@@ -2,7 +2,7 @@
 id: en-business-auto-parts
 fuente: https://fanalca.com/en/business/auto-parts/
 titulo: Auto parts
-seccion: negocios/auto-parts
+seccion: negocios/autopartes
 fecha_captura: '2026-11-04T23:47:01.664212+00:00'
 idioma: en
 tokens_aprox: 121

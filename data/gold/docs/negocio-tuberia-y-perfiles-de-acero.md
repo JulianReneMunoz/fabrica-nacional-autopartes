@@ -2,7 +2,7 @@
 id: negocio-tuberia-y-perfiles-de-acero
 fuente: https://fanalca.com/negocio/tuberia-y-perfiles-de-acero/
 titulo: Tubería y perfiles de acero Archives - Fanalca
-seccion: negocios/tuberia-y-perfiles-de-acero
+seccion: negocios/tubos-y-perfiles-de-acero
 fecha_captura: '2026-11-04T23:47:28.146200+00:00'
 idioma: es
 tokens_aprox: 28

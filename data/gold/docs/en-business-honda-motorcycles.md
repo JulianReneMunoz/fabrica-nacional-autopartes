@@ -2,7 +2,7 @@
 id: en-business-honda-motorcycles
 fuente: https://fanalca.com/en/business/honda-motorcycles/
 titulo: Honda Motorcycles
-seccion: negocios/honda-motorcycles
+seccion: negocios/honda-motocicletas
 fecha_captura: '2026-11-04T23:46:47.671573+00:00'
 idioma: en
 tokens_aprox: 183

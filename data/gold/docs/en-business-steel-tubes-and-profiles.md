@@ -2,7 +2,7 @@
 id: en-business-steel-tubes-and-profiles
 fuente: https://fanalca.com/en/business/steel-tubes-and-profiles/
 titulo: Steel tubes and profiles
-seccion: negocios/steel-tubes-and-profiles
+seccion: negocios/tubos-y-perfiles-de-acero
 fecha_captura: '2026-11-04T23:46:53.651568+00:00'
 idioma: en
 tokens_aprox: 137

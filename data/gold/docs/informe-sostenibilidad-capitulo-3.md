@@ -2,7 +2,7 @@
 id: informe-sostenibilidad-capitulo-3
 fuente: https://fanalca.com/informe-sostenibilidad/capitulo-3/
 titulo: Conscientes con la comunidad
-seccion: noticias
+seccion: sostenibilidad
 fecha_captura: '2026-11-04T23:50:26.769531+00:00'
 idioma: es
 tokens_aprox: 1533

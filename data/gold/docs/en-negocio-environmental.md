@@ -2,7 +2,7 @@
 id: en-negocio-environmental
 fuente: https://fanalca.com/en/negocio/environmental/
 titulo: Environmental Archives - Fanalca
-seccion: negocios/environmental
+seccion: negocios/ambiental
 fecha_captura: '2026-11-04T23:47:19.732526+00:00'
 idioma: en
 tokens_aprox: 47

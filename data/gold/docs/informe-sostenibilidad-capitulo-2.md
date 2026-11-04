@@ -2,7 +2,7 @@
 id: informe-sostenibilidad-capitulo-2
 fuente: https://fanalca.com/informe-sostenibilidad/capitulo-2/
 titulo: rESPETUOSOS CON EL MEDIO AMBIENTE
-seccion: noticias
+seccion: sostenibilidad
 fecha_captura: '2026-11-04T23:50:24.750520+00:00'
 idioma: es
 tokens_aprox: 1026

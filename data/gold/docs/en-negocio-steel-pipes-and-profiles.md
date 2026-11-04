@@ -2,7 +2,7 @@
 id: en-negocio-steel-pipes-and-profiles
 fuente: https://fanalca.com/en/negocio/steel-pipes-and-profiles/
 titulo: Steel pipes and profiles Archives - Fanalca
-seccion: negocios/steel-pipes-and-profiles
+seccion: negocios/tubos-y-perfiles-de-acero
 fecha_captura: '2026-11-04T23:47:26.212147+00:00'
 idioma: en
 tokens_aprox: 43

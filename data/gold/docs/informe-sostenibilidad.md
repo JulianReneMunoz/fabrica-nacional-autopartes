@@ -2,7 +2,7 @@
 id: informe-sostenibilidad
 fuente: https://fanalca.com/informe-sostenibilidad/
 titulo: MÁS CONSCIENTES, MÁS HUMANOS
-seccion: noticias
+seccion: sostenibilidad
 fecha_captura: '2026-11-04T23:49:27.344208+00:00'
 idioma: es
 tokens_aprox: 2895

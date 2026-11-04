@@ -1,6 +1,6 @@
 BASE DE CONOCIMIENTO — Fábrica Nacional de Autopartes (Fanalca)
-Generada: 2026-11-04T23:50:35+00:00
-Fragmentos: 215
+Generada: 2026-11-04T23:56:37+00:00
+Fragmentos: 166
 
 [inicio#000] (inicio | https://fanalca.com/)
 ## Orgullo colombiano
@@ -276,14 +276,14 @@ Ofrecemos una **amplia gama** de cajas compactadoras diseñadas con componentes 
 Tenemos **presencia en 29 departamentos** del territorio nacional, contamos con **más de 250 clientes** nacionales e internacionales, ubicados en países como Panamá, Venezuela, Ecuador, India y Chile.
 Somos lideres en la implementación de aceros anti desgaste y de alta resistencia en nuestras cajas y contamos con tecnologías patentadas para hacer su **operación de recolección más rentable**.
 
-[negocios-holda-autos#000] (negocios/holda-autos | https://fanalca.com/negocios/holda-autos/)
+[negocios-holda-autos#000] (negocios/honda-autos | https://fanalca.com/negocios/holda-autos/)
 # Honda
 En 1962, Honda pasa de dos a cuatro ruedas y **nace el primer auto deportivo de la marca**, el S360, que alcanzaba una velocidad de 100 km por hora.
 Durante 1972, **se lanza el reconocido Honda Civic**, marcando la diferencia en la historia de los autos compactos pues fue el primero en cumplir con las normas ambientales establecidas por Estados Unidos.
 En Colombia, **Fanalca inició la importación y comercialización de vehículos Honda en la década de 1990** y se consolida como la única marca en el país que ofrece una Garantía Real Total: mano de obra, insumos y repuestos sin costo, por 2 años y sin límite de kilometraje. Actualmente, la Garantía Total Honda es la única en el mercado que incluye mantenimiento preventivo, correctivo y predictivo sin costo.
 En línea con el propósito de la marca de crear soluciones de movilidad y garantizar su innovación, Honda incursiona en la robótica y en el año 2000 presenta a Asimo, el robot humanoide más avanzado del mundo. Además, en el 2003, lanza el Hondajet, haciendo su primer vuelo sobre Carolina del Norte, Estados Unidos.
 
-[negocios-holda-autos#001] (negocios/holda-autos | https://fanalca.com/negocios/holda-autos/)
+[negocios-holda-autos#001] (negocios/honda-autos | https://fanalca.com/negocios/holda-autos/)
 Única marca en el país que ofrece una **Garantía Real Total**: mano de obra, insumos y repuestos sin costo, por 2 años y sin límite de kilometraje. Actualmente, la Garantía Total Honda es la única en el mercado que incluye mantenimiento preventivo, correctivo y predictivo sin costo.
 En tres décadas, nuestra marca ha logrado excelentes resultados de posicionamiento por su calidad, diseño, eficiencia y ecología; como también, de expansión: contamos con **más de 32.000 clientes** y una red de concesionarios compuesta por **26 vitrinas** a nivel nacional, que prestan el servicio de venta y posventa.
 Nuestro servicio de **Renting Total** actualmente cuenta con una flota de **638 vehículos**.
@@ -297,7 +297,7 @@ Marketers of road safety elements such as **crash cushions** and **special end t
 Defenses manufactured with the highest **geometric precision** in the forming, resulting in **lower installation and maintenance costs**.
 **Production plants** in **Acopi**, Yumbo (Valle del Cauca) with the capacity to continuously supply the main **road infrastructure projects in the country**.
 
-[en-business-honda-motorcycles#000] (negocios/honda-motorcycles | https://fanalca.com/en/business/honda-motorcycles/)
+[en-business-honda-motorcycles#000] (negocios/honda-motocicletas | https://fanalca.com/en/business/honda-motorcycles/)
 # Honda
 ## #1 of motorcycles in the world
 #### We are the brand of the power of dreams and we accompany Colombians to make real their own dreams.
@@ -318,7 +318,7 @@ Unique brand in the country that offers a **Total True Guarantee**: labor, suppl
 In three decades, our brand has achieved excellent positioning results for its quality, design, efficiency and ecology; as well as expansion: we have **more than 32,000 customers** and a network of dealers composed of **26 show rooms** nationwide, who provide the sales and after-sales service.
 Our **Total Renting** service currently has a fleet of **638 vehicles**.
 
-[en-business-environmental#000] (negocios/environmental | https://fanalca.com/en/business/environmental/)
+[en-business-environmental#000] (negocios/ambiental | https://fanalca.com/en/business/environmental/)
 # Environmental
 We have been manufacturing solid waste collection equipment since 1981, leading the innovation and evolution of garbage compactor boxes and steel containers in Colombia.
 We market complementary waste management equipment such as **hydraulic arms**, **side loading boxes**, **container cleaners** and **sweepers**.
@@ -326,7 +326,7 @@ We offer a **wide range** of compacting boxes designed with state-of-the-art com
 We have a **presence in 29 departments** nationwide, we have **more than 250 national and international clients**, located in countries such as Panama, Venezuela, Ecuador, India and Chile.
 We are leaders in the implementation of high-strength, anti-wear steels in boxes and have patented technologies to make its **collection operation more cost-effective**.
 
-[en-business-steel-tubes-and-profiles#000] (negocios/steel-tubes-and-profiles | https://fanalca.com/en/business/steel-tubes-and-profiles/)
+[en-business-steel-tubes-and-profiles#000] (negocios/tubos-y-perfiles-de-acero | https://fanalca.com/en/business/steel-tubes-and-profiles/)
 # Steel tubes
 We manufacture and market steel products
 Welded **steel tubes** in Cold Rolled, Hot Rolled, Structural and Galvanized sheet.
@@ -377,7 +377,7 @@ The management of the Fanalca Foundation has been key to following a sustainable
 Our goals have grown along with the dreams of our employees and their families. But our vision of collective construction goes further.
 The management of the Fanalca Foundation has been key to following a sustainable path and supporting the needs of the communities in which we operate.
 
-[en-business-auto-parts#000] (negocios/auto-parts | https://fanalca.com/en/business/auto-parts/)
+[en-business-auto-parts#000] (negocios/autopartes | https://fanalca.com/en/business/auto-parts/)
 # Auto parts
 #### We have production plants in Acopi, Yumbo (Valle del Cauca), Bogotá (Cundinamarca) and Medellin (Antioquia).
 At our **Yumbo** and **Bogota** plant we manufacture metal parts for cars and commercial vehicles such as trucks, pickups, buses, buses; as well as doors, crossbars and chassis (frames) supports.
@@ -468,7 +468,7 @@ Defensas fabricadas con la mas alta **precisión geométrica** en el formado, lo
 **Acopi**, Yumbo (Valle del Cauca) con capacidad para suministrar continuamente los principales proyectos de
 **infraestructura vial en el país**.
 
-[en-negocio-environmental#000] (negocios/environmental | https://fanalca.com/en/negocio/environmental/)
+[en-negocio-environmental#000] (negocios/ambiental | https://fanalca.com/en/negocio/environmental/)
 In the midst of the covid-19 contingency, our environmental business unit managed to deliver 40 garbage compactor boxes and 19 dump trucks on time for waste collection in Barranquilla, as…
 
 [negocio-fanalca#000] (negocios/fanalca | https://fanalca.com/negocio/fanalca/)
@@ -479,10 +479,10 @@ In the midst of the covid-19 contingency, our environmental business unit manage
 - Publicación de la entrada: 18 septiembre, 2025
 - Categoría de la entrada:
 
-[en-negocio-steel-pipes-and-profiles#000] (negocios/steel-pipes-and-profiles | https://fanalca.com/en/negocio/steel-pipes-and-profiles/)
+[en-negocio-steel-pipes-and-profiles#000] (negocios/tubos-y-perfiles-de-acero | https://fanalca.com/en/negocio/steel-pipes-and-profiles/)
 We are human and we act in solidarity, it is one of the values of our company; Therefore, from the beginning of the contingency generated by covid-19, our main objective…
 
-[negocio-tuberia-y-perfiles-de-acero#000] (negocios/tuberia-y-perfiles-de-acero | https://fanalca.com/negocio/tuberia-y-perfiles-de-acero/)
+[negocio-tuberia-y-perfiles-de-acero#000] (negocios/tubos-y-perfiles-de-acero | https://fanalca.com/negocio/tuberia-y-perfiles-de-acero/)
 - Autor de la entrada: Carolina Robles
 - Publicación de la entrada: 6 febrero, 2025
 - Categoría de la entrada:
@@ -513,7 +513,7 @@ We are human and we act in solidarity, it is one of the values of our company; T
 - Publicación de la entrada: 3 octubre, 2025
 - Categoría de la entrada:
 
-[negocio-honda-motos#000] (negocios/honda-motos | https://fanalca.com/negocio/honda-motos/)
+[negocio-honda-motos#000] (negocios/honda-motocicletas | https://fanalca.com/negocio/honda-motos/)
 - Autor de la entrada: Diana Romero
 - Publicación de la entrada: 3 febrero, 2026
 - Categoría de la entrada:
@@ -546,235 +546,15 @@ We are human and we act in solidarity, it is one of the values of our company; T
 - Publicación de la entrada: 27 enero, 2025
 - Categoría de la entrada:
 
-[area-administrativo#000] (noticias | https://fanalca.com/area/administrativo/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[area-administrativo#001] (noticias | https://fanalca.com/area/administrativo/)
-### Estudiante en Práctica nivel técnico / tecnólogo 2026-1
-#### Fanalca
-
-[area-administrativo#002] (noticias | https://fanalca.com/area/administrativo/)
-### Jefe de lamina y pintura concesionarios automóviles Honda
-#### Honda Autos
-
-[area-administrativo#003] (noticias | https://fanalca.com/area/administrativo/)
-### Auxiliar de aseguradora automóviles Honda
-#### Honda Autos
-
-[area-administrativo#004] (noticias | https://fanalca.com/area/administrativo/)
-### Estudiante en Práctica- Universitarios 2026-1
-#### Fanalca
-
-[area-comercial#000] (noticias | https://fanalca.com/area/comercial/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[area-comercial#001] (noticias | https://fanalca.com/area/comercial/)
-### Asesor comercial de repuestos posventa motocicletas Honda
-#### Honda Motos
-
-[area-comercial#002] (noticias | https://fanalca.com/area/comercial/)
-### Asesor comercial automóviles Honda
-#### Honda Autos
-### Asesor comercial automóviles Honda
-#### Honda Autos
-### Asesor comercial automóviles Honda
-#### Honda Autos
-
-[area-comercial#003] (noticias | https://fanalca.com/area/comercial/)
-### COORDINADOR DE VENTAS UNIDAD DE NEGOCIO TUBOS Y PERFILES DE ACERO
-#### Tubería y perfiles de acero
-
-[area-operativo#000] (noticias | https://fanalca.com/area/operativo/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[area-operativo#001] (noticias | https://fanalca.com/area/operativo/)
-### Inspector De Flota De Rentig
-#### Renting Total
-### Inspector De Flota De Rentig
-#### Renting Total
-### Inspector De Flota De Rentig
-#### Renting Total
-
-[area-operativo#002] (noticias | https://fanalca.com/area/operativo/)
-### Técnico Latonero Automóviles Honda
-#### Honda Autos
-### Técnico Latonero Automóviles Honda
-#### Honda Autos
-### Técnico Latonero Automóviles Honda
-#### Honda Autos
-
-[area-operativo#003] (noticias | https://fanalca.com/area/operativo/)
-### Técnico Taller de Motocicletas Cali
-#### Supermotos
-
-[area-operativo#004] (noticias | https://fanalca.com/area/operativo/)
-### Técnico Taller de Motocicletas Valledupar
-#### Supermotos
-
-[area-operativo#005] (noticias | https://fanalca.com/area/operativo/)
-### Técnico Taller de Motocicletas Barrancabermeja
-#### Supermotos
-
-[area-operativo#006] (noticias | https://fanalca.com/area/operativo/)
-### Técnico Taller de Motocicletas Jamundi
-#### Supermotos
-
-[ciudad-barrancabermeja#000] (noticias | https://fanalca.com/ciudad/barrancabermeja/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[ciudad-barrancabermeja#001] (noticias | https://fanalca.com/ciudad/barrancabermeja/)
-### Técnico Taller de Motocicletas Barrancabermeja
-#### Supermotos
-
-[ciudad-barranquilla#000] (noticias | https://fanalca.com/ciudad/barranquilla/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[ciudad-barranquilla#001] (noticias | https://fanalca.com/ciudad/barranquilla/)
-### Técnico Latonero Automóviles Honda
-#### Honda Autos
-
-[ciudad-bogota#000] (noticias | https://fanalca.com/ciudad/bogota/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[ciudad-bogota#001] (noticias | https://fanalca.com/ciudad/bogota/)
-### Asesor comercial de repuestos posventa motocicletas Honda
-#### Honda Motos
-
-[ciudad-bogota#002] (noticias | https://fanalca.com/ciudad/bogota/)
-### Inspector De Flota De Rentig
-#### Renting Total
-
-[ciudad-bogota#003] (noticias | https://fanalca.com/ciudad/bogota/)
-### Técnico Latonero Automóviles Honda
-#### Honda Autos
-
-[ciudad-bogota#004] (noticias | https://fanalca.com/ciudad/bogota/)
-### Asesor comercial automóviles Honda
-#### Honda Autos
-
-[ciudad-cali#000] (noticias | https://fanalca.com/ciudad/cali/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[ciudad-cali#001] (noticias | https://fanalca.com/ciudad/cali/)
-### Estudiante en Práctica nivel técnico / tecnólogo 2026-1
-#### Fanalca
-
-[ciudad-cali#002] (noticias | https://fanalca.com/ciudad/cali/)
-### Técnico Latonero Automóviles Honda
-#### Honda Autos
-
-[ciudad-cali#003] (noticias | https://fanalca.com/ciudad/cali/)
-### Jefe de lamina y pintura concesionarios automóviles Honda
-#### Honda Autos
-
-[ciudad-cali#004] (noticias | https://fanalca.com/ciudad/cali/)
-### Asesor comercial automóviles Honda
-#### Honda Autos
-
-[ciudad-cali#005] (noticias | https://fanalca.com/ciudad/cali/)
-### Auxiliar de aseguradora automóviles Honda
-#### Honda Autos
-
-[ciudad-cali#006] (noticias | https://fanalca.com/ciudad/cali/)
-### Estudiante en Práctica- Universitarios 2026-1
-#### Fanalca
-
-[ciudad-cali#007] (noticias | https://fanalca.com/ciudad/cali/)
-### Técnico Taller de Motocicletas Cali
-#### Supermotos
-### Técnico Taller de Motocicletas Cali
-#### Supermotos
-
-[ciudad-cartagena#000] (noticias | https://fanalca.com/ciudad/cartagena/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[ciudad-cartagena#001] (noticias | https://fanalca.com/ciudad/cartagena/)
-### Inspector De Flota De Rentig
-#### Renting Total
-
-[ciudad-jamundi#000] (noticias | https://fanalca.com/ciudad/jamundi/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[ciudad-jamundi#001] (noticias | https://fanalca.com/ciudad/jamundi/)
-### Técnico Taller de Motocicletas Jamundi
-#### Supermotos
-
-[ciudad-medellin#000] (noticias | https://fanalca.com/ciudad/medellin/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[ciudad-medellin#001] (noticias | https://fanalca.com/ciudad/medellin/)
-### Inspector De Flota De Rentig
-#### Renting Total
-
-[ciudad-medellin#002] (noticias | https://fanalca.com/ciudad/medellin/)
-### Asesor comercial automóviles Honda
-#### Honda Autos
-
-[ciudad-medellin#003] (noticias | https://fanalca.com/ciudad/medellin/)
-### COORDINADOR DE VENTAS UNIDAD DE NEGOCIO TUBOS Y PERFILES DE ACERO
-#### Tubería y perfiles de acero
-
-[ciudad-valledupar#000] (noticias | https://fanalca.com/ciudad/valledupar/)
-### Nuestras vacantes
-¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
-
-[ciudad-valledupar#001] (noticias | https://fanalca.com/ciudad/valledupar/)
-### Técnico Taller de Motocicletas Valledupar
-#### Supermotos
-
-[noticias-2#000] (noticias | https://fanalca.com/noticias/2/)
-Reafirmamos nuestro compromiso con el desarrollo social y la equidad en el Valle del Cauca, sumándonos activamente a la estrategia #CompromisoValle, una iniciativa que ya
-
-[noticias-2#001] (noticias | https://fanalca.com/noticias/2/)
-# Buenas noticias
-# Buenas noticias
-En Fanalca seguimos trabajando por una movilidad más segura para todos. Por eso, recibimos con entusiasmo la visita de la Agencia Nacional de Seguridad Vial
-Durante el primer Consejo Fundacional del año, ProPacífico anunció el nombramiento de nuestro presidente, Joaquín Losada Fina, como nuevo Presidente del Consejo Directivo y Fundacional
-Te presentamos 4 iniciativas impulsadas por el equipo de Honda Motocicletas para generar conciencia y reducir los índices de accidentalidad de los motociclistas en nuestro
-Joaquín Losada, quien también preside la Junta de Dirección General de la ANDI, dio apertura a la 9º edición de este congreso, celebrando los 80
-Nuestra marca especializada en infraestructura vial, recibió la certificación otorgada por la entidad europea Bureau Veritas, la cual valida que nuestra planta de producción cumple
-
-[noticias-3#000] (noticias | https://fanalca.com/noticias/3/)
-Participamos en la construcción de cubiertas de la primera planta de producción de VaxThera, compañía de biotecnología 100% colombiana que posiciona al país entre las
-
-[noticias-3#001] (noticias | https://fanalca.com/noticias/3/)
-# Buenas noticias
-# Buenas noticias
-Nuestra unidad de negocio ambiental presentó el nuevo equipo compactador de residuos sólidos: FH-17E, diseñado con un acero especial y paredes elípticas que garantizan una
-La Fundación Fanalca nace en diciembre de 2003 con el propósito de contribuir a la construcción de cultura ciudadana a través de la recuperación del espacio público, especialmente
-Les compartimos una recopilación sobre el lanzamiento del primer piloto, en Latinoamérica, para transporte masivo a base de hidrógeno; un momento histórico para nuestra región, como
-Este espacio, ubicado en Cali e inaugurado este mes, se suma a la campaña de seguridad vial: “Vive la vía, Honda te cuida”, que nace
-Es un orgullo compartir con todos los colombianos el diseño y puesta en marcha de Green Móvil, el centro logístico de movilidad eléctrica más grande
-
-[noticias-4#000] (noticias | https://fanalca.com/noticias/4/)
-En medio de la contingencia por covid-19, nuestra unidad de negocio ambiental logró entregar a tiempo 40 cajas compactadoras de basura y 19 volcos para la recolección de residuos en Barranquilla.
-
-[noticias-4#001] (noticias | https://fanalca.com/noticias/4/)
-# Buenas noticias
-# Buenas noticias
-Leer mas »
-Tubería y perfiles de acero
-Fanalca participó en el proyecto de dotación de infraestructura hospitalaria en Jamundí, Yumbo y Candelaria mediante el suministro del sistema Steel Framing.
-
-[informe-sostenibilidad#000] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#000] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 # MÁS CONSCIENTES, MÁS HUMANOS
 ## Informe de sostenibilidad
 
-[informe-sostenibilidad#001] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#001] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 # MÁS CONSCIENTES,
 ## explora las principales estrategias de sostenibilidad
 
-[informe-sostenibilidad#002] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#002] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## 01
 Para Fanalca, El 2021 fue un año de liberar y liderar un nuevo espíritu, más consciente y movilizador frente a las necesidades de uno de los públicos de interés más importantes: la comunidad.
 Por eso, constantemente nos preguntamos:
@@ -785,59 +565,59 @@ Para Fanalca, El 2021 fue un año de liberar y liderar un nuevo espíritu, más 
 ¿qué nos corresponde hacer como organización para aportar a una mejor sociedad, más equitativa y más justa?
 PRESIDENTE DE FANALCA
 
-[informe-sostenibilidad#003] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#003] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## NUESTROS
 Uno de nuestros propósitos como compañía consciente, es tomar decisiones y actuar bajo los comportamientos que describen nuestros valores corporativos.
 
-[informe-sostenibilidad#004] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#004] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## Estamos comprometidos con los resultados
 Trabajamos en equipo con determinación y excelencia, desarrollando relaciones constructivas que permitan obtener un desempeño superior en nuestros objetivos.
 
-[informe-sostenibilidad#005] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#005] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## Somos
 Valoramos la coherencia entre lo que pensamos, decimos y hacemos, cumplimos nuestras promesas fundamentando todas las decisiones en la transparencia y la ética.
 
-[informe-sostenibilidad#006] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#006] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## Actuamos con
 Valoramos la individualidad, las diferencias y contribuciones de todas las personas con las que nos relacionamos dentro y fuera de la organización, construyendo vínculos positivos y de largo plazo.
 
-[informe-sostenibilidad#007] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#007] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## Somos
 Perseveramos para encontrar oportunidades que nos ofrezcan ventajas competitivas y respondemos a ellas con pasión, innovación y flexibilidad.
 
-[informe-sostenibilidad#008] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#008] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## Somos humanos
 y actuamos solidariamente
 Nos interesamos genuinamente por la seguridad, estabilidad y bienestar propia, de nuestros colaboradores y sus familias. Así mismo, nos ocupamos por contribuir al desarrollo sostenible del entorno social y ambiental.
 
-[informe-sostenibilidad#009] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#009] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## ASPECTOS
 Mantenemos el compromiso de presentar nuestras acciones enmarcadas en sostenibilidad, siguiendo los lineamientos del Global Reporting Initiative (GRI) y los aspectos materiales, priorizados por nuestra organización, propios del sector de automóviles, autopartes y metalmecánica:
 
-[informe-sostenibilidad#010] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#010] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## NUESTROS
 Uno de nuestros propósitos como compañía consciente, es tomar decisiones y actuar bajo los comportamientos que describen nuestros valores corporativos.
 
-[informe-sostenibilidad#011] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#011] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## Somos
 Valoramos la coherencia entre lo que pensamos, decimos y hacemos, cumplimos nuestras promesas fundamentando todas las decisiones en la transparencia y la ética.
 ## Somos
 Valoramos la coherencia entre lo que pensamos, decimos y hacemos, cumplimos nuestras promesas fundamentando todas las decisiones en la transparencia y la ética.
 
-[informe-sostenibilidad#012] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#012] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## Actuamos con
 Valoramos la individualidad, las diferencias y contribuciones de todas las personas con las que nos relacionamos dentro y fuera de la organización, construyendo vínculos positivos y de largo plazo.
 
-[informe-sostenibilidad#013] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#013] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## Somos
 Perseveramos para encontrar oportunidades que nos ofrezcan ventajas competitivas y respondemos a ellas con pasión, innovación y flexibilidad.
 
-[informe-sostenibilidad#014] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#014] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## Somos humanos
 y actuamos solidariamente
 Nos interesamos genuinamente por la seguridad, estabilidad y bienestar propia, de nuestros colaboradores y sus familias. Asimismo, nos ocupamos por contribuir al desarrollo sostenible del entorno social y ambiental.
 
-[informe-sostenibilidad#015] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#015] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## MATRIZ DE
 - Generar ingresos y permitir el acceso a nuevos mercados.
 - Mejoras de la eficiencia operacional.
@@ -846,11 +626,11 @@ Nos interesamos genuinamente por la seguridad, estabilidad y bienestar propia, d
 - Cumplir con las expectativas de los grupos de interés prioritarios.
 - La reputación y consolidación de la marca.
 
-[informe-sostenibilidad#016] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#016] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## OBJETIVOS DE
 Nuestras operaciones y actividades buscan aportar a metas superiores como lo son los Objetivos de Desarrollo Sostenible de nuestro territorio. Tenemos el compromiso de contribuir a ocho objetivos\*:
 
-[informe-sostenibilidad#017] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#017] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## GRUPOS DE
 ● Estabilidad laboral
 ● Remuneración adecuada
@@ -879,7 +659,7 @@ Nuestras operaciones y actividades buscan aportar a metas superiores como lo son
 ● Sana competencia
 ● Relaciones de mutuo beneficio para el desarrollo de proveedores comunes
 
-[informe-sostenibilidad#018] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#018] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## COLABORADORES
 ● Estabilidad laboral
 ● Remuneración adecuada
@@ -888,7 +668,7 @@ Nuestras operaciones y actividades buscan aportar a metas superiores como lo son
 ● Instrucciones claras
 ● Desarrollo y participación laboral
 
-[informe-sostenibilidad#019] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#019] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## SOCIOS
 ● Aumento en la rentabilidad
 ● Crecimiento de la organización
@@ -896,13 +676,13 @@ Nuestras operaciones y actividades buscan aportar a metas superiores como lo son
 ● Riesgos controlados
 **●** Buena reputación e imagen de los productos y de la organización
 
-[informe-sostenibilidad#020] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#020] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## GERENCIA
 ● Cumplimiento de objetivos
 ● Información actualizada y confiable para la toma de decisiones
 ● Productividad y eficiencia
 
-[informe-sostenibilidad#021] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#021] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## PROVEEDORES
 ● Relación de largo plazo
 ● Requisitos / especificaciones claras
@@ -910,7 +690,7 @@ Nuestras operaciones y actividades buscan aportar a metas superiores como lo son
 ● Información de los cambios con antelación
 ● Respuesta oportuna a requerimientos
 
-[informe-sostenibilidad#022] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#022] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## CLIENTES
 ● Precios competitivos
 ● Responsabilidad Social Corporativa
@@ -918,26 +698,26 @@ Nuestras operaciones y actividades buscan aportar a metas superiores como lo son
 ● Líneas de crédito
 ● SGC certificado
 
-[informe-sostenibilidad#023] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#023] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## COMPETENCIA
 ● Sana competencia
 ● Relaciones de mutuo beneficio para el desarrollo de proveedores comunes
 
-[informe-sostenibilidad#024] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#024] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## CASA MATRIZ (HONDA)
 ● Cumplimiento con los negocios pactados
 ● Incremento en ventas
 ● Mayor participación en el mercado
 ● Sostenimiento de la marca
 
-[informe-sostenibilidad#025] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#025] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## GOBIERNO Y ENTES DE CONTROL
 ● Cumplimiento con los negocios pactados
 ● Incremento en ventas
 ● Mayor participación en el mercado
 ● Sostenimiento de la marca
 
-[informe-sostenibilidad#026] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#026] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## PRESIDENTE
 Juan Carlos Escobar B.
 Giselle bueno g.
@@ -951,7 +731,7 @@ Nicolás Rendón E.
 Gerente General Honda Autos
 Claudia Arango Z.
 
-[informe-sostenibilidad#027] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#027] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ## DE LA ORGANIZACIÓN
 Joaquín Losada F.
 Juan Carlos Escobar B.
@@ -967,7 +747,7 @@ Claudia Arango Z.
 Bernardo Ávila G.
 Alicia del Pilar Lozano
 
-[informe-sostenibilidad#028] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#028] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ### HONDA
 - Somos la marca del poder de los sueños y acompañamos a los colombianos a hacer realidad los suyos: #1 en motocicletas a nivel mundial.
 - Somos la única planta de producción nacional, a nivel mundial, con licencia para fabricar y ensamblar motocicletas Honda, por nuestros altos estándares de calidad. Nuestra planta de ensamble Honda motocicletas está ubicada en Acopi, Yumbo, Valle del Cauca.
@@ -975,20 +755,20 @@ Alicia del Pilar Lozano
 - Contamos con una red de distribución propia y una red de distribuidores que permite tener cobertura en el territorio nacional: 450 puntos de venta con presencia en los 32 departamentos, 265 talleres de servicio en el país y 1.265 almacenes de repuestos.
 ### HONDA
 
-[informe-sostenibilidad#029] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#029] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ### HONDA
 - En Colombia, Fanalca inició la importación y comercialización de vehículos Honda en la década de 1990 y se consolida como la única marca en el país que ofrece una Garantía Real Total: mano de obra, insumos y repuestos sin costo, por 2 años y sin límite de kilometraje. Actualmente, la Garantía Total Honda es la única en el mercado que incluye mantenimiento preventivo, correctivo y predictivo sin costo.
 - En tres décadas, nuestra marca ha logrado excelentes resultados de posicionamiento por su calidad, diseño, eficiencia y ecología; como también, de expansión: contamos con más de 32.000 clientes y una red de concesionarios compuesta por 26 vitrinas a nivel nacional, que prestan el servicio de venta y posventa.
 - Nuestro servicio de Renting Total (arrendamiento de vehículos) actualmente cuenta con una flota de 638 vehículos.
 
-[informe-sostenibilidad#030] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#030] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ### TUBOS Y PERFILES
 - Fabricamos y comercializamos productos de acero formado como tubos soldados de acero al carbón (Cold Rolled, Hot Rolled Estructural y Galvanizado).
 - Fabricamos y comercializamos perfiles de acero abiertos para la construcción (Drywall, Steel Framing, Entrepiso, Perfil C y Fleje Cortina).
 - Más de 1.000 clientes a nivel nacional con presencia geográfica en 28 departamentos de Colombia.
 - Contamos con plantas de producción en Acopi, Yumbo (Valle del Cauca) y Guachené (Cauca).
 
-[informe-sostenibilidad#031] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#031] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ### AMBIENTAL
 - Fabricamos equipos para recolección de residuos sólidos desde el año 1981, liderando la innovación y la evolución de las cajas compactadoras de basura y contenedores de acero en Colombia.
 - Comercializamos equipos complementarios de manejo de residuos como brazos hidráulicos, cajas de cargue lateral y barredoras.
@@ -996,25 +776,25 @@ Alicia del Pilar Lozano
 - Tenemos cobertura en 29 departamentos del territorio nacional, contamos con más de 250 clientes nacionales e internacionales, ubicados en países como Panamá, Venezuela, Ecuador, India y Chile, gracias a que nuestros equipos se adaptan a diversos terrenos.
 - Planta de producción en Acopi, Yumbo (Valle del Cauca).
 
-[informe-sostenibilidad#032] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#032] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ### FANALVÍAS
 - Fabricantes y comercializadores de defensas viales metálicas de carretera.
 - Comercializadores de elementos para seguridad vial como amortiguadores de impacto y terminales especiales.
 - Más de 120 clientes y presencia en los principales proyectos de infraestructura vial en el país.
 - Plantas de producción en Acopi, Yumbo (Valle del Cauca) y Guachené (Cauca).
 
-[informe-sostenibilidad#033] (noticias | https://fanalca.com/informe-sostenibilidad/)
+[informe-sostenibilidad#033] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/)
 ### AUTOPARTES
 - En nuestra planta de Yumbo y Bogotá fabricamos partes metálicas para automóviles y vehículos comerciales como camiones, pickups, buses, busetas; como puertas, travesaños y soportes para chasis.
 - De igual manera, en nuestra planta ubicada en Bogotá, fabricamos mangueras, tuberías, radiadores y condensadores para aires acondicionados instalados en camiones y automóviles.
 - En la planta ubicada en Medellín se realiza ensamble de partes metálicas para automóviles y vehículos comerciales; como paneles de pisos, cunas motor y trenes traseros para automóviles.
 - Contamos con plantas de producción en Acopi, Yumbo (Valle del Cauca), Bogotá (Cundinamarca) y Medellín (Antioquia).
 
-[informe-sostenibilidad-capitulo-1#000] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#000] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 # Comprometidos con una operación sostenible y con nuestra gente
 Nuestro desempeño económico representa la capacidad que tenemos de crear circuitos económicos virtuosos con nuestros grupos de interés a través de la generación de ingresos; esto nos permite contribuir al crecimiento de nuestra región.
 
-[informe-sostenibilidad-capitulo-1#001] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#001] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 # 2018
 **VALOR ECONÓMICO GENERADO – VEG**
 De los cuales el 98% corresponden a ingresos operacionales.
@@ -1027,7 +807,7 @@ Aportes a comunidad:**0,2%**
 **VALOR ECONÓMICO RETENIDO – VER**
 6.3% del valor económico generado en el 2018 fue retenido por los accionistas.
 
-[informe-sostenibilidad-capitulo-1#002] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#002] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 # 2019
 **VALOR ECONÓMICO GENERADO – VEG**
 De los cuales el 97% corresponden a ingresos operacionales.
@@ -1039,7 +819,7 @@ Aportes a comunidad:**0,2%**
 **VALOR ECONÓMICO RETENIDO – VER**
 4.3% del valor económico generado en el 2019 fue retenido por los accionistas.
 
-[informe-sostenibilidad-capitulo-1#003] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#003] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 # 2020
 **VALOR ECONÓMICO GENERADO – VEG**
 De los cuales el 90% corresponden a ingresos operacionales.
@@ -1051,7 +831,7 @@ Aportes a comunidad:**0,1%**
 **VALOR ECONÓMICO RETENIDO – VER**
 18,5% del valor económico generado en el 2020 fue retenido por los accionistas.
 
-[informe-sostenibilidad-capitulo-1#004] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#004] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 # 2021
 **VALOR ECONÓMICO GENERADO – VEG**
 De los cuales el 94% corresponden a ingresos operacionales
@@ -1063,7 +843,7 @@ Aportes a comunidad:**0,4%**
 **VALOR ECONÓMICO RETENIDO – VER**
 6.9% del valor económico generado en el 2021 fue retenido por los accionistas.
 
-[informe-sostenibilidad-capitulo-1#005] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#005] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 ## EMPLEO
 Reconocemos que nuestros colaboradores son el pilar fundamental que apalanca nuestro compromiso de operación sostenible. Por eso, creamos empleo que garantice las mejores condiciones de bienestar y desarrollo.
 Total de colaboradores
@@ -1073,7 +853,7 @@ Contrato de aprendizaje: 14,1%
 Total de colaboradores
 El ingreso promedio en cargos operativos en el 2021 fue de **$1.230.420**, equivalente a un **35,43%** mayor al SMMLV. **728 colaboradores** recibieron este ingreso el año pasado.
 
-[informe-sostenibilidad-capitulo-1#006] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#006] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 ## TASA
 Actualmente, desde la Vicepresidencia de Talento Humano se está trabajando en un diagnóstico para analizar las causas de retiro voluntario de colaboradores de todas las unidades de negocio de la compañía, con el fin de trabajar en planes de acción más eficientes.
 Desarrollo de nuestros colaboradores
@@ -1083,7 +863,7 @@ Dada la contingencia que se presentó a nivel nacional por la situación de orde
 - Talleres enfocados en liderazgo integral y gestión de emociones para todos los niveles de la organización .
 - Patrocinio del 100% a 9 colaboradores para realizar un MBA con la Wesfield Business School (quienes se graduaron durante el 2021).
 
-[informe-sostenibilidad-capitulo-1#007] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#007] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 - Patrocinio del 100% a 9 colaboradores para realizar un MBA con la Wesfield Business School (quienes se graduaron durante el 2021).
 - Desarrollo del curso de cumplimiento virtual para el 100% de nuestros colaboradores (administrativos y operativos) .
 - Participación de 33 líderes en nuestra Escuela de Liderazgo y certificación de 23 de ellos en el programa Liderazgo Consciente.
@@ -1095,18 +875,18 @@ Trabajamos por aportar al mejoramiento de la calidad de vida de nuestros colabor
 Prosperidad y calidad de vida
 Nuestra estrategia de bienestar
 
-[informe-sostenibilidad-capitulo-1#008] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#008] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 Prosperidad y calidad de vida
 Nuestra estrategia de bienestar
 Trabajamos por aportar al mejoramiento de la calidad de vida de nuestros colaboradores y sus familias, a través de 4 pilares: salud física, emocional y mental, financiera y propósito social.
 
-[informe-sostenibilidad-capitulo-1#009] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#009] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 ### PROSPERIDAD
 Promover, prevenir y atender situaciones de riesgo físico y mental en el colaborador, velando por su tranquilidad y seguridad.
 Se realizaron 4 actividades durante el año.
 Participaron 380 colaboradores y familiares.
 
-[informe-sostenibilidad-capitulo-1#010] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#010] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 ### Prosperidad
 Cubrir necesidades básicas y deseos de crecimiento financiero de los colaboradores, apoyando su autorrealización y la tranquilidad para sus familias.
 Se realizaron 10 actividades durante el año.
@@ -1122,7 +902,7 @@ Nuestro foco, como lo mencionamos en otras secciones, fue apoyar emocionalmente 
 Promover equilibrio entre los aspectos laborales y sociales y una cultura de solidaridad y colaboración entre nuestros colaboradores.
 Se realizaron 3 actividades durante el año.
 
-[informe-sostenibilidad-capitulo-1#011] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#011] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 Se realizaron 3 actividades durante el año.
 Participaron 273 colaboradores y familiares.
 El 2021 fue un año de consciencia social y desde Fanalca nos enfocamos en repensar cómo aportar a la comunidad; fue el año en el que se consolidó nuestro voluntariado corporativo con una participación de más de 40 colaboradores.
@@ -1131,12 +911,12 @@ Realizamos un mural (que representa cultura ciudadana, tolerancia y paz) en el p
 El objetivo del parque es brindar, a los más de 35 mil habitantes de Potrero Grande, un espacio que promueva la construcción de ciudadanía pacífica; a través de talleres, conversatorios, jornadas deportivas, gastronómicas, culturales, que fortalecen su identidad y los valores que los representan.
 En torno a nuestros valores corporativos
 
-[informe-sostenibilidad-capitulo-1#012] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#012] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 En torno a nuestros valores corporativos
 En octubre del 2021, después de un año y medio trabajando 100% desde casa, nuestros colaboradores administrativos nos solicitaron un espacio de integración, para volver a encontrarse con sus compañeros y, para el caso de los ingresos que tuvimos durante ese tiempo, para conocer la compañía y a sus equipos.
 Nos volvimos a encontrar, por vicepresidencias, en nuestras instalaciones de Fanalca, en una actividad de bienestar e integración, guiada por nuestros valores y los comportamientos que nos identifican. Conoce la opinión de nuestros vicepresidentes, haciendo clic en el video:
 
-[informe-sostenibilidad-capitulo-1#013] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#013] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 ## SEGURIDAD Y
 SALUD EN EL TRABAJO
 Inmunizar a nuestros colaboradores fue uno de los retos más importantes del 2021
@@ -1146,20 +926,20 @@ Fanalca aplicó 2.000 vacunas a colaboradores y familiares bajo la iniciativa Em
 354 participaciones en formaciones de seguridad en protocolos de bioseguridad para la prevención del Covid-19.
 Cumplimiento 100% de protocolos de bioseguridad en la auditoría realizada a los buses que transportan colaboradores.
 
-[informe-sostenibilidad-capitulo-1#014] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#014] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 ## Capítulo 01
 Comprometidos con una operación sostenible y con nuestra gente
 
-[informe-sostenibilidad-capitulo-1#015] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
+[informe-sostenibilidad-capitulo-1#015] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-1/)
 ## Capítulo 02
 rESPETUOSOS CON EL MEDIO AMBIENTE
 
-[informe-sostenibilidad-capitulo-2#000] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
+[informe-sostenibilidad-capitulo-2#000] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
 # rESPETUOSOS CON EL MEDIO AMBIENTE
 NUESTRO COMPROMISO CON EL MEDIO AMBIENTE
 Minimizar la huella ambiental de nuestras operaciones es una tarea de todos los que hacemos parte de la organización, por eso, algunos de los proyectos de mejoramiento continuo que nacen de los mismos colaboradores buscan mantener niveles estables en el uso del agua, ser más eficientes con la energía eléctrica y el manejo de residuos sólidos.
 
-[informe-sostenibilidad-capitulo-2#001] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
+[informe-sostenibilidad-capitulo-2#001] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
 ## Sobre nuestro consumo de agua:
 - Nuestro suministro de agua no proviene de empresas de servicios públicos ni de captación de agua superficial. Nuestro consumo es de agua subterránea, capturada de pozos.
 - Llevamos el agua utilizada con fines domésticos o industriales a una de nuestras dos Plantas de Tratamiento de Agua PTAR, las cuales siguen procesos biológicos o fisicoquímicos, según corresponda, para descontaminarla y reutilizarla en nuestra red contraincendios o verterla al Río Cauca, cumpliendo con la normatividad vigente.
@@ -1168,27 +948,27 @@ Minimizar la huella ambiental de nuestras operaciones es una tarea de todos los 
 Consumo total de agua
 (consumo industrial y de prestación de servicios)
 
-[informe-sostenibilidad-capitulo-2#002] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
+[informe-sostenibilidad-capitulo-2#002] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
 # 3
 - Por primera vez, desde que reportamos indicadores GRI, contabilizamos el porcentaje de agua que es reutilizada en el proceso de producción: aproximadamente 4% de agua es reutilizada en el proceso de fabricación de tubería, en la línea de ensamble de motocicletas Honda y en la red contra incendios.
 
-[informe-sostenibilidad-capitulo-2#003] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
+[informe-sostenibilidad-capitulo-2#003] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
 # kwh
 La productividad de la energía es de 75 mil de pesos de ingreso total por kilovatio hora consumida de energía eléctrica.
 
-[informe-sostenibilidad-capitulo-2#004] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
+[informe-sostenibilidad-capitulo-2#004] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
 # kwh
 La productividad de la energía es de 113 mil de pesos de ingreso total por kilovatio hora consumida de energía eléctrica.
 
-[informe-sostenibilidad-capitulo-2#005] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
+[informe-sostenibilidad-capitulo-2#005] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
 # kwh
 El consumo de energía más representativo fue el de la línea de ensamble de motocicletas Honda (19.11%), conformado por motopartes, ensamble de motocicletas y el área de pintura, seguido del negocio de tubería (16.50%) y de los compresores (16.42%) para el suministro de aire comprimido.
 
-[informe-sostenibilidad-capitulo-2#006] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
+[informe-sostenibilidad-capitulo-2#006] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
 # kwh
 El incremento se debe a la activación de nuestra operación en todas las plantas de producción, después de implementar todos los protocolos de bioseguridad.
 
-[informe-sostenibilidad-capitulo-2#007] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
+[informe-sostenibilidad-capitulo-2#007] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
 ## Sobre nuestro
 consumo de energía:
 - Nuestra operación utiliza energía eléctrica comprada. Hasta el momento, no contamos con proyectos enfocados en autogenerar energía eléctrica.
@@ -1198,20 +978,20 @@ consumo de energía:
 - Ahorro de 4,06 kW-h/Ton
 - Mejoras en eficiencia energética en el sistema de enfriamiento, aire comprimido y luminaria
 
-[informe-sostenibilidad-capitulo-2#008] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
+[informe-sostenibilidad-capitulo-2#008] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
 ## EMISIONES DIRECTAS DE GASES DE EFECTO INVERNADERO
 
-[informe-sostenibilidad-capitulo-2#009] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
+[informe-sostenibilidad-capitulo-2#009] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-2/)
 # 2
 Factor de Conversión usado:
 1 metro cubico de Gas natural genera 1,9806 Kg de CO<sub>2</sub>
 Pava M., Villalba D., Saavedra F., Carrasco J. y Rodríguez W., (2016). Factores de emisión considerados en la herramienta de cálculo de la huella de carbono corporativa MVC Colombia. Trabajo derivado del proyecto: Mecanismo para la mitigación voluntaria de emisiones de gases efecto invernadero para Colombia MVC.
 
-[informe-sostenibilidad-capitulo-3#000] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#000] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 Inversión de la compañía en programas sociales
 Inversión de la compañía en programas sociales y municipios en los que se desarrollaron los programas
 
-[informe-sostenibilidad-capitulo-3#001] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#001] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 # \*
 Durante el 2021, nuestra inversión social se triplicó gracias a la construcción del Centro de Integración y Desarrollo Social en la comuna 18, sobre el cuál se comparten más detalles en este capítulo.
 Municipios en los que se desarrollaron los programas
@@ -1220,7 +1000,7 @@ Durante el 2021, nuestra inversión social se triplicó gracias a la construcci�
 Los programas en los cuales se enfoca nuestra Fundación Fanalca están relacionados con:
 Durante el 2021, parte del presupuesto estuvo destinado a la construcción del proyecto CIDES y a los encuentros con la comunidad vecina del mismo (ubicado en la Comuna 18) para identificar sus características sociodemográficas y validar sus necesidades respecto a los espacios para la recreación y el deporte.
 
-[informe-sostenibilidad-capitulo-3#002] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#002] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 ## Nuevo proyecto de la Fundación Fanalca en la comuna 18
 La Alcaldía de Santiago de Cali, la Fundación Fanalca y la Fundación Club Campestre de Cali, se han unido para desarrollar un proyecto urbanístico y social en la comuna 18. Se trata de un CIDES (Centro de Integración y Desarrollo Social) construido al lado del CDI Altos de Santa Elena, el cual beneficiará a toda la comunidad.
 - Femenino
@@ -1241,7 +1021,7 @@ La Alcaldía de Santiago de Cali, la Fundación Fanalca y la Fundación Club Cam
 Arte y cultura
 Generación de ingresos
 
-[informe-sostenibilidad-capitulo-3#003] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#003] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 ## PARTICIPANTES
 - 2.204
 - 824
@@ -1249,7 +1029,7 @@ Generación de ingresos
 - 179
 - 47
 
-[informe-sostenibilidad-capitulo-3#004] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#004] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 ## PARTICIPANTES
 - 2.279
 - 734
@@ -1257,7 +1037,7 @@ Generación de ingresos
 - 215
 - 47
 
-[informe-sostenibilidad-capitulo-3#005] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#005] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 ## PARTICIPANTES
 - 1.941
 - 707
@@ -1265,7 +1045,7 @@ Generación de ingresos
 - 1.550
 - 0
 
-[informe-sostenibilidad-capitulo-3#006] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#006] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 ## PARTICIPANTES
 - 2.965
 - 1.380
@@ -1273,7 +1053,7 @@ Generación de ingresos
 - 1.901
 - 117
 
-[informe-sostenibilidad-capitulo-3#007] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#007] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 ## Reflexiones
 de la Fundación
 El reto más grande
@@ -1282,24 +1062,24 @@ lOGROS ALCANZADOS EN 2021
 Durante el 2021, regresamos a los territorios intervenidos en Cali y afianzamos nuestras estrategias digitales. Este trabajo híbrido permitió recuperar espacios de encuentro y unión con las comunidades, para quienes el trabajo presencial de la Fundación es de suma importancia, y aumentar la cobertura, desde la virtualidad, para quienes la tecnología facilita el acceso y optimiza recursos.
 En el 2021, logramos aumentar en 15% los participantes en cada una de las líneas de acción, lo cual representa un mayor impacto en las comunidades vulnerables.
 
-[informe-sostenibilidad-capitulo-3#008] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#008] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 Gracias al desarrollo de la estrategia Compromiso Valle, se logró el financiamiento de programas de generación de ingresos, adicionales a los desarrollados directamente por la Fundación Fanalca, beneficiando a jóvenes entre 18 y 28 años, con oportunidades de formación en Cali y Palmira.
 
-[informe-sostenibilidad-capitulo-3#009] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#009] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 ## Nuestro aporte a
 En el marco del paro nacional en el año 2021, empresarios de todos los tamaños, fundaciones, ciudadanos y organizaciones sociales empezaron procesos de escucha activa sobre las necesidades expresadas en las protestas. Producto de ésta rápida reacción y de la articulación con ProPacífico se creó la iniciativa Compromiso Valle, como oportunidad para multiplicar esfuerzos y recursos para programas sociales dirigidos a jóvenes entre 18 y 28 años en diferentes ciudades del Valle como Cali, Yumbo, Palmira, Buga, Jamundí, Candelaria y Buenaventura.
 Esta iniciativa comprende el desarrollo de proyectos durante 24 meses en seis ejes de trabajo, a corto, mediano y largo plazo: seguridad alimentaria, empleabilidad, emprendimiento, transformación de proyectos de vida, liderazgo sólido y educación. A través de Compromiso Valle, Fanalca y la Fundación Fanalca se vincularon con los siguientes programas sociales:
 SEGURIDAD ALIMENTARIA UNO DE LOS RETOS MÁS GRANDES
 Reactivación del comedor del Centro de Desarrollo Social San Carlos Borromeo, en el que se entregaron aproximadamente 100 almuerzos diarios con mercados financiados por Compromiso Valle.
 
-[informe-sostenibilidad-capitulo-3#010] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#010] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 Desarrollamos el programa Motores de Vida al que se vincularon 24 jóvenes de la comuna 20, graduándose en dos diplomados, Mantenimiento General y Preventivo de Motocicletas y Sistema Eléctrico de la Motocicleta, posteriormente iniciaron su formación en Técnico Laboral en Mecánica de Motos.
 La Fundación Fanalca en alianza con la Fundación Carvajal y SUPERTEX
 Igualmente, la Fundación Fanalca ha participado activamente en las mesas temáticas de Emprendimiento y Liderazgo Sólido, logrando el intercambio de conocimientos entre sus participantes y la inclusión de proyectos que desarrollamos en alianza como el Premio Cívico por una Ciudad Mejor, que durante el 2021 y 2022 tiene una edición especial conjunta entre Cali y Yumbo que logrará beneficiar a 45 organizaciones de origen social.
 Creo en Compromiso Valle porque es una iniciativa que reconoce las necesidades de la comunidad; su principal herramienta para alcanzar el cambio es la escucha, una escucha activa, sin sesgos, que nos une para actuar y fortalecer el puente de confianza que nos conecta con nuestro país y con el otro.
 PRESIDENTE DE FANALCA
 
-[informe-sostenibilidad-capitulo-3#011] (noticias | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
+[informe-sostenibilidad-capitulo-3#011] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 ## Conoce la página web de nuestra fundación fanalca
 La Fundación Fanalca ha participado activamente en las mesas temáticas de Emprendimiento y Liderazgo Sólido, logrando el intercambio de conocimientos entre sus participantes y la inclusión de proyectos que desarrollamos en alianza como el Premio Cívico por una Ciudad Mejor, que durante el 2021 y 2022 tiene una edición especial conjunta entre Cali y Yumbo que logrará beneficiar a 45 organizaciones de origen social.
 

@@ -2,7 +2,7 @@
 id: negocios-holda-autos
 fuente: https://fanalca.com/negocios/holda-autos/
 titulo: Honda Automóviles
-seccion: negocios/holda-autos
+seccion: negocios/honda-autos
 fecha_captura: '2026-11-04T23:46:43.700026+00:00'
 idioma: es
 tokens_aprox: 448

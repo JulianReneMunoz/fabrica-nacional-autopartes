@@ -2,7 +2,7 @@
 id: informe-sostenibilidad-capitulo-1
 fuente: https://fanalca.com/informe-sostenibilidad/capitulo-1/
 titulo: Comprometidos con una operación sostenible y con nuestra gente
-seccion: noticias
+seccion: sostenibilidad
 fecha_captura: '2026-11-04T23:50:22.772255+00:00'
 idioma: es
 tokens_aprox: 2331
