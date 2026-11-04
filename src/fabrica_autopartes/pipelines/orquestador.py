@@ -10,6 +10,7 @@ import json
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Literal
+from urllib.parse import urlparse
 
 from fabrica_autopartes.core.config import Configuracion
 from fabrica_autopartes.core.registro import obtener_registro
@@ -20,7 +21,26 @@ from fabrica_autopartes.pipelines.gold import construir_gold
 
 log = obtener_registro(__name__)
 
-Fuente = Literal["auto", "scraping", "semilla", "ambas"]
+Fuente = Literal["auto", "scraping", "semilla", "ambas", "mixta"]
+
+
+def _host(url: str) -> str:
+    return (urlparse(url).hostname or "").removeprefix("www.")
+
+
+def complemento_lectura_web(almacen: AlmacenBronze, config: Configuracion) -> list:
+    """Documentos de lectura web (``origen: lectura_web``) de los dominios sin capturas en Bronze.
+
+    Se usa cuando un sitio oficial no pudo rastrearse (p. ej. protección antibots): la información se
+    toma de la lectura documentada de ese sitio, con su URL, y queda marcada como ``lectura_web``.
+    Los dominios que sí se rastrearon nunca se complementan.
+    """
+    capturados = {_host(r.url_final) for r in almacen.ultimos_por_url().values()}
+    return [
+        d
+        for d in silver.desde_semilla(config.dir_semilla)
+        if d.origen == "lectura_web" and _host(d.url) not in capturados
+    ]
 
 
 @dataclass
@@ -61,10 +81,19 @@ def construir_base(config: Configuracion, fuente: Fuente = "auto") -> ResultadoC
 
     paginas: list[dict] = []
     documentos = []
-    if fuente in ("scraping", "ambas"):
-        documentos.extend(silver.desde_bronze(almacen, paginas))
-    if fuente in ("semilla", "ambas"):
-        semilla = silver.desde_semilla(config.dir_semilla)
+    if fuente in ("scraping", "ambas", "mixta"):
+        documentos.extend(silver.desde_bronze(almacen, paginas, config.rutas_excluidas))
+    if fuente in ("semilla", "ambas", "mixta"):
+        semilla = (
+            complemento_lectura_web(almacen, config)
+            if fuente == "mixta"
+            else silver.desde_semilla(config.dir_semilla)
+        )
+        if fuente == "mixta" and semilla:
+            advertencias.append(
+                "Dominios sin capturas en Bronze complementados con lectura web documentada: "
+                + ", ".join(sorted({_host(d.url) for d in semilla}))
+            )
         documentos.extend(semilla)
         paginas.extend(
             {
@@ -99,7 +128,7 @@ def construir_base(config: Configuracion, fuente: Fuente = "auto") -> ResultadoC
     metricas = {
         "generado_en": ahora_utc().isoformat(),
         "fuente": fuente,
-        "bronze": _metricas_bronze(almacen) if fuente in ("scraping", "ambas") else None,
+        "bronze": _metricas_bronze(almacen) if fuente in ("scraping", "ambas", "mixta") else None,
         "paginas": paginas,
         "silver": {
             "documentos": len(unicos),
@@ -120,7 +149,7 @@ def construir_base(config: Configuracion, fuente: Fuente = "auto") -> ResultadoC
         },
     }
     (config.dir_gold / "metricas_etapas.json").write_text(
-        json.dumps(metricas, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps(metricas, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n"
     )
     log.info("Gold: %d fragmentos, ~%d tokens", estadisticas.fragmentos, estadisticas.tokens_aprox)
     return ResultadoConstruccion(

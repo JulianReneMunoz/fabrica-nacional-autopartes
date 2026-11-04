@@ -64,6 +64,13 @@ class Configuracion(BaseSettings):
             "?s=",
             "/vacantes",
             "/wp-content/uploads",
+            # Plantillas y páginas sin contenido para el cliente (detectadas en el scraping real)
+            "elementskit_template",
+            "/firma",
+            "/sitio-en-construccion",
+            # Avisos legales extensos: diluyen la base de primer contacto (decisión documentada)
+            "/aviso-de-privacidad",
+            "/privacy-notice",
         ]
     )
 

@@ -56,6 +56,10 @@ class PoliticaRobots:
             self.cargar_desde_texto(base, "User-agent: *\nDisallow: /")
         elif estado >= 400:
             self.cargar_desde_texto(base, "")
+        elif estado != 200:
+            # 2xx distinto de 200 (p. ej. 202 de una página de verificación): no es un robots.txt.
+            log.warning("robots.txt de %s no legible (HTTP %s): posible protección antibots", host, estado)
+            self.cargar_desde_texto(base, "")
         else:
             self.cargar_desde_texto(base, texto)
         log.info("robots.txt de %s cargado (HTTP %s)", host, estado)

@@ -25,7 +25,7 @@ cd C:\fabrica-nacional-autopartes
 # 2. Publicar todo el proyecto en GitHub (cuenta JulianReneMunoz)
 .\scripts\publicar_github.ps1                   # -Privado para un repositorio privado
 # 3. Scraping real + gráficas + evidencias publicadas en GitHub
-.\scripts\ejecutar_pipeline.ps1 -MaxPaginas 60 -Publicar
+.\scripts\ejecutar_pipeline.ps1 -MaxPaginas 80 -DesdeCero -Publicar
 # 4. Demostración
 .\scripts\ejecutar_api.ps1                      # API y visor 3D → http://127.0.0.1:8000/app/
 .\scripts\ejecutar_app.ps1                      # Streamlit → http://localhost:8501
@@ -75,7 +75,7 @@ fanalca.com ─────────────┴─robots.txt/sitemaps─�
                  ┌──────────────┬───────────┬──────────┬──────────────┬─────────────────────────────┐
              Streamlit       FastAPI      CLI    Servidor MCP   SQLite / PostgreSQL     Visor 3D (React Three Fiber, /app)
 ```
-Decisiones en `docs/arquitectura/adr/` (14 ADR). Diagramas en `docs/diagramas/` y en el manual.
+Decisiones en `docs/arquitectura/adr/` (15 ADR). Diagramas en `docs/diagramas/` y en el manual.
 
 ## Tecnologías
 Python 3.12 · uv · requests · BeautifulSoup + lxml · trafilatura · Playwright (opcional) · matplotlib · LangChain 1.x
@@ -110,11 +110,16 @@ del proyecto** (`C:\fabrica-nacional-autopartes`). No se ejecuta desde la interf
 ```powershell
 cd C:\fabrica-nacional-autopartes
 uv sync
-uv run fabrica pipeline --max-paginas 60     # rastreo → Bronze → Silver/Gold → validación → gráficas
+uv run fabrica pipeline --max-paginas 80     # rastreo → Bronze → Silver/Gold → validación → gráficas
 uv run fabrica stats                         # verificar: origen "scraping" en los fragmentos
 ```
-Equivalente con script: `.\scripts\ejecutar_pipeline.ps1 -MaxPaginas 60` (sincroniza el entorno, ejecuta el
-pipeline y muestra las estadísticas).
+Equivalente con script: `.\scripts\ejecutar_pipeline.ps1 -MaxPaginas 80 -DesdeCero -Publicar` (sincroniza el
+entorno, ejecuta el pipeline desde cero, muestra las estadísticas y publica las evidencias en GitHub).
+
+> **Protección antibots (ADR-015):** autopartesfanalca.com.co responde `HTTP 202` con `SG-Captcha: challenge`
+> (SiteGround). El rastreador no elude el desafío: registra el host como protegido y la base se construye con
+> la fuente `mixta`, es decir, todo lo capturado de fanalca.com más la lectura web documentada de
+> autopartesfanalca.com.co (`origen: lectura_web`, con URL). `--sin-complemento` usa solo scraping.
 - **PowerShell** es la forma directa. **Claude Code** (consola principal del proyecto) puede ejecutar el mismo
   comando desde su terminal; solicita aprobación porque accede a la red (`.claude/settings.json`). OpenCode es la
   alternativa con la misma regla (`opencode.json`, permiso `ask`).

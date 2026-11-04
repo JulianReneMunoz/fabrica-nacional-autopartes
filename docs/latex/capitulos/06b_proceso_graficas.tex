@@ -58,6 +58,36 @@ La generación desde un rastreo se verifica en la prueba \texttt{test\_metricas\
 que recorre un sitio simulado y produce las seis gráficas.
 \end{nota}
 
+\section{Sitios con protección antibots}\label{sec:antibots}
+En la primera ejecución real (4 de noviembre de 2026, Windows~11), \url{https://autopartesfanalca.com.co/}
+respondió a todas las peticiones con \texttt{HTTP 202 Accepted} y el encabezado \texttt{SG-Captcha: challenge}
+de SiteGround Security, mientras que \texttt{fanalca.com} entregó 60 páginas.
+\begin{lstlisting}[style=txt]
+$ curl.exe -sI https://autopartesfanalca.com.co/
+HTTP/1.1 202 Accepted
+Server: nginx
+Content-Type: text/html
+Content-Length: 167
+SG-Captcha: challenge
+X-Robots-Tag: noindex
+\end{lstlisting}
+El desafío no se elude (AGENTS.md, ADR-015). El rastreador lo detecta, registra el host como protegido y no lo
+vuelve a solicitar; el pipeline construye la base con la fuente \texttt{mixta}: todo lo capturado por scraping
+más la lectura web documentada de autopartesfanalca.com.co (\texttt{origen: lectura\_web}, con URL y fecha), solo
+para los dominios sin capturas. Si la protección se retira, la siguiente ejecución rastrea el sitio y el
+complemento deja de usarse sin cambios de código.
+
+\section{Ajustes tras la primera ejecución real}
+\begin{itemize}
+  \item Exclusión de plantillas y páginas sin contenido (\texttt{?elementskit\_template=}, \texttt{/firma/},
+        \texttt{/sitio-en-construccion/}) y de los avisos de privacidad extensos, que sumaban 12 de 90 fragmentos.
+        Las exclusiones vigentes se aplican también a capturas Bronze anteriores.
+  \item Clasificación de secciones por segmento exacto de la ruta: las entradas del blog se agrupan en
+        \texttt{noticias} y las rutas \texttt{/negocio/} se unen a \texttt{negocios}.
+  \item Opción \texttt{--desde-cero} para que el resumen y las gráficas correspondan a una ejecución completa.
+  \item Escritura de archivos con fin de línea LF en Windows.
+\end{itemize}
+
 \section{Métricas registradas}
 El orquestador escribe \ruta{data/gold/metricas_etapas.json} con: capturas, bytes y estados HTTP de Bronze; el
 resumen del rastreo (URL descubiertas en sitemaps, visitadas, capturadas, descartadas y duración); por página,

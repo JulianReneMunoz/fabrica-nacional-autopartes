@@ -23,10 +23,41 @@ class RespuestaHTTP:
     estado: int
     tipo_contenido: str
     contenido: bytes
+    encabezados: dict[str, str] = field(default_factory=dict)
 
     @property
     def texto(self) -> str:
         return self.contenido.decode("utf-8", errors="replace")
+
+    @property
+    def proteccion_antibots(self) -> str | None:
+        """Nombre de la protección antibots si la respuesta es un desafío (CAPTCHA/JS), o ``None``.
+
+        El rastreador NO intenta superar estos desafíos: registra el host como protegido y lo omite.
+        """
+        return detectar_proteccion(self.estado, self.encabezados, self.contenido)
+
+
+# Encabezados que publican los proveedores de protección cuando responden con un desafío.
+_ENCABEZADOS_DESAFIO = {
+    "sg-captcha": "SiteGround Security (SG-Captcha)",
+    "cf-mitigated": "Cloudflare",
+    "x-sucuri-block": "Sucuri",
+    "x-amzn-waf-action": "AWS WAF",
+}
+_MARCAS_CUERPO = (b"sgcaptcha", b"challenge-platform", b"captcha", b"cf-chl-")
+
+
+def detectar_proteccion(estado: int, encabezados: dict[str, str], contenido: bytes) -> str | None:
+    claves = {k.lower(): v for k, v in encabezados.items()}
+    for encabezado, proveedor in _ENCABEZADOS_DESAFIO.items():
+        if encabezado in claves:
+            return f"{proveedor}: {claves[encabezado]}".strip()
+    if estado in (202, 403, 429, 503) and len(contenido) < 20_000:
+        cuerpo = contenido[:20_000].lower()
+        if any(m in cuerpo for m in _MARCAS_CUERPO):
+            return f"desafío antibots (HTTP {estado})"
+    return None
 
 
 @dataclass
@@ -82,6 +113,7 @@ class ClienteHTTP:
             estado=r.status_code,
             tipo_contenido=r.headers.get("Content-Type", ""),
             contenido=r.content,
+            encabezados=dict(r.headers),
         )
 
     def obtener_texto(self, url: str) -> tuple[int, str]:

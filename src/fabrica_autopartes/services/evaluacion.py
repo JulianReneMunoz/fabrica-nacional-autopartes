@@ -142,8 +142,10 @@ def evaluar(
         sello = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         nombre = f"{sello}_{proveedor}_{modelo}_{version}_{modo}".replace(":", "-").replace(".", "-")
         ruta = DIR_RESULTADOS / nombre
-        Path(f"{ruta}.json").write_text(json.dumps(informe, ensure_ascii=False, indent=2), encoding="utf-8")
-        Path(f"{ruta}.md").write_text(informe_markdown(informe), encoding="utf-8")
+        Path(f"{ruta}.json").write_text(
+            json.dumps(informe, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n"
+        )
+        Path(f"{ruta}.md").write_text(informe_markdown(informe), encoding="utf-8", newline="\n")
         informe["archivo"] = f"{ruta}.md"
     return informe
 

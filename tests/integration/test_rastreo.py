@@ -10,6 +10,7 @@ import re
 
 import responses
 
+from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.pipelines.bronze import AlmacenBronze
 from fabrica_autopartes.pipelines.orquestador import construir_base
 from fabrica_autopartes.scraping.rastreador import Rastreador
@@ -105,3 +106,61 @@ def test_pipeline_bronze_silver_gold_desde_rastreo(config) -> None:  # type: ign
 def test_construccion_auto_usa_semilla_si_bronze_vacio(config) -> None:  # type: ignore[no-untyped-def]
     res = construir_base(config, "auto")
     assert res.fuente_usada == "semilla" and res.advertencias
+
+
+PROTEGIDO = "https://protegido-fna.test"
+
+
+@responses.activate
+def test_host_con_proteccion_antibots_se_omite_sin_eludirla(config) -> None:  # type: ignore[no-untyped-def]
+    """Un desafío SG-Captcha (HTTP 202) marca el host como protegido: no se insiste ni se elude."""
+    _registrar_sitio()
+    desafio = {"SG-Captcha": "challenge"}
+    responses.add(responses.GET, f"{PROTEGIDO}/robots.txt", status=202, body="<html></html>", headers=desafio)
+    for ruta in ("/", "/productos/", "/contacto/"):
+        responses.add(responses.GET, f"{PROTEGIDO}{ruta}", status=202, body="<html></html>", headers=desafio)
+    config.dominios_permitidos = ["ejemplo-fna.test", "protegido-fna.test"]
+    config.urls_semilla = [
+        f"{PROTEGIDO}/",
+        f"{PROTEGIDO}/productos/",
+        f"{PROTEGIDO}/contacto/",
+        f"{DOMINIO_PRUEBA}/",
+    ]
+    almacen = AlmacenBronze(config.dir_bronze)
+    res = Rastreador(config, almacen).rastrear()
+    assert "protegido-fna.test" in res.hosts_protegidos
+    assert "SiteGround" in res.hosts_protegidos["protegido-fna.test"]
+    # solo se solicitó robots.txt del host protegido; las páginas no se piden
+    pedidas = [c.request.url for c in responses.calls if c.request.url.startswith(PROTEGIDO)]
+    assert pedidas == [f"{PROTEGIDO}/robots.txt"]
+    assert len(res.omitidas_proteccion) == 3
+    assert "Protección antibots" in almacen.errores.read_text(encoding="utf-8")
+    # el otro dominio se rastrea normalmente
+    assert f"{DOMINIO_PRUEBA}/contacto/" in res.capturadas
+    assert almacen.leer_resumen()["hosts_protegidos"]["protegido-fna.test"].startswith("SiteGround")
+
+
+@responses.activate
+def test_exclusiones_nuevas_se_aplican_a_bronze_existente(config) -> None:  # type: ignore[no-untyped-def]
+    """Ajustar ``rutas_excluidas`` limpia Silver sin borrar Bronze ni volver a rastrear."""
+    _registrar_sitio()
+    Rastreador(config, AlmacenBronze(config.dir_bronze)).rastrear()
+    assert construir_base(config, "scraping").documentos_silver == 4
+    config.rutas_excluidas = [*config.rutas_excluidas, "/contacto"]
+    res = construir_base(config, "scraping")
+    assert res.documentos_silver == 3
+    assert "/contacto/" not in (config.dir_gold / "base_conocimiento.txt").read_text(encoding="utf-8")
+
+
+@responses.activate
+def test_fuente_mixta_complementa_solo_dominios_sin_capturas(config) -> None:  # type: ignore[no-untyped-def]
+    """La lectura web de autopartesfanalca.com.co complementa el scraping si ese dominio no se capturó."""
+    _registrar_sitio()
+    Rastreador(config, AlmacenBronze(config.dir_bronze)).rastrear()
+    res = construir_base(config, "mixta")
+    origenes = res.metricas["gold"]["origenes"]
+    assert origenes.get("scraping", 0) > 0 and origenes.get("lectura_web", 0) > 0
+    assert "semilla" not in origenes  # la semilla genérica nunca se mezcla
+    assert any("autopartesfanalca.com.co" in a for a in res.advertencias)
+    urls = {f.url for f in BaseConocimiento(config.dir_gold).fragmentos}
+    assert any(u.startswith("https://autopartesfanalca.com.co") for u in urls)

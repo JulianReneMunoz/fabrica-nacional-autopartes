@@ -107,8 +107,10 @@ def generar_graficas(ruta_metricas: Path, destino: Path) -> list[Path]:
     metricas = json.loads(ruta_metricas.read_text(encoding="utf-8"))
     destino.mkdir(parents=True, exist_ok=True)
     fuente = metricas["fuente"]
-    NOTA[0] = f"Fuente de datos: {fuente} · generado {metricas['generado_en'][:16].replace('T', ' ')} UTC" + (
-        "" if fuente in ("scraping", "ambas") else " · regenerar tras 'uv run fabrica pipeline'"
+    etiqueta_fuente = {"mixta": "scraping + lectura web de dominios no rastreables"}.get(fuente, fuente)
+    NOTA[0] = (
+        f"Fuente de datos: {etiqueta_fuente} · generado {metricas['generado_en'][:16].replace('T', ' ')} UTC"
+        + ("" if fuente in ("scraping", "ambas", "mixta") else " · regenerar tras 'uv run fabrica pipeline'")
     )
     paginas = [p for p in metricas["paginas"] if not p.get("descartada")]
     rutas: list[Path] = []
@@ -125,6 +127,7 @@ def generar_graficas(ruta_metricas: Path, destino: Path) -> list[Path]:
             "Omitidas por robots.txt",
             "Errores HTTP / red",
             "Duplicadas por hash",
+            "Omitidas por protección antibots",
         ]
         valores = [
             rastreo["descubiertas_sitemap"],
@@ -133,11 +136,14 @@ def generar_graficas(ruta_metricas: Path, destino: Path) -> list[Path]:
             rastreo["omitidas_robots"],
             rastreo["errores"],
             rastreo["duplicadas"],
+            rastreo.get("omitidas_proteccion", 0),
         ]
+        protegidos = rastreo.get("hosts_protegidos") or {}
         _barras_h(
             ruta,
             ETAPAS[0][1],
-            f"Resultado del rastreo en {rastreo['duracion_s']} s",
+            f"Resultado del rastreo en {rastreo['duracion_s']} s"
+            + (f" · protegido (no se elude): {', '.join(protegidos)}" if protegidos else ""),
             etiquetas,
             valores,
             "URL",

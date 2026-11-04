@@ -168,7 +168,7 @@ def generar(salida: Path, parametros: ParametrosFreno | None = None) -> dict:
         ],
     }
     (salida / f"{ens.id}.manifiesto.json").write_text(
-        json.dumps(manifiesto, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps(manifiesto, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n"
     )
     log.info("GLB generado: %s (%d bytes, %d piezas)", ruta_glb, len(datos), len(mallas))
     return manifiesto

@@ -59,6 +59,29 @@ def test_inferir_seccion() -> None:
     assert silver.inferir_seccion("https://fanalca.com/en/who-we-are/") == "quienes-somos"
 
 
+def test_inferir_seccion_agrupa_noticias_y_negocio_singular() -> None:
+    """Hallazgos del scraping real: entradas del blog y rutas /negocio/ del sitio corporativo."""
+    noticia = (
+        "https://fanalca.com/como-parte-de-nuestro-proposito-superior-la-seguridad-continua-siendo-"
+        "la-estrategia-prioritaria-para-nuestra-unidad-de-negocio-de-honda-motocicletas/"
+    )
+    assert silver.inferir_seccion(noticia) == "noticias"
+    assert silver.inferir_seccion("https://fanalca.com/primer-bus-a-hidrogeno-para-colombia/") == "noticias"
+    assert silver.inferir_seccion("https://fanalca.com/negocio/honda-autos/") == "negocios/honda-autos"
+    assert (
+        silver.inferir_seccion("https://fanalca.com/en/who-we-are/why-work-at-fanalca/") == "talento-humano"
+    )
+    assert silver.inferir_seccion("https://fanalca.com/aviso-de-privacidad/") == "legal"
+    assert silver.inferir_seccion("https://autopartesfanalca.com.co/productos/") == "autopartes/productos"
+
+
+def test_excluida_considera_consulta() -> None:
+    reglas = ["elementskit_template", "/firma"]
+    assert silver.excluida("https://fanalca.com/?elementskit_template=header", reglas)
+    assert silver.excluida("https://fanalca.com/firma/", reglas)
+    assert not silver.excluida("https://fanalca.com/nosotros/", reglas)
+
+
 def test_limpiar_texto_descarta_restos_cortos() -> None:
     texto = "# Título\n\nAceptar\n\nEste párrafo tiene suficientes palabras para quedarse.\n\n- Ítem"
     limpio = silver.limpiar_texto(texto)

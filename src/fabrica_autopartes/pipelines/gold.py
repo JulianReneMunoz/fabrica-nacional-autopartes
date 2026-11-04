@@ -61,13 +61,15 @@ def construir_gold(
 
     fragmentos: list[Fragmento] = []
     for doc in documentos:
-        (dir_docs / f"{doc.id}.md").write_text(documento_a_markdown(doc), encoding="utf-8")
+        (dir_docs / f"{doc.id}.md").write_text(documento_a_markdown(doc), encoding="utf-8", newline="\n")
         fragmentos.extend(fragmentar_documento(doc, tamano, solapamiento))
 
-    with (directorio / "fragmentos.jsonl").open("w", encoding="utf-8") as fh:
+    with (directorio / "fragmentos.jsonl").open("w", encoding="utf-8", newline="\n") as fh:
         for f in fragmentos:
             fh.write(f.model_dump_json() + "\n")
-    (directorio / "base_conocimiento.txt").write_text(consolidar(fragmentos, empresa), encoding="utf-8")
+    (directorio / "base_conocimiento.txt").write_text(
+        consolidar(fragmentos, empresa), encoding="utf-8", newline="\n"
+    )
 
     estadisticas = EstadisticasBase(
         documentos=len(documentos),
@@ -81,5 +83,6 @@ def construir_gold(
     (directorio / "estadisticas.json").write_text(
         json.dumps(estadisticas.model_dump(mode="json"), ensure_ascii=False, indent=2),
         encoding="utf-8",
+        newline="\n",
     )
     return estadisticas

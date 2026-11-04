@@ -27,16 +27,35 @@ from fabrica_autopartes.scraping.extraccion import extraer_contenido
 
 log = obtener_registro(__name__)
 
-_MAPA_SECCIONES = [
-    (("quienes-somos", "who-we-are", "nosotros", "historia"), "quienes-somos"),
-    (("contacto", "contact"), "contacto"),
-    (("sostenibilidad", "sustainability", "fundacion"), "sostenibilidad"),
-    (("noticias", "news", "blog"), "noticias"),
-    (("trabaja", "work-with-us", "empleo", "why-work"), "talento-humano"),
-    (("productos", "products"), "productos"),
-    (("clientes", "clients"), "clientes"),
-    (("negocios", "business"), "negocios"),
-    (("privacidad", "privacy", "datos-personales", "politica"), "legal"),
+# Coincidencia EXACTA por segmento de ruta (no por subcadena): evita que el título de una noticia
+# que contiene "negocio" o "trabajar" se clasifique como página de negocios o de empleo.
+_MAPA_SECCIONES: list[tuple[frozenset[str], str]] = [
+    (
+        frozenset({"quienes-somos", "who-we-are", "nosotros", "historia", "about", "about-us"}),
+        "quienes-somos",
+    ),
+    (frozenset({"contacto", "contact", "contactenos"}), "contacto"),
+    (frozenset({"sostenibilidad", "sustainability", "fundacion"}), "sostenibilidad"),
+    (frozenset({"noticias", "news", "blog"}), "noticias"),
+    (
+        frozenset(
+            {
+                "trabaja-con-nosotros",
+                "work-with-us",
+                "empleo",
+                "por-que-trabajar-en-fanalca",
+                "why-work-at-fanalca",
+            }
+        ),
+        "talento-humano",
+    ),
+    (frozenset({"productos", "products"}), "productos"),
+    (frozenset({"clientes", "clients"}), "clientes"),
+    (frozenset({"negocios", "negocio", "business"}), "negocios"),
+    (
+        frozenset({"aviso-de-privacidad", "privacy-notice", "politica-de-privacidad", "datos-personales"}),
+        "legal",
+    ),
 ]
 
 # Prefijo por sitio: permite combinar varios dominios oficiales sin colisiones de identificador.
@@ -52,15 +71,28 @@ def prefijo_sitio(url: str) -> str:
 
 
 def _seccion_por_ruta(ruta: str) -> str:
-    if not ruta or ruta in ("en", "es"):
+    """Sección a partir de la ruta: se revisa del segmento más específico al más general.
+
+    Las páginas de un solo segmento que no corresponden a una sección conocida son entradas del
+    blog del sitio corporativo (p. ej. ``/primer-bus-a-hidrogeno-para-colombia/``) y se agrupan en
+    ``noticias``.
+    """
+    partes = [p for p in ruta.split("/") if p and p not in ("en", "es")]
+    if not partes:
         return "inicio"
-    for claves, seccion in _MAPA_SECCIONES:
-        if any(c in ruta for c in claves):
-            partes = [p for p in ruta.split("/") if p not in ("en", "es")]
-            if seccion == "negocios" and len(partes) > 1:
-                return f"negocios/{partes[-1]}"
-            return seccion
-    return ruta.split("/")[-1] or "inicio"
+    for indice in range(len(partes) - 1, -1, -1):
+        for claves, seccion in _MAPA_SECCIONES:
+            if partes[indice] in claves:
+                if seccion == "negocios" and indice < len(partes) - 1:
+                    return f"negocios/{partes[-1]}"
+                return seccion
+    return "noticias"
+
+
+def excluida(url: str, rutas_excluidas: list[str]) -> bool:
+    p = urlparse(url)
+    completa = p.path + ("?" + p.query if p.query else "")
+    return any(excl in completa for excl in rutas_excluidas)
 
 
 def inferir_seccion(url: str) -> str:
@@ -119,13 +151,21 @@ def deduplicar(documentos: Iterable[DocumentoLimpio]) -> tuple[list[DocumentoLim
     return unicos, descartados
 
 
-def desde_bronze(almacen: AlmacenBronze, metricas: list[dict] | None = None) -> list[DocumentoLimpio]:
+def desde_bronze(
+    almacen: AlmacenBronze,
+    metricas: list[dict] | None = None,
+    rutas_excluidas: list[str] | None = None,
+) -> list[DocumentoLimpio]:
     """Transforma las capturas Bronze en documentos Silver.
 
     Si se entrega la lista ``metricas``, se agrega una fila por página con el tamaño de
     cada etapa (bytes HTML, caracteres extraídos, caracteres limpios) para las gráficas.
+    ``rutas_excluidas`` aplica las exclusiones vigentes también a capturas antiguas de Bronze,
+    de modo que no es necesario borrar Bronze al ajustar la configuración.
     """
-    registros = list(almacen.ultimos_por_url().values())
+    registros = [
+        r for r in almacen.ultimos_por_url().values() if not excluida(r.url_final, rutas_excluidas or [])
+    ]
     extraidas = []
     for r in registros:
         pagina = extraer_contenido(almacen.leer_html(r), r.url_final)
@@ -202,7 +242,7 @@ def desde_semilla(directorio: Path) -> list[DocumentoLimpio]:
 def escribir_silver(documentos: list[DocumentoLimpio], directorio: Path) -> Path:
     directorio.mkdir(parents=True, exist_ok=True)
     ruta = directorio / "documentos.jsonl"
-    with ruta.open("w", encoding="utf-8") as f:
+    with ruta.open("w", encoding="utf-8", newline="\n") as f:
         for d in documentos:
             f.write(d.model_dump_json() + "\n")
     return ruta

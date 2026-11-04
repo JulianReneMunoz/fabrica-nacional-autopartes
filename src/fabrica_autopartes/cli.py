@@ -53,7 +53,7 @@ def construir_parser() -> argparse.ArgumentParser:
     s.add_argument("--max-paginas", type=int)
 
     b = sub.add_parser("build", help="Construir Silver y Gold")
-    b.add_argument("--fuente", choices=["auto", "scraping", "semilla", "ambas"], default="auto")
+    b.add_argument("--fuente", choices=["auto", "scraping", "semilla", "ambas", "mixta"], default="auto")
 
     sub.add_parser("validate", help="Validar calidad del corpus Gold")
 
@@ -63,6 +63,16 @@ def construir_parser() -> argparse.ArgumentParser:
     pl = sub.add_parser("pipeline", help="Proceso completo: scrape → build → validate → graficas")
     pl.add_argument("--max-paginas", type=int)
     pl.add_argument("--sin-sitemap", action="store_true")
+    pl.add_argument(
+        "--desde-cero",
+        action="store_true",
+        help="Eliminar data/bronze antes de rastrear (resumen y gráficas de una sola ejecución completa)",
+    )
+    pl.add_argument(
+        "--sin-complemento",
+        action="store_true",
+        help="No complementar con lectura web los dominios que no pudieron rastrearse",
+    )
     sub.add_parser("stats", help="Estadísticas de la base")
 
     a = sub.add_parser("ask", help="Pregunta al sistema Q&A")
@@ -102,7 +112,9 @@ def main(argv: list[str] | None = None) -> int:
 
         ruta = Path(args.salida)
         ruta.parent.mkdir(parents=True, exist_ok=True)
-        ruta.write_text(json.dumps(crear_app().openapi(), ensure_ascii=False, indent=2), encoding="utf-8")
+        ruta.write_text(
+            json.dumps(crear_app().openapi(), ensure_ascii=False, indent=2), encoding="utf-8", newline="\n"
+        )
         print(f"OpenAPI exportado en {ruta}")
         return 0
 
@@ -171,17 +183,32 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.max_paginas:
             servicio.config.max_paginas = args.max_paginas
+        if args.desde_cero and servicio.config.dir_bronze.exists():
+            import shutil
+
+            shutil.rmtree(servicio.config.dir_bronze)
+            print(f"      {servicio.config.dir_bronze} eliminado: rastreo completo desde cero")
         print("[1/4] Rastreo responsable de los sitios oficiales (Bronze)")
         rastreo = servicio.rastrear(None, usar_sitemap=not args.sin_sitemap)
         print(
             f"      capturadas={len(rastreo.capturadas)} omitidas_robots={len(rastreo.omitidas_robots)} "
-            f"errores={len(rastreo.errores)} duplicadas={rastreo.duplicadas}"
+            f"errores={len(rastreo.errores)} duplicadas={rastreo.duplicadas} "
+            f"omitidas_proteccion={len(rastreo.omitidas_proteccion)}"
         )
-        if not rastreo.capturadas:
+        for host, proteccion in rastreo.hosts_protegidos.items():
+            print(f"      {host}: protección antibots ({proteccion}); no se elude")
+        from fabrica_autopartes.pipelines.bronze import AlmacenBronze
+
+        if AlmacenBronze(servicio.config.dir_bronze).vacio():
             print("No se capturó ninguna página: revisar red, robots.txt y data/bronze/errores.jsonl")
             return 2
-        print("[2/4] Construcción Silver y Gold desde Bronze")
-        construccion = servicio.construir("scraping")
+        if not rastreo.capturadas:
+            print("      sin páginas nuevas: se reutilizan las capturas existentes en Bronze")
+        fuente = "scraping" if args.sin_complemento else "mixta"
+        print(f"[2/4] Construcción Silver y Gold desde Bronze (fuente: {fuente})")
+        construccion = servicio.construir(fuente)
+        for advertencia in construccion.advertencias:
+            print(f"      {advertencia}")
         print(
             f"      documentos={construccion.documentos_silver} "
             f"fragmentos={construccion.estadisticas.fragmentos} "

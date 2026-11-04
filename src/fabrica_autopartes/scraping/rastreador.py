@@ -3,6 +3,10 @@
 Flujo: robots.txt → sitemaps → URLs semilla → enlaces internos (BFS hasta
 ``profundidad_maxima``) → captura en Bronze. Se respetan ``Disallow``, ``Crawl-delay``,
 dominios permitidos, rutas excluidas y un máximo de páginas.
+
+Protección antibots: si un host responde con un desafío (CAPTCHA o verificación JavaScript,
+p. ej. ``SG-Captcha: challenge`` de SiteGround), el host se registra como protegido y no se
+vuelve a solicitar en la ejecución. El desafío no se intenta superar (AGENTS.md).
 """
 
 from __future__ import annotations
@@ -16,7 +20,7 @@ from urllib.parse import urljoin, urlparse, urlunparse
 from fabrica_autopartes.core.config import Configuracion
 from fabrica_autopartes.core.registro import obtener_registro
 from fabrica_autopartes.domain.puertos import AlmacenCapturas
-from fabrica_autopartes.scraping.cliente_http import ClienteHTTP
+from fabrica_autopartes.scraping.cliente_http import ClienteHTTP, RespuestaHTTP
 from fabrica_autopartes.scraping.extraccion import extraer_enlaces
 from fabrica_autopartes.scraping.robots import PoliticaRobots, esta_en_dominios
 from fabrica_autopartes.scraping.sitemap import analizar_sitemap
@@ -66,6 +70,8 @@ class ResultadoRastreo:
     descubiertas_sitemap: int = 0
     visitadas: int = 0
     duracion_s: float = 0.0
+    hosts_protegidos: dict[str, str] = field(default_factory=dict)
+    omitidas_proteccion: list[str] = field(default_factory=list)
 
     def a_dict(self) -> dict:
         return {
@@ -76,6 +82,9 @@ class ResultadoRastreo:
             "descubiertas_sitemap": self.descubiertas_sitemap,
             "visitadas": self.visitadas,
             "duracion_s": round(self.duracion_s, 2),
+            "hosts_protegidos": self.hosts_protegidos,
+            "omitidas_proteccion": len(self.omitidas_proteccion),
+            "urls_omitidas_proteccion": self.omitidas_proteccion,
             "urls_capturadas": self.capturadas,
             "urls_omitidas_robots": self.omitidas_robots,
             "urls_error": self.errores,
@@ -99,6 +108,7 @@ class Rastreador:
         )
         self.robots = PoliticaRobots(agente_usuario=config.agente_usuario)
         self._hosts_cargados: set[str] = set()
+        self.hosts_protegidos: dict[str, str] = {}
 
     # ------------------------------------------------------------------ filtros
     def _url_valida(self, url: str) -> bool:
@@ -116,13 +126,37 @@ class Rastreador:
         host = urlparse(url).netloc
         if host in self._hosts_cargados:
             return
-        base = f"{urlparse(url).scheme}://{host}/"
-        self.robots.cargar(base, self.cliente.obtener_texto)
         self._hosts_cargados.add(host)
+        base = f"{urlparse(url).scheme}://{host}/"
+        respuestas: list[RespuestaHTTP] = []
+
+        def obtener_texto(u: str) -> tuple[int, str]:
+            r = self.cliente.obtener(u)
+            respuestas.append(r)
+            return r.estado, r.texto
+
+        self.robots.cargar(base, obtener_texto)
+        if respuestas and (proteccion := respuestas[0].proteccion_antibots):
+            self._marcar_protegido(host, proteccion, urljoin(base, "/robots.txt"))
+
+    def _marcar_protegido(self, host: str, proteccion: str, url: str) -> None:
+        if host in self.hosts_protegidos:
+            return
+        self.hosts_protegidos[host] = proteccion
+        self.almacen.registrar_error(
+            url, f"Protección antibots ({proteccion}); el host se omite sin eludirla"
+        )
+        log.warning(
+            "%s responde con un desafío antibots (%s). No se elude: el host se omite en esta ejecución.",
+            host,
+            proteccion,
+        )
 
     # ----------------------------------------------------------------- sitemaps
     def descubrir_sitemaps(self, base: str) -> list[str]:
         self._asegurar_robots(base)
+        if urlparse(base).netloc in self.hosts_protegidos:
+            return []
         candidatos = self.robots.sitemaps(base) or [
             urljoin(base, "/wp-sitemap.xml"),
             urljoin(base, "/sitemap_index.xml"),
@@ -182,6 +216,10 @@ class Rastreador:
                 continue
             visitadas.add(url)
             self._asegurar_robots(url)
+            host = urlparse(url).netloc
+            if host in self.hosts_protegidos:
+                resultado.omitidas_proteccion.append(url)
+                continue
             if not self.robots.permitido(url):
                 resultado.omitidas_robots.append(url)
                 log.info("Omitida por robots.txt: %s", url)
@@ -194,6 +232,10 @@ class Rastreador:
                 resultado.errores.append(url)
                 self.almacen.registrar_error(url, repr(exc))
                 log.warning("Error al capturar %s: %s", url, exc)
+                continue
+            if proteccion := r.proteccion_antibots:
+                self._marcar_protegido(host, proteccion, url)
+                resultado.omitidas_proteccion.append(url)
                 continue
             if r.estado != 200 or "html" not in r.tipo_contenido.lower():
                 self.almacen.registrar_error(url, f"HTTP {r.estado} {r.tipo_contenido}")
@@ -219,6 +261,7 @@ class Rastreador:
                     n = normalizar_url(enlace)
                     if n not in visitadas and self._url_valida(n):
                         cola.append((n, profundidad + 1))
+        resultado.hosts_protegidos = dict(self.hosts_protegidos)
         resultado.visitadas = len(visitadas)
         resultado.duracion_s = time.monotonic() - inicio
         guardar = getattr(self.almacen, "guardar_resumen", None)

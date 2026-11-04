@@ -198,9 +198,9 @@ Aplicar la skill fna-arquitectura sobre src/. Ejecutar scripts/verificar_capas.p
 
 ```powershell
 uv run pytest tests/unit/test_scraping.py tests/integration/test_rastreo.py -q
-uv run fabrica pipeline --max-paginas 60
+uv run fabrica pipeline --max-paginas 80 --desde-cero
 uv run fabrica stats
-.\scripts\ejecutar_pipeline.ps1 -MaxPaginas 60 -Publicar
+.\scripts\ejecutar_pipeline.ps1 -MaxPaginas 80 -DesdeCero -Publicar
 ```
 
 4. **Explicación:** Implementa y prueba el rastreador con un sitio simulado; luego ejecuta el proceso real desde la consola del equipo con Windows 11: 'uv run fabrica pipeline' rastrea autopartesfanalca.com.co y fanalca.com (Bronze), construye Silver y Gold con '--fuente scraping', valida el corpus y genera las gráficas de cada etapa en docs/graficas. El scraping no se ejecuta dentro de un agente sin aprobación: Claude Code solicita permiso porque el comando accede a la red.
@@ -213,7 +213,7 @@ Implementar en src/fabrica_autopartes/scraping/ un rastreador BFS que: lea robot
 6. **Archivos:** src/fabrica_autopartes/scraping/*.py, src/fabrica_autopartes/pipelines/bronze.py, tests/integration/test_rastreo.py
 7. **Pruebas:** Pruebas de scraping en verde; data/bronze/manifiesto.jsonl con capturas reales; data/gold/metricas_etapas.json con fuente 'scraping'; seis PNG en docs/graficas sin la marca 'semilla'
 8. **Resultado esperado:** Capturas de los sitios oficiales en Bronze, base Gold reconstruida y gráficas por etapa.
-9. **Errores frecuentes:** HTTP 403 o 429 → Aumentar FNA_PAUSA_ENTRE_PETICIONES_S; nunca rotar User-Agent ni eludir bloqueos.; Texto vacío por contenido JavaScript → uv sync --extra dinamico y usar scraping/dinamico.py.
+9. **Errores frecuentes:** HTTP 403 o 429 → Aumentar FNA_PAUSA_ENTRE_PETICIONES_S; nunca rotar User-Agent ni eludir bloqueos.; Texto vacío por contenido JavaScript → uv sync --extra dinamico y usar scraping/dinamico.py.; HTTP 202 con SG-Captcha: challenge (autopartesfanalca.com.co) → Protección antibots de SiteGround: no se elude (ADR-015). El host queda registrado como protegido y la base usa la fuente mixta con la lectura web documentada.
 10. **Condición para continuar:** Al menos 10 páginas capturadas sin rutas prohibidas.
 
 ## F10 · Construcción de pipelines

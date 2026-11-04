@@ -184,9 +184,9 @@ fases:
     terminal: PowerShell en C:\fabrica-nacional-autopartes (o la terminal integrada de Claude Code)
     comandos:
       - "uv run pytest tests/unit/test_scraping.py tests/integration/test_rastreo.py -q"
-      - "uv run fabrica pipeline --max-paginas 60"
+      - "uv run fabrica pipeline --max-paginas 80 --desde-cero"
       - "uv run fabrica stats"
-      - ".\\scripts\\ejecutar_pipeline.ps1 -MaxPaginas 60 -Publicar"
+      - ".\\scripts\\ejecutar_pipeline.ps1 -MaxPaginas 80 -DesdeCero -Publicar"
     explicacion: >-
       Implementa y prueba el rastreador con un sitio simulado; luego ejecuta el proceso real desde la
       consola del equipo con Windows 11: 'uv run fabrica pipeline' rastrea autopartesfanalca.com.co y
@@ -207,6 +207,7 @@ fases:
     errores:
       - {error: "HTTP 403 o 429", correccion: "Aumentar FNA_PAUSA_ENTRE_PETICIONES_S; nunca rotar User-Agent ni eludir bloqueos."}
       - {error: "Texto vacío por contenido JavaScript", correccion: "uv sync --extra dinamico y usar scraping/dinamico.py."}
+      - {error: "HTTP 202 con SG-Captcha: challenge (autopartesfanalca.com.co)", correccion: "Protección antibots de SiteGround: no se elude (ADR-015). El host queda registrado como protegido y la base usa la fuente mixta con la lectura web documentada."}
     condicion: "Al menos 10 páginas capturadas sin rutas prohibidas."
 
   - id: F10

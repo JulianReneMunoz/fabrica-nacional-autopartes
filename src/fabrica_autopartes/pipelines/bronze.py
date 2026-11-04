@@ -50,12 +50,12 @@ class AlmacenBronze:
             bytes=len(contenido),
             agente_usuario=agente_usuario,
         )
-        with self.manifiesto.open("a", encoding="utf-8") as f:
+        with self.manifiesto.open("a", encoding="utf-8", newline="\n") as f:
             f.write(registro.model_dump_json() + "\n")
         return registro
 
     def registrar_error(self, url: str, motivo: str) -> None:
-        with self.errores.open("a", encoding="utf-8") as f:
+        with self.errores.open("a", encoding="utf-8", newline="\n") as f:
             f.write(
                 json.dumps(
                     {"url": url, "motivo": motivo, "fecha": ahora_utc().isoformat()},
@@ -90,7 +90,7 @@ class AlmacenBronze:
         """Resumen de la última ejecución del rastreador (insumo de las gráficas)."""
         datos = {"fecha": ahora_utc().isoformat(), **resumen}
         (self.directorio / "resumen_rastreo.json").write_text(
-            json.dumps(datos, ensure_ascii=False, indent=2), encoding="utf-8"
+            json.dumps(datos, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n"
         )
 
     def leer_resumen(self) -> dict | None:
