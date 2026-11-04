@@ -3,7 +3,7 @@ id: en
 fuente: https://fanalca.com/en/
 titulo: An unstoppable path assembled in Colombia
 seccion: inicio
-fecha_captura: '2026-11-04T23:24:07.480091+00:00'
+fecha_captura: '2026-11-04T23:46:59.653204+00:00'
 idioma: en
 tokens_aprox: 335
 origen: scraping

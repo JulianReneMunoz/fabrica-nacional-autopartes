@@ -3,7 +3,7 @@ id: en-business
 fuente: https://fanalca.com/en/business/
 titulo: Business - Fanalca
 seccion: negocios
-fecha_captura: '2026-11-04T23:22:32.494551+00:00'
+fecha_captura: '2026-11-04T23:45:47.670145+00:00'
 idioma: en
 tokens_aprox: 45
 origen: scraping

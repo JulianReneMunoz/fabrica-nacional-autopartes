@@ -3,7 +3,7 @@ id: negocios-honda-motocicletas
 fuente: https://fanalca.com/negocios/honda-motocicletas/
 titulo: Honda motocicletas
 seccion: negocios/honda-motocicletas
-fecha_captura: '2026-11-04T23:22:28.441532+00:00'
+fecha_captura: '2026-11-04T23:45:43.579080+00:00'
 idioma: es
 tokens_aprox: 201
 origen: scraping

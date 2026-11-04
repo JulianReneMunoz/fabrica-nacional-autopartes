@@ -3,7 +3,7 @@ id: en-business-fanalvias
 fuente: https://fanalca.com/en/business/fanalvias/
 titulo: Fanalvías
 seccion: negocios/fanalvias
-fecha_captura: '2026-11-04T23:23:45.848437+00:00'
+fecha_captura: '2026-11-04T23:46:45.628727+00:00'
 idioma: en
 tokens_aprox: 184
 origen: scraping

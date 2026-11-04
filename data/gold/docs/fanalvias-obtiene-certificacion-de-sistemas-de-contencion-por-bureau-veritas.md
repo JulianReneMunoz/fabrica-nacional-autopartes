@@ -3,8 +3,8 @@ id: fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas
 fuente: https://fanalca.com/fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas/
 titulo: Fanalvías obtiene certificación de Sistemas de Contención, otorgada por Bureau
   Veritas
-seccion: fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas
-fecha_captura: '2026-11-04T23:23:04.973181+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:11.550993+00:00'
 idioma: es
 tokens_aprox: 141
 origen: scraping

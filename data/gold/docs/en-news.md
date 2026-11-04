@@ -3,7 +3,7 @@ id: en-news
 fuente: https://fanalca.com/en/news/
 titulo: Good news
 seccion: noticias
-fecha_captura: '2026-11-04T23:23:58.707426+00:00'
+fecha_captura: '2026-11-04T23:46:55.619530+00:00'
 idioma: en
 tokens_aprox: 48
 origen: scraping

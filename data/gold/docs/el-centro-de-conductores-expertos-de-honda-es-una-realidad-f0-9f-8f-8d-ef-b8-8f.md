@@ -2,8 +2,8 @@
 id: el-centro-de-conductores-expertos-de-honda-es-una-realidad-f0-9f-8f-8d-ef-b8-8f
 fuente: https://fanalca.com/el-centro-de-conductores-expertos-de-honda-es-una-realidad-%F0%9F%8F%8D%EF%B8%8F/
 titulo: ¡El Centro de Conductores Expertos de Honda es una realidad! 🏍️​
-seccion: el-centro-de-conductores-expertos-de-honda-es-una-realidad-%f0%9f%8f%8d%ef%b8%8f
-fecha_captura: '2026-11-04T23:22:50.424825+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:01.531483+00:00'
 idioma: es
 tokens_aprox: 172
 origen: scraping

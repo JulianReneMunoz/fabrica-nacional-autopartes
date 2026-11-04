@@ -3,8 +3,8 @@ id: lanzamiento-de-green-movil-la-flota-y-el-centro-logistico-de-movilidad-elect
 fuente: https://fanalca.com/lanzamiento-de-green-movil-la-flota-y-el-centro-logistico-de-movilidad-electrica-mas-grande-de-latinoamerica/
 titulo: 'Lanzamiento de Green Móvil: La flota y el centro logístico de movilidad eléctrica
   más grande de Latinoamérica'
-seccion: lanzamiento-de-green-movil-la-flota-y-el-centro-logistico-de-movilidad-electrica-mas-grande-de-latinoamerica
-fecha_captura: '2026-11-04T23:23:07.915662+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:15.583522+00:00'
 idioma: es
 tokens_aprox: 480
 origen: scraping

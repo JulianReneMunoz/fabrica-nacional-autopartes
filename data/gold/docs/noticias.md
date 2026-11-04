@@ -3,7 +3,7 @@ id: noticias
 fuente: https://fanalca.com/noticias/
 titulo: Buenas noticias
 seccion: noticias
-fecha_captura: '2026-11-04T23:24:17.316222+00:00'
+fecha_captura: '2026-11-04T23:47:07.618908+00:00'
 idioma: es
 tokens_aprox: 261
 origen: scraping

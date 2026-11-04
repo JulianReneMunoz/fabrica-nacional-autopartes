@@ -3,8 +3,8 @@ id: nuevos-lanzamientos-motocicletas-honda-xr300l-tornado-xre300-sahara-cb1000-h
 fuente: https://fanalca.com/nuevos-lanzamientos-motocicletas-honda-xr300l-tornado-xre300-sahara-cb1000-hornet-y-nt1100/
 titulo: 'Nuevos lanzamientos Motocicletas Honda: XR300L Tornado, XRE300 SAHARA, CB1000
   HORNET y NT1100'
-seccion: nuevos-lanzamientos-motocicletas-honda-xr300l-tornado-xre300-sahara-cb1000-hornet-y-nt1100
-fecha_captura: '2026-11-04T23:23:25.874991+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:29.586837+00:00'
 idioma: es
 tokens_aprox: 278
 origen: scraping

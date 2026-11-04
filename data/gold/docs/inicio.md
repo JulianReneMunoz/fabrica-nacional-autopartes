@@ -3,7 +3,7 @@ id: inicio
 fuente: https://fanalca.com/
 titulo: Un camino imparable ensamblado en Colombia
 seccion: inicio
-fecha_captura: '2026-11-04T23:22:26.876229+00:00'
+fecha_captura: '2026-11-04T23:45:41.466448+00:00'
 idioma: es
 tokens_aprox: 376
 origen: scraping

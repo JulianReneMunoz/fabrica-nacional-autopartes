@@ -3,7 +3,7 @@ id: en-who-we-are
 fuente: https://fanalca.com/en/who-we-are/
 titulo: Committed with sustainable development
 seccion: quienes-somos
-fecha_captura: '2026-11-04T23:22:30.438612+00:00'
+fecha_captura: '2026-11-04T23:45:45.556349+00:00'
 idioma: en
 tokens_aprox: 415
 origen: scraping

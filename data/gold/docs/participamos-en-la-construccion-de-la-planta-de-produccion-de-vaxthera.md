@@ -3,8 +3,8 @@ id: participamos-en-la-construccion-de-la-planta-de-produccion-de-vaxthera
 fuente: https://fanalca.com/participamos-en-la-construccion-de-la-planta-de-produccion-de-vaxthera/
 titulo: Nuestra unidad de negocio de tubos y perfiles de acero presente en la construcción
   de la planta de producción de VaxThera
-seccion: participamos-en-la-construccion-de-la-planta-de-produccion-de-vaxthera
-fecha_captura: '2026-11-04T23:22:54.505191+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:03.581424+00:00'
 idioma: es
 tokens_aprox: 199
 origen: scraping

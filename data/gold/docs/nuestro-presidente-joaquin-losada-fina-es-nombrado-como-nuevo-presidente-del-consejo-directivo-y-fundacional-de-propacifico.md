@@ -3,8 +3,8 @@ id: nuestro-presidente-joaquin-losada-fina-es-nombrado-como-nuevo-presidente-del
 fuente: https://fanalca.com/nuestro-presidente-joaquin-losada-fina-es-nombrado-como-nuevo-presidente-del-consejo-directivo-y-fundacional-de-propacifico/
 titulo: Nuestro presidente Joaquín Losada Fina es nombrado como nuevo Presidente del
   Consejo Directivo y Fundacional de ProPacífico
-seccion: sostenibilidad
-fecha_captura: '2026-11-04T23:23:34.400044+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:35.612322+00:00'
 idioma: es
 tokens_aprox: 194
 origen: scraping

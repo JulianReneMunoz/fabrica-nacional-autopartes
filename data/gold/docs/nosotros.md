@@ -3,7 +3,7 @@ id: nosotros
 fuente: https://fanalca.com/nosotros/
 titulo: Comprometidos con el desarrollo sostenible
 seccion: quienes-somos
-fecha_captura: '2026-11-04T23:24:13.389482+00:00'
+fecha_captura: '2026-11-04T23:47:05.553229+00:00'
 idioma: es
 tokens_aprox: 438
 origen: scraping

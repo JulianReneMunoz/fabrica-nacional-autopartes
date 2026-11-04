@@ -3,8 +3,8 @@ id: 20-anos-de-nuestra-fundacion-fanalca-transformando-comunidades-en-cali
 fuente: https://fanalca.com/20-anos-de-nuestra-fundacion-fanalca-transformando-comunidades-en-cali/
 titulo: '20 años de nuestra Fundación Fanalca: multiplicando espacios donde se fortalece
   la cultura ciudadana'
-seccion: sostenibilidad
-fecha_captura: '2026-11-04T23:22:59.945069+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:07.619358+00:00'
 idioma: es
 tokens_aprox: 516
 origen: scraping

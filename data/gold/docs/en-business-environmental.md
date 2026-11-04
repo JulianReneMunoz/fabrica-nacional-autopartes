@@ -3,7 +3,7 @@ id: en-business-environmental
 fuente: https://fanalca.com/en/business/environmental/
 titulo: Environmental
 seccion: negocios/environmental
-fecha_captura: '2026-11-04T23:23:52.701436+00:00'
+fecha_captura: '2026-11-04T23:46:51.650394+00:00'
 idioma: en
 tokens_aprox: 222
 origen: scraping

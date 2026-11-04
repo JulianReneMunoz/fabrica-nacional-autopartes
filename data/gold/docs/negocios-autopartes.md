@@ -3,7 +3,7 @@ id: negocios-autopartes
 fuente: https://fanalca.com/negocios/autopartes/
 titulo: Autopartes
 seccion: negocios/autopartes
-fecha_captura: '2026-11-04T23:24:11.398763+00:00'
+fecha_captura: '2026-11-04T23:47:03.634468+00:00'
 idioma: es
 tokens_aprox: 132
 origen: scraping

@@ -2,8 +2,8 @@
 id: la-inteligencia-artificial-en-nuestro-radar-estrategico-fanalca
 fuente: https://fanalca.com/la-inteligencia-artificial-en-nuestro-radar-estrategico-fanalca/
 titulo: La inteligencia artificial en nuestro radar estratégico – Fanalca
-seccion: la-inteligencia-artificial-en-nuestro-radar-estrategico-fanalca
-fecha_captura: '2026-11-04T23:23:12.949339+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:19.469313+00:00'
 idioma: es
 tokens_aprox: 359
 origen: scraping

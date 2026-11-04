@@ -3,7 +3,7 @@ id: negocios
 fuente: https://fanalca.com/negocios/
 titulo: Negocios - Fanalca
 seccion: negocios
-fecha_captura: '2026-11-04T23:23:37.945988+00:00'
+fecha_captura: '2026-11-04T23:46:37.556984+00:00'
 idioma: es
 tokens_aprox: 43
 origen: scraping

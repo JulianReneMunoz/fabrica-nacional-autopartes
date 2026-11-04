@@ -2,8 +2,8 @@
 id: en-a-delivery-against-all-odds
 fuente: https://fanalca.com/en/a-delivery-against-all-odds/
 titulo: A delivery against all odds
-seccion: a-delivery-against-all-odds
-fecha_captura: '2026-11-04T23:22:47.151023+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:45:57.634215+00:00'
 idioma: en
 tokens_aprox: 221
 origen: scraping

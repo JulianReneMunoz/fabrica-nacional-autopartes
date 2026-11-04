@@ -3,7 +3,7 @@ id: negocios-tubos-y-perfiles-de-acero
 fuente: https://fanalca.com/negocios/tubos-y-perfiles-de-acero/
 titulo: Tubos y perfiles de acero
 seccion: negocios/tubos-y-perfiles-de-acero
-fecha_captura: '2026-11-04T23:23:39.900242+00:00'
+fecha_captura: '2026-11-04T23:46:39.530129+00:00'
 idioma: es
 tokens_aprox: 143
 origen: scraping

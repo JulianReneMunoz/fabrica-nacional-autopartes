@@ -2,8 +2,8 @@
 id: nuestra-fundacion-fanalca-recibe-exaltacion-de-honor-del-concejo-de-cali
 fuente: https://fanalca.com/nuestra-fundacion-fanalca-recibe-exaltacion-de-honor-del-concejo-de-cali/
 titulo: Nuestra Fundación Fanalca recibe Exaltación de Honor del Concejo de Cali
-seccion: sostenibilidad
-fecha_captura: '2026-11-04T23:23:19.183517+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:23.627845+00:00'
 idioma: es
 tokens_aprox: 342
 origen: scraping

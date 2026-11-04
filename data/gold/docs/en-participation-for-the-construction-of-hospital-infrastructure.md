@@ -2,8 +2,8 @@
 id: en-participation-for-the-construction-of-hospital-infrastructure
 fuente: https://fanalca.com/en/participation-for-the-construction-of-hospital-infrastructure/
 titulo: Participation for the construction of hospital infrastructure
-seccion: participation-for-the-construction-of-hospital-infrastructure
-fecha_captura: '2026-11-04T23:22:48.168615+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:45:59.533797+00:00'
 idioma: en
 tokens_aprox: 220
 origen: scraping

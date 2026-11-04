@@ -2,8 +2,8 @@
 id: estamos-entre-las-mejores-empresas-para-trabajar-en-colombia-merco-2025
 fuente: https://fanalca.com/estamos-entre-las-mejores-empresas-para-trabajar-en-colombia-merco-2025/
 titulo: ¡Estamos entre las mejores empresas para trabajar en Colombia! MERCO 2025
-seccion: talento-humano
-fecha_captura: '2026-11-04T23:23:20.217962+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:25.530744+00:00'
 idioma: es
 tokens_aprox: 301
 origen: scraping

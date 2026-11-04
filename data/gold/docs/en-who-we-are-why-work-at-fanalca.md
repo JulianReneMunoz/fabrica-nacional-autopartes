@@ -2,8 +2,8 @@
 id: en-who-we-are-why-work-at-fanalca
 fuente: https://fanalca.com/en/who-we-are/why-work-at-fanalca/
 titulo: Why work at Fanalca
-seccion: quienes-somos
-fecha_captura: '2026-11-04T23:24:00.918649+00:00'
+seccion: talento-humano
+fecha_captura: '2026-11-04T23:46:57.630948+00:00'
 idioma: en
 tokens_aprox: 362
 origen: scraping

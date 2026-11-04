@@ -3,8 +3,8 @@ id: nuevo-hito-historico-honda-500-millones-de-motocicletas-fabricadas-en-el-mun
 fuente: https://fanalca.com/nuevo-hito-historico-honda-500-millones-de-motocicletas-fabricadas-en-el-mundo/
 titulo: '¡Nuevo hito histórico Honda: 500 millones de motocicletas fabricadas en el
   mundo!'
-seccion: nuevo-hito-historico-honda-500-millones-de-motocicletas-fabricadas-en-el-mundo
-fecha_captura: '2026-11-04T23:23:24.590589+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:27.601396+00:00'
 idioma: es
 tokens_aprox: 261
 origen: scraping

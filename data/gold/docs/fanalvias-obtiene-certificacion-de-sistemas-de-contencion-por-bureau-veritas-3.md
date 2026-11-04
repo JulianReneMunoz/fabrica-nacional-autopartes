@@ -3,8 +3,8 @@ id: fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas
 fuente: https://fanalca.com/fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas-3/
 titulo: Nuestro presidente en la apertura del Congreso Empresarial Colombiano de la
   ANDI
-seccion: fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas-3
-fecha_captura: '2026-11-04T23:23:02.468505+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:09.646960+00:00'
 idioma: es
 tokens_aprox: 283
 origen: scraping

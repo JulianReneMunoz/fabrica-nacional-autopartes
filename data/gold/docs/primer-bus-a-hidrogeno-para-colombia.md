@@ -2,8 +2,8 @@
 id: primer-bus-a-hidrogeno-para-colombia
 fuente: https://fanalca.com/primer-bus-a-hidrogeno-para-colombia/
 titulo: Primer bus a hidrógeno para Colombia​
-seccion: primer-bus-a-hidrogeno-para-colombia
-fecha_captura: '2026-11-04T23:23:11.836147+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:17.522557+00:00'
 idioma: es
 tokens_aprox: 257
 origen: scraping

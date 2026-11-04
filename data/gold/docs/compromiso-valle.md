@@ -2,8 +2,8 @@
 id: compromiso-valle
 fuente: https://fanalca.com/compromiso-valle/
 titulo: '¡En Fanalca somos una empresa #CompromisoValle!'
-seccion: compromiso-valle
-fecha_captura: '2026-11-04T23:23:29.264628+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:31.629472+00:00'
 idioma: es
 tokens_aprox: 195
 origen: scraping

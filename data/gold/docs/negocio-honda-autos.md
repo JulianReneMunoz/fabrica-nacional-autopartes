@@ -2,8 +2,8 @@
 id: negocio-honda-autos
 fuente: https://fanalca.com/negocio/honda-autos/
 titulo: Honda Autos Archives - Fanalca
-seccion: honda-autos
-fecha_captura: '2026-11-04T23:24:44.692170+00:00'
+seccion: negocios/honda-autos
+fecha_captura: '2026-11-04T23:47:30.234123+00:00'
 idioma: es
 tokens_aprox: 228
 origen: scraping

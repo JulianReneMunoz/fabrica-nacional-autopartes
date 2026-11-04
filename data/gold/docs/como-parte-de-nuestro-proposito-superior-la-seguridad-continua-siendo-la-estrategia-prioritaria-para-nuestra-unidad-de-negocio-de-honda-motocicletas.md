@@ -3,8 +3,8 @@ id: como-parte-de-nuestro-proposito-superior-la-seguridad-continua-siendo-la-est
 fuente: https://fanalca.com/como-parte-de-nuestro-proposito-superior-la-seguridad-continua-siendo-la-estrategia-prioritaria-para-nuestra-unidad-de-negocio-de-honda-motocicletas/
 titulo: Como parte de nuestro propósito superior, la seguridad continúa siendo la
   estrategia prioritaria para nuestra unidad de negocio de Honda Motocicletas
-seccion: como-parte-de-nuestro-proposito-superior-la-seguridad-continua-siendo-la-estrategia-prioritaria-para-nuestra-unidad-de-negocio-de-honda-motocicletas
-fecha_captura: '2026-11-04T23:23:06.007949+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:13.532473+00:00'
 idioma: es
 tokens_aprox: 439
 origen: scraping

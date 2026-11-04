@@ -2,8 +2,8 @@
 id: nosotros-por-que-trabajar-en-fanalca
 fuente: https://fanalca.com/nosotros/por-que-trabajar-en-fanalca/
 titulo: Por qué trabajar en Fanalca
-seccion: quienes-somos
-fecha_captura: '2026-11-04T23:24:20.345711+00:00'
+seccion: talento-humano
+fecha_captura: '2026-11-04T23:47:11.638974+00:00'
 idioma: es
 tokens_aprox: 466
 origen: scraping

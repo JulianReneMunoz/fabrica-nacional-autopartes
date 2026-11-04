@@ -2,8 +2,8 @@
 id: participacion-para-la-construccion-de-infraestructura-hospitalaria
 fuente: https://fanalca.com/participacion-para-la-construccion-de-infraestructura-hospitalaria/
 titulo: Participación para la construcción de infraestructura hospitalaria
-seccion: participacion-para-la-construccion-de-infraestructura-hospitalaria
-fecha_captura: '2026-11-04T23:22:42.345753+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:45:55.591286+00:00'
 idioma: es
 tokens_aprox: 237
 origen: scraping

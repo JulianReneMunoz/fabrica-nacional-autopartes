@@ -3,7 +3,7 @@ id: en-sustainability
 fuente: https://fanalca.com/en/sustainability/
 titulo: Sustainability
 seccion: sostenibilidad
-fecha_captura: '2026-11-04T23:22:34.816449+00:00'
+fecha_captura: '2026-11-04T23:45:49.697306+00:00'
 idioma: en
 tokens_aprox: 186
 origen: scraping

@@ -2,8 +2,8 @@
 id: relanzamiento-centro-de-conductores-honda-cali
 fuente: https://fanalca.com/relanzamiento-centro-de-conductores-honda-cali/
 titulo: Relanzamiento Centro de Conductores Honda Cali
-seccion: relanzamiento-centro-de-conductores-honda-cali
-fecha_captura: '2026-11-04T23:23:16.587174+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:21.535134+00:00'
 idioma: es
 tokens_aprox: 231
 origen: scraping

@@ -2,8 +2,8 @@
 id: negocio-fanalca
 fuente: https://fanalca.com/negocio/fanalca/
 titulo: Fanalca Archives - Fanalca
-seccion: fanalca
-fecha_captura: '2026-11-04T23:24:35.403383+00:00'
+seccion: negocios/fanalca
+fecha_captura: '2026-11-04T23:47:21.633153+00:00'
 idioma: es
 tokens_aprox: 57
 origen: scraping

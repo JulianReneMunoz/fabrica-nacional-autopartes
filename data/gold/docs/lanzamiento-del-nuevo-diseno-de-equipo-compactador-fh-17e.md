@@ -2,8 +2,8 @@
 id: lanzamiento-del-nuevo-diseno-de-equipo-compactador-fh-17e
 fuente: https://fanalca.com/lanzamiento-del-nuevo-diseno-de-equipo-compactador-fh-17e/
 titulo: 'Lanzamos un nuevo diseño: el equipo compactador de residuos FH-17E'
-seccion: lanzamiento-del-nuevo-diseno-de-equipo-compactador-fh-17e
-fecha_captura: '2026-11-04T23:22:57.207074+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:05.699529+00:00'
 idioma: es
 tokens_aprox: 203
 origen: scraping

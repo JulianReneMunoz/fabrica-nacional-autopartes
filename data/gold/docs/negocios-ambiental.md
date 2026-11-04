@@ -3,7 +3,7 @@ id: negocios-ambiental
 fuente: https://fanalca.com/negocios/ambiental/
 titulo: Ambiental
 seccion: negocios/ambiental
-fecha_captura: '2026-11-04T23:23:41.877978+00:00'
+fecha_captura: '2026-11-04T23:46:41.653954+00:00'
 idioma: es
 tokens_aprox: 232
 origen: scraping

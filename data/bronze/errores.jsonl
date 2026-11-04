@@ -1,6 +1,18 @@
-{"url": "https://autopartesfanalca.com.co/", "motivo": "HTTP 202 text/html", "fecha": "2026-11-04T23:22:17.640197+00:00"}
-{"url": "https://autopartesfanalca.com.co/nosotros/", "motivo": "HTTP 202 text/html", "fecha": "2026-11-04T23:22:19.358840+00:00"}
-{"url": "https://autopartesfanalca.com.co/productos/", "motivo": "HTTP 202 text/html", "fecha": "2026-11-04T23:22:21.356203+00:00"}
-{"url": "https://autopartesfanalca.com.co/clientes/", "motivo": "HTTP 202 text/html", "fecha": "2026-11-04T23:22:23.353759+00:00"}
-{"url": "https://autopartesfanalca.com.co/contacto/", "motivo": "HTTP 202 text/html", "fecha": "2026-11-04T23:22:25.347770+00:00"}
-{"url": "https://fanalca.com/negocio/honda/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:24:37.619652+00:00"}
+{"url": "https://autopartesfanalca.com.co/robots.txt", "motivo": "Protección antibots (SiteGround Security (SG-Captcha): challenge); el host se omite sin eludirla", "fecha": "2026-11-04T23:45:11.084678+00:00"}
+{"url": "https://fanalca.com/negocio/honda/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:47:25.188470+00:00"}
+{"url": "https://fanalca.com/informe-sostenibilidad-2022/", "motivo": "RetryError(MaxRetryError(\"HTTPSConnectionPool(host='fanalca.com', port=443): Max retries exceeded with url: /informe-sostenibilidad-2022/ (Caused by ResponseError('too many 500 error responses'))\"))", "fecha": "2026-11-04T23:49:26.842950+00:00"}
+{"url": "https://fanalca.com/en/negocio/honda-autos/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:49:47.085066+00:00"}
+{"url": "https://fanalca.com/en/negocio/honda-motos/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:49:49.382148+00:00"}
+{"url": "https://fanalca.com/en/negocio/renting-total/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:49:51.656905+00:00"}
+{"url": "https://fanalca.com/en/negocio/supermotos/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:49:53.912216+00:00"}
+{"url": "https://fanalca.com/en/area/administrativo/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:49:58.579840+00:00"}
+{"url": "https://fanalca.com/en/area/comercial/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:50:00.828827+00:00"}
+{"url": "https://fanalca.com/en/area/operativo/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:50:03.608398+00:00"}
+{"url": "https://fanalca.com/en/ciudad/barrancabermeja/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:50:05.841874+00:00"}
+{"url": "https://fanalca.com/en/ciudad/barranquilla/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:50:07.960268+00:00"}
+{"url": "https://fanalca.com/en/ciudad/bogota/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:50:10.087115+00:00"}
+{"url": "https://fanalca.com/en/ciudad/cali/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:50:12.298354+00:00"}
+{"url": "https://fanalca.com/en/ciudad/cartagena/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:50:14.341713+00:00"}
+{"url": "https://fanalca.com/en/ciudad/jamundi/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:50:16.352035+00:00"}
+{"url": "https://fanalca.com/en/ciudad/medellin/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:50:18.430611+00:00"}
+{"url": "https://fanalca.com/en/ciudad/valledupar/", "motivo": "HTTP 404 text/html; charset=UTF-8", "fecha": "2026-11-04T23:50:20.590434+00:00"}

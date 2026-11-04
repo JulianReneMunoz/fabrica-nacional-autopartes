@@ -2,8 +2,8 @@
 id: negocio-honda-motos
 fuente: https://fanalca.com/negocio/honda-motos/
 titulo: Honda Motos Archives - Fanalca
-seccion: honda-motos
-fecha_captura: '2026-11-04T23:24:47.131317+00:00'
+seccion: negocios/honda-motos
+fecha_captura: '2026-11-04T23:47:32.243593+00:00'
 idioma: es
 tokens_aprox: 28
 origen: scraping

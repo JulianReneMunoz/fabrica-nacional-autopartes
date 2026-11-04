@@ -2,8 +2,8 @@
 id: fanalca-y-la-ansv-unidos-por-la-seguridad-vial
 fuente: https://fanalca.com/fanalca-y-la-ansv-unidos-por-la-seguridad-vial/
 titulo: Fanalca y la ANSV unidos por la seguridad vial
-seccion: fanalca-y-la-ansv-unidos-por-la-seguridad-vial
-fecha_captura: '2026-11-04T23:23:31.993100+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:46:33.897982+00:00'
 idioma: es
 tokens_aprox: 245
 origen: scraping

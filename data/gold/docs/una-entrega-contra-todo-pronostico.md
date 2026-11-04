@@ -2,8 +2,8 @@
 id: una-entrega-contra-todo-pronostico
 fuente: https://fanalca.com/una-entrega-contra-todo-pronostico/
 titulo: Una entrega contra todo pronóstico
-seccion: una-entrega-contra-todo-pronostico
-fecha_captura: '2026-11-04T23:22:41.017510+00:00'
+seccion: noticias
+fecha_captura: '2026-11-04T23:45:53.613234+00:00'
 idioma: es
 tokens_aprox: 245
 origen: scraping

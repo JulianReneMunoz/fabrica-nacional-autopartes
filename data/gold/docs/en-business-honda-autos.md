@@ -3,7 +3,7 @@ id: en-business-honda-autos
 fuente: https://fanalca.com/en/business/honda-autos/
 titulo: Honda Autos
 seccion: negocios/honda-autos
-fecha_captura: '2026-11-04T23:23:51.735198+00:00'
+fecha_captura: '2026-11-04T23:46:49.694051+00:00'
 idioma: en
 tokens_aprox: 425
 origen: scraping
