@@ -21,12 +21,14 @@ HTML = "text/html; charset=utf-8"
 
 
 def _registrar_sitio() -> None:
-    responses.add(responses.GET, f"{DOMINIO_PRUEBA}/robots.txt", body=(SITIO / "robots.txt").read_text())
+    responses.add(
+        responses.GET, f"{DOMINIO_PRUEBA}/robots.txt", body=(SITIO / "robots.txt").read_text(encoding="utf-8")
+    )
     for nombre in ("wp-sitemap.xml", "wp-sitemap-posts-page-1.xml"):
         responses.add(
             responses.GET,
             f"{DOMINIO_PRUEBA}/{nombre}",
-            body=(SITIO / nombre).read_text(),
+            body=(SITIO / nombre).read_text(encoding="utf-8"),
             content_type="application/xml",
         )
     paginas = {
@@ -96,7 +98,7 @@ def test_pipeline_bronze_silver_gold_desde_rastreo(config) -> None:  # type: ign
     Rastreador(config, AlmacenBronze(config.dir_bronze)).rastrear()
     res = construir_base(config, "scraping")
     assert res.fuente_usada == "scraping" and res.documentos_silver == 4
-    texto = (config.dir_gold / "base_conocimiento.txt").read_text()
+    texto = (config.dir_gold / "base_conocimiento.txt").read_text(encoding="utf-8")
     assert "travesaños" in texto
     assert "cookies" not in texto.lower() and "Copyright" not in texto
     assert "persona.privada@gmail.com" not in texto and "prensa@fanalca.com" in texto

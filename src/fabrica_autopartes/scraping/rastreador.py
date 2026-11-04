@@ -22,7 +22,7 @@ from fabrica_autopartes.core.registro import obtener_registro
 from fabrica_autopartes.domain.puertos import AlmacenCapturas
 from fabrica_autopartes.scraping.cliente_http import ClienteHTTP, RespuestaHTTP
 from fabrica_autopartes.scraping.extraccion import extraer_enlaces
-from fabrica_autopartes.scraping.robots import PoliticaRobots, esta_en_dominios
+from fabrica_autopartes.scraping.robots import PoliticaRobots, esta_en_dominios, url_excluida
 from fabrica_autopartes.scraping.sitemap import analizar_sitemap
 
 log = obtener_registro(__name__)
@@ -119,8 +119,7 @@ class Rastreador:
             return False
         if p.path.lower().endswith(_EXTENSIONES_NO_HTML):
             return False
-        completa = p.path + ("?" + p.query if p.query else "")
-        return not any(excl in completa for excl in self.config.rutas_excluidas)
+        return not url_excluida(url, self.config.rutas_excluidas, self.config.patrones_excluidos)
 
     def _asegurar_robots(self, url: str) -> None:
         host = urlparse(url).netloc

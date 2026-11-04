@@ -114,7 +114,9 @@ uv run fabrica pipeline --max-paginas 80     # rastreo → Bronze → Silver/Gol
 uv run fabrica stats                         # verificar: origen "scraping" en los fragmentos
 ```
 Equivalente con script: `.\scripts\ejecutar_pipeline.ps1 -MaxPaginas 80 -DesdeCero -Publicar` (sincroniza el
-entorno, ejecuta el pipeline desde cero, muestra las estadísticas y publica las evidencias en GitHub).
+entorno, ejecuta el pipeline desde cero, muestra las estadísticas y publica las evidencias en GitHub). Tras ajustar
+exclusiones o secciones, `.\scripts\ejecutar_pipeline.ps1 -SoloReconstruir -Publicar` reconstruye la base y las
+gráficas desde el Bronze existente, sin volver a rastrear.
 
 > **Protección antibots (ADR-015):** autopartesfanalca.com.co responde `HTTP 202` con `SG-Captcha: challenge`
 > (SiteGround). El rastreador no elude el desafío: registra el host como protegido y la base se construye con

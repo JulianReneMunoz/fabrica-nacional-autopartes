@@ -14,7 +14,7 @@ BASE = "https://ejemplo-fna.test/"
 
 def _robots() -> PoliticaRobots:
     p = PoliticaRobots(agente_usuario="FNA-KnowledgeBot/0.1")
-    p.cargar_desde_texto(BASE, (SITIO / "robots.txt").read_text())
+    p.cargar_desde_texto(BASE, (SITIO / "robots.txt").read_text(encoding="utf-8"))
     return p
 
 
@@ -54,9 +54,9 @@ def test_dominios_permitidos() -> None:
 
 
 def test_sitemap_indice_y_urls() -> None:
-    hijos, urls = analizar_sitemap((SITIO / "wp-sitemap.xml").read_text())
+    hijos, urls = analizar_sitemap((SITIO / "wp-sitemap.xml").read_text(encoding="utf-8"))
     assert hijos == ["https://ejemplo-fna.test/wp-sitemap-posts-page-1.xml"] and urls == []
-    hijos, urls = analizar_sitemap((SITIO / "wp-sitemap-posts-page-1.xml").read_text())
+    hijos, urls = analizar_sitemap((SITIO / "wp-sitemap-posts-page-1.xml").read_text(encoding="utf-8"))
     assert hijos == [] and "https://ejemplo-fna.test/quienes-somos/" in urls
 
 
@@ -65,7 +65,7 @@ def test_sitemap_invalido_falla_seguro() -> None:
 
 
 def test_extraccion_elimina_ruido() -> None:
-    html = (SITIO / "inicio.html").read_text()
+    html = (SITIO / "inicio.html").read_text(encoding="utf-8")
     pagina = extraer_contenido(html, BASE, usar_trafilatura=False)
     assert pagina.titulo == "Empresa Ejemplo de Autopartes"
     assert "# Empresa Ejemplo de Autopartes" in pagina.texto
@@ -76,14 +76,14 @@ def test_extraccion_elimina_ruido() -> None:
 
 
 def test_extraccion_con_trafilatura_conserva_contenido() -> None:
-    html = (SITIO / "autopartes.html").read_text()
+    html = (SITIO / "autopartes.html").read_text(encoding="utf-8")
     pagina = extraer_contenido(html, BASE + "negocios/autopartes/")
     assert "travesaños" in pagina.texto
     assert "cookies" not in pagina.texto.lower()
 
 
 def test_enlaces_absolutos_sin_mailto() -> None:
-    enlaces = extraer_enlaces((SITIO / "inicio.html").read_text(), BASE)
+    enlaces = extraer_enlaces((SITIO / "inicio.html").read_text(encoding="utf-8"), BASE)
     assert "https://ejemplo-fna.test/quienes-somos/" in enlaces
     assert not any(e.startswith("mailto:") for e in enlaces)
 

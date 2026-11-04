@@ -8,22 +8,33 @@
   a una sola ejecución completa (la ejecución anterior queda en el historial de Git).
   Con -Publicar, al terminar guarda las evidencias (data/bronze, data/silver, data/gold, docs/graficas)
   en un commit y las publica en GitHub (requiere haber ejecutado antes scripts/publicar_github.ps1).
+  Con -SoloReconstruir, no accede a la red: reconstruye Silver/Gold (fuente mixta) desde el Bronze
+  existente, valida y regenera las gráficas (útil tras ajustar exclusiones o secciones).
   Los dominios con protección antibots (p. ej. SG-Captcha) no se eluden: se complementan con la lectura
   web documentada (origen lectura_web), salvo que se indique -SinComplemento.
 .EXAMPLE
   .\scripts\ejecutar_pipeline.ps1 -MaxPaginas 80
   .\scripts\ejecutar_pipeline.ps1 -MaxPaginas 80 -DesdeCero -Publicar
+  .\scripts\ejecutar_pipeline.ps1 -SoloReconstruir -Publicar
 #>
-param([int]$MaxPaginas = 80, [switch]$SinSitemap, [switch]$DesdeCero, [switch]$SinComplemento, [switch]$Publicar)
+param([int]$MaxPaginas = 80, [switch]$SinSitemap, [switch]$DesdeCero, [switch]$SinComplemento,
+      [switch]$SoloReconstruir, [switch]$Publicar)
 $ErrorActionPreference = 'Stop'
 $raiz = Split-Path -Parent $PSScriptRoot
 Set-Location $raiz
 uv sync
-$argumentos = @('run', 'fabrica', 'pipeline', '--max-paginas', "$MaxPaginas")
-if ($SinSitemap) { $argumentos += '--sin-sitemap' }
-if ($DesdeCero) { $argumentos += '--desde-cero' }
-if ($SinComplemento) { $argumentos += '--sin-complemento' }
-& uv @argumentos
+if ($SoloReconstruir) {
+    $fuente = if ($SinComplemento) { 'scraping' } else { 'mixta' }
+    uv run fabrica build --fuente $fuente
+    if ($LASTEXITCODE -eq 0) { uv run fabrica validate }
+    if ($LASTEXITCODE -eq 0) { uv run fabrica graficas }
+} else {
+    $argumentos = @('run', 'fabrica', 'pipeline', '--max-paginas', "$MaxPaginas")
+    if ($SinSitemap) { $argumentos += '--sin-sitemap' }
+    if ($DesdeCero) { $argumentos += '--desde-cero' }
+    if ($SinComplemento) { $argumentos += '--sin-complemento' }
+    & uv @argumentos
+}
 if ($LASTEXITCODE -ne 0) {
     Write-Warning "El pipeline terminó con código $LASTEXITCODE. Revisar data/bronze/errores.jsonl y la conexión."
     exit $LASTEXITCODE
@@ -37,7 +48,8 @@ if ($Publicar) {
     git diff --cached --quiet
     if ($LASTEXITCODE -ne 0) {
         $fecha = Get-Date -Format 'yyyy-MM-dd'
-        git commit -m "datos: scraping real de autopartesfanalca.com.co y fanalca.com ($fecha)" | Out-Null
+        $mensaje = if ($SoloReconstruir) { "datos: reconstrucción de Silver/Gold y gráficas ($fecha)" } else { "datos: scraping real de autopartesfanalca.com.co y fanalca.com ($fecha)" }
+        git commit -m $mensaje | Out-Null
         git push
         if ($LASTEXITCODE -ne 0) { throw 'No fue posible publicar las evidencias.' }
         Write-Host 'Evidencias del scraping publicadas en GitHub.'

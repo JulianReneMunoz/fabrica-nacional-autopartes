@@ -7,6 +7,7 @@ si responde 404, se asume permiso (comportamiento estándar del protocolo).
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from urllib.parse import urljoin, urlparse
@@ -20,6 +21,15 @@ log = obtener_registro(__name__)
 def dominio_de(url: str) -> str:
     host = urlparse(url).hostname or ""
     return host.removeprefix("www.")
+
+
+def url_excluida(url: str, rutas_excluidas: list[str], patrones: list[str] | None = None) -> bool:
+    """Regla única de exclusión (rastreo y Silver): subcadenas de ruta+consulta y expresiones regulares."""
+    p = urlparse(url)
+    completa = p.path + ("?" + p.query if p.query else "")
+    if any(excl in completa for excl in rutas_excluidas):
+        return True
+    return any(re.search(patron, p.path) for patron in patrones or [])
 
 
 def esta_en_dominios(url: str, dominios: list[str]) -> bool:

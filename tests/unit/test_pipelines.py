@@ -75,6 +75,28 @@ def test_inferir_seccion_agrupa_noticias_y_negocio_singular() -> None:
     assert silver.inferir_seccion("https://autopartesfanalca.com.co/productos/") == "autopartes/productos"
 
 
+def test_secciones_hallazgos_segunda_ejecucion() -> None:
+    """Informe de sostenibilidad, alias de unidades de negocio y error tipográfico del sitio."""
+    assert (
+        silver.inferir_seccion("https://fanalca.com/informe-sostenibilidad/capitulo-2/") == "sostenibilidad"
+    )
+    assert (
+        silver.inferir_seccion("https://fanalca.com/en/business/honda-motorcycles/")
+        == "negocios/honda-motocicletas"
+    )
+    assert silver.inferir_seccion("https://fanalca.com/negocios/holda-autos/") == "negocios/honda-autos"
+    assert silver.inferir_seccion("https://fanalca.com/en/business/auto-parts/") == "negocios/autopartes"
+
+
+def test_patrones_excluyen_paginacion_y_filtros_de_vacantes() -> None:
+    patrones = [r"/(?:page|noticias|news)/\d+/?$", r"^/(?:en/)?(?:area|ciudad)/"]
+    assert silver.excluida("https://fanalca.com/noticias/3/", [], patrones)
+    assert silver.excluida("https://fanalca.com/ciudad/cali/", [], patrones)
+    assert silver.excluida("https://fanalca.com/area/comercial/", [], patrones)
+    assert not silver.excluida("https://fanalca.com/noticias/", [], patrones)
+    assert not silver.excluida("https://fanalca.com/primer-bus-a-hidrogeno-para-colombia/", [], patrones)
+
+
 def test_excluida_considera_consulta() -> None:
     reglas = ["elementskit_template", "/firma"]
     assert silver.excluida("https://fanalca.com/?elementskit_template=header", reglas)
@@ -139,7 +161,7 @@ def test_construir_gold_genera_artefactos(tmp_path) -> None:  # type: ignore[no-
     assert est.documentos == 1 and est.fragmentos == 1
     for nombre in ("fragmentos.jsonl", "base_conocimiento.txt", "estadisticas.json", "docs/a.md"):
         assert (tmp_path / nombre).exists()
-    assert "[a#000]" in (tmp_path / "base_conocimiento.txt").read_text()
+    assert "[a#000]" in (tmp_path / "base_conocimiento.txt").read_text(encoding="utf-8")
 
 
 def test_validacion_detecta_errores() -> None:

@@ -24,6 +24,7 @@ from fabrica_autopartes.pipelines.texto import (
     similitud_jaccard,
 )
 from fabrica_autopartes.scraping.extraccion import extraer_contenido
+from fabrica_autopartes.scraping.robots import url_excluida
 
 log = obtener_registro(__name__)
 
@@ -35,7 +36,18 @@ _MAPA_SECCIONES: list[tuple[frozenset[str], str]] = [
         "quienes-somos",
     ),
     (frozenset({"contacto", "contact", "contactenos"}), "contacto"),
-    (frozenset({"sostenibilidad", "sustainability", "fundacion"}), "sostenibilidad"),
+    (
+        frozenset(
+            {
+                "sostenibilidad",
+                "sustainability",
+                "fundacion",
+                "informe-sostenibilidad",
+                "sustainability-report",
+            }
+        ),
+        "sostenibilidad",
+    ),
     (frozenset({"noticias", "news", "blog"}), "noticias"),
     (
         frozenset(
@@ -70,6 +82,20 @@ def prefijo_sitio(url: str) -> str:
     return _PREFIJOS_SITIO.get(host, "")
 
 
+# Unifica las rutas en inglés, las variantes /negocio/ y el error tipográfico del sitio (holda-autos):
+# una sola sección por unidad de negocio en Gold y en las gráficas.
+_ALIAS_NEGOCIOS = {
+    "honda-motorcycles": "honda-motocicletas",
+    "honda-motos": "honda-motocicletas",
+    "holda-autos": "honda-autos",
+    "environmental": "ambiental",
+    "steel-tubes-and-profiles": "tubos-y-perfiles-de-acero",
+    "steel-pipes-and-profiles": "tubos-y-perfiles-de-acero",
+    "tuberia-y-perfiles-de-acero": "tubos-y-perfiles-de-acero",
+    "auto-parts": "autopartes",
+}
+
+
 def _seccion_por_ruta(ruta: str) -> str:
     """Sección a partir de la ruta: se revisa del segmento más específico al más general.
 
@@ -84,15 +110,13 @@ def _seccion_por_ruta(ruta: str) -> str:
         for claves, seccion in _MAPA_SECCIONES:
             if partes[indice] in claves:
                 if seccion == "negocios" and indice < len(partes) - 1:
-                    return f"negocios/{partes[-1]}"
+                    return f"negocios/{_ALIAS_NEGOCIOS.get(partes[-1], partes[-1])}"
                 return seccion
     return "noticias"
 
 
-def excluida(url: str, rutas_excluidas: list[str]) -> bool:
-    p = urlparse(url)
-    completa = p.path + ("?" + p.query if p.query else "")
-    return any(excl in completa for excl in rutas_excluidas)
+def excluida(url: str, rutas_excluidas: list[str], patrones: list[str] | None = None) -> bool:
+    return url_excluida(url, rutas_excluidas, patrones)
 
 
 def inferir_seccion(url: str) -> str:
@@ -155,6 +179,7 @@ def desde_bronze(
     almacen: AlmacenBronze,
     metricas: list[dict] | None = None,
     rutas_excluidas: list[str] | None = None,
+    patrones_excluidos: list[str] | None = None,
 ) -> list[DocumentoLimpio]:
     """Transforma las capturas Bronze en documentos Silver.
 
@@ -164,7 +189,9 @@ def desde_bronze(
     de modo que no es necesario borrar Bronze al ajustar la configuración.
     """
     registros = [
-        r for r in almacen.ultimos_por_url().values() if not excluida(r.url_final, rutas_excluidas or [])
+        r
+        for r in almacen.ultimos_por_url().values()
+        if not excluida(r.url_final, rutas_excluidas or [], patrones_excluidos)
     ]
     extraidas = []
     for r in registros:

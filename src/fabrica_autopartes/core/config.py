@@ -73,6 +73,14 @@ class Configuracion(BaseSettings):
             "/privacy-notice",
         ]
     )
+    # Expresiones regulares sobre la ruta: paginación de listados (repiten resúmenes de noticias) y
+    # filtros de vacantes por área o ciudad (equivalentes a /vacantes, ya excluida).
+    patrones_excluidos: list[str] = Field(
+        default_factory=lambda: [
+            r"/(?:page|noticias|news)/\d+/?$",
+            r"^/(?:en/)?(?:area|ciudad)/",
+        ]
+    )
 
     # --- Scraping responsable ---------------------------------------------
     agente_usuario: str = (

@@ -85,6 +85,11 @@ complemento deja de usarse sin cambios de código.
   \item Clasificación de secciones por segmento exacto de la ruta: las entradas del blog se agrupan en
         \texttt{noticias} y las rutas \texttt{/negocio/} se unen a \texttt{negocios}.
   \item Opción \texttt{--desde-cero} para que el resumen y las gráficas correspondan a una ejecución completa.
+  \item Segunda ejecución real (75 páginas): exclusión por expresiones regulares de la paginación de noticias
+        (\texttt{/noticias/2/}) y de los filtros de vacantes por área y ciudad; el informe de sostenibilidad pasa a
+        la sección \texttt{sostenibilidad} y las rutas en inglés, \texttt{/negocio/} y \texttt{holda-autos} se unifican
+        en una sección por unidad de negocio. Base resultante: 201 fragmentos de scraping y 14 de lectura web.
+  \item \texttt{-SoloReconstruir} reconstruye Silver, Gold y las gráficas desde el Bronze existente, sin red.
   \item Escritura de archivos con fin de línea LF en Windows.
 \end{itemize}
 

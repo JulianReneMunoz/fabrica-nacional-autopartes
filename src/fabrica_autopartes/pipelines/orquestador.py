@@ -82,7 +82,9 @@ def construir_base(config: Configuracion, fuente: Fuente = "auto") -> ResultadoC
     paginas: list[dict] = []
     documentos = []
     if fuente in ("scraping", "ambas", "mixta"):
-        documentos.extend(silver.desde_bronze(almacen, paginas, config.rutas_excluidas))
+        documentos.extend(
+            silver.desde_bronze(almacen, paginas, config.rutas_excluidas, config.patrones_excluidos)
+        )
     if fuente in ("semilla", "ambas", "mixta"):
         semilla = (
             complemento_lectura_web(almacen, config)
