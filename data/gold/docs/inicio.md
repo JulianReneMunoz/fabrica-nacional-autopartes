@@ -1,34 +1,47 @@
 ---
 id: inicio
-fuente: https://fanalca.com/en/
-titulo: Fanalca — Inicio y unidades de negocio
+fuente: https://fanalca.com/
+titulo: Un camino imparable ensamblado en Colombia
 seccion: inicio
-fecha_captura: '2026-11-04T00:00:00'
+fecha_captura: '2026-11-04T23:22:26.876229+00:00'
 idioma: es
-tokens_aprox: 350
-origen: semilla
-sha256_texto: 879a2c4be5ad680eadce5af4f38a382a5f0d47447f19e66db717c2b8c9401665
+tokens_aprox: 376
+origen: scraping
+sha256_texto: 29647a135cbb6e057f9e5179ed53d4de1ce5a254f9541a65ebc55ee65b5467a0
 ---
 
-# Fanalca: organización y unidades de negocio
+## Orgullo colombiano
 
-Fanalca (Fábrica Nacional de Autopartes) es un grupo empresarial colombiano con sede en Acopi, Yumbo, Valle del Cauca. Su portal corporativo presenta la cultura de la organización, sus unidades de negocio, las noticias más relevantes y las vacantes disponibles.
+El 31 de mayo de 1958 se constituyó, entre las familias Losada y Herrera, la Fábrica Nacional de Carrocerías: Fanalca.
 
-## Unidades de negocio
+Hoy, se consolida como una compañía diversa, emprendedora y líder en los sectores en los cuales tiene participación a través de sus unidades de negocio.
 
-Las unidades de negocio de Fanalca son seis:
+Esto evidencia el compromiso de nuestros fundadores, quienes han continuado su legado y cada uno de los colaboradores que hacen parte de la organización, para que el crecimiento de la compañía agregue valor a la sociedad y genere un balance económico, social y ambiental.
 
-- Honda Motocicletas: fabricación, ensamble y comercialización de motocicletas Honda en Colombia.
-- Honda Autos: importación y venta de vehículos Honda.
-- Tubos y perfiles de acero: tubería de acero soldada y perfiles abiertos para construcción.
-- Autopartes: fabricación y ensamble de partes metálicas para vehículos.
-- Ambiental: equipos para la recolección de residuos sólidos, como cajas compactadoras y contenedores.
-- Fanalvías: barreras metálicas y elementos de seguridad vial.
+## Negocios
 
-## Canales generales
+### Honda motos (602 347 22 25)
 
-La unidad Ambiental publica como contacto el teléfono (+57) 314 832 5949 y el correo fanalcambiental@fanalca.com.
+### Honda autos (+57 310 233 02 37)
 
-Las personas interesadas en trabajar en Fanalca pueden consultar las vacantes en el portal de empleo https://empleoscolombia.fnservicios.com/ (enlace "Trabaja con nosotros"). Los colaboradores acceden a un portal interno de la plataforma SuccessFactors.
+### Tubos y perfiles de acero (+57 312 777 31 25)
 
-La gestión de la Fundación Fanalca se presenta como un eje del camino sostenible de la organización y del apoyo a las comunidades donde opera.
+### Tubos y perfiles de acero
+
+### Autopartes
+
+### Autopartes (+57 310 211 23 08)
+
+### Ambiental (+57 314 832 59 49)
+
+### Fanalvías (+57 310 890 95 92)
+
+## Sostenibilidad
+
+Nuestras metas han crecido a la par con los sueños de nuestros colaboradores y sus familias, pero nuestra visión de construcción colectiva va más allá.
+
+La gestión de la Fundación Fanalca ha sido clave para recorrer un camino sostenible y apoyar las necesidades de las comunidades en las cuales tenemos operación.
+
+Nuestras metas han crecido a la par con los sueños de nuestros colaboradores y sus familias, pero nuestra visión de construcción colectiva va más allá.
+
+La gestión de la Fundación Fanalca ha sido clave para recorrer un camino sostenible y apoyar las necesidades de las comunidades en las cuales tenemos operación.

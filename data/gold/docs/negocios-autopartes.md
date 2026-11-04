@@ -1,25 +1,19 @@
 ---
 id: negocios-autopartes
-fuente: https://fanalca.com/en/business/auto-parts/
+fuente: https://fanalca.com/negocios/autopartes/
 titulo: Autopartes
 seccion: negocios/autopartes
-fecha_captura: '2026-11-04T00:00:00'
+fecha_captura: '2026-11-04T23:24:11.398763+00:00'
 idioma: es
-tokens_aprox: 149
-origen: semilla
-sha256_texto: c43cce6397595178ade1e17433bafc1542b1b5971c7f6b42692bc7707588e4e6
+tokens_aprox: 132
+origen: scraping
+sha256_texto: d2900457c8145b16bac4779979364a4d89f8c9ee980e7d93a47503a2e10e8637
 ---
 
 # Autopartes
 
-La unidad de Autopartes opera cuatro plantas: Acopi-Yumbo (Valle del Cauca), Yumbo (Valle del Cauca), Bogotá (Cundinamarca) y Medellín (Antioquia).
+#### Contamos con plantas de producción en Acopi, Yumbo (Valle del Cauca), Bogotá (Cundinamarca) y Medellín (Antioquia).
 
-## Productos por planta
+En nuestra planta de **Yumbo** y **Bogotá** fabricamos partes metálicas para automóviles y vehículos comerciales como camiones, pickups, buses, busetas; como puertas, travesaños y soportes para chasis.
 
-Las plantas de Yumbo y Bogotá fabrican partes metálicas para automóviles y vehículos comerciales (camiones, camionetas y buses), entre ellas puertas, travesaños y soportes de chasis.
-
-La planta de Medellín ensambla partes metálicas para automóviles y vehículos comerciales, como paneles de piso, cunas de motor y partes traseras.
-
-## Canal de la unidad
-
-El sitio web de la unidad es autopartesfanalca.com.co.
+En la planta ubicada en **Medellín** se realiza ensamble de partes metálicas para automóviles y vehículos comerciales; como paneles de pisos, cunas motor y trenes traseros para automóviles.

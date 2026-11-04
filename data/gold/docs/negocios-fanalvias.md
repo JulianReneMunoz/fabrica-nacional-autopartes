@@ -1,27 +1,29 @@
 ---
 id: negocios-fanalvias
-fuente: https://fanalca.com/en/business/fanalvias/
+fuente: https://fanalca.com/negocios/fanalvias/
 titulo: Fanalvías
 seccion: negocios/fanalvias
-fecha_captura: '2026-11-04T00:00:00'
+fecha_captura: '2026-11-04T23:24:24.375860+00:00'
 idioma: es
-tokens_aprox: 202
-origen: semilla
-sha256_texto: 603f24333cc314c5d2d5b4397c100c5f31092e0f525a663e807eb9a33a7ee42d
+tokens_aprox: 215
+origen: scraping
+sha256_texto: 6074eb5c6582aa84e61c4a205b58943d1c18f6e2fd6a0fbe9daef83a17468b83
 ---
 
 # Fanalvías
 
-Fanalvías es la unidad de infraestructura vial de Fanalca, creada como parte de la estrategia de diversificación a partir de la experiencia en el procesamiento de acero.
+#### Calidad y respaldo para vías seguras
 
-## Productos
+Como parte de nuestra visión estratégica de crecimiento a través de la diversificación y respaldados en nuestra experiencia en transformación de acero, incursionamos en el mercado de la infraestructura vial con nuestra marca Fanalvías.
 
-- Barreras metálicas para vías, fabricadas según las normas técnicas vigentes.
-- Amortiguadores de impacto para protección lateral.
-- Terminales especiales para los extremos de las barreras.
+Fabricamos **defensas viales metálicas** de carretera garantizando **cumplimiento de especificaciones** y normativa vigente.
 
-## Capacidades
+Comercializadores de elementos para seguridad vial como **amortiguadores de impacto** y **terminales especiales**.
 
-Fanalvías fabrica y comercializa elementos de seguridad vial. El conformado de las barreras tiene alta precisión geométrica, lo que según la empresa reduce los costos de instalación y mantenimiento. La unidad abastece de forma continua grandes proyectos de infraestructura vial en Colombia.
+Defensas fabricadas con la mas alta **precisión geométrica** en el formado, lo que se traduce en **menores costos de instalación y mantenimiento**.
 
-La planta de producción está en Acopi, Yumbo (Valle del Cauca). El sitio web de la unidad es fanalvias.com.
+**Plantas de producción**en
+
+**Acopi**, Yumbo (Valle del Cauca) con capacidad para suministrar continuamente los principales proyectos de
+
+**infraestructura vial en el país**.

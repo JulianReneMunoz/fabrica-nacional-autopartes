@@ -1,31 +1,25 @@
 ---
 id: negocios-ambiental
-fuente: https://fanalca.com/en/business/environmental/
+fuente: https://fanalca.com/negocios/ambiental/
 titulo: Ambiental
 seccion: negocios/ambiental
-fecha_captura: '2026-11-04T00:00:00'
+fecha_captura: '2026-11-04T23:23:41.877978+00:00'
 idioma: es
 tokens_aprox: 232
-origen: semilla
-sha256_texto: 942f08d2bad44beac04a649e7df036d769555d25028ed1b305bb3a590f552f95
+origen: scraping
+sha256_texto: e8b7222e84af6b4ea0fd14e61b1d48bf64f1a2beff504263b8cd3638365744aa
 ---
 
 # Ambiental
 
-La unidad Ambiental fabrica equipos para la recolección de residuos sólidos desde 1981, principalmente cajas compactadoras de basura y contenedores de acero, y se presenta como líder en Colombia en innovación de estos equipos.
+Fabricamos equipos para recolección de residuos sólidos desde el año 1981, liderando la innovación y la evolución de las cajas compactadoras de basura y contenedores de acero en Colombia.
 
-## Portafolio complementario
+**Comercializamos**equipos complementarios de manejo de residuos como
 
-Además comercializa brazos hidráulicos, cajas de carga lateral, lavacontenedores y barredoras. Sus cajas compactadoras usan componentes avanzados para una mayor vida útil y una operación flexible en los terrenos empinados de la región andina.
+**cajas de cargue lateral**,
 
-## Cobertura y clientes
+Ofrecemos una **amplia gama** de cajas compactadoras diseñadas con componentes de última tecnología para una un **mayor vida útil** del equipo y una **operación flexible** en cualquier terreno de la exigente topografía andina.
 
-- Presencia en 29 departamentos de Colombia.
-- Más de 250 clientes nacionales e internacionales.
-- Clientes internacionales en Panamá, Venezuela, Ecuador, India y Chile.
+Tenemos **presencia en 29 departamentos** del territorio nacional, contamos con **más de 250 clientes** nacionales e internacionales, ubicados en países como Panamá, Venezuela, Ecuador, India y Chile.
 
-La unidad usa aceros de alta resistencia y antidesgaste en sus cajas y posee tecnologías patentadas orientadas a una recolección más rentable.
-
-## Canal de la unidad
-
-El sitio web de la unidad es fanalcambiental.com.
+Somos lideres en la implementación de aceros anti desgaste y de alta resistencia en nuestras cajas y contamos con tecnologías patentadas para hacer su **operación de recolección más rentable**.

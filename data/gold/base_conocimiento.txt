@@ -1,256 +1,575 @@
 BASE DE CONOCIMIENTO — Fábrica Nacional de Autopartes (Fanalca)
-Generada: 2026-11-04T21:54:14+00:00
-Fragmentos: 48
+Generada: 2026-11-04T23:24:54+00:00
+Fragmentos: 90
 
-[autopartes-clientes#000] (autopartes/clientes | https://autopartesfanalca.com.co/clientes/)
-# Nuestros clientes
-Los productos de Autopartes Fanalca se despachan principalmente a ensambladoras de automóviles y camiones de la región Andina. La empresa declara buscar el crecimiento mutuo con sus clientes, la mejora continua de sus procesos y el cumplimiento de altos estándares de calidad.
-Los logotipos de clientes publicados en el sitio corresponden a: Renault, UpTime Parts, Morgan Olson, Morgan Corp, Marcopolo, Iveco, General Motors, Hino y EAM.
+[inicio#000] (inicio | https://fanalca.com/)
+## Orgullo colombiano
+El 31 de mayo de 1958 se constituyó, entre las familias Losada y Herrera, la Fábrica Nacional de Carrocerías: Fanalca.
+Hoy, se consolida como una compañía diversa, emprendedora y líder en los sectores en los cuales tiene participación a través de sus unidades de negocio.
+Esto evidencia el compromiso de nuestros fundadores, quienes han continuado su legado y cada uno de los colaboradores que hacen parte de la organización, para que el crecimiento de la compañía agregue valor a la sociedad y genere un balance económico, social y ambiental.
 
-[autopartes-contacto#000] (autopartes/contacto | https://autopartesfanalca.com.co/contacto/)
-# Contacto de Autopartes Fanalca
-La dirección publicada es Calle 13 # 31A - 80, Urbanización Industrial Acopi, Yumbo (Valle del Cauca), Colombia. El teléfono de contacto es +57 310 211 23 08 y el correo es info@autopartesfanalca.com.co. La página no publica horario de atención.
+[inicio#001] (inicio | https://fanalca.com/)
+## Negocios
+### Honda motos (602 347 22 25)
 
-[autopartes-contacto#001] (autopartes/contacto | https://autopartesfanalca.com.co/contacto/)
-## Formulario de contacto
-El formulario "Contáctenos" permite elegir el asunto de la solicitud (cotización de equipo o asesoría de equipo) y pide nombre completo, empresa, correo electrónico, teléfono móvil (opcional), ciudad, país, mensaje y la aceptación del tratamiento de datos personales. Según la página, un asesor atiende la solicitud por WhatsApp.
+[inicio#002] (inicio | https://fanalca.com/)
+### Honda autos (+57 310 233 02 37)
 
-[autopartes-contacto#002] (autopartes/contacto | https://autopartesfanalca.com.co/contacto/)
-## Otros enlaces
-El sitio enlaza las vacantes del grupo en https://fanalca.com/vacantes/, el portal de colaboradores y la política de tratamiento de datos (aviso de privacidad).
+[inicio#003] (inicio | https://fanalca.com/)
+### Tubos y perfiles de acero (+57 312 777 31 25)
 
-[autopartes-inicio#000] (autopartes/inicio | https://autopartesfanalca.com.co/)
-# Autopartes Fanalca
-Autopartes Fanalca acredita más de 60 años de experiencia y se presenta como uno de los líderes regionales en la fabricación de piezas metálicas para el sector automotriz. Exporta a Ecuador, Brasil y Estados Unidos.
-
-[autopartes-inicio#001] (autopartes/inicio | https://autopartesfanalca.com.co/)
-## Plantas de producción
-La unidad opera tres plantas: una planta de fabricación en Yumbo y plantas de ensamble en Medellín y Bogotá.
-
-[autopartes-inicio#002] (autopartes/inicio | https://autopartesfanalca.com.co/)
-## Planta de fabricación en Yumbo
-La planta de Yumbo tiene una capacidad de 1.300 toneladas al año de partes metálicas para automóviles y vehículos comerciales (camiones, pick up, buses y busetas). Sus productos y procesos incluyen:
-- Largueros de bastidor de chasis.
-- Paneles estampados.
-- Travesaños, refuerzos y soportes para chasis.
-- Partes de carrocería y partes estructurales para cajas secas y refrigeradas.
-- Pintura en polvo electrostática.
-- Puertas para automóviles y piezas para baúl y capó.
-- Estructuras metálicas de sillas para camiones de reparto tipo walk-in van.
-- Elevadores para personas con movilidad reducida.
-- Mobiliario urbano.
-
-[autopartes-inicio#003] (autopartes/inicio | https://autopartesfanalca.com.co/)
-## Planta de ensamble en Medellín
-La planta de Medellín tiene capacidad para hasta 300.000 ensambles al año: ensamble por soldadura de chasises para pick up y camiones, paneles de piso para automóviles, trenes traseros, cunas de motor y tanques de combustible para automóviles.
-
-[autopartes-inicio#004] (autopartes/inicio | https://autopartesfanalca.com.co/)
-## Planta de ensamble en Bogotá
-La planta de Bogotá tiene capacidad para hasta 24.000 chasises al año: ensamble por soldadura y remachado de chasises de camiones, buses y busetas, ensamble de platones de carga para pick up, entregas justo a tiempo a ensambladoras y pintura en polvo.
-
-[autopartes-nosotros#000] (autopartes/quienes-somos | https://autopartesfanalca.com.co/nosotros/)
-# Nosotros
-## Fanalca S.A.
-Fanalca es una organización colombiana fundada en 1958, con presencia en Colombia, Chile, Ecuador, El Salvador y Panamá y más de 28.000 empleados. Sus empresas participan en los sectores de transporte, servicios públicos, textil, financiero y metalmecánico.
-
-[autopartes-nosotros#001] (autopartes/quienes-somos | https://autopartesfanalca.com.co/nosotros/)
-## Autopartes Fanalca
-El negocio de autopartes comenzó en 1958 suministrando partes metálicas estampadas a las principales ensambladoras de vehículos y camiones del Grupo Andino. Cuenta con una plataforma de manufactura descrita como moderna y de alta capacidad, exporta partes a Ecuador, Brasil y Estados Unidos y también fabrica piezas metalmecánicas para otros sectores industriales, por ejemplo elevadores para personas con movilidad reducida en vehículos de servicio público.
-Opera 3 plantas de producción ubicadas en Bogotá, Medellín y Yumbo. Sus productos incluyen partes metálicas para chasis y partes de carrocería.
-
-[autopartes-nosotros#002] (autopartes/quienes-somos | https://autopartesfanalca.com.co/nosotros/)
-## Capacidades
-La página presenta secciones de capacidad de diseño, laboratorio de metrología y capacidad de planta, ilustradas con imágenes sin texto descriptivo.
-
-[autopartes-nosotros#003] (autopartes/quienes-somos | https://autopartesfanalca.com.co/nosotros/)
-## Certificaciones y compromisos
-La página muestra dos sellos sin descripción textual; por el nombre de los archivos corresponden a un sello ICONTEC de inventario de gases de efecto invernadero (GEI) y a un distintivo "Semilla". No se publican detalles adicionales.
-
-[autopartes-productos#000] (autopartes/productos | https://autopartesfanalca.com.co/productos/)
-# Productos y servicios
-La página de productos de Autopartes Fanalca presenta tres líneas ilustradas con imágenes:
-- Panel interior estampado.
-- Ensambles de carrocería con paneles estampados.
-- Travesaños (crossmembers) para camión y bus.
-La página no publica dimensiones, materiales, capacidades ni precios de estos productos.
-
-[contacto#000] (contacto | https://fanalca.com/en/contact/)
-# Contacto
-La dirección de la sede principal de Fanalca es Calle 13 # 31A - 80, Acopi, Yumbo (Valle del Cauca). El teléfono publicado en la página de contacto es (57) 2 651 5343.
-
-[contacto#001] (contacto | https://fanalca.com/en/contact/)
-## Formulario de contacto
-Las solicitudes se envían mediante un formulario en línea que pide nombre y apellidos, teléfono, correo electrónico, la unidad de negocio relacionada con la solicitud y comentarios. El formulario exige aceptar la Política de Tratamiento de Datos.
-Las opciones de unidad de negocio del formulario son: información general de la empresa, Honda Motocicletas, Honda Autos, tubos y perfiles de acero, autopartes, ambiental y Fanalvías.
-
-[contacto#002] (contacto | https://fanalca.com/en/contact/)
-## Enlaces relacionados
-- Vacantes: portal "Trabaja con nosotros" en https://empleoscolombia.fnservicios.com/.
-- Aviso de privacidad: https://fanalca.com/en/privacy-notice/.
-- La Política de Tratamiento de Datos está disponible en formato PDF.
-
-[inicio#000] (inicio | https://fanalca.com/en/)
-# Fanalca: organización y unidades de negocio
-Fanalca (Fábrica Nacional de Autopartes) es un grupo empresarial colombiano con sede en Acopi, Yumbo, Valle del Cauca. Su portal corporativo presenta la cultura de la organización, sus unidades de negocio, las noticias más relevantes y las vacantes disponibles.
-
-[inicio#001] (inicio | https://fanalca.com/en/)
-## Unidades de negocio
-Las unidades de negocio de Fanalca son seis:
-- Honda Motocicletas: fabricación, ensamble y comercialización de motocicletas Honda en Colombia.
-- Honda Autos: importación y venta de vehículos Honda.
-- Tubos y perfiles de acero: tubería de acero soldada y perfiles abiertos para construcción.
-- Autopartes: fabricación y ensamble de partes metálicas para vehículos.
-- Ambiental: equipos para la recolección de residuos sólidos, como cajas compactadoras y contenedores.
-- Fanalvías: barreras metálicas y elementos de seguridad vial.
-
-[inicio#002] (inicio | https://fanalca.com/en/)
-## Canales generales
-La unidad Ambiental publica como contacto el teléfono (+57) 314 832 5949 y el correo fanalcambiental@fanalca.com.
-Las personas interesadas en trabajar en Fanalca pueden consultar las vacantes en el portal de empleo https://empleoscolombia.fnservicios.com/ (enlace "Trabaja con nosotros"). Los colaboradores acceden a un portal interno de la plataforma SuccessFactors.
-La gestión de la Fundación Fanalca se presenta como un eje del camino sostenible de la organización y del apoyo a las comunidades donde opera.
-
-[negocios-ambiental#000] (negocios/ambiental | https://fanalca.com/en/business/environmental/)
-# Ambiental
-La unidad Ambiental fabrica equipos para la recolección de residuos sólidos desde 1981, principalmente cajas compactadoras de basura y contenedores de acero, y se presenta como líder en Colombia en innovación de estos equipos.
-
-[negocios-ambiental#001] (negocios/ambiental | https://fanalca.com/en/business/environmental/)
-## Portafolio complementario
-Además comercializa brazos hidráulicos, cajas de carga lateral, lavacontenedores y barredoras. Sus cajas compactadoras usan componentes avanzados para una mayor vida útil y una operación flexible en los terrenos empinados de la región andina.
-
-[negocios-ambiental#002] (negocios/ambiental | https://fanalca.com/en/business/environmental/)
-## Cobertura y clientes
-- Presencia en 29 departamentos de Colombia.
-- Más de 250 clientes nacionales e internacionales.
-- Clientes internacionales en Panamá, Venezuela, Ecuador, India y Chile.
-La unidad usa aceros de alta resistencia y antidesgaste en sus cajas y posee tecnologías patentadas orientadas a una recolección más rentable.
-
-[negocios-ambiental#003] (negocios/ambiental | https://fanalca.com/en/business/environmental/)
-## Canal de la unidad
-El sitio web de la unidad es fanalcambiental.com.
-
-[negocios-autopartes#000] (negocios/autopartes | https://fanalca.com/en/business/auto-parts/)
-# Autopartes
-La unidad de Autopartes opera cuatro plantas: Acopi-Yumbo (Valle del Cauca), Yumbo (Valle del Cauca), Bogotá (Cundinamarca) y Medellín (Antioquia).
-
-[negocios-autopartes#001] (negocios/autopartes | https://fanalca.com/en/business/auto-parts/)
-## Productos por planta
-Las plantas de Yumbo y Bogotá fabrican partes metálicas para automóviles y vehículos comerciales (camiones, camionetas y buses), entre ellas puertas, travesaños y soportes de chasis.
-La planta de Medellín ensambla partes metálicas para automóviles y vehículos comerciales, como paneles de piso, cunas de motor y partes traseras.
-
-[negocios-autopartes#002] (negocios/autopartes | https://fanalca.com/en/business/auto-parts/)
-## Canal de la unidad
-El sitio web de la unidad es autopartesfanalca.com.co.
-
-[negocios-fanalvias#000] (negocios/fanalvias | https://fanalca.com/en/business/fanalvias/)
-# Fanalvías
-Fanalvías es la unidad de infraestructura vial de Fanalca, creada como parte de la estrategia de diversificación a partir de la experiencia en el procesamiento de acero.
-
-[negocios-fanalvias#001] (negocios/fanalvias | https://fanalca.com/en/business/fanalvias/)
-## Productos
-- Barreras metálicas para vías, fabricadas según las normas técnicas vigentes.
-- Amortiguadores de impacto para protección lateral.
-- Terminales especiales para los extremos de las barreras.
-
-[negocios-fanalvias#002] (negocios/fanalvias | https://fanalca.com/en/business/fanalvias/)
-## Capacidades
-Fanalvías fabrica y comercializa elementos de seguridad vial. El conformado de las barreras tiene alta precisión geométrica, lo que según la empresa reduce los costos de instalación y mantenimiento. La unidad abastece de forma continua grandes proyectos de infraestructura vial en Colombia.
-La planta de producción está en Acopi, Yumbo (Valle del Cauca). El sitio web de la unidad es fanalvias.com.
-
-[negocios-honda-autos#000] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
-# Honda Autos
-La unidad Honda Autos de Fanalca importa y comercializa vehículos Honda en Colombia; la importación y venta de automóviles Honda en el país comenzó en la década de 1990.
-
-[negocios-honda-autos#001] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
-## Garantía Total Verdadera
-Fanalca ofrece la "Garantía Total Verdadera": cubre mano de obra, insumos y repuestos sin costo durante 2 años y sin límite de kilometraje. Según la empresa, es la única garantía del mercado que incluye mantenimiento preventivo, correctivo y predictivo sin costo.
-
-[negocios-honda-autos#002] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
-## Cifras de la unidad
-- Más de 32.000 clientes.
-- 26 vitrinas en el país con servicio de ventas y posventa.
-- Flota de Renting Total de 638 vehículos.
-
-[negocios-honda-autos#003] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
-## Canales digitales
-El sitio web de la marca es autos.honda.com.co y existe una vitrina virtual en 360next.honda.com.co/tour/. La marca tiene presencia en Facebook, Twitter, Instagram y YouTube.
-
-[negocios-honda-autos#004] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
-## Hitos de la marca Honda mencionados
-- 1962: Honda incursionó en vehículos de cuatro ruedas; su primer deportivo, el S360, alcanzó 100 km/h.
-- 1972: lanzamiento del Honda Civic, primer compacto en cumplir las normas ambientales de Estados Unidos.
-- 2000: presentación de Asimo, robot humanoide.
-- 2003: el HondaJet realizó su primer vuelo sobre Carolina del Norte, Estados Unidos.
+[inicio#004] (inicio | https://fanalca.com/)
+## Sostenibilidad
+Nuestras metas han crecido a la par con los sueños de nuestros colaboradores y sus familias, pero nuestra visión de construcción colectiva va más allá.
+La gestión de la Fundación Fanalca ha sido clave para recorrer un camino sostenible y apoyar las necesidades de las comunidades en las cuales tenemos operación.
+Nuestras metas han crecido a la par con los sueños de nuestros colaboradores y sus familias, pero nuestra visión de construcción colectiva va más allá.
+La gestión de la Fundación Fanalca ha sido clave para recorrer un camino sostenible y apoyar las necesidades de las comunidades en las cuales tenemos operación.
 
 [negocios-honda-motocicletas#000] (negocios/honda-motocicletas | https://fanalca.com/negocios/honda-motocicletas/)
-# Honda Motocicletas
-Honda se presenta como la marca de motocicletas número uno del mundo. Fanalca opera la única planta de producción nacional en el mundo con licencia para fabricar y ensamblar motocicletas Honda bajo sus estándares de calidad. La planta de ensamble está ubicada en Acopi, Yumbo, Valle del Cauca.
+# Honda
+## #1 de motocicletas en el mundo
+#### Somos la marca del poder de los sueños y acompañamos a los colombianos a hacer los suyos realidad.
+Somos la **única planta de producción nacional**, a nivel mundial, con licencia para fabricar y ensamblar motocicletas Honda, por nuestros altos estándares de calidad. Nuestra planta de ensamble está ubicada en Acopi, Yumbo, Valle del Cauca.
+Comercializamos motos de **100 y hasta 250** centímetros cúbicos, repuestos y accesorios Honda.
+**Importamos** motos Honda de alto cilindraje.
+Contamos con una red de distribución propia y una red de distribuidores que permite tener cobertura en el territorio nacional: **450 puntos de venta** con presencia en los 32 departamentos, **265 talleres de servicio** en el país y **1.265 almacenes de repuestos**.
 
-[negocios-honda-motocicletas#001] (negocios/honda-motocicletas | https://fanalca.com/negocios/honda-motocicletas/)
-## Portafolio
-Fanalca vende motocicletas Honda de 100 cc hasta 250 cc, además de repuestos y accesorios Honda. Las motocicletas Honda de alto cilindraje se importan.
+[en-who-we-are#000] (quienes-somos | https://fanalca.com/en/who-we-are/)
+# Committed with sustainable development
+# Committed with sustainable development
+The history of Fanalca dates back to 1957 when Joaquín Losada Salcedo, in a fortunate event of destiny, helps a representative of the Superior Coach of the United States and, after several conversations, offers him the representation in Colombia to import car bodies.
+Shortly after, on May 31, 1958, the National Factory of Bodyworks –Fanalca (its acronym in spanish)vwas established between the Losada and Herrera families. In 1959, along with the Gómez family, they founded Super Bus Medellín and Super Bus Bogotá to assemble car bodies.
+These visionaries, with a group of 12 collaborators, began this successful story of over 60 years.
+From importing complete car bodies from the United States, little by little it was possible to assemble 100% of a bus in Colombia, which demonstrated the capacity of the organization.
+In 1969, Alberto Losada and Jorge Herrera assumed the presidency and began a period of diversification with auto parts. Considering that the bus seats required large amounts of tubing they identified an opportunity to develop this business.
 
-[negocios-honda-motocicletas#002] (negocios/honda-motocicletas | https://fanalca.com/negocios/honda-motocicletas/)
-## Red de distribución
-La red comercial reportada incluye 450 puntos de venta en 32 departamentos de Colombia, 265 talleres de servicio y 1.265 almacenes de repuestos.
+[en-who-we-are#001] (quienes-somos | https://fanalca.com/en/who-we-are/)
+In 1971, Fanalca had 40 employees and, in its constant search for growth, it began negotiations with Honda Japan to market its motorcycles and later assemble them. Years later, and from that contact, authorization was obtained to market Honda automobiles in Colombia.
 
-[negocios-tubos-perfiles#000] (negocios/tubos-perfiles | https://fanalca.com/en/business/steel-tubes-and-profiles/)
-# Tubos y perfiles de acero
-La unidad de tubos y perfiles fabrica tubería de acero soldada con alta precisión geométrica.
+[en-who-we-are#002] (quienes-somos | https://fanalca.com/en/who-we-are/)
+## Colombian Pride
+Today Fanalca is consolidated as a diverse, entrepreneurial and leading company in the sectors in which it has a stake.
+The passion and commitment of our employees allows us to travel a path of sustainable innovation.
 
-[negocios-tubos-perfiles#001] (negocios/tubos-perfiles | https://fanalca.com/en/business/steel-tubes-and-profiles/)
-## Productos
-- Tubería de acero soldada en lámina laminada en frío, laminada en caliente, estructural y galvanizada.
-- Perfiles abiertos de acero para construcción: perfil C, perfil para mezanine (entrepiso), vigas, Steel Deck, correa para cortina, sistema liviano de construcción en seco (Drywall) y Steel Framing.
+[en-business#000] (negocios | https://fanalca.com/en/business/)
+### Steel tubes and profiles
+### Steel tubes and profiles
 
-[negocios-tubos-perfiles#002] (negocios/tubos-perfiles | https://fanalca.com/en/business/steel-tubes-and-profiles/)
-## Plantas
-Las plantas de producción están en Acopi, Yumbo (Valle del Cauca) y en Guachené (Cauca).
+[en-sustainability#000] (sostenibilidad | https://fanalca.com/en/sustainability/)
+# Sustainability
+# Sustainability
+## Fanalca Foundation
+Our Fanalca Foundation was born in 2003, as an ally to implement projects that contribute to the construction of civic culture, through the recovery of public space, especially parks located in vulnerable areas and the transformation of community behaviors in general, providing them with tools that support the sustainability of these actions.
+The lines of action on which the Foundation works, with different target audiences, are: citizen culture, education, income generation, art and culture.
+To learn more about the management of our Fanalca Foundation, visit its website:
 
-[negocios-tubos-perfiles#003] (negocios/tubos-perfiles | https://fanalca.com/en/business/steel-tubes-and-profiles/)
-## Canal de la unidad
-El sitio web de productos es tubosyperfilesfanalca.com.
+[en-sustainability#001] (sostenibilidad | https://fanalca.com/en/sustainability/)
+## Encouraging on the sustainable development of the region
+Learn about our sustainability reports.
 
-[quienes-somos#000] (quienes-somos | https://fanalca.com/en/who-we-are/)
-# Quiénes somos
-Fanalca nació como Fábrica Nacional de Carrocerías. El 31 de mayo de 1958 las familias Losada y Herrera constituyeron la empresa, que empezó con un grupo de 12 colaboradores. La organización acumula más de 60 años de operación y cuenta con aliados comerciales en más de 16 países.
-En 1957 Joaquín Losada Salcedo recibió la propuesta de representar en Colombia a un fabricante estadounidense de carrocerías de bus para importar carrocerías; ese antecedente dio origen a la compañía.
+[una-entrega-contra-todo-pronostico#000] (una-entrega-contra-todo-pronostico | https://fanalca.com/una-entrega-contra-todo-pronostico/)
+En medio de la contingencia por covid-19, nuestra unidad de negocio ambiental logró entregar a tiempo 40 cajas compactadoras de basura y 19 volcos para la recolección de residuos en Barranquilla, como parte del proyecto Mi Ciudad de Renting Colombia.
+Fanalca ganó esta licitación que tenía como fecha de inicio el 1 de junio. El equipo encargado tenía previsto viajar en marzo para instalar la maquinaría durante los tres meses posteriores. Sin embargo, la crisis por el coronavirus representó un riesgo para cumplir los tiempos de entrega.
+Al ser la recolección de basura una necesidad vital, mantuvimos la fecha de operación y gracias a la sinergia entre diversas áreas de la organización, el equipo logró viajar a Barranquilla y cumplir con la fecha pactada.
+Esta es una muestra del compromiso que tenemos con los resultados. Para conocer más sobre el proyecto, haz clic en el video:
+\*Video tomado de: https://renting.rentingcolombia.com/blog/las-empresas-y-el-covid-19-0
 
-[quienes-somos#001] (quienes-somos | https://fanalca.com/en/who-we-are/)
-## Línea de tiempo
-- 1959: junto con la familia Gómez se fundaron Super Bus Medellín y Super Bus Bogotá para ensamblar carrocerías.
-- 1962: inicio de la representación de Superior Coach para el ensamble de carrocerías metálicas.
-- 1969: Alberto Losada y Jorge Herrera asumieron la presidencia y la empresa se diversificó hacia las autopartes.
-- 1971: Fanalca tenía 40 empleados e inició negociaciones con Honda Japón.
-- 1972: inicio del negocio de fabricación de tubería metálica soldada.
-- 1974: inicio de la fabricación de autopartes de acero para Chrysler.
-- 1978: inicio de la fabricación de autopartes para General Motors.
-- 1980: importación de las primeras motocicletas Honda.
-- 1981: inicio de la venta de automóviles Honda y obtención de la licencia para fabricar cajas compactadoras de basura.
-- 1982: inicio del ensamble de motocicletas Honda en Yumbo, Valle del Cauca.
-- 1985: creación de Fanaltex como línea integrada a Fanalca (posteriormente Supertex).
-- 1991: diseño de los primeros vehículos recolectores de residuos sólidos domiciliarios.
-- 1992: inicio de la importación de motocicletas CKD y apertura de una planta de ensamble de chasis en Bogotá.
+[participacion-para-la-construccion-de-infraestructura-hospitalaria#000] (participacion-para-la-construccion-de-infraestructura-hospitalaria | https://fanalca.com/participacion-para-la-construccion-de-infraestructura-hospitalaria/)
+**Somos humanos y actuamos solidariamente,** es uno de los valores de nuestra compañía; por eso, desde el inicio de la contingencia generada por el covid-19 nuestro principal objetivo fue aportar a nuestra comunidad.
+En línea con esto, Fanalca participó en el proyecto de dotación de infraestructura hospitalaria en Jamundí, Yumbo y Candelaria mediante el suministro del sistema *Steel Framing*, el cual permite construir estructuras completas en perfiles de acero galvanizado, de una manera rápida, limpia e industrializada. Adicionalmente, facilitamos nuestras instalaciones para realizar el preensamble de estas estructuras.
+En total se construyeron 6 módulos de 14mx7m cada uno, que permitieron albergar aproximadamente 20 camillas; nuestra compañía donó los que fueron instalados en el hospital de Yumbo. La rapidez y simplicidad en la construcción fue la principal razón por la cual se escogió este sistema constructivo para el proyecto.
 
-[quienes-somos#002] (quienes-somos | https://fanalca.com/en/who-we-are/)
-- 1992: inicio de la importación de motocicletas CKD y apertura de una planta de ensamble de chasis en Bogotá.
-- 1993: inicio del negocio de partes para motocicletas.
-- 1998: apertura de una planta de ensamble de chasis en Medellín y de la planta de tubería Metalsur S.A. en el Cauca.
-- 2000: inicio del negocio de aire acondicionado.
-- 2003: creación de la Fundación Fanalca.
-- 2011: inicio del negocio de renting (Honda Renting Total).
-- 2014: inicio del negocio de defensas metálicas e infraestructura vial.
-- 2016: renovación de la imagen visual corporativa de la marca Fanalca.
+[en-a-delivery-against-all-odds#000] (a-delivery-against-all-odds | https://fanalca.com/en/a-delivery-against-all-odds/)
+In the midst of the covid-19 contingency, our environmental business unit managed to deliver 40 garbage compactor boxes and 19 dump trucks on time for waste collection in Barranquilla, as part of Mi Ciudad of Renting Colombia project.
+Fanalca won this tender, which had a start date of June 1. The team in charge planned to travel in March to install the machinery for the next three months. However, the coronavirus crisis represented a risk to meet delivery times.
+As garbage collection is a vital need, we kept the date of operation and thanks to the synergy between various areas of the organization, the team was able to travel to Barranquilla and meet the agreed date.
+This is a sample of the commitment we have with the results.
+To learn more about the project, click on the video:
+\* Video taken from: https://renting.rentingcolombia.com/blog/las-empresas-y-el-covid-19-0
 
-[quienes-somos#003] (quienes-somos | https://fanalca.com/en/who-we-are/)
-## Sede y operaciones
-La sede principal está en la Calle 13 # 31A - 80, Acopi, Yumbo (Valle del Cauca). La organización tiene plantas u operaciones en Yumbo, Bogotá, Medellín y el departamento del Cauca.
+[en-participation-for-the-construction-of-hospital-infrastructure#000] (participation-for-the-construction-of-hospital-infrastructure | https://fanalca.com/en/participation-for-the-construction-of-hospital-infrastructure/)
+We are human and we act in solidarity, it is one of the values of our company; Therefore, from the beginning of the contingency generated by covid-19, our main objective was to contribute to our community.
+In line with this, Fanalca participated in the project for the provision of hospital infrastructure in Jamundí, Yumbo and Candelaria by supplying the Steel Framing system, which allows the construction of complete structures in galvanized steel profiles, in a fast, clean and industrialized way. Additionally, we provide our facilities to carry out the pre-assembly of these structures.
+In total, 6 modules of 14mx7m each were built, which allowed to house approximately 20 stretchers; our company donated those that were installed in the Yumbo hospital. The speed and simplicity of construction was the main reason why this construction system was chosen for the project.
 
-[sostenibilidad#000] (sostenibilidad | https://fanalca.com/en/sustainability/)
+[el-centro-de-conductores-expertos-de-honda-es-una-realidad-f0-9f-8f-8d-ef-b8-8f#000] (el-centro-de-conductores-expertos-de-honda-es-una-realidad-%f0%9f%8f%8d%ef%b8%8f | https://fanalca.com/el-centro-de-conductores-expertos-de-honda-es-una-realidad-%F0%9F%8F%8D%EF%B8%8F/)
+Este espacio, ubicado en Cali e inaugurado este mes, se suma a la campaña de seguridad vial: “Vive la vía, Honda te cuida”, que nace para dar respuesta a una situación crítica para el país: en 7 de cada 10 accidentes viales se encuentran involucradas motocicletas.
+El Centro de Conductores Expertos Honda está habilitado para que los motociclistas colombianos, sin importar la marca o cilindraje de su vehículo, puedan aprender y reaprender sobre conducción y comportamientos seguros, para cuidar a todos los actores de la vía.
+Este programa contará con pilotos expertos que dictarán sesiones teóricas y prácticas. Para más información, te invitamos a visitar: www.motos.honda.com.co
+
+[participamos-en-la-construccion-de-la-planta-de-produccion-de-vaxthera#000] (participamos-en-la-construccion-de-la-planta-de-produccion-de-vaxthera | https://fanalca.com/participamos-en-la-construccion-de-la-planta-de-produccion-de-vaxthera/)
+Participamos en la construcción de cubiertas de la primera planta de producción de VaxThera, compañía de biotecnología 100% colombiana que posiciona al país entre las cinco de América Latina con la **capacidad de producir sus propias vacunas y terapias.**
+VaxThera es una empresa SURA, ubicada en Rionegro – Antioquia, que se destaca como **complejo tecnológico de vanguardia para la investigación y el desarrollo.**
+Para la construcción de las cubiertas, suministramos nuestros tubos estructurales y perfiles en “C”, punzonados a medida, los cuales facilitan la fabricación de todo tipo de estructuras metálicas, ya sea con acabado negro o galvanizado. Además, nuestra capacidad de producir los cortes a medida permitió la optimización de tiempos en la construcción de esta infraestructura.
+
+[lanzamiento-del-nuevo-diseno-de-equipo-compactador-fh-17e#000] (lanzamiento-del-nuevo-diseno-de-equipo-compactador-fh-17e | https://fanalca.com/lanzamiento-del-nuevo-diseno-de-equipo-compactador-fh-17e/)
+Nuestra unidad de negocio ambiental presentó el nuevo equipo compactador de residuos sólidos: FH-17E, diseñado con un acero especial y paredes elípticas que garantizan una mayor vida útil y prolongan los tiempos entre mantenimientos.
+Este innovador equipo se destaca por la alta calidad de sus componentes, lo que ofrece una mayor eficiencia operativa a nuestros clientes.
+Además de su robustez, el FH-17E ha sido concebido con un enfoque en la seguridad total durante su funcionamiento. Evolucionamos su sistema de ‘STOP’, lo que genera la detención total del vehículo ante cualquier situación que represente un riesgo para el operador o para el proceso, reforzando nuestra misión de ofrecer equipos de alto rendimiento y calidad.
+Haz clic aquí para conocer más sobre el FH-17E: https://fanalcambiental.com/
+
+[20-anos-de-nuestra-fundacion-fanalca-transformando-comunidades-en-cali#000] (sostenibilidad | https://fanalca.com/20-anos-de-nuestra-fundacion-fanalca-transformando-comunidades-en-cali/)
+**LaFundación Fanalcanace en diciembre de 2003 con el propósito de contribuir a la construcción de cultura ciudadana a través de larecuperación del espacio público,** especialmente de parques ubicados en las comunidades más vulnerables de Cali.
+Hoy, ha logrado transformar 7 parques que funcionan como centros de desarrollo social, promoviendo integración de la comunidad que los rodea y fomentando programas educativos que empoderan a los ciudadanos vecinos y les brindan herramientas que permiten mejorar su calidad de vida; estos son:
+- Parque Altos de Normandía: Comuna 2
+- Parque Las Acacias: Comuna 7
+- Parque Las Orquídeas: Comuna 14
+- Centro de Integración y Desarrollo Social (CIDES) Parque Los Pinos: Comuna 18
+- Parque La Horqueta: Comuna 20
+- Parque La Nave: Comuna 20
+- Parque La Arboleda: Comuna 21
+
+[20-anos-de-nuestra-fundacion-fanalca-transformando-comunidades-en-cali#001] (sostenibilidad | https://fanalca.com/20-anos-de-nuestra-fundacion-fanalca-transformando-comunidades-en-cali/)
+- Parque La Horqueta: Comuna 20
+- Parque La Nave: Comuna 20
+- Parque La Arboleda: Comuna 21
+Estos espacios son reconocidos por las comunidades aledañas como **lugares seguros que multiplican sus oportunidades de aprendizaje, deporte, recreación y convivencia pacífica.** La mejora en la infraestructura de estos lugares ha permitido la ampliación de servicios y de cobertura, convirtiendo a los parques en centros de desarrollo y unión, que dignifican a las personas y al espacio público.
+En total, **más de 73,375 m² de espacio público han sido intervenidos y se han sembrado más de 786 árboles, gracias a una inversión de $32.000.000.000, a lo largo de estos años.**
+Nuestra Fundación Fanalca ha implementado **más de 26 programas sociales, enfocados en tres líneas de acción,** e impactado a más de 67.447 personas: **cultura ciudadana** (46.445 personas), **educación** (15.150 personas) y **generación de ingresos** (5.852 personas).
+Además, se han establecido 44 alianzas estratégicas con diversas entidades para maximizar el impacto de estas acciones y nuestros parques reciben en promedio, anualmente, un millón de usuarios.
+
+[20-anos-de-nuestra-fundacion-fanalca-transformando-comunidades-en-cali#002] (sostenibilidad | https://fanalca.com/20-anos-de-nuestra-fundacion-fanalca-transformando-comunidades-en-cali/)
+De esta manera, nuestra Fundación Fanalca continúa aportando a los proyectos de vida de millones de habitantes caleños y reafirmando su compromiso con la transformación social y urbana de la ciudad.
+
+[fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas-3#000] (fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas-3 | https://fanalca.com/fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas-3/)
+Joaquín Losada, quien también preside la Junta de Dirección General de la ANDI, dio apertura a la 9º edición de este congreso, celebrando los 80 años de esta agremiación y el desarrollo empresarial en Colombia.
+Su mensaje enalteció los importantes aportes que han realizado las empresas, a través de la ANDI, para enfrentar desafíos nacionales (desde dictaduras militares hasta pandemias), de manera colectiva; lo que continúa siendo la visión de esta organización.
+Enfatizó que el cambio ha sido una constante en nuestra historia y recordó que las empresas han estado en el centro de las coyunturas, adaptándose a las necesidades del país (trabajando con más de 22 gobiernos diferentes) y siendo un motor de cambio para agregar valor público en términos de salud, educación, infraestructura, cultura, empleabilidad.
+Así pues, su propósito fue recordar a la audiencia la importancia de **construir sobre lo construido,** abarcando un concepto de deconstrucción: analizando los hechos vividos para darle nuevo sindicado al presente y al futuro, trabajando de forma colectiva y poniendo en primer lugar los intereses de la nación.
+
+[fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas#000] (fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas | https://fanalca.com/fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas/)
+Nuestra marca especializada en infraestructura vial, recibió la **certificación otorgada por la entidad europea Bureau Veritas,** la cual valida que nuestra planta de producción cumple con los requerimientos en los sistemas de contención de vehículos, alcanzando los niveles N2 (normal) y H1 (alto).
+Con este aval, garantizamos a nuestros clientes un portafolio al margen de la nueva metodología para el diseño, selección e instalación de sistemas de contención vehicular. Este logro reafirma nuestro compromiso con la calidad, la confiabilidad y la seguridad.
+
+[como-parte-de-nuestro-proposito-superior-la-seguridad-continua-siendo-la-estrategia-prioritaria-para-nuestra-unidad-de-negocio-de-honda-motocicletas#000] (como-parte-de-nuestro-proposito-superior-la-seguridad-continua-siendo-la-estrategia-prioritaria-para-nuestra-unidad-de-negocio-de-honda-motocicletas | https://fanalca.com/como-parte-de-nuestro-proposito-superior-la-seguridad-continua-siendo-la-estrategia-prioritaria-para-nuestra-unidad-de-negocio-de-honda-motocicletas/)
+Te presentamos **4 iniciativas** impulsadas por el equipo de Honda Motocicletas para **generar conciencia y reducir los índices de accidentalidad de los motociclistas en nuestro país:**
+**“Vive la vía, Honda te cuida”:** esta campaña educativa inició en el año 2023 con el objetivo de fortalecer la cultura de seguridad y las buenas prácticas a la hora de manejar una motocicleta, protegiendo la vida de todos los actores en la vía. Una de sus principales herramientas es una serie, publicada en YouTube, a través de la cual pilotos e influenciadores de la marca comparten diferentes experiencias y recomendaciones de seguridad, link para ver la serie: https://youtu.be/xv7aE72EQZI?si=tCFLlzJHfEJU9VQr
+**Centro de conductores de Honda:** un espacio teórico – práctico, diseñado para que las personas que conducen motocicletas, de cualquier marca, adquieran o refuercen sus conocimientos sobre cómo manejar correctamente, bajo el concepto de conducción segura y defensiva.
+
+[como-parte-de-nuestro-proposito-superior-la-seguridad-continua-siendo-la-estrategia-prioritaria-para-nuestra-unidad-de-negocio-de-honda-motocicletas#001] (como-parte-de-nuestro-proposito-superior-la-seguridad-continua-siendo-la-estrategia-prioritaria-para-nuestra-unidad-de-negocio-de-honda-motocicletas | https://fanalca.com/como-parte-de-nuestro-proposito-superior-la-seguridad-continua-siendo-la-estrategia-prioritaria-para-nuestra-unidad-de-negocio-de-honda-motocicletas/)
+**Nuestro Tecnomóvil:** un vehículo que acompaña nuestras intervenciones en diferentes lugares del país, equipado con las herramientas necesarias para realizar revisiones preventivas de las motocicletas y brindar un completo diagnóstico de las mismas.
+Liderazgo y participación de **‘Movemos Colombia’:** este movimiento, impulsado por ocho ensambladoras de motocicletas con presencia en Colombia, las cuales conforman la Cámara de la Industria de las Motocicletas de la Asociación Nacional de Empresarios de Colombia (ANDI), tiene como objetivo integrar a diversos actores de la industria para generar soluciones efectivas a los desafíos que surgen en torno al uso de las motocicletas, incluyendo temas de movilidad eficiente y sostenibilidad y, particularmente, seguridad vial.
+
+[lanzamiento-de-green-movil-la-flota-y-el-centro-logistico-de-movilidad-electrica-mas-grande-de-latinoamerica#000] (lanzamiento-de-green-movil-la-flota-y-el-centro-logistico-de-movilidad-electrica-mas-grande-de-latinoamerica | https://fanalca.com/lanzamiento-de-green-movil-la-flota-y-el-centro-logistico-de-movilidad-electrica-mas-grande-de-latinoamerica/)
+Es un orgullo compartir con todos los colombianos el diseño y puesta en marcha de **Green Móvil, el centro logístico de movilidad eléctrica más grande Latinoamérica, con una flota de 406 buses eléctricos,** que nace de la alianza entre Fanalca, Transdev, Transmilenio y la Alcaldía de Bogotá.
+Este es un importante avance hacia una movilidad más consciente y sostenible en nuestro país y un ejemplo para el mundo. **Este patio taller de 40.000 m2 tiene una potencia de 20 megavatios** (la mayor capacidad a nivel mundial, en términos de transporte eléctrico, después de China).
+Entre los principales logros conseguidos a través de este proyecto:
+- **Mejoramos la calidad del aire:** estos 406 buses disminuyen la emisión de 6.5 toneladas de material particulado y 17.000 toneladas de CO2 al año.
+- **Generamos empleo:** los buses usan carrocería fabricada y ensamblada 100% en Colombia, por Superpolo. La construcción del centro logístico generó más de 1.500 empleos y la operación de Green Móvil genera más de 1.200 empleos directos.
+
+[lanzamiento-de-green-movil-la-flota-y-el-centro-logistico-de-movilidad-electrica-mas-grande-de-latinoamerica#001] (lanzamiento-de-green-movil-la-flota-y-el-centro-logistico-de-movilidad-electrica-mas-grande-de-latinoamerica | https://fanalca.com/lanzamiento-de-green-movil-la-flota-y-el-centro-logistico-de-movilidad-electrica-mas-grande-de-latinoamerica/)
+- **Ofrecemos innovación en movilidad:** cada bus cuenta con asistencia de arranque y subida de cuestas, cámaras a bordo (para la seguridad de pasajeros y conductores), puertos USB para cargar dispositivos móviles, GPS, paneles informativos, comunicación directa con el Centro de Control. Además, fueron diseñados con plataformas accesibles para sillas de ruedas, fabricadas por Fanalca.
+- **Promovemos la inclusión:** el 50% de colaboradoras directivas de Green Móvil son mujeres y la operación de los buses eléctricos cuenta con 45 conductoras especializadas en esta modalidad, gracias a los programas que impulsan la formación de mujeres para ser operadoras de buses eléctricos.
+Este proyecto es el resultado de la unión entre la ciudadanía, instituciones gubernamentales, empresa nacional y global, en busca de implementar un transporte con tecnología más limpia e innovadora.
+
+[primer-bus-a-hidrogeno-para-colombia#000] (primer-bus-a-hidrogeno-para-colombia | https://fanalca.com/primer-bus-a-hidrogeno-para-colombia/)
+Les compartimos una recopilación sobre el lanzamiento del primer piloto, en Latinoamérica, para transporte masivo a base de hidrógeno; un momento histórico para nuestra región, como parte del camino hacia la descarbonización.
+Este es el fruto de años de inversión en investigación y desarrollo.
+Gracias al trabajo conjunto y al apoyo de Grupo Móvil. Fanalca – Transdevy, Transdev, Ecopetrol, FENOGE, Cenit Transporte y Logística de Hidrocarburos, Alcaldía Mayor de Bogotá y TRANSMILENIO, hoy nuestro país cuenta con un bus a base de hidrógeno:
+✔️ 100% diseñado y ensamblado en Colombia
+✔️ Pensado para recorrer las montañas andinas, con pendientes mayores a 21%
+✔️ Con una autonomía superior a 450 Km con una recarga de 8 minutos
+El lanzamiento se llevó a cabo en Green Móvil, el centro logístico de buses eléctricos más grande de Latinoamérica (inaugurado hace un año); un espacio que, sin duda, continuará presenciando noticias como esta, en busca de la reindustrialización para el progreso de la economía colombiana.
+
+[la-inteligencia-artificial-en-nuestro-radar-estrategico-fanalca#000] (la-inteligencia-artificial-en-nuestro-radar-estrategico-fanalca | https://fanalca.com/la-inteligencia-artificial-en-nuestro-radar-estrategico-fanalca/)
+Seguimos abriéndonos a la innovación para fortalecer nuestra capacidad de adaptarnos y avanzar. Recientemente, nuestro equipo directivo participó en un enriquecedor taller sobre Inteligencia Artificial, liderado por Nicolás Uribe Rueda, a quien agradecemos profundamente por compartirnos su conocimiento y visión.
+Durante el encuentro, **exploramos herramientas basadas en IA y descubrimos su enorme potencial para transformar la manera en que trabajamos, creamos y tomamos decisiones.** Este espacio nos dejó importantes reflexiones:
+**La IA no reemplaza, sino que complementa:** nos reta a desarrollar nuevas competencias y a diversificar el contenido que consumimos y generamos.
+**Nos permite optimizar procesos, automatizar tareas y mejorar la toma de decisiones en distintos niveles de la organización.**
+**Amplía, agiliza y profundiza nuestra capacidad para analizar datos, convirtiéndose en un aliado clave para anticiparnos a los retos.**
+
+[la-inteligencia-artificial-en-nuestro-radar-estrategico-fanalca#001] (la-inteligencia-artificial-en-nuestro-radar-estrategico-fanalca | https://fanalca.com/la-inteligencia-artificial-en-nuestro-radar-estrategico-fanalca/)
+**Amplía, agiliza y profundiza nuestra capacidad para analizar datos, convirtiéndose en un aliado clave para anticiparnos a los retos.**
+Pero uno de los aprendizajes más poderosos fue entender que la calidad del resultado depende de la calidad del contexto. Una buena pregunta, un “prompt” bien estructurado, marca la diferencia entre una respuesta genérica y una solución verdaderamente útil.
+Este acercamiento nos impulsa a seguir incorporando nuevas tecnologías desde una mirada estratégica, ética y consciente, para seguir construyendo juntos una organización más eficiente, innovadora y preparada para el futuro.
+
+[relanzamiento-centro-de-conductores-honda-cali#000] (relanzamiento-centro-de-conductores-honda-cali | https://fanalca.com/relanzamiento-centro-de-conductores-honda-cali/)
+Seguimos reafirmando nuestro compromiso con la movilidad segura y responsable. El pasado 16 de junio llevamos a cabo la reinauguración del Centro de Conductores Fanalca Honda en Cali, un espacio diseñado para formar conductores más conscientes y preparados en la vía.
+Este centro, abierto para todos los motociclistas —sin importar la marca de su vehículo—, hace parte de nuestra campaña “Vive la vía, Honda te cuida”, y tiene como propósito fortalecer las habilidades de conducción segura y defensiva.
+Durante el relanzamiento contamos con la presencia de la Secretaría de Tránsito y Seguridad Vial de Cali, medios de comunicación y aliados estratégicos que comparten nuestro propósito de construir una cultura vial más responsable en Colombia.
+📍 El centro está ubicado en el Centro Comercial Calima y ofrece formación gratuita, convirtiéndose en una herramienta clave para fomentar la educación vial desde la práctica.
+
+[nuestra-fundacion-fanalca-recibe-exaltacion-de-honor-del-concejo-de-cali#000] (sostenibilidad | https://fanalca.com/nuestra-fundacion-fanalca-recibe-exaltacion-de-honor-del-concejo-de-cali/)
+**Nuestra Fundación Fanalca fue reconocida con la Exaltación de Honor por parte del Concejo Distrital de Cali,** gracias a una iniciativa presentada por el concejal Edison Giraldo. Este reconocimiento **se otorgó en conmemoración de los 21 años de trabajo ininterrumpido de la Fundación en defensa del espacio público y la transformación social en la ciudad.**
+En la resolución de exaltación, se destacó el impacto del trabajo desarrollado, que ha logrado la recuperación de más de 73.000 m² en siete parques ubicados en las comunas 2, 7, 14, 18, 20 y 21, además de la adecuación de un Centro de Desarrollo Infantil (CDI) y un Centro de Desarrollo Comunitario (CDC). También se resaltó la participación activa de más de 5.000 personas al año en programas de Cultura Ciudadana, Educación y Generación de Ingresos, impulsados por la Fundación.
+La exaltación fue recibida por la Directora Ejecutiva de la Fundación Fanalca, Elizabeth Gutiérrez Muñoz, quien expresó:
+**“Este reconocimiento es un aliciente para seguir adelante, trabajando con amor y compromiso por Cali”.**
+
+[nuestra-fundacion-fanalca-recibe-exaltacion-de-honor-del-concejo-de-cali#001] (sostenibilidad | https://fanalca.com/nuestra-fundacion-fanalca-recibe-exaltacion-de-honor-del-concejo-de-cali/)
+**“Este reconocimiento es un aliciente para seguir adelante, trabajando con amor y compromiso por Cali”.**
+También extendió una invitación a los concejales y a la ciudadanía a visitar los parques intervenidos y conocer de cerca las actividades sociales y comunitarias que allí se desarrollan.
+Este reconocimiento reafirma el compromiso de Fundación Fanalca con una Cali más digna, verde y humana. 🌿
+
+[estamos-entre-las-mejores-empresas-para-trabajar-en-colombia-merco-2025#000] (talento-humano | https://fanalca.com/estamos-entre-las-mejores-empresas-para-trabajar-en-colombia-merco-2025/)
+Nos llena de orgullo anunciar que hemos sido reconocidos en el ranking MERCO Talento 2025 como una de las mejores empresas para trabajar en Colombia, **ocupando el puesto #9 en el sector industrial.**
+MERCO Talento es uno de los monitores más prestigiosos de reputación corporativa en Iberoamérica, que evalúa la capacidad de las compañías para atraer y retener talento, teniendo en cuenta la percepción de trabajadores, expertos en gestión del talento, universidades, sindicatos, headhunters y ciudadanos en general.
+Este logro reconoce aspectos fundamentales de nuestra cultura organizacional, tales como:
+– La gestión empresarial centrada en las personas.
+– La responsabilidad social y compromiso con el entorno.
+– La experiencia positiva de nuestros colaboradores.
+Y la reputación construida con nuestros grupos de interés.
+En Fanalca, trabajamos cada día con un propósito claro: **nuestra prioridad son las personas, nuestro compromiso es el bienestar y el progreso sostenible.**
+Este reconocimiento nos motiva a seguir fortaleciendo una cultura donde el desarrollo humano, el respeto y el sentido de propósito son protagonistas.
+
+[estamos-entre-las-mejores-empresas-para-trabajar-en-colombia-merco-2025#001] (talento-humano | https://fanalca.com/estamos-entre-las-mejores-empresas-para-trabajar-en-colombia-merco-2025/)
+¡**Gracias a cada persona que hace parte de este camino!**
+
+[nuevo-hito-historico-honda-500-millones-de-motocicletas-fabricadas-en-el-mundo#000] (nuevo-hito-historico-honda-500-millones-de-motocicletas-fabricadas-en-el-mundo | https://fanalca.com/nuevo-hito-historico-honda-500-millones-de-motocicletas-fabricadas-en-el-mundo/)
+Hoy celebramos un logro que marca un antes y un después en nuestra historia: **Honda ha fabricado 500 millones de motocicletas a nivel global.**
+Un número que no solo representa crecimiento industrial, sino también la **confianza, la innovación y la pasión compartida con millones de personas en todo el mundo.**
+Detrás de cada motocicleta hay mucho más que un proceso de ensamblaje. Hay historias de libertad, momentos inolvidables y sueños impulsados por la potencia de avanzar.
+Cada moto es:
+- Una aventura vivida.
+- Un vínculo entre la tradición y el futuro.
+- Un símbolo de confianza entre quienes conducen y quienes fabrican.
+Este logro ha sido posible gracias al compromiso de nuestros conductores, colaboradores, aliados y soñadores, que han creído en la marca, en la calidad y en la promesa de movilidad que nos mueve.
+En Honda, no solo sumamos kilómetros…
+Sumamos emociones, experiencias y razones para seguir avanzando.
+**500 millones de motocicletas. 500 millones de historias. 500 millones de razones para seguir rodando.**
+
+[nuevos-lanzamientos-motocicletas-honda-xr300l-tornado-xre300-sahara-cb1000-hornet-y-nt1100#000] (nuevos-lanzamientos-motocicletas-honda-xr300l-tornado-xre300-sahara-cb1000-hornet-y-nt1100 | https://fanalca.com/nuevos-lanzamientos-motocicletas-honda-xr300l-tornado-xre300-sahara-cb1000-hornet-y-nt1100/)
+Iniciamos mayo con grandes novedades que reafirman nuestro liderazgo en el sector motociclista colombiano. Tuvimos el honor de recibir al equipo Honda Racing Colombia 2025, quienes representarán nuestra marca en las competencias GP Colombia, MX Motocross y Enduro.
+Durante su visita, los pilotos compartieron sus vivencias en las pistas y acompañaron el lanzamiento oficial de las nuevas motocicletas Honda:
+🏍️ XR300L Tornado – 🏍️ XRE300 SAHARA – 🏍️ CB1000 HORNET – 🏍️ NT1100
+Además, **celebramos con orgullo la llegada al país de la primera Honda CBR 1000 RR-R,** una motocicleta que marca un hito en potencia, diseño y tecnología para nuestra marca.
+En el área de posventa motocicletas, también tuvimos importantes lanzamientos. Presentamos la nueva imagen del aceite ProHonda y lanzamos nuestra línea de cascos y accesorios AMX, diseñada para brindar a nuestros usuarios una experiencia superior en seguridad, mantenimiento y estilo.
+Este emocionante inicio de mes refleja nuestro compromiso constante con la innovación, la excelencia y la pasión por las dos ruedas. ¡Seguimos acelerando hacia el futuro!
+
+[compromiso-valle#000] (compromiso-valle | https://fanalca.com/compromiso-valle/)
+Reafirmamos nuestro compromiso con el desarrollo social y la equidad en el Valle del Cauca, sumándonos activamente a la estrategia #CompromisoValle, una iniciativa que ya ha transformado la vida de más de 77 mil personas en la región.
+Esta alianza multisectorial, que une a empresas, organizaciones y comunidades, demuestra que la diversidad, la colaboración y la acción colectiva son claves para generar oportunidades reales y sostenibles.
+Desde Fanalca, creemos firmemente que el cambio se construye con hechos y no con promesas. Por eso, no esperamos… ¡Avanzamos! 💙🧡💚🩷
+Te invitamos a conocer más sobre las iniciativas de Compromiso Valle, seguir sus redes sociales y visitar su página web: https://www.compromisovalle.org/
+¡**Sigamos demostrando que juntos, es posible!**
+
+[fanalca-y-la-ansv-unidos-por-la-seguridad-vial#000] (fanalca-y-la-ansv-unidos-por-la-seguridad-vial | https://fanalca.com/fanalca-y-la-ansv-unidos-por-la-seguridad-vial/)
+En Fanalca seguimos trabajando por una movilidad más segura para todos. Por eso, recibimos con entusiasmo la visita de la Agencia Nacional de Seguridad Vial (ANSV), en una jornada enriquecedora donde abordamos **la importancia de la seguridad vial tanto en el entorno empresarial como ciudadano.**
+Durante este encuentro, tuvimos la oportunidad de **compartir experiencias, buenas prácticas y reflexionar sobre los retos actuales en materia de tránsito seguro. Se destacaron temas clave como el uso adecuado del casco, la prevención de incidentes y la construcción de hábitos responsables al movilizarnos por las vías.**
+Este espacio reafirma nuestro compromiso con el bienestar de nuestros colaboradores y de toda la comunidad, promoviendo acciones concretas que contribuyen a una cultura vial más consciente y preventiva.
+Agradecemos a la ANSV por su visita y por facilitar este diálogo que fortalece alianzas por la vida.
+¡Porque la seguridad vial es tarea de todos! 🏍️✨
+
+[nuestro-presidente-joaquin-losada-fina-es-nombrado-como-nuevo-presidente-del-consejo-directivo-y-fundacional-de-propacifico#000] (sostenibilidad | https://fanalca.com/nuestro-presidente-joaquin-losada-fina-es-nombrado-como-nuevo-presidente-del-consejo-directivo-y-fundacional-de-propacifico/)
+Durante el primer Consejo Fundacional del año, ProPacífico anunció el nombramiento de nuestro presidente, Joaquín Losada Fina, como nuevo Presidente del Consejo Directivo y Fundacional de esta importante entidad.
+Este nombramiento nos llena de orgullo y representa una valiosa oportunidad para seguir aportando al desarrollo integral del Valle del Cauca y del suroccidente colombiano. Desde Fanalca, reafirmamos nuestro compromiso con la construcción de una región más próspera, equitativa y con más oportunidades para todos.
+Estamos convencidos de que, bajo este nuevo liderazgo, seguiremos fortaleciendo alianzas estratégicas y promoviendo iniciativas que generan impacto positivo y transformación sostenible.
+Seguimos avanzando juntos por el futuro de nuestra región.
+
+[negocios#000] (negocios | https://fanalca.com/negocios/)
+### Tubos y perfiles de acero
+### Tubos y perfiles de acero
+
+[negocios-tubos-y-perfiles-de-acero#000] (negocios/tubos-y-perfiles-de-acero | https://fanalca.com/negocios/tubos-y-perfiles-de-acero/)
+# Tubos y perfiles
+Fabricamos y comercializamos productos de acero
+**Tubos de acero** soldados en lámina Cold Rolled, Hot Rolled, Estructural y Galvanizada.
+**Perfiles de acero abiertos**para la construcción como: Perfil C, Perfil Entrepiso, Vigas, Steel Deck, Fleje Cortina, Sistema Liviano Drywall y Steel Framing.
+Ofrecemos el **portafolio** mas completo de tubos en acero fabricados con las mas alta **precisión geométrica** asegurando el **desempeño** del producto.
+Contamos con plantas de producción en **Acopi, Yumbo** (Valle del Cauca) y **Guachené** (Cauca)
+
+[negocios-ambiental#000] (negocios/ambiental | https://fanalca.com/negocios/ambiental/)
+# Ambiental
+Fabricamos equipos para recolección de residuos sólidos desde el año 1981, liderando la innovación y la evolución de las cajas compactadoras de basura y contenedores de acero en Colombia.
+**Comercializamos**equipos complementarios de manejo de residuos como
+**cajas de cargue lateral**,
+Ofrecemos una **amplia gama** de cajas compactadoras diseñadas con componentes de última tecnología para una un **mayor vida útil** del equipo y una **operación flexible** en cualquier terreno de la exigente topografía andina.
+Tenemos **presencia en 29 departamentos** del territorio nacional, contamos con **más de 250 clientes** nacionales e internacionales, ubicados en países como Panamá, Venezuela, Ecuador, India y Chile.
+Somos lideres en la implementación de aceros anti desgaste y de alta resistencia en nuestras cajas y contamos con tecnologías patentadas para hacer su **operación de recolección más rentable**.
+
+[negocios-holda-autos#000] (negocios/holda-autos | https://fanalca.com/negocios/holda-autos/)
+# Honda
+En 1962, Honda pasa de dos a cuatro ruedas y **nace el primer auto deportivo de la marca**, el S360, que alcanzaba una velocidad de 100 km por hora.
+Durante 1972, **se lanza el reconocido Honda Civic**, marcando la diferencia en la historia de los autos compactos pues fue el primero en cumplir con las normas ambientales establecidas por Estados Unidos.
+En Colombia, **Fanalca inició la importación y comercialización de vehículos Honda en la década de 1990** y se consolida como la única marca en el país que ofrece una Garantía Real Total: mano de obra, insumos y repuestos sin costo, por 2 años y sin límite de kilometraje. Actualmente, la Garantía Total Honda es la única en el mercado que incluye mantenimiento preventivo, correctivo y predictivo sin costo.
+En línea con el propósito de la marca de crear soluciones de movilidad y garantizar su innovación, Honda incursiona en la robótica y en el año 2000 presenta a Asimo, el robot humanoide más avanzado del mundo. Además, en el 2003, lanza el Hondajet, haciendo su primer vuelo sobre Carolina del Norte, Estados Unidos.
+
+[negocios-holda-autos#001] (negocios/holda-autos | https://fanalca.com/negocios/holda-autos/)
+Única marca en el país que ofrece una **Garantía Real Total**: mano de obra, insumos y repuestos sin costo, por 2 años y sin límite de kilometraje. Actualmente, la Garantía Total Honda es la única en el mercado que incluye mantenimiento preventivo, correctivo y predictivo sin costo.
+En tres décadas, nuestra marca ha logrado excelentes resultados de posicionamiento por su calidad, diseño, eficiencia y ecología; como también, de expansión: contamos con **más de 32.000 clientes** y una red de concesionarios compuesta por **26 vitrinas** a nivel nacional, que prestan el servicio de venta y posventa.
+Nuestro servicio de **Renting Total** actualmente cuenta con una flota de **638 vehículos**.
+
+[en-business-fanalvias#000] (negocios/fanalvias | https://fanalca.com/en/business/fanalvias/)
+# Fanalvías
+#### Quality and support for safe roads
+As part of our strategic vision of growth through diversification and backed by our steel processing expertise, we entered the road infrastructure market with our Fanalvías brand.
+We manufacture **metal road defenses** ensuring **compliance with current specifications** and regulations.
+Marketers of road safety elements such as **crash cushions** and **special end terminals**.
+Defenses manufactured with the highest **geometric precision** in the forming, resulting in **lower installation and maintenance costs**.
+**Production plants** in **Acopi**, Yumbo (Valle del Cauca) with the capacity to continuously supply the main **road infrastructure projects in the country**.
+
+[en-business-honda-motorcycles#000] (negocios/honda-motorcycles | https://fanalca.com/en/business/honda-motorcycles/)
+# Honda
+## #1 of motorcycles in the world
+#### We are the brand of the power of dreams and we accompany Colombians to make real their own dreams.
+We are **the only domestic production plant,** worldwide, licensed to manufacture and assemble Honda motorcycles, by our high quality standards. Our assembly plant is located in Acopi, Yumbo, Valle del Cauca.
+We sell **100 cc up to 250 cc**, Honda spare parts and accessories.
+**We** import high cilinder Honda motorcycles.
+We have our own distribution network and a network of distributors that allows to have coverage in the national **territory: 450 points of sale** with presence in the 32 departments, **265 Repair shops** in the country and **1,265 spare parts warehouses.**
+
+[en-business-honda-autos#000] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
+# Honda
+In 1962, Honda went from two to four wheels and **the brand’s first sports car, the S360, was born**, reaching a speed of 100 km per hour.
+During 1972, **the renowned Honda Civic was launched**, making a difference in the history of compact cars as it was the first to meet the environmental standards established by the United States.
+In Colombia, **Fanalca began importing and marketing Honda vehicles in the 1990s** and is consolidated as the only brand in the country to offer a Total True Guarantee: labor, inputs and spare parts at no cost, for 2 years and without mileage limit. Currently, the Honda Total Guarantee is the only one on the market that includes preventive, corrective and predictive maintenance at no cost.
+Agreeing with the brand’s purpose of creating mobility solutions and ensuring their innovation, Honda entered robotics and in 2000 introduced Asimo, the world’s most advanced humanoid robot. In addition, in 2003, launched the Hondajet, making his first flight over North Carolina, United States.
+
+[en-business-honda-autos#001] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
+Unique brand in the country that offers a **Total True Guarantee**: labor, supplies and spare parts at no cost, for 2 years and without mileage limit. Currently, the Honda Total Warranty is the only one on the market that includes preventive, corrective and predictive maintenance at no cost.
+In three decades, our brand has achieved excellent positioning results for its quality, design, efficiency and ecology; as well as expansion: we have **more than 32,000 customers** and a network of dealers composed of **26 show rooms** nationwide, who provide the sales and after-sales service.
+Our **Total Renting** service currently has a fleet of **638 vehicles**.
+
+[en-business-environmental#000] (negocios/environmental | https://fanalca.com/en/business/environmental/)
+# Environmental
+We have been manufacturing solid waste collection equipment since 1981, leading the innovation and evolution of garbage compactor boxes and steel containers in Colombia.
+We market complementary waste management equipment such as **hydraulic arms**, **side loading boxes**, **container cleaners** and **sweepers**.
+We offer a **wide range** of compacting boxes designed with state-of-the-art components for **longer equipment life** and **flexible operation** in any terrain of demanding Andean topography.
+We have a **presence in 29 departments** nationwide, we have **more than 250 national and international clients**, located in countries such as Panama, Venezuela, Ecuador, India and Chile.
+We are leaders in the implementation of high-strength, anti-wear steels in boxes and have patented technologies to make its **collection operation more cost-effective**.
+
+[en-business-steel-tubes-and-profiles#000] (negocios/steel-tubes-and-profiles | https://fanalca.com/en/business/steel-tubes-and-profiles/)
+# Steel tubes
+We manufacture and market steel products
+Welded **steel tubes** in Cold Rolled, Hot Rolled, Structural and Galvanized sheet.
+**Open steel profiles** for construction such as: Profile C, Mezzanine Profile, Beams, Steel Deck, Curtain Strap, Drywall Lightweight Drywall System and Steel Framing.
+We offer the most complete **portfolio** of steel pipes manufactured with the highest **geometric precision** ensuring product **performance.**
+We have production plants in **Acopi, Yumbo** (Valle del Cauca) and **Guachené** (Cauca).
+
+[en-privacy-notice#000] (legal | https://fanalca.com/en/privacy-notice/)
+# PRIVACY NOTICE
+**FANALCA S.A.**, identified with NIT 890.301.886 – 1 and domiciled at Calle 13 No. 31 A 80 Acopi, in the municipality of Yumbo, Colombia, carries out the processing of your personal data as responsible
+
+[en-privacy-notice#001] (legal | https://fanalca.com/en/privacy-notice/)
+### TREATMENT AND PURPOSE
+The treatment carried out by the commercial and/or administrative units of **FANALCA S.A.** with your personal information is to collect, store, process, use, circulate, guard, archive, collect, process, consult, compile, analyze, update, verify, exchange, report, supply, delete, dispose, share, transmit and transfer.
+This information is and will be used in the development of the social object and the functions of **FANALCA S.A.** , including for statistical, commercial, advertising, marketing, financial management, accounting, labor management, collection, processing, complaints and complaints purposes, as well as to offer products and services, promotions and service campaigns.
+
+[en-privacy-notice#002] (legal | https://fanalca.com/en/privacy-notice/)
+### TREATMENT OF SENSITIVE DATA AND MINORS
+Sensitive data are data that affect the privacy of the information subject and may result in it being discriminated against, such as those that reveal its racial or ethnic origin, political orientation, religious or philosophical convictions, membership of trade unions, social organizations, human rights, as well as data relating to health, sex life, and biometric data.
+**FANALCA S.A. guarantees that the owner is not obliged to provide or authorize the processing of his sensitive data for the purposes warned, except in cases where by law the granting of such authorization is not** required, or the treatment is necessary to safeguard the vital interest of the owner and the owner is physically or legally incapacitated, cases of medical or health emergency.
+
+[en-privacy-notice#003] (legal | https://fanalca.com/en/privacy-notice/)
+In addition, **FANALCA S.A.** security measures are in place to provide enhanced protection to data of children collected in a way that ensures respect for the prevalent rights of children and adolescents. In any case, prior, express and informed authorization will be requested from the owner, guardian or representative of the minor before initiating the collection of personal data, as well as the purposes of such consent.
+
+[en-privacy-notice#004] (legal | https://fanalca.com/en/privacy-notice/)
+### RIGHTS OF THE OWNER
+The owner of the personal information has the right to: access the data provided free of charge; know, update and rectify your information; request proof of the authorization granted; Superintendency of Industry and Commerce (SIC) complaints after **FANALCA S.A.** violates the terms established by law to respond to the owner’s requests; revoke the authorization and/or request the deletion of any data; refrain from answering questions about sensitive data **(except with the data required in compliance with health emergency standards)**or on minors.
+To exercise the rights the owner can make requests, complaints or complaints through email: lpdp@fanalca.com
+
+[en-privacy-notice#005] (legal | https://fanalca.com/en/privacy-notice/)
+### MECHANISMS FOR KNOWING THE PERSONAL DATA PROCESSING POLICY
+The owner of the information can access and know the policy of processing personal data through:
+- Website: fanalca.com
+- Email: lpdp@fanalca.com
+
+[en-news#000] (noticias | https://fanalca.com/en/news/)
+# Good news
+# Good news
+Steel pipes and profiles
+We are human and we act in solidarity, it is one of the values of our company; Therefore, from the beginning of the contingency generated
+
+[en-who-we-are-why-work-at-fanalca#000] (quienes-somos | https://fanalca.com/en/who-we-are/why-work-at-fanalca/)
+# Why work at Fanalca
+# Why work at Fanalca
+Although, over the years, Fanalca’s businesses have become more diverse, there is a constant that drives our alignment, teamwork and that differentiates us in the market: **our corporate values**.
+**We are committed to results**
+We work as a team with determination and excellence, developing constructive relationships that allow us to obtain superior performance in our objectives.
+**We are trustworthy**
+We value consistency between what we think, say and do, we fulfill our promises basing all decisions on transparency and ethics.
+**We act with respect**
+We value the individuality, differences and contributions of all the people with whom we interact inside and outside the organization, building positive and long-term bonds.
+**We are entrepreneurs**
+We persevere to find opportunities that offer us competitive advantages and we respond to them with passion, innovation and flexibility.
+**We are human and we act in solidarity**
+
+[en-who-we-are-why-work-at-fanalca#001] (quienes-somos | https://fanalca.com/en/who-we-are/why-work-at-fanalca/)
+**We are human and we act in solidarity**
+We are genuinely interested in the safety, stability and well-being of ourselves, our collaborators and their families. Likewise, we take care to contribute to the sustainable development of the social and environmental environment.
+This is the basis of our identity; Our actions and decisions are based every day on each one of them.
+Would you like to be part of our organization? Get to know our vacancies, apply and experience the Fanalca culture.
+
+[aviso-de-privacidad#000] (legal | https://fanalca.com/aviso-de-privacidad/)
+# AVISO DE PRIVACIDAD
+**FANALCA S.A.**, identificada con el NIT 890.301.886 – 1 y con domicilio en la Calle 13 No. 31 A 80 Acopi, del municipio de Yumbo, Colombia, realiza el tratamiento de sus datos personales en calidad de responsable y encargado.
+
+[aviso-de-privacidad#001] (legal | https://fanalca.com/aviso-de-privacidad/)
+### TRATAMIENTO Y FINALIDAD
+El tratamiento que realizan las dependencias comerciales y/o administrativas de **FANALCA S.A.** con su información personal es la de recolectar, almacenar, tratar, usar, circular, custodiar, archivar, recopilar, procesar, consultar, compilar, analizar, actualizar, verificar, intercambiar, reportar, suministrar, suprimir, disponer, compartir, transmitir y transferir.
+Esta información es y será utilizada en el desarrollo del objeto social y de las funciones propias de **FANALCA S.A.**, entre ellas, para fines estadísticos, comerciales, publicitarios, de mercadeo, manejo financiero, contable, gestión laboral, de cobranza, de trámites, quejas y reclamos, así como para ofrecer productos y servicios, promociones y campañas de servicio.
+
+[aviso-de-privacidad#002] (legal | https://fanalca.com/aviso-de-privacidad/)
+### TRATAMIENTO DE DATOS SENSIBLES Y DE MENORES DE EDAD
+Los datos sensibles son aquellos que afectan la intimidad del titular de la información y pueden dar lugar a que sea discriminado, como aquellos que revelan su origen racial o étnico, su orientación política, las convicciones religiosas o filosóficas, la pertenencia a sindicatos, organizaciones sociales, de derechos humanos, así como los datos relativos a la salud, a la vida sexual, y los datos biométricos.
+**FANALCA S.A.** garantiza que el titular no está obligado a suministrar o autorizar el tratamiento de sus datos sensibles para las finalidades advertidas, salvo en los casos en que por ley no sea requerido el otorgamiento de dicha autorización, o el tratamiento sea necesario para salvaguardar el interés vital del titular y este se encuentre física o jurídicamente incapacitado, casos de urgencia médica o sanitaria.
+
+[aviso-de-privacidad#003] (legal | https://fanalca.com/aviso-de-privacidad/)
+Además, **FANALCA S.A.** dispone de medidas de seguridad para brindar una protección reforzada a los datos de menores de edad recolectados de manera que se asegure el respeto a los derechos prevalentes de los niños, niñas y adolescentes. En todo caso se solicitará autorización previa, expresa e informada al titular, tutor o representante del menor de edad antes de iniciar la recolección de datos personales, así como las finalidades de tal consentimiento.
+
+[aviso-de-privacidad#004] (legal | https://fanalca.com/aviso-de-privacidad/)
+### DERECHOS DEL TITULAR
+El titular de la información personal tiene derecho a: acceder de forma gratuita a los datos proporcionados; conocer, actualizar y rectificar su información; solicitar prueba de la autorización otorgada; presentar ante la Superintendencia de Industria y Comercio (SIC) quejas luego de que **FANALCA S.A.** incumpla los términos establecidos en la ley para atender las solicitudes del titular; revocar la autorización y/o solicitar la supresión de cualquier dato; abstenerse de responder las preguntas sobre datos sensibles (**excepto con los datos requeridos en cumplimiento de las normas de emergencia sanitaria**) o sobre menores de edad.
+Para ejercer los derechos el titular puede realizar las solicitudes, quejas o reclamos a través del correo electrónico: lpdp@fanalca.com
+
+[aviso-de-privacidad#005] (legal | https://fanalca.com/aviso-de-privacidad/)
+### MECANISMOS PARA CONOCER LA POLÍTICA DE TRATAMIENTO DE DATOS PERSONALES
+El titular de la información puede acceder y conocer la política de tratamiento de datos personales a través de:
+- Página web: www.fanalca.com
+- Correo electrónico: lpdp@fanalca.com
+
+[en#000] (inicio | https://fanalca.com/en/)
+## Colombian pride
+On May 31, 1958, the National Factory of bodyworks – Fanalca was established between the Losada and Herrera families.
+Today, it is consolidated as a diverse, entrepreneurial company and a leader in the sectors in which it has a stake through its business units.
+This shows the commitment of our founders, who have continued their legacy and each one of the collaborators who are part of the organization, so that the growth of the company adds value to society and generates an economic, social and environmental balance.
+
+[en#001] (inicio | https://fanalca.com/en/)
+### Steel tubes and profiles
+### Steel tubes and profiles
+
+[en#002] (inicio | https://fanalca.com/en/)
+## Sustainability
+Our goals have grown along with the dreams of our employees and their families. But our vision of collective construction goes further.
+The management of the Fanalca Foundation has been key to following a sustainable path and supporting the needs of the communities in which we operate.
+Our goals have grown along with the dreams of our employees and their families. But our vision of collective construction goes further.
+The management of the Fanalca Foundation has been key to following a sustainable path and supporting the needs of the communities in which we operate.
+
+[en-business-auto-parts#000] (negocios/auto-parts | https://fanalca.com/en/business/auto-parts/)
+# Auto parts
+#### We have production plants in Acopi, Yumbo (Valle del Cauca), Bogotá (Cundinamarca) and Medellin (Antioquia).
+At our **Yumbo** and **Bogota** plant we manufacture metal parts for cars and commercial vehicles such as trucks, pickups, buses, buses; as well as doors, crossbars and chassis (frames) supports.
+In the plant located in **Medellin** is carried out assembly of metal parts for cars and commercial vehicles; such as floor panels, motor cots and rear ends.
+
+[negocios-autopartes#000] (negocios/autopartes | https://fanalca.com/negocios/autopartes/)
+# Autopartes
+#### Contamos con plantas de producción en Acopi, Yumbo (Valle del Cauca), Bogotá (Cundinamarca) y Medellín (Antioquia).
+En nuestra planta de **Yumbo** y **Bogotá** fabricamos partes metálicas para automóviles y vehículos comerciales como camiones, pickups, buses, busetas; como puertas, travesaños y soportes para chasis.
+En la planta ubicada en **Medellín** se realiza ensamble de partes metálicas para automóviles y vehículos comerciales; como paneles de pisos, cunas motor y trenes traseros para automóviles.
+
+[nosotros#000] (quienes-somos | https://fanalca.com/nosotros/)
+# Comprometidos con el desarrollo sostenible
+# Comprometidos con el desarrollo sostenible
+La historia de Fanalca se remonta al año 1958 cuando Joaquín Losada Salcedo, en un afortunado evento del destino, ayuda a un representante de la Superior Coach de Estados Unidos y, después de varias conversaciones, le ofrece la representación en Colombia para importar carrocerías.
+Poco después, el 31 de mayo de 1958, se constituyó, entre las familias Losada y Herrera, la Fábrica Nacional de Carrocerías – Fanalca. En 1959, en compañía de la familia Gómez, fundaron Super Bus Medellín y Super Bus Bogotá para ensamblar carrocerías.
+Estos visionarios, con un grupo de 12 colaboradores, iniciaron esta exitosa historia de más de 60 años.
+De importar carrocerías completas de Estados Unidos, poco a poco se logró ensamblar el 100% del bus en Colombia, lo que evidenció la capacidad de la organización.
+En 1969, asumen la presidencia Alberto Losada y Jorge Herrera y se inicia un período de diversificación con autopartes. Teniendo en cuenta que los asientos de los buses requerían grandes cantidades de tubería, identificaron la oportunidad de desarrollar este negocio.
+
+[nosotros#001] (quienes-somos | https://fanalca.com/nosotros/)
+En el año 1971, Fanalca contaba con 40 colaboradores y, en su búsqueda constante de crecimiento, inicia la negociación con Honda Japón para comercializar sus motocicletas y posteriormente realizar su ensamblaje. Años después, y a partir de ese contacto, se consigue la autorización para comercializar automóviles Honda en Colombia.
+
+[nosotros#002] (quienes-somos | https://fanalca.com/nosotros/)
+## Orgullo Colombiano
+Hoy Fanalca se consolida como una compañía diversa, emprendedora y líder en los sectores en los cuales tiene participación.
+La pasión y compromiso de nuestros colaboradores nos permite recorrer un camino de innovación sostenible.
+
+[noticias#000] (noticias | https://fanalca.com/noticias/)
+Seguimos reafirmando nuestro compromiso con la movilidad segura y responsable. El pasado 16 de junio llevamos a cabo la reinauguración del Centro de Conductores Fanalca
+
+[noticias#001] (noticias | https://fanalca.com/noticias/)
+# Buenas noticias
+# Buenas noticias
+Seguimos abriéndonos a la innovación para fortalecer nuestra capacidad de adaptarnos y avanzar. Recientemente, nuestro equipo directivo participó en un enriquecedor taller sobre Inteligencia Artificial,
+Nos llena de orgullo anunciar que hemos sido reconocidos en el ranking MERCO Talento 2025 como una de las mejores empresas para trabajar en Colombia,
+Nuestra Fundación Fanalca fue reconocida con la Exaltación de Honor por parte del Concejo Distrital de Cali, gracias a una iniciativa presentada por el concejal
+Hoy celebramos un logro que marca un antes y un después en nuestra historia: Honda ha fabricado 500 millones de motocicletas a nivel global. Un
+Iniciamos mayo con grandes novedades que reafirman nuestro liderazgo en el sector motociclista colombiano. Tuvimos el honor de recibir al equipo Honda Racing Colombia 2025,
+
+[nosotros-por-que-trabajar-en-fanalca#000] (quienes-somos | https://fanalca.com/nosotros/por-que-trabajar-en-fanalca/)
+# Por qué trabajar en Fanalca
+# Por qué trabajar en Fanalca
+Con el paso de los años los negocios de Fanalca se hacen más diversos, bajo una constante que impulsa nuestra alineación, visión, trabajo en equipo y nos diferencia en el mercado: nuestro propósito superior, pilares estratégicos y valores corporativos.
+
+[nosotros-por-que-trabajar-en-fanalca#001] (quienes-somos | https://fanalca.com/nosotros/por-que-trabajar-en-fanalca/)
+## Propósito superior Fanalca
+Nuestra prioridad las personas, nuestro compromiso el bienestar y el progreso sostenible
+
+[nosotros-por-que-trabajar-en-fanalca#002] (quienes-somos | https://fanalca.com/nosotros/por-que-trabajar-en-fanalca/)
+## Pilares estratégicos
+1. Bienestar y desarrollo de colaboradores y sus familias.
+2. Compromiso social y ambiental.
+3. Creación de valor: Emprendimiento y progreso económico.
+
+[nosotros-por-que-trabajar-en-fanalca#003] (quienes-somos | https://fanalca.com/nosotros/por-que-trabajar-en-fanalca/)
+## Valores corporativos
+**Estamos comprometidos con los resultados**
+Trabajamos en equipo con determinación y excelencia, desarrollando relaciones constructivas que permitan obtener un desempeño superior en nuestros objetivos.
+Valoramos la coherencia entre lo que pensamos, decimos y hacemos, cumplimos nuestras promesas fundamentando todas las decisiones en la transparencia y la ética.
+**Actuamos con respeto**
+Valoramos la individualidad, las diferencias y contribuciones de todas las personas con las que nos relacionamos dentro y fuera de la organización, construyendo vínculos positivos y de largo plazo.
+Perseveramos para encontrar oportunidades que nos ofrezcan ventajas competitivas y respondemos a ellas con pasión, innovación y flexibilidad.
+**Somos humanos y actuamos solidariamente**
+Nos interesamos genuinamente por la seguridad, estabilidad y bienestar propio, de nuestros colaboradores y sus familias. Asimismo, nos ocupamos por contribuir al desarrollo sostenible del entorno social y ambiental.
+Los valores corporativos son la base de nuestra identidad; guía nuestras acciones y decisiones todos los días.
+
+[nosotros-por-que-trabajar-en-fanalca#004] (quienes-somos | https://fanalca.com/nosotros/por-que-trabajar-en-fanalca/)
+Los valores corporativos son la base de nuestra identidad; guía nuestras acciones y decisiones todos los días.
+¿Te gustaría hacer parte de nuestra organización? Conoce nuestras vacantes, postúlate y vive la cultura Fanalca.
+
+[sostenibilidad#000] (sostenibilidad | https://fanalca.com/sostenibilidad/)
+# Sostenibilidad
 # Sostenibilidad
 ## Fundación Fanalca
-La Fundación Fanalca se creó en 2003 para desarrollar proyectos de construcción de cultura ciudadana. Su trabajo incluye la recuperación de espacios públicos, principalmente parques en zonas vulnerables, y la transformación de comportamientos de la comunidad, entregando herramientas para que las acciones se sostengan.
-La Fundación trabaja en cuatro líneas de acción: cultura ciudadana, educación, generación de ingresos, y arte y cultura. Su sitio web es fundacionfanalca.org.co.
+Nuestra Fundación Fanalca nace en el 2003, como un aliado para implementar proyectos que contribuyan a la construcción de cultura ciudadana a través de la **recuperación** del espacio público, especialmente parques ubicados en zonas vulnerables y la **transformación** de comportamientos de la comunidad en general, brindándoles herramientas que apoyen la sostenibilidad de estas acciones.
+Las líneas de acción sobre las cuales trabaja la fundación, con diferentes públicos objetivos, son: cultura ciudadana, educación, generación de ingresos, arte y cultura.
+Para conocer más sobre la gestión de nuestra Fundación Fanalca, visita su página web:
 
-[sostenibilidad#001] (sostenibilidad | https://fanalca.com/en/sustainability/)
-## Informes de sostenibilidad
-El sitio publica informes de sostenibilidad de los años 2018, 2019 y 2020 en formato PDF.
+[negocios-fanalvias#000] (negocios/fanalvias | https://fanalca.com/negocios/fanalvias/)
+# Fanalvías
+#### Calidad y respaldo para vías seguras
+Como parte de nuestra visión estratégica de crecimiento a través de la diversificación y respaldados en nuestra experiencia en transformación de acero, incursionamos en el mercado de la infraestructura vial con nuestra marca Fanalvías.
+Fabricamos **defensas viales metálicas** de carretera garantizando **cumplimiento de especificaciones** y normativa vigente.
+Comercializadores de elementos para seguridad vial como **amortiguadores de impacto** y **terminales especiales**.
+Defensas fabricadas con la mas alta **precisión geométrica** en el formado, lo que se traduce en **menores costos de instalación y mantenimiento**.
+**Plantas de producción**en
+**Acopi**, Yumbo (Valle del Cauca) con capacidad para suministrar continuamente los principales proyectos de
+**infraestructura vial en el país**.
+
+[en-negocio-environmental#000] (environmental | https://fanalca.com/en/negocio/environmental/)
+In the midst of the covid-19 contingency, our environmental business unit managed to deliver 40 garbage compactor boxes and 19 dump trucks on time for waste collection in Barranquilla, as…
+
+[negocio-fanalca#000] (fanalca | https://fanalca.com/negocio/fanalca/)
+- Autor de la entrada: Diana Romero
+- Publicación de la entrada: 24 octubre, 2025
+- Categoría de la entrada:
+- Autor de la entrada: Diana Romero
+- Publicación de la entrada: 18 septiembre, 2025
+- Categoría de la entrada:
+
+[en-negocio-steel-pipes-and-profiles#000] (steel-pipes-and-profiles | https://fanalca.com/en/negocio/steel-pipes-and-profiles/)
+We are human and we act in solidarity, it is one of the values of our company; Therefore, from the beginning of the contingency generated by covid-19, our main objective…
+
+[negocio-tuberia-y-perfiles-de-acero#000] (tuberia-y-perfiles-de-acero | https://fanalca.com/negocio/tuberia-y-perfiles-de-acero/)
+- Autor de la entrada: Carolina Robles
+- Publicación de la entrada: 6 febrero, 2025
+- Categoría de la entrada:
+
+[negocio-honda-autos#000] (honda-autos | https://fanalca.com/negocio/honda-autos/)
+- Autor de la entrada: Carolina Robles
+- Publicación de la entrada: 3 octubre, 2025
+- Categoría de la entrada:
+- Autor de la entrada: Carolina Robles
+- Publicación de la entrada: 3 octubre, 2025
+- Categoría de la entrada:
+- Autor de la entrada: Carolina Robles
+- Publicación de la entrada: 3 octubre, 2025
+- Categoría de la entrada:
+- Autor de la entrada: Carolina Robles
+- Publicación de la entrada: 3 octubre, 2025
+- Categoría de la entrada:
+- Autor de la entrada: Carolina Robles
+- Publicación de la entrada: 3 octubre, 2025
+- Categoría de la entrada:
+- Autor de la entrada: Carolina Robles
+- Publicación de la entrada: 3 octubre, 2025
+- Categoría de la entrada:
+- Autor de la entrada: Carolina Robles
+- Publicación de la entrada: 3 octubre, 2025
+- Categoría de la entrada:
+- Autor de la entrada: Carolina Robles
+- Publicación de la entrada: 3 octubre, 2025
+- Categoría de la entrada:
+
+[negocio-honda-motos#000] (honda-motos | https://fanalca.com/negocio/honda-motos/)
+- Autor de la entrada: Diana Romero
+- Publicación de la entrada: 3 febrero, 2026
+- Categoría de la entrada:

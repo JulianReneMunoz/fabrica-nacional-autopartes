@@ -1,23 +1,25 @@
 ---
 id: negocios-honda-motocicletas
 fuente: https://fanalca.com/negocios/honda-motocicletas/
-titulo: Honda Motocicletas
+titulo: Honda motocicletas
 seccion: negocios/honda-motocicletas
-fecha_captura: '2026-11-04T00:00:00'
+fecha_captura: '2026-11-04T23:22:28.441532+00:00'
 idioma: es
-tokens_aprox: 164
-origen: semilla
-sha256_texto: 12d183f2ccc5df97950ba5438d2616a12dc82c4462444eb71bcb2707fba3814a
+tokens_aprox: 201
+origen: scraping
+sha256_texto: 9951e53441bb1dad2ba6e5d671f7fc87a05102e2777be9963d5fce8a6e13d292
 ---
 
-# Honda Motocicletas
+# Honda
 
-Honda se presenta como la marca de motocicletas número uno del mundo. Fanalca opera la única planta de producción nacional en el mundo con licencia para fabricar y ensamblar motocicletas Honda bajo sus estándares de calidad. La planta de ensamble está ubicada en Acopi, Yumbo, Valle del Cauca.
+## #1 de motocicletas en el mundo
 
-## Portafolio
+#### Somos la marca del poder de los sueños y acompañamos a los colombianos a hacer los suyos realidad.
 
-Fanalca vende motocicletas Honda de 100 cc hasta 250 cc, además de repuestos y accesorios Honda. Las motocicletas Honda de alto cilindraje se importan.
+Somos la **única planta de producción nacional**, a nivel mundial, con licencia para fabricar y ensamblar motocicletas Honda, por nuestros altos estándares de calidad. Nuestra planta de ensamble está ubicada en Acopi, Yumbo, Valle del Cauca.
 
-## Red de distribución
+Comercializamos motos de **100 y hasta 250** centímetros cúbicos, repuestos y accesorios Honda.
 
-La red comercial reportada incluye 450 puntos de venta en 32 departamentos de Colombia, 265 talleres de servicio y 1.265 almacenes de repuestos.
+**Importamos** motos Honda de alto cilindraje.
+
+Contamos con una red de distribución propia y una red de distribuidores que permite tener cobertura en el territorio nacional: **450 puntos de venta** con presencia en los 32 departamentos, **265 talleres de servicio** en el país y **1.265 almacenes de repuestos**.

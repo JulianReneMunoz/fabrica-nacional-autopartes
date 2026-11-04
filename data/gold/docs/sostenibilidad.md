@@ -1,23 +1,23 @@
 ---
 id: sostenibilidad
-fuente: https://fanalca.com/en/sustainability/
-titulo: Sostenibilidad y Fundación Fanalca
+fuente: https://fanalca.com/sostenibilidad/
+titulo: Sostenibilidad
 seccion: sostenibilidad
-fecha_captura: '2026-11-04T00:00:00'
+fecha_captura: '2026-11-04T23:24:22.499897+00:00'
 idioma: es
-tokens_aprox: 161
-origen: semilla
-sha256_texto: a62802701ba57e93e60b6e7b0e0aad5a9a9eb4285b03b55804f9b4b6522aac6d
+tokens_aprox: 177
+origen: scraping
+sha256_texto: c6dbb14562fc31250fa69ef579cb404f450ece279c198d2b5b7f355ec78d1be4
 ---
+
+# Sostenibilidad
 
 # Sostenibilidad
 
 ## Fundación Fanalca
 
-La Fundación Fanalca se creó en 2003 para desarrollar proyectos de construcción de cultura ciudadana. Su trabajo incluye la recuperación de espacios públicos, principalmente parques en zonas vulnerables, y la transformación de comportamientos de la comunidad, entregando herramientas para que las acciones se sostengan.
+Nuestra Fundación Fanalca nace en el 2003, como un aliado para implementar proyectos que contribuyan a la construcción de cultura ciudadana a través de la **recuperación** del espacio público, especialmente parques ubicados en zonas vulnerables y la **transformación** de comportamientos de la comunidad en general, brindándoles herramientas que apoyen la sostenibilidad de estas acciones.
 
-La Fundación trabaja en cuatro líneas de acción: cultura ciudadana, educación, generación de ingresos, y arte y cultura. Su sitio web es fundacionfanalca.org.co.
+Las líneas de acción sobre las cuales trabaja la fundación, con diferentes públicos objetivos, son: cultura ciudadana, educación, generación de ingresos, arte y cultura.
 
-## Informes de sostenibilidad
-
-El sitio publica informes de sostenibilidad de los años 2018, 2019 y 2020 en formato PDF.
+Para conocer más sobre la gestión de nuestra Fundación Fanalca, visita su página web:
