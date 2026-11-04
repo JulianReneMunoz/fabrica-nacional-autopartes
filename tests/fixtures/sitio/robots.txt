@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /wp-admin/
+Disallow: /privado/
+Crawl-delay: 0
+Sitemap: https://ejemplo-fna.test/wp-sitemap.xml

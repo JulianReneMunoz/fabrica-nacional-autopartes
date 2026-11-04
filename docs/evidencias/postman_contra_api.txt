@@ -1,0 +1,29 @@
+<stdin>:3: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+# Ejecución de las solicitudes de la colección Postman contra la API local — 2026-11-04T22:49:55Z
+# Proveedor LLM configurado: ollama (servicio no iniciado en el entorno de construcción)
+OK  GET  200 (esperado 200) Operación · Salud
+OK  GET  200 (esperado 200) Operación · Interacciones (auditoría)
+OK  GET  200 (esperado 200) Operación · Ejecuciones del pipeline
+OK  GET  200 (esperado 200) Base de conocimiento · Estadísticas
+OK  GET  200 (esperado 200) Base de conocimiento · Buscar fragmentos (BM25)
+OK  GET  200 (esperado 200) Base de conocimiento · Fragmento por id
+DIF POST 503 (esperado 200) Tareas LLM · Q&A — respondible {"codigo": "proveedor_llm_no_disponible", "mensaje": "No fue posible conectar con el proveedor 'ollama'. Con O
+DIF POST 503 (esperado 200) Tareas LLM · Q&A — dato ausente (debe rechazar) {"codigo": "proveedor_llm_no_disponible", "mensaje": "No fue posible conectar con el proveedor 'ollama'. Con O
+OK  POST 200 (esperado 200) Tareas LLM · Q&A — inyección (debe bloquear)
+DIF POST 503 (esperado 200) Tareas LLM · FAQ {"codigo": "proveedor_llm_no_disponible", "mensaje": "No fue posible conectar con el proveedor 'ollama'. Con O
+DIF POST 503 (esperado 200) Tareas LLM · Resumen {"codigo": "proveedor_llm_no_disponible", "mensaje": "No fue posible conectar con el proveedor 'ollama'. Con O
+OK  GET  200 (esperado 200) Simulador 3D (v2.0) · Ensamblajes
+OK  GET  200 (esperado 200) Simulador 3D (v2.0) · Jerarquía
+OK  GET  200 (esperado 200) Simulador 3D (v2.0) · Piezas
+OK  GET  200 (esperado 200) Simulador 3D (v2.0) · Despiece (factor 0,5)
+OK  GET  200 (esperado 200) Simulador 3D (v2.0) · Secuencia de desmontaje
+OK  POST 200 (esperado 200) Simulador 3D (v2.0) · Cinemática válida
+OK  POST 422 (esperado 422) Simulador 3D (v2.0) · Cinemática fuera de límites (422) {"detail": "'j_piston' fuera de límites: 0.01 ∉ [0.0, 0.003] m"}
+OK  POST 200 (esperado 200) Simulador 3D (v2.0) · Cálculo del freno
+OK  POST 200 (esperado 200) Simulador 3D (v2.0) · Preguntar por pieza
+OK  POST 200 (esperado 200) Simulador 3D (v2.0) · Pregunta de seguridad (rechazo)
+OK  POST 201 (esperado 201) Simulador 3D (v2.0) · Guardar estado
+OK  GET  200 (esperado 200) Simulador 3D (v2.0) · Listar estados
+OK  GET  200 (esperado 200) Biblioteca de máquinas (v2.0) · Máquinas
+OK  GET  200 (esperado 200) Biblioteca de máquinas (v2.0) · Máquina línea
+Resultado: 21 coinciden, 4 difieren

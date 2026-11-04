@@ -1,0 +1,15 @@
+schema: spec-driven
+
+context: |
+  Proyecto: base de conocimiento y sistema Q&A para Fábrica Nacional de Autopartes (Fanalca).
+  Pila: Python 3.12 + uv, requests/BeautifulSoup/trafilatura, LangChain (LCEL), Ollama u
+  OpenAI/Anthropic, FastAPI, Streamlit, SQLAlchemy + Alembic (SQLite), MCP SDK 2.x.
+  Arquitectura: capas scraping -> pipelines (Medallion) -> knowledge -> llm -> services -> interfaces.
+  Reglas: ver AGENTS.md. Redacción de especificaciones en español, impersonal.
+  Pruebas: uv run pytest -q. Calidad: uv run ruff check . && uv run mypy.
+
+rules:
+  proposal:
+    - Indicar si el cambio responde a un requisito documentado del taller o a una extensión.
+  tasks:
+    - Cada tarea termina con un comando de verificación ejecutable.

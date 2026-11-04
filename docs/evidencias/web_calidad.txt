@@ -1,0 +1,13 @@
+# Evidencia del visor web — 2026-11-04T22:47:19Z — Node v22.23.4, Chrome for
+$ npm run typecheck
+> tsc -p tsconfig.json
+
+$ npm test
+ Test Files  2 passed (2)
+      Tests  22 passed (22)
+$ npm run build
+dist/index.html                           0.90 kB │ gzip:   0.54 kB
+dist/assets/index-BMjLWeYV.css            7.83 kB │ gzip:   2.39 kB
+dist/assets/index-az1QplGV.js           254.24 kB │ gzip:  79.69 kB
+dist/assets/MaquinaFreno-C-BuIQfi.js  1,028.29 kB │ gzip: 276.08 kB
+✓ built in 805ms

@@ -1,0 +1,13 @@
+@startuml modelo_dominio
+class RegistroCaptura { url; url_final; fecha_captura; estado_http; sha256; archivo_html }
+class DocumentoLimpio { id; url; titulo; seccion; idioma; texto; sha256_texto; origen }
+class Fragmento { id; documento_id; url; seccion; encabezado; texto; tokens_aprox; orden; origen }
+class RespuestaQA { pregunta; respuesta; fundamentada; confianza; version_prompt; modo_contexto }
+class Fuente { fragmento_id; titulo; url }
+class Interaccion <<tabla>> { id; fecha; tarea; canal; entrada; salida; fuentes; fundamentada }
+RegistroCaptura "1" --> "0..1" DocumentoLimpio : Silver
+DocumentoLimpio "1" --> "1..*" Fragmento : Gold
+RespuestaQA "1" --> "0..*" Fuente
+Fuente --> Fragmento
+RespuestaQA ..> Interaccion : se audita
+@enduml

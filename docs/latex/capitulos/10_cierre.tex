@@ -1,0 +1,206 @@
+% ============================================================ Capítulo 27
+\chapter{Validación contra los requisitos del taller}\label{cap:validacion}
+
+\section{Rúbrica ajustada del Módulo 1}
+\begin{longtable}{@{}P{3.2cm}P{4.6cm}P{5.0cm}P{2.2cm}@{}}
+\caption{Cumplimiento de la rúbrica ajustada}\label{tab:rubrica}\\\toprule
+Criterio (peso) & Exigencia & Evidencia en el proyecto & Estado\\\midrule\endfirsthead
+\toprule Criterio & Exigencia & Evidencia & Estado\\\midrule\endhead
+Análisis de la empresa y estrategia de datos (15\,\%) & Claridad en la investigación y el alcance; calidad de
+los datos extraídos & Cap.~\ref{cap:intro}--\ref{cap:documentos} y~\ref{cap:procesodatos}; alcance en
+\texttt{preguntas.yaml}; scraper con robots, Medallion y gráficas por etapa & Cumple; datos reales pendientes de captura local\\
+Procesamiento de datos y tareas LLM (25\,\%) & Archivo de texto limpio; Resumen, FAQ y Q\&A con LangChain &
+\texttt{base\_conocimiento.txt}; \texttt{llm/cadenas.py}; pruebas de las tres tareas & Cumple\\
+Prompt Engineering (25\,\%) & Eficacia y creatividad; instrucciones anti-alucinación; documentación de la
+experimentación & v1--v3 por tarea; salvaguardas; laboratorio; bitácora con hallazgo H-01 & Cumple;
+resultados con LLM pendientes\\
+Aplicación de prueba (15\,\%) & Dashboard funcional con las tres funcionalidades; código limpio en GitHub &
+Streamlit de 10 pestañas; Ruff, mypy, 124 pruebas Python, 22 Vitest, 7 Playwright, CI & Cumple; publicación pendiente\\
+Documentación escrita (10\,\%) & Informe claro y profundo & Sección~\ref{sec:informe} y este manual & Cumple\\
+Presentación y demostración (10\,\%) & Exposición de arquitectura y demo fluida & Guion de la
+sección~\ref{sec:guion} & Preparado\\\bottomrule
+\end{longtable}
+
+\section{Criterios de calificación (tabla complementaria)}
+\begin{table}[H]\centering\small
+\caption{Correspondencia con la tabla de criterios de calificación}\label{tab:criterios}
+\begin{tabularx}{\linewidth}{@{}l X@{}}\toprule
+Criterio & Evidencia\\\midrule
+Selección y justificación de la tarea (10\,\%) & Problema y justificación (cap.~\ref{cap:intro}); alcance (cap.~\ref{cap:objetivos}).\\
+Configuración y uso del modelo (20\,\%) & Ollama \texttt{llama3.2:3b} con \texttt{num\_ctx}; proveedores intercambiables (cap.~\ref{cap:llm}).\\
+Aplicación de Prompt Engineering (20\,\%) & Tres versiones documentadas, protocolo de evaluación, bitácora.\\
+Implementación del framework LLM (20\,\%) & LCEL con plantillas, modelos y analizadores; pruebas con modelo simulado.\\
+Calidad de la aplicación y código (10\,\%) & Arquitectura por capas verificada, 91\,\% de cobertura.\\
+Documentación escrita (10\,\%) & Manual, README, ADR, matriz de trazabilidad.\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Informe del Módulo 1 (estructura exigida)}\label{sec:informe}
+\subsection*{Descripción del problema}
+Necesidad de un canal de comunicación automatizado y preciso para Fábrica Nacional de Autopartes (Fanalca). La
+información de primer contacto (sedes, negocios, historia, contacto y procesos) está distribuida en el sitio
+oficial, en dos idiomas y en seis unidades de negocio; un asistente sin anclaje podría inventar datos que la
+empresa no publica, como horarios o precios.
+
+\subsection*{Planteamiento de la solución}
+Creación de un sistema Q\&A basado en el contexto como núcleo de un futuro \emph{chatbot}: base de conocimiento
+Medallion, archivo consolidado inyectado en el prompt de sistema, tres tareas LangChain y salvaguardas que
+verifican cada cita. La arquitectura queda preparada para RAG (Módulo~2) mediante la interfaz de recuperación
+ya existente.
+
+\subsection*{Preparación de los datos}
+\textbf{Scraping}: rastreador BFS sobre \texttt{autopartesfanalca.com.co} y \texttt{fanalca.com} con \texttt{robots.txt}, sitemaps, pausa de 2\,s,
+reintentos y trazabilidad SHA-256. \textbf{Limpieza}: trafilatura con respaldo BeautifulSoup, eliminación de
+plantilla del sitio, anonimización de correos y deduplicación. \textbf{Chunking}: por encabezados Markdown y luego
+por tamaño (1\,200 caracteres, solapamiento 150), con identificadores citables. Con la base de demostración
+(semilla y lectura web): 15 documentos y 48 fragmentos. Cada etapa se explica con una gráfica
+(capítulo~\ref{cap:procesodatos}).
+
+\subsection*{Modelado}
+\begin{itemize}
+  \item \textbf{LLM del Módulo 1}: \texttt{llama3.2:3b} vía Ollama (local, sin costo por token), con
+        \texttt{num\_ctx}~=~16\,384; alternativas por API para comparación.
+  \item \textbf{Diseño del prompt}: rol, reglas de anclaje, delimitación XML, frase de rechazo fija, defensa ante
+        inyección, salida JSON con citas y dos ejemplos \emph{few-shot} distinguibles del contexto.
+  \item \textbf{Embeddings para el Módulo 2}: \texttt{nomic-embed-text-v2-moe} vía Ollama (alternativas
+        señaladas en la Clase~1: \texttt{qwen3-embedding}, \texttt{embeddinggemma}), por ejecución local y soporte
+        multilingüe.
+  \item \textbf{Base vectorial del Módulo 2}: Chroma persistente (alternativa: Qdrant), con recuperación híbrida
+        BM25 + vectorial (propuesta en \ruta{openspec/changes/rag-embeddings-modulo2}).
+  \item \textbf{LLM del Módulo 2}: se mantiene Ollama; si el hardware lo permite, un modelo de 7--8B mejora la
+        redacción con el contexto recuperado, decisión que debe confirmarse con la evaluación.
+\end{itemize}
+
+\subsection*{Resultados}
+Ejemplos verificados con la línea base extractiva: ``¿Dónde queda la sede principal?'' $\rightarrow$ Calle~13
+\#~31A-80, Acopi, Yumbo, citando \texttt{contacto\#000}; ``¿Qué cubre la Garantía Total Verdadera?'' $\rightarrow$
+mano de obra, insumos y repuestos durante 2 años sin límite de kilometraje; la pregunta de inyección queda
+bloqueada. Métricas en la Tabla~\ref{tab:linea-base}. \textbf{Limitaciones}: (1) los resultados con LLM real no
+se ejecutaron en el entorno de construcción y deben completarse con la fase F15; (2) la base actual es la semilla;
+(3) BM25 no captura sinónimos; (4) las cifras del sitio son autodeclaradas por la empresa; (5) el sitio no publica
+horarios ni precios, por lo que el asistente solo puede remitir al formulario de contacto.
+
+\section{Guion de la demostración (15 minutos, sin PowerPoint)}\label{sec:guion}
+\begin{enumerate}
+  \item (2 min) Problema y alcance: pestaña Panel (procedencia y fragmentos por sección).
+  \item (3 min) Arquitectura: este manual, Figuras~\ref{fig:arquitectura} y~\ref{fig:medallion}; archivo
+        \texttt{base\_conocimiento.txt} en la pestaña Base de conocimiento.
+  \item (4 min) Q\&A en vivo con Ollama: pregunta respondible (P01), dato ausente (P20) e inyección (P24); mostrar
+        fuentes y etiquetas.
+  \item (2 min) Resumen y FAQ.
+  \item (3 min) Laboratorio de prompts: P20 con v1, v2 y v3; explicar el hallazgo H-01.
+  \item (1 min) Evaluación y limitaciones.
+  \item (adicional, versión 2.0) Pestaña Proceso de datos (gráficas por etapa), biblioteca de máquinas y video del
+        recorrido del freno (\texttt{docs/videos/recorrido\_freno.mp4}, 29\,s).
+\end{enumerate}
+
+\section{Estado de los entregables}
+\begin{longtable}{@{}P{5.4cm}P{2.6cm}P{7.0cm}@{}}
+\caption{Entregables: implementado, probado y pendiente}\label{tab:entregables}\\\toprule
+Entregable & Estado & Evidencia u observación\\\midrule\endfirsthead
+\toprule Entregable & Estado & Observación\\\midrule\endhead
+Código fuente, backend, frontend, scrapers, pipelines & Implementado y probado & 124 pruebas Python, 91\,\% de cobertura.\\
+Simulador 3D, visor y biblioteca de máquinas (v2.0) & Implementado y probado & 22 pruebas Vitest, 7 Playwright (Chrome), capturas y videos MP4.\\
+Gráficas por etapa del proceso de datos & Generadas & Con la base de demostración; regenerar tras el scraping real.\\
+Esquemas y migraciones & Probado & \texttt{alembic upgrade head} en SQLite y en PostgreSQL embebido.\\
+Configuraciones MCP, OpenCode, Claude Code & Implementado & Servidor MCP probado por stdio; consolas no ejecutadas en el entorno de construcción.\\
+Skills del proyecto & Implementado & 11 skills sincronizadas; subagentes con modelo por especialidad.\\
+OpenSpec & Probado & \texttt{openspec validate --all}: 7 de 7 aprobados.\\
+Scripts PowerShell & Sintaxis verificada & PowerShell 7.4.6 en Linux; ejecución en Windows pendiente.\\
+\texttt{pyproject.toml} y \texttt{uv.lock} & Probado & \texttt{uv sync} y \texttt{uv lock}.\\
+Postman y OpenAPI & Implementado & OpenAPI exportado; solicitudes de la colección ejecutadas contra la API (21 de 25 sin Ollama; las 4 de tareas LLM devuelven 503 hasta iniciar Ollama).\\
+README, manual LaTeX, TikZ, PDF & Compilado & Este documento.\\
+Matriz de trazabilidad y guía cronológica & Generadas & Desde CSV y YAML.\\
+Base de conocimiento desde scraping real & \textbf{Pendiente} & Ejecutar \texttt{uv run fabrica pipeline} (F09) en el computador local.\\
+Evaluación con LLM real & \textbf{Pendiente} & Ejecutar F14--F15 con Ollama.\\
+Docker (postgres, ollama, api, app) & \textbf{Pendiente de validación} & Sin demonio Docker en el entorno de construcción.\\
+Publicación en GitHub y CI & \textbf{Pendiente} & \texttt{scripts/publicar\_github.ps1} (F03) en la cuenta JulianReneMunoz.\\\bottomrule
+\end{longtable}
+
+% ============================================================ Capítulo 28
+\chapter{Conclusiones técnicas}\label{cap:conclusiones}
+\begin{enumerate}
+  \item El valor del Módulo~1 reside en la \textbf{trazabilidad}: cada respuesta puede seguirse hasta un
+        fragmento, un documento Silver, una captura Bronze con hash y una URL pública. Esa cadena convierte la
+        afirmación ``basado únicamente en el contexto'' en una propiedad verificable.
+  \item Las \textbf{instrucciones del prompt no bastan}: la verificación posterior de citas y la fundamentación
+        léxica detectan citas inventadas y respuestas sin respaldo, y la detección previa de inyección evita
+        invocar el modelo en casos evidentes.
+  \item La \textbf{línea base sin LLM} resultó útil como instrumento: validó el arnés de evaluación, demostró
+        que el corpus contiene los hechos de todas las preguntas respondibles (cobertura 1,0) y reveló la
+        contaminación por ejemplos \emph{few-shot} (H-01), un defecto que también afecta a modelos reales.
+  \item Explicar el proceso de datos con \textbf{métricas y gráficas por etapa} convierte el scraping en evidencia
+        auditable: cada cifra de la presentación puede regenerarse con un comando y declara su fuente.
+  \item En la versión~2.0, separar \textbf{geometría, cinemática, física y animación} permitió probar cada capa por
+        separado y mantener el simulador honesto: la escena reproduce números calculados y validados en el
+        servidor, sin presentarlos como validación mecánica.
+  \item Los agentes de código aceleran la construcción cuando operan con \textbf{especificaciones, permisos
+        mínimos y verificaciones objetivas}; las decisiones irreversibles (publicar, borrar, facturar) permanecen
+        en manos humanas.
+  \item La transición al Módulo~2 está acotada: la interfaz de recuperación ya existe (BM25) y la propuesta de
+        embeddings y base vectorial está especificada y validada en OpenSpec.
+\end{enumerate}
+
+% ============================================================ Capítulo 29
+\chapter{Bibliografía y referencias}\label{cap:bibliografia}
+\begingroup
+\renewcommand{\chapter}[2]{}%
+\begin{thebibliography}{99}\small
+\bibitem{taller1} Universidad Autónoma de Occidente. \emph{551462-B-1 (2026-2S): Taller 1 --- Aplicación de Técnicas Avanzadas de IA en Modelos de Lenguaje}. Campus Digital, 2026.
+\bibitem{clases} J. Polanco Velasco. \emph{Clase 1: Introducción a los LLMs; Clase 2: Modelos cerrados vs. abiertos y uv; Clase 3: Consolas agénticas (OpenCode)}. UAO, 2026.
+\bibitem{fanalca-quienes} Fanalca. \emph{Who we are}. \url{https://fanalca.com/en/who-we-are/} (consultado el 4 de noviembre de 2026).
+\bibitem{fanalca-negocios} Fanalca. \emph{Business} (Honda Motorcycles, Honda Autos, Steel tubes and profiles, Auto parts, Environmental, Fanalvías), \emph{Sustainability}, \emph{Contact}. \url{https://fanalca.com/en/business/} (consultado el 4 de noviembre de 2026).
+\bibitem{larepublica-fanalca} La República. \emph{Fanalca, la empresa familiar que fabrica y ensambla las motos Honda en Colombia}, 29 de febrero de 2024. \url{https://www.larepublica.co/empresas/fanalca-la-empresa-familiar-que-fabrica-y-ensambla-las-motos-honda-en-colombia-3810955}
+\bibitem{ley1581} Congreso de Colombia. \emph{Ley Estatutaria 1581 de 2012}, por la cual se dictan disposiciones generales para la protección de datos personales.
+\bibitem{rfc9309} M. Koster, G. Illyes, H. Zeller, L. Sassman. \emph{RFC 9309: Robots Exclusion Protocol}. IETF, 2022.
+\bibitem{uv} Astral. \emph{uv documentation}. \url{https://docs.astral.sh/uv/}
+\bibitem{ollama} Ollama. \emph{Model library}. \url{https://ollama.com/library}
+\bibitem{ollama-opencode} Ollama. \emph{OpenCode integration}. \url{https://docs.ollama.com/integrations/opencode}
+\bibitem{opencode} Anomaly. \emph{OpenCode documentation}. \url{https://opencode.ai/docs}; repositorio \url{https://github.com/anomalyco/opencode}
+\bibitem{claude-code} Anthropic. \emph{Claude Code overview}. \url{https://docs.claude.com/en/docs/claude-code/overview}
+\bibitem{register-anthropic} The Register. \emph{Anthropic clarifies ban on third-party harnesses with Claude subscriptions}, 20 de febrero de 2026. \url{https://www.theregister.com/2026/02/20/anthropic_clarifies_ban_third_party_claude_access}
+\bibitem{mcp} Model Context Protocol. \emph{Specification and Python SDK} (v2: \emph{FastMCP renamed to MCPServer}). \url{https://modelcontextprotocol.io}; \url{https://py.sdk.modelcontextprotocol.io/v2/migration/}
+\bibitem{openspec} Fission-AI. \emph{OpenSpec}. \url{https://github.com/Fission-AI/OpenSpec}; \url{https://openspec.dev/docs/getting-started}
+\bibitem{engram} Gentleman-Programming. \emph{Engram: persistent memory for AI coding agents}. \url{https://github.com/Gentleman-Programming/engram}
+\bibitem{gga} Gentleman-Programming. \emph{Gentleman Guardian Angel}. \url{https://github.com/Gentleman-Programming/gentleman-guardian-angel}
+\bibitem{skillspector} NVIDIA. \emph{SkillSpector: security scanner for AI agent skills}. \url{https://github.com/NVIDIA/SkillSpector}
+\bibitem{archify} tt-a1i. \emph{Archify}. \url{https://github.com/tt-a1i/archify}; Aryan1718. \emph{Archify}. \url{https://github.com/Aryan1718/Archify}
+\bibitem{langchain} LangChain. \emph{LangChain Expression Language (LCEL)}. \url{https://python.langchain.com/}
+\bibitem{vaswani} A. Vaswani et al. \emph{Attention Is All You Need}. NeurIPS, 2017. arXiv:1706.03762.
+\bibitem{lostmiddle} N. F. Liu et al. \emph{Lost in the Middle: How Language Models Use Long Contexts}. arXiv:2307.03172, 2023.
+\bibitem{rsi} Y. Qu et al. \emph{Recursive Introspection: Teaching Language Model Agents How to Self-Improve}. arXiv:2407.18219, 2024.
+\bibitem{agentskills} Y. Liu et al. \emph{Agent Skills in the Wild}. arXiv:2601.10338, 2026.
+\bibitem{autopartes} Fanalca. \emph{Autopartes Fanalca} (inicio, nosotros, productos, clientes, contacto). \url{https://autopartesfanalca.com.co/} (consultado el 4 de noviembre de 2026).
+\bibitem{claude-subagents} Anthropic. \emph{Claude Code: subagents} (campo \texttt{model}: sonnet, opus, haiku o inherit). \url{https://docs.claude.com/en/docs/claude-code/sub-agents}
+\bibitem{anatomy} wheresryan22. \emph{Anatomy: skill para máquinas interactivas}. \url{https://github.com/wheresryan22/anatomy}
+\bibitem{trimesh} M. Dawson-Haggerty et al. \emph{trimesh}. \url{https://trimesh.org/}
+\bibitem{manifold} E. Lalish et al. \emph{Manifold: geometry library for topological robustness}. \url{https://github.com/elalish/manifold}
+\bibitem{r3f} Poimandres. \emph{React Three Fiber}. \url{https://r3f.docs.pmnd.rs/}; three.js \url{https://threejs.org/}
+\bibitem{shigley} R. G. Budynas, J. K. Nisbett. \emph{Shigley's Mechanical Engineering Design}, cap. de embragues y frenos. McGraw-Hill.
+\bibitem{bm25} S. Robertson, H. Zaragoza. \emph{The Probabilistic Relevance Framework: BM25 and Beyond}. Foundations and Trends in IR, 2009.
+\end{thebibliography}
+\endgroup
+
+% ============================================================ Capítulo 30
+\chapter{Anexos}\label{cap:anexos}
+\section{Estructura del repositorio}
+{\scriptsize\lstinputlisting[style=txt,basicstyle=\ttfamily\scriptsize,frame=none]{generado/arbol.txt}}
+
+\section{AGENTS.md}
+\lstinputlisting[style=txt]{../../AGENTS.md}
+
+\section{Prompts de FAQ y Resumen}
+\lstinputlisting[style=yaml]{../../src/fabrica_autopartes/llm/prompts/faq.yaml}
+\lstinputlisting[style=yaml]{../../src/fabrica_autopartes/llm/prompts/resumen.yaml}
+
+\section{Banco de preguntas (extracto)}
+\lstinputlisting[style=yaml,firstline=1,lastline=40]{../../evaluacion/preguntas.yaml}
+
+\section{Evidencia: batería de calidad}
+\lstinputlisting[style=txt,firstline=1,lastline=12]{../evidencias/calidad_construccion.txt}
+
+\section{Evidencia: evaluación de línea base}
+\lstinputlisting[style=txt]{../evidencias/evaluacion_linea_base_extractiva.txt}
+
+\section{Configuración MCP de Claude Code}
+\lstinputlisting[style=json]{../../.mcp.json}

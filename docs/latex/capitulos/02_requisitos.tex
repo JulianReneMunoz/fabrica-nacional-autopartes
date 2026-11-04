@@ -1,0 +1,82 @@
+% ============================================================ Capítulo 4
+\chapter{Ingeniería de requisitos}\label{cap:requisitos}
+
+\section{Criterio de clasificación}
+Cada requisito se clasifica en una de tres categorías, para no atribuir a los documentos algo que no dicen:
+\textbf{Documentado} (cita del taller o de una clase con página), \textbf{Diseño} (decisión técnica
+justificada en un ADR) y \textbf{Extensión} (funcionalidad no exigida que aporta valor y se declara como tal).
+La matriz se mantiene en \ruta{docs/requisitos/matriz_trazabilidad.csv} y se transforma en Markdown y LaTeX con
+\cmd{uv run python scripts/generar\_matriz.py}, de modo que existe una única fuente de verdad.
+
+\section{Requisitos funcionales y no funcionales}
+\begin{table}[H]\centering\small
+\caption{Resumen cuantitativo de la matriz}\label{tab:resumen-matriz}
+\begin{tabular}{@{}lcccc@{}}\toprule
+Categoría & Cantidad & Implementado* & Parcial & Documentado/pendiente\\\midrule
+Funcionales del taller (RF) & 20 & 15 & 4 & 1\\
+No funcionales (RNF) & 6 & 4 & 1 & 1\\
+Extensiones (EXT) & 6 & 5 & 0 & 1\\\bottomrule
+\end{tabular}
+\end{table}
+(*) Incluye filas implementadas con una verificación complementaria pendiente, indicada en la matriz. Los estados ``parcial'' tienen una causa común y explícita: dependen de una acción que debe ejecutarse en el
+equipo  (scraping real, evaluación con un LLM real, publicación en GitHub, instalación de Engram/GGA).
+
+\section{Casos de uso}
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=0.45cm and 1.2cm]
+  \node[actor] (cli) {Cliente};
+  \node[actor, below=3.2cm of cli] (dev) {Equipo\\desarrollo};
+  \node[actor, below=2.6cm of dev] (ag) {Agente de\\código};
+  \begin{scope}[every node/.style={ellipse,draw=fnaazul,fill=fnaazul!6,font=\sffamily\scriptsize,minimum width=3.7cm,minimum height=0.62cm}]
+    \node[right=2.2cm of cli, yshift=1.1cm] (u4) {CU-04 Consultar Q\&A};
+    \node[below=of u4] (u5) {CU-05 Generar FAQ};
+    \node[below=of u5] (u6) {CU-06 Generar resumen};
+    \node[below=of u6] (u1) {CU-01 Configurar fuentes};
+    \node[below=of u1] (u2) {CU-02 Ejecutar scraping};
+    \node[below=of u2] (u3) {CU-03 Construir base};
+    \node[below=of u3] (u7) {CU-07 Comparar prompts};
+    \node[below=of u7] (u8) {CU-08 Evaluar};
+    \node[below=of u8] (u10) {CU-10 Auditar};
+    \node[below=of u10] (u9) {CU-09 Consultar vía MCP};
+  \end{scope}
+  \begin{scope}[on background layer]
+    \node[grupo=fnagris, fit=(u4)(u9), label={[font=\sffamily\scriptsize\bfseries]above:Sistema de conocimiento Fanalca}] {};
+  \end{scope}
+  \foreach \u in {u4,u5,u6} \draw[thick,fnagris] (cli) -- (\u.west);
+  \foreach \u in {u1,u2,u3,u7,u8,u10} \draw[thick,fnagris] (dev) -- (\u.west);
+  \draw[thick,fnagris] (ag) -- (u9.west);
+  \draw[flechad] (u2.east) to[bend left=40] node[etq,right]{\guillemotleft precede\guillemotright} (u3.east);
+\end{tikzpicture}
+\caption{Diagrama de casos de uso}\label{fig:casos-uso}
+\end{figure}
+
+\section{Historias de usuario y criterios de aceptación}
+\begin{table}[H]\centering\small
+\caption{Historias de usuario principales con criterio verificable}\label{tab:historias}
+\begin{tabularx}{\linewidth}{@{}l X X@{}}\toprule
+ID & Historia & Criterio de aceptación (verificable)\\\midrule
+HU-01 & Como cliente, se desea saber dónde queda la sede principal. & La respuesta contiene ``Acopi'' y ``Yumbo'',
+cita \texttt{contacto\#000} y queda marcada como fundamentada.\\
+HU-02 & Como cliente, se desea conocer el horario de atención. & Al no estar publicado, se devuelve la frase de
+rechazo fija (P20).\\
+HU-03 & Como analista, se requiere un archivo único con todo el conocimiento. & Existe
+\ruta{data/gold/base_conocimiento.txt} con cada fragmento precedido por \texttt{[id] (sección | url)}.\\
+HU-04 & Como ingeniero de datos, se requiere rastrear sin infringir \texttt{robots.txt}. & Ninguna petición HTTP
+hacia rutas en \texttt{Disallow} (prueba \texttt{test\_rastreo\_completo\_respeta\_robots\_y\_limites}).\\
+HU-05 & Como responsable de seguridad, se requiere bloquear intentos de manipulación. & ``Ignora todas las
+instrucciones\ldots'' produce \texttt{modo\_contexto = bloqueado} sin invocar el modelo.\\
+HU-06 & Como docente, se requiere ver las tres funcionalidades en la interfaz. & Pestañas Q\&A, Resumen y FAQ
+operativas (pruebas e2e con \texttt{AppTest}).\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Matriz de trazabilidad}
+{\scriptsize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}P{1.0cm}>{\raggedright\arraybackslash}P{2.2cm}>{\raggedright\arraybackslash}P{4.0cm}>{\raggedright\arraybackslash}P{2.9cm}>{\raggedright\arraybackslash}P{2.8cm}>{\raggedright\arraybackslash}P{2.7cm}@{}}
+\caption{Matriz de trazabilidad (generada desde el CSV)}\label{tab:matriz}\\\toprule
+ID & Origen & Descripción & Componente & Prueba de aceptación & Estado\\\midrule\endfirsthead
+\toprule ID & Origen & Descripción & Componente & Prueba de aceptación & Estado\\\midrule\endhead
+\input{generado/matriz_filas.tex}
+\end{longtable}}
+La columna ``historia'' y la columna ``caso de uso'' del CSV completan la trazabilidad en la versión Markdown
+(\ruta{docs/requisitos/matriz_trazabilidad.md}).

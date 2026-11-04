@@ -1,0 +1,372 @@
+fabrica-nacional-autopartes/
+├── .claude/
+│   ├── agents/
+│   │   ├── analista-requisitos.md
+│   │   ├── arquitecto-mecanico-3d.md
+│   │   ├── arquitecto-sistema.md
+│   │   ├── documentador.md
+│   │   ├── ingeniero-3d-frontend.md
+│   │   ├── ingeniero-datos.md
+│   │   ├── ingeniero-llm.md
+│   │   ├── revisor-calidad.md
+│   │   └── verificador-rapido.md
+│   ├── skills/
+│   │   └── … (11 archivos)
+│   └── settings.json
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── .vscode/
+│   ├── extensions.json
+│   └── settings.json
+├── alembic/
+│   ├── versions/
+│   │   ├── 0001_esquema_inicial.py
+│   │   └── 0002_simulador.py
+│   ├── env.py
+│   └── script.py.mako
+├── data/
+│   ├── bronze/
+│   │   └── html/
+│   │       └── … (0 archivos)
+│   ├── gold/
+│   │   ├── docs/
+│   │   │   └── … (15 archivos)
+│   │   ├── base_conocimiento.txt
+│   │   ├── estadisticas.json
+│   │   ├── fragmentos.jsonl
+│   │   └── metricas_etapas.json
+│   ├── seed/
+│   │   ├── autopartes-clientes.md
+│   │   ├── autopartes-contacto.md
+│   │   ├── autopartes-inicio.md
+│   │   ├── autopartes-nosotros.md
+│   │   ├── autopartes-productos.md
+│   │   ├── contacto.md
+│   │   ├── inicio.md
+│   │   ├── negocios-ambiental.md
+│   │   ├── negocios-autopartes.md
+│   │   ├── negocios-fanalvias.md
+│   │   ├── negocios-honda-autos.md
+│   │   ├── negocios-honda-motocicletas.md
+│   │   ├── negocios-tubos-perfiles.md
+│   │   ├── quienes-somos.md
+│   │   ├── README.md
+│   │   └── sostenibilidad.md
+│   ├── silver/
+│   │   └── documentos.jsonl
+│   └── app.db
+├── docs/
+│   ├── api/
+│   │   └── openapi.json
+│   ├── arquitectura/
+│   │   └── adr/
+│   │       ├── ADR-001-python-uv.md
+│   │       ├── ADR-002-medallion-archivos.md
+│   │       ├── ADR-003-sqlite-auditoria.md
+│   │       ├── ADR-004-langchain-proveedores.md
+│   │       ├── ADR-005-contexto-completo-bm25.md
+│   │       ├── ADR-006-streamlit.md
+│   │       ├── ADR-007-fastapi.md
+│   │       ├── ADR-008-mcp-propio.md
+│   │       ├── ADR-009-prompts-versionados.md
+│   │       ├── ADR-010-fuentes-redes-sociales.md
+│   │       ├── ADR-011-geometria-procedural-trimesh.md
+│   │       ├── ADR-012-postgresql-despliegue.md
+│   │       ├── ADR-013-visor-react-three-fiber.md
+│   │       └── ADR-014-sin-notebooks.md
+│   ├── capturas/
+│   │   └── v2/
+│   │       └── … (7 archivos)
+│   ├── diagramas/
+│   │   ├── c4_contenedores.mmd
+│   │   ├── casos_uso.puml
+│   │   ├── modelo_dominio.puml
+│   │   └── secuencia_qa.mmd
+│   ├── evidencias/
+│   │   ├── api_en_vivo.txt
+│   │   ├── calidad_construccion.txt
+│   │   ├── e2e_playwright.txt
+│   │   ├── evaluacion_linea_base_extractiva.txt
+│   │   ├── openspec_validate.txt
+│   │   ├── postman_contra_api.txt
+│   │   └── web_calidad.txt
+│   ├── graficas/
+│   │   ├── 01_rastreo.png
+│   │   ├── 02_bronze_paginas.png
+│   │   ├── 03_reduccion.png
+│   │   ├── 04_limpieza_paginas.png
+│   │   ├── 05_fragmentos_seccion.png
+│   │   └── 06_tokens_fragmento.png
+│   ├── latex/
+│   │   ├── capitulos/
+│   │   │   ├── 01_contexto.tex
+│   │   │   ├── 02_requisitos.tex
+│   │   │   ├── 03_arquitectura.tex
+│   │   │   ├── 04_instalacion.tex
+│   │   │   ├── 05_agentes_mcp.tex
+│   │   │   ├── 06_datos.tex
+│   │   │   ├── 06b_proceso_graficas.tex
+│   │   │   ├── 07_aplicacion.tex
+│   │   │   ├── 08_calidad.tex
+│   │   │   ├── 09_operacion.tex
+│   │   │   ├── 10_cierre.tex
+│   │   │   ├── 11_simulador.tex
+│   │   │   └── 12_anatomia.tex
+│   │   ├── figuras/
+│   │   │   ├── ui_faq.png
+│   │   │   ├── ui_laboratorio.png
+│   │   │   ├── ui_panel.png
+│   │   │   └── ui_qa.png
+│   │   ├── generado/
+│   │   │   └── … (4 archivos)
+│   │   ├── main.pdf
+│   │   └── main.tex
+│   ├── manuales/
+│   │   ├── fases_agentes.yaml
+│   │   ├── guia_operativa_agentes.md
+│   │   ├── herramientas_windows.yaml
+│   │   └── instalacion_windows.md
+│   ├── prompts/
+│   │   └── bitacora_experimentos.md
+│   ├── requisitos/
+│   │   ├── analisis_documentos.md
+│   │   ├── matriz_trazabilidad.csv
+│   │   └── matriz_trazabilidad.md
+│   ├── videos/
+│   │   ├── recorrido_freno.mp4
+│   │   ├── recorrido_linea.mp4
+│   │   └── recorrido_prensa.mp4
+│   └── prompt_maestro_v2.md
+├── evaluacion/
+│   ├── resultados/
+│   │   ├── .gitkeep
+│   │   ├── 20261104T162643Z_extractivo_lexico-bm25_v1_completo.json
+│   │   ├── 20261104T162643Z_extractivo_lexico-bm25_v1_completo.md
+│   │   ├── 20261104T162644Z_extractivo_lexico-bm25_v1_seleccion.json
+│   │   ├── 20261104T162644Z_extractivo_lexico-bm25_v1_seleccion.md
+│   │   ├── 20261104T162646Z_extractivo_lexico-bm25_v2_completo.json
+│   │   ├── 20261104T162646Z_extractivo_lexico-bm25_v2_completo.md
+│   │   ├── 20261104T162648Z_extractivo_lexico-bm25_v2_seleccion.json
+│   │   ├── 20261104T162648Z_extractivo_lexico-bm25_v2_seleccion.md
+│   │   ├── 20261104T162649Z_extractivo_lexico-bm25_v3_completo.json
+│   │   ├── 20261104T162649Z_extractivo_lexico-bm25_v3_completo.md
+│   │   ├── 20261104T162651Z_extractivo_lexico-bm25_v3_seleccion.json
+│   │   └── 20261104T162651Z_extractivo_lexico-bm25_v3_seleccion.md
+│   └── preguntas.yaml
+├── frontend/
+│   └── app.py
+├── infra/
+│   └── docker/
+│       └── Dockerfile
+├── mcp/
+│   └── README.md
+├── openspec/
+│   ├── changes/
+│   │   ├── archive/
+│   │   │   └── 2026-11-04-seleccion-contexto-bm25/
+│   │   │       ├── specs/
+│   │   │       │   └── base-conocimiento/
+│   │   │       │       └── spec.md
+│   │   │       ├── design.md
+│   │   │       ├── proposal.md
+│   │   │       └── tasks.md
+│   │   └── rag-embeddings-modulo2/
+│   │       ├── specs/
+│   │       │   └── base-conocimiento/
+│   │       │       └── spec.md
+│   │       ├── proposal.md
+│   │       └── tasks.md
+│   ├── specs/
+│   │   ├── base-conocimiento/
+│   │   │   └── spec.md
+│   │   ├── biblioteca-maquinas/
+│   │   │   └── spec.md
+│   │   ├── extraccion-datos/
+│   │   │   └── spec.md
+│   │   ├── interfaz-prueba/
+│   │   │   └── spec.md
+│   │   ├── simulador-3d/
+│   │   │   └── spec.md
+│   │   └── tareas-llm/
+│   │       └── spec.md
+│   └── config.yaml
+├── postman/
+│   └── fabrica_autopartes.postman_collection.json
+├── scripts/
+│   ├── ejecutar_api.ps1
+│   ├── ejecutar_app.ps1
+│   ├── ejecutar_pipeline.ps1
+│   ├── exportar_referencia_web.py
+│   ├── generar_arbol.py
+│   ├── generar_guia.py
+│   ├── generar_matriz.py
+│   ├── instalar_herramientas.ps1
+│   ├── preparar_proyecto.ps1
+│   ├── publicar_github.ps1
+│   ├── sincronizar_skills.py
+│   ├── verificar_calidad.ps1
+│   ├── verificar_capas.py
+│   └── verificar_entorno.ps1
+├── skills/
+│   └── … (11 archivos)
+├── src/
+│   └── fabrica_autopartes/
+│       ├── api/
+│       │   ├── routes/
+│       │   │   ├── __init__.py
+│       │   │   ├── base.py
+│       │   │   ├── operacion.py
+│       │   │   ├── simulador.py
+│       │   │   └── tareas.py
+│       │   ├── __init__.py
+│       │   ├── dependencias.py
+│       │   ├── esquemas.py
+│       │   └── main.py
+│       ├── core/
+│       │   ├── __init__.py
+│       │   ├── config.py
+│       │   ├── excepciones.py
+│       │   └── registro.py
+│       ├── domain/
+│       │   ├── __init__.py
+│       │   ├── modelos.py
+│       │   └── puertos.py
+│       ├── knowledge/
+│       │   ├── __init__.py
+│       │   ├── base.py
+│       │   └── recuperacion.py
+│       ├── llm/
+│       │   ├── prompts/
+│       │   │   ├── faq.yaml
+│       │   │   ├── qa.yaml
+│       │   │   └── resumen.yaml
+│       │   ├── __init__.py
+│       │   ├── cadenas.py
+│       │   ├── catalogo_prompts.py
+│       │   ├── extractivo.py
+│       │   ├── proveedores.py
+│       │   └── salvaguardas.py
+│       ├── mcp_server/
+│       │   ├── __init__.py
+│       │   └── server.py
+│       ├── pipelines/
+│       │   ├── __init__.py
+│       │   ├── bronze.py
+│       │   ├── calidad.py
+│       │   ├── fragmentacion.py
+│       │   ├── gold.py
+│       │   ├── graficas.py
+│       │   ├── orquestador.py
+│       │   ├── silver.py
+│       │   └── texto.py
+│       ├── repositories/
+│       │   ├── __init__.py
+│       │   ├── auditoria.py
+│       │   └── orm.py
+│       ├── scraping/
+│       │   ├── __init__.py
+│       │   ├── cliente_http.py
+│       │   ├── dinamico.py
+│       │   ├── extraccion.py
+│       │   ├── rastreador.py
+│       │   ├── robots.py
+│       │   └── sitemap.py
+│       ├── services/
+│       │   ├── __init__.py
+│       │   ├── asistente.py
+│       │   ├── evaluacion.py
+│       │   ├── maquinas.py
+│       │   └── simulador.py
+│       ├── simulador/
+│       │   ├── __init__.py
+│       │   ├── catalogo_freno.py
+│       │   ├── cinematica.py
+│       │   ├── fisica_freno.py
+│       │   ├── generacion.py
+│       │   └── modelos.py
+│       ├── __init__.py
+│       └── cli.py
+├── tests/
+│   ├── e2e/
+│   │   ├── __init__.py
+│   │   └── test_streamlit.py
+│   ├── fixtures/
+│   │   └── sitio/
+│   │       ├── autopartes.html
+│   │       ├── contacto.html
+│   │       ├── inicio.html
+│   │       ├── quienes-somos-copia.html
+│   │       ├── quienes-somos.html
+│   │       ├── robots.txt
+│   │       ├── wp-sitemap-posts-page-1.xml
+│   │       └── wp-sitemap.xml
+│   ├── integration/
+│   │   ├── __init__.py
+│   │   ├── test_api.py
+│   │   ├── test_api_simulador.py
+│   │   ├── test_generacion_3d.py
+│   │   ├── test_graficas.py
+│   │   ├── test_mcp.py
+│   │   ├── test_persistencia_y_evaluacion.py
+│   │   ├── test_postgresql.py
+│   │   └── test_rastreo.py
+│   ├── unit/
+│   │   ├── __init__.py
+│   │   ├── test_llm.py
+│   │   ├── test_pipelines.py
+│   │   ├── test_scraping.py
+│   │   └── test_simulador.py
+│   ├── __init__.py
+│   └── conftest.py
+├── web/
+│   ├── e2e/
+│   │   ├── recorrido.spec.ts
+│   │   └── visor.spec.ts
+│   ├── public/
+│   │   └── modelos/
+│   │       ├── freno_disco.glb
+│   │       └── freno_disco.manifiesto.json
+│   ├── src/
+│   │   ├── __tests__/
+│   │   │   ├── interfaz.test.tsx
+│   │   │   ├── modelos.test.ts
+│   │   │   └── referencia_freno.json
+│   │   ├── componentes/
+│   │   │   └── anatomia.tsx
+│   │   ├── modelos/
+│   │   │   ├── freno.ts
+│   │   │   ├── linea.ts
+│   │   │   └── prensa.ts
+│   │   ├── paginas/
+│   │   │   ├── Biblioteca.tsx
+│   │   │   ├── EscenaFreno.tsx
+│   │   │   ├── MaquinaFreno.tsx
+│   │   │   ├── MaquinaLinea.tsx
+│   │   │   └── MaquinaPrensa.tsx
+│   │   ├── api.ts
+│   │   ├── App.tsx
+│   │   ├── estilos.css
+│   │   └── main.tsx
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── playwright.config.ts
+│   ├── tsconfig.json
+│   └── vite.config.ts
+├── .coverage
+├── .dockerignore
+├── .env.example
+├── .gitattributes
+├── .gitignore
+├── .mcp.json
+├── .pre-commit-config.yaml
+├── .python-version
+├── AGENTS.md
+├── alembic.ini
+├── CLAUDE.md
+├── docker-compose.yml
+├── opencode.json
+├── pyproject.toml
+├── README.md
+└── uv.lock

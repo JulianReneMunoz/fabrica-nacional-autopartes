@@ -1,0 +1,8 @@
+✓ spec/base-conocimiento
+✓ spec/biblioteca-maquinas
+✓ spec/extraccion-datos
+✓ spec/interfaz-prueba
+✓ change/rag-embeddings-modulo2
+✓ spec/simulador-3d
+✓ spec/tareas-llm
+Totals: 7 passed, 0 failed (7 items)

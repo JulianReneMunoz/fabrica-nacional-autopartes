@@ -1,0 +1,185 @@
+% =============================================================================
+% Manual técnico — Fábrica Nacional de Autopartes: base de conocimiento, Q&A y simulador 3D (v2.0)
+% Compilar:  latexmk -pdf -interaction=nonstopmode main.tex   (MiKTeX o TeX Live)
+% =============================================================================
+\documentclass[11pt,letterpaper,oneside]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+% Idioma: se usa babel-spanish si está instalado; si no, inglés con nombres en español.
+\IfFileExists{spanish.ldf}{%
+  \usepackage[spanish,es-noshorthands,es-tabla]{babel}%
+}{%
+  \usepackage[english]{babel}%
+  \addto\captionsenglish{%
+    \renewcommand{\contentsname}{Índice general}%
+    \renewcommand{\listfigurename}{Índice de figuras}%
+    \renewcommand{\listtablename}{Índice de tablas}%
+    \renewcommand{\chaptername}{Capítulo}%
+    \renewcommand{\figurename}{Figura}%
+    \renewcommand{\tablename}{Tabla}%
+    \renewcommand{\bibname}{Referencias}%
+    \renewcommand{\appendixname}{Anexo}%
+    \renewcommand{\indexname}{Índice}}%
+}
+\usepackage[margin=2.3cm,headheight=14pt]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs,longtable,array,tabularx,multirow}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,shapes.multipart,fit,backgrounds,calc,shadows}
+\usepackage{float}
+\usepackage{csquotes}
+\usepackage{amssymb}
+\usepackage[hidelinks,unicode,bookmarksnumbered]{hyperref}
+\usepackage{xurl}
+
+% ---------------------------------------------------------------- colores
+\definecolor{fnarojo}{HTML}{C8102E}
+\definecolor{fnagris}{HTML}{3C4650}
+\definecolor{fnaclaro}{HTML}{F4F5F7}
+\definecolor{fnaazul}{HTML}{1F5FA8}
+\definecolor{fnaverde}{HTML}{2E7D4F}
+\definecolor{fnaambar}{HTML}{B7791F}
+\definecolor{bronce}{HTML}{B07B48}
+\definecolor{plata}{HTML}{8E99A4}
+\definecolor{oro}{HTML}{C9A227}
+
+\hypersetup{colorlinks=true,linkcolor=fnaazul,urlcolor=fnaazul,citecolor=fnaverde}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\renewcommand{\arraystretch}{1.18}
+\setlist{itemsep=0.15em,topsep=0.3em}
+
+\titleformat{\chapter}[display]{\normalfont\bfseries\color{fnagris}}
+  {\color{fnarojo}\large\MakeUppercase{\chaptertitlename}~\thechapter}{0.4em}{\LARGE}
+\titlespacing*{\chapter}{0pt}{-10pt}{18pt}
+\titleformat{\section}{\normalfont\Large\bfseries\color{fnagris}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries\color{fnagris}}{\thesubsection}{0.7em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\small\color{fnagris}\nouppercase{\leftmark}}
+\fancyfoot[L]{\scriptsize\color{fnagris}Fanalca · Base de conocimiento, Q\&A y simulador 3D · v2.0}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---------------------------------------------------------------- listados
+\lstset{
+  basicstyle=\ttfamily\footnotesize, breaklines=true, breakatwhitespace=false,
+  columns=fullflexible, keepspaces=true, showstringspaces=false,
+  frame=single, rulecolor=\color{fnagris!40}, backgroundcolor=\color{fnaclaro},
+  framesep=4pt, xleftmargin=4pt, xrightmargin=4pt, upquote=true, tabsize=2,
+  extendedchars=true, inputencoding=utf8,
+  literate=
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+    {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {ü}{{\"u}}1 {¿}{{?`}}1 {¡}{{!`}}1
+    {·}{{$\cdot$}}1 {—}{{---}}1 {–}{{--}}1 {…}{{...}}1 {→}{{$\rightarrow$}}1
+    {≥}{{$\geq$}}1 {≤}{{$\leq$}}1 {«}{{\guillemotleft}}1 {»}{{\guillemotright}}1
+    {├}{{\textbar}}1 {└}{{`}}1 {─}{{-}}1 {│}{{\textbar}}1
+    {✓}{{$\checkmark$}}1 {✗}{{$\times$}}1 {⚠}{{!}}1
+    {“}{{``}}1 {”}{{''}}1 {‘}{{`}}1 {’}{{'}}1 {º}{{\textordmasculine}}1 {°}{{\textdegree}}1
+}
+\lstdefinestyle{ps}{language={}, morekeywords={uv,git,winget,npm,ollama,opencode,claude,docker,wsl,gh,engram,openspec,latexmk,Set-ExecutionPolicy,Copy-Item,irm,iex,Invoke-RestMethod,Get-Command},
+  keywordstyle=\color{fnaazul}\bfseries, commentstyle=\color{fnaverde}\itshape, morecomment=[l]{\#},
+  title={\scriptsize\sffamily PowerShell}}
+\lstdefinestyle{py}{language=Python, keywordstyle=\color{fnaazul}\bfseries,
+  commentstyle=\color{fnaverde}\itshape, stringstyle=\color{fnarojo!80!black}, title={\scriptsize\sffamily Python}}
+\lstdefinestyle{json}{language={}, stringstyle=\color{fnarojo!80!black}, title={\scriptsize\sffamily JSON}}
+\lstdefinestyle{yaml}{language={}, commentstyle=\color{fnaverde}\itshape, morecomment=[l]{\#}, title={\scriptsize\sffamily YAML}}
+\lstdefinestyle{txt}{language={}, title={\scriptsize\sffamily Texto}}
+
+% ---------------------------------------------------------------- cajas
+\newtcolorbox{promptbox}{enhanced,breakable,colback=fnaazul!4,colframe=fnaazul!60,
+  boxrule=0.6pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt,
+  title={\sffamily\small Prompt para el agente (listo para copiar)},fonttitle=\bfseries,
+  coltitle=white,colbacktitle=fnaazul!80}
+\newtcolorbox{nota}[1][Nota]{enhanced,breakable,colback=fnaambar!6,colframe=fnaambar!70,
+  boxrule=0.6pt,arc=2pt,title={\sffamily\small #1},fonttitle=\bfseries,coltitle=white,colbacktitle=fnaambar}
+\newtcolorbox{evidencia}[1][Evidencia de ejecución]{enhanced,breakable,colback=fnaverde!5,
+  colframe=fnaverde!70,boxrule=0.6pt,arc=2pt,title={\sffamily\small #1},fonttitle=\bfseries,
+  coltitle=white,colbacktitle=fnaverde}
+
+% ---------------------------------------------------------------- TikZ
+\tikzset{
+  caja/.style={draw=fnagris,rounded corners=3pt,fill=white,align=center,font=\sffamily\footnotesize,
+    minimum height=0.95cm,inner sep=4pt,text width=#1},
+  caja/.default=2.6cm,
+  clave/.style={caja=#1,fill=fnaazul!8,draw=fnaazul},
+  clave/.default=2.6cm,
+  externo/.style={caja=#1,fill=fnaclaro,dashed},
+  externo/.default=2.6cm,
+  almacen/.style={cylinder,shape border rotate=90,aspect=0.22,draw=fnagris,fill=oro!12,
+    font=\sffamily\footnotesize,align=center,minimum height=1.2cm,minimum width=2.2cm},
+  actor/.style={circle,draw=fnarojo,fill=fnarojo!8,font=\sffamily\footnotesize,align=center,minimum size=1.3cm},
+  flecha/.style={-{Stealth[length=2.2mm]},thick,draw=fnagris},
+  flechad/.style={-{Stealth[length=2.2mm]},thick,draw=fnagris,dashed},
+  etq/.style={font=\sffamily\scriptsize,fill=white,inner sep=1pt},
+  grupo/.style={draw=#1,rounded corners=5pt,thick,inner sep=8pt,fill=#1!4},
+}
+
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+\newcommand{\ruta}[1]{\texttt{\detokenize{#1}}}
+
+\title{\vspace{-1cm}{\color{fnarojo}\rule{\linewidth}{2pt}}\\[0.6em]
+  {\Huge\bfseries\color{fnagris} Fábrica Nacional de Autopartes}\\[0.4em]
+  {\LARGE Base de conocimiento semántico, sistema Q\&A y simulador 3D}\\[0.3em]
+  {\large Manual técnico, guía de instalación y guía operativa de desarrollo con agentes}\\[0.4em]
+  {\color{fnarojo}\rule{\linewidth}{2pt}}}
+\author{Taller 1 · Módulo 1 · Técnicas Avanzadas de IA aplicadas en Modelos de Lenguaje\\
+  Maestría en Inteligencia Artificial y Ciencia de Datos · Universidad Autónoma de Occidente}
+\date{Versión 2.0.0 · 4 de noviembre de 2026}
+
+\begin{document}
+\pagenumbering{roman}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent Este manual documenta el análisis, diseño, implementación, prueba y operación del núcleo de
+conocimiento de un futuro asistente virtual para Fábrica Nacional de Autopartes (Fanalca). La solución extrae
+mediante web scraping responsable el contenido público de los sitios oficiales (autopartesfanalca.com.co y
+fanalca.com), explica cada etapa del procesamiento con gráficas, lo organiza en una arquitectura Medallion
+(Bronze, Silver, Gold), consolida un archivo de texto limpio y ofrece tres tareas sobre modelos de lenguaje
+con LangChain ---Resumen, Preguntas Frecuentes y Preguntas y Respuestas--- ancladas al contexto y protegidas
+contra alucinaciones e inyección de instrucciones. Las funcionalidades se exponen mediante una interfaz
+Streamlit, una API REST, una línea de comandos y un servidor del Model Context Protocol. El documento incluye la
+preparación completa de Windows~11, la configuración de OpenCode y Claude Code, una guía cronológica de 24 fases
+con prompts operativos, la asignación de modelos de Claude por especialidad (Opus para arquitectura, diseño
+mecánico y revisión; Sonnet para implementación) y las evidencias reales de las verificaciones realizadas. La
+versión~2.0 agrega un simulador 3D demostrativo del freno de disco ---modelo de componentes, articulaciones,
+despiece reversible, generación procedural, API validada, persistencia en PostgreSQL e integración RAG--- y una
+biblioteca de máquinas interactivas basada en el método Anatomy y alimentada por los datos del scraping. La redacción es impersonal y
+distingue en todo momento entre requisitos documentados, decisiones de diseño y extensiones propuestas.
+\end{abstract}
+
+\tableofcontents
+\listoffigures
+\listoftables
+\cleardoublepage
+\pagenumbering{arabic}
+
+\input{capitulos/01_contexto}
+\input{capitulos/02_requisitos}
+\input{capitulos/03_arquitectura}
+\input{capitulos/04_instalacion}
+\input{capitulos/05_agentes_mcp}
+\input{capitulos/06_datos}
+\input{capitulos/06b_proceso_graficas}
+\input{capitulos/07_aplicacion}
+\input{capitulos/08_calidad}
+\input{capitulos/09_operacion}
+\input{capitulos/11_simulador}
+\input{capitulos/12_anatomia}
+\input{capitulos/10_cierre}
+
+\end{document}

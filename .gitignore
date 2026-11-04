@@ -1,0 +1,41 @@
+# Entornos y cachés
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secretos (nunca versionar)
+.env
+*.key
+
+# Datos locales y bases de auditoría
+data/app.db
+data/*.db
+evaluacion/resultados/*.json
+!evaluacion/resultados/.gitkeep
+
+# LaTeX (artefactos intermedios)
+docs/latex/*.aux
+docs/latex/*.log
+docs/latex/*.out
+docs/latex/*.toc
+docs/latex/*.lof
+docs/latex/*.lot
+docs/latex/*.fls
+docs/latex/*.fdb_latexmk
+docs/latex/*.synctex.gz
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+.idea/
+
+# Visor web (v2.0)
+web/node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/

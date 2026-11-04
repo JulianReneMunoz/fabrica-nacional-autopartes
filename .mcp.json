@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "fna-conocimiento": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "fabrica-mcp"],
+      "env": { "FNA_MCP_PERMITIR_LLM": "false" }
+    }
+  }
+}

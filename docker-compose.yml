@@ -1,0 +1,54 @@
+# Despliegue local: docker compose up --build
+# Luego descargar el modelo dentro del contenedor de Ollama:
+#   docker compose exec ollama ollama pull llama3.2:3b
+# Visor 3D: http://localhost:8000/app/ · API: http://localhost:8000/docs · Streamlit: http://localhost:8501
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${FNA_PG_USUARIO:-fna}
+      POSTGRES_PASSWORD: ${FNA_PG_CLAVE:-fna_local}
+      POSTGRES_DB: ${FNA_PG_BASE:-fna}
+    ports: ["5432:5432"]
+    volumes: ["postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes: ["ollama:/root/.ollama"]
+
+  api:
+    build: { context: ., dockerfile: infra/docker/Dockerfile }
+    command: ["sh", "-c", "uv run alembic upgrade head && uv run uvicorn fabrica_autopartes.api.main:app --host 0.0.0.0 --port 8000"]
+    environment:
+      FNA_OLLAMA_URL: http://ollama:11434
+      FNA_URL_BASE_DATOS: postgresql+psycopg://${FNA_PG_USUARIO:-fna}:${FNA_PG_CLAVE:-fna_local}@postgres:5432/${FNA_PG_BASE:-fna}
+    env_file: [{ path: .env, required: false }]
+    ports: ["8000:8000"]
+    volumes: ["datos:/app/data"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      ollama: { condition: service_started }
+
+  app:
+    build: { context: ., dockerfile: infra/docker/Dockerfile }
+    command: ["uv", "run", "streamlit", "run", "frontend/app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+    environment:
+      FNA_OLLAMA_URL: http://ollama:11434
+      FNA_URL_BASE_DATOS: postgresql+psycopg://${FNA_PG_USUARIO:-fna}:${FNA_PG_CLAVE:-fna_local}@postgres:5432/${FNA_PG_BASE:-fna}
+      FNA_URL_VISOR: http://localhost:8000/app/
+    env_file: [{ path: .env, required: false }]
+    ports: ["8501:8501"]
+    volumes: ["datos:/app/data"]
+    depends_on:
+      api: { condition: service_started }
+
+volumes:
+  postgres:
+  ollama:
+  datos:

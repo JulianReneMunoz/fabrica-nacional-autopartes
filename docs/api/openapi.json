@@ -1,0 +1,3398 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Fanalca — Base de Conocimiento y Q&A",
+    "description": "\nAPI del sistema de conocimiento de **Fábrica Nacional de Autopartes (Fanalca)**.\n\n* **Tareas LLM**: Resumen, FAQ y Q&A anclados al contexto (LangChain).\n* **Base de conocimiento**: consulta de fragmentos Gold con procedencia.\n* **Operación**: salud, auditoría e historial del pipeline Medallion.\n* **Simulador 3D (v2.0)**: ensamblajes, piezas, articulaciones, despiece, cinemática validada,\n  cálculo del freno, estados, eventos y preguntas sobre piezas.\n* **Biblioteca de máquinas**: explicadores interactivos alimentados por el scraping.\n",
+    "contact": {
+      "name": "Proyecto académico TAAML — UAO"
+    },
+    "license": {
+      "name": "MIT"
+    },
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/salud": {
+      "get": {
+        "tags": [
+          "Operación"
+        ],
+        "summary": "Verificación de disponibilidad",
+        "operationId": "salud_salud_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Salud Salud Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auditoria/interacciones": {
+      "get": {
+        "tags": [
+          "Operación"
+        ],
+        "summary": "Historial de interacciones",
+        "operationId": "interacciones_api_v1_auditoria_interacciones_get",
+        "parameters": [
+          {
+            "name": "pagina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagina"
+            }
+          },
+          {
+            "name": "tamano",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Tamano"
+            }
+          },
+          {
+            "name": "tarea",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(qa|faq|resumen)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tarea"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pagina_InteraccionDTO_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/ejecuciones": {
+      "get": {
+        "tags": [
+          "Operación"
+        ],
+        "summary": "Historial de ejecuciones del pipeline",
+        "operationId": "ejecuciones_api_v1_pipeline_ejecuciones_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EjecucionDTO"
+                  },
+                  "type": "array",
+                  "title": "Response Ejecuciones Api V1 Pipeline Ejecuciones Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/reconstruir": {
+      "post": {
+        "tags": [
+          "Operación"
+        ],
+        "summary": "Reconstruir Silver/Gold desde Bronze o semilla (requiere X-API-Key)",
+        "operationId": "reconstruir_api_v1_pipeline_reconstruir_post",
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudReconstruccion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadisticasBase"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/base/estadisticas": {
+      "get": {
+        "tags": [
+          "Base de conocimiento"
+        ],
+        "summary": "Estadísticas del corpus Gold",
+        "operationId": "estadisticas_api_v1_base_estadisticas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadisticasBase"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/base/fragmentos": {
+      "get": {
+        "tags": [
+          "Base de conocimiento"
+        ],
+        "summary": "Listar o buscar fragmentos",
+        "operationId": "listar_api_v1_base_fragmentos_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Consulta BM25; si se omite se lista en orden",
+              "title": "Q"
+            },
+            "description": "Consulta BM25; si se omite se lista en orden"
+          },
+          {
+            "name": "seccion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "examples": [
+                "negocios"
+              ],
+              "title": "Seccion"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagina"
+            }
+          },
+          {
+            "name": "tamano",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Tamano"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pagina_FragmentoBuscado_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/base/fragmentos/{fragmento_id}": {
+      "get": {
+        "tags": [
+          "Base de conocimiento"
+        ],
+        "summary": "Obtener un fragmento",
+        "operationId": "obtener_api_v1_base_fragmentos__fragmento_id__get",
+        "parameters": [
+          {
+            "name": "fragmento_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Fragmento Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Fragmento"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tareas/qa": {
+      "post": {
+        "tags": [
+          "Tareas LLM"
+        ],
+        "summary": "Responder una pregunta con base en el contexto",
+        "operationId": "qa_api_v1_tareas_qa_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudQA"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaQA"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tareas/faq": {
+      "post": {
+        "tags": [
+          "Tareas LLM"
+        ],
+        "summary": "Generar preguntas frecuentes",
+        "operationId": "faq_api_v1_tareas_faq_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudFAQ"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFAQ"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tareas/resumen": {
+      "post": {
+        "tags": [
+          "Tareas LLM"
+        ],
+        "summary": "Generar el resumen ejecutivo",
+        "operationId": "resumen_api_v1_tareas_resumen_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudResumen"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoResumen"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Listar Ensamblajes",
+        "operationId": "listar_ensamblajes_api_v1_simulador_ensamblajes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResumenEnsamblaje"
+                  },
+                  "type": "array",
+                  "title": "Response Listar Ensamblajes Api V1 Simulador Ensamblajes Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Ensamblaje",
+        "operationId": "ensamblaje_api_v1_simulador_ensamblajes__ens_id__get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ensamblaje"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/jerarquia": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Jerarquia",
+        "operationId": "jerarquia_api_v1_simulador_ensamblajes__ens_id__jerarquia_get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodoJerarquia"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/piezas": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Piezas",
+        "operationId": "piezas_api_v1_simulador_ensamblajes__ens_id__piezas_get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pieza"
+                  },
+                  "title": "Response Piezas Api V1 Simulador Ensamblajes  Ens Id  Piezas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/piezas/{pieza_id}": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Pieza",
+        "operationId": "pieza_api_v1_simulador_ensamblajes__ens_id__piezas__pieza_id__get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          },
+          {
+            "name": "pieza_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pieza Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pieza"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/articulaciones": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Articulaciones",
+        "operationId": "articulaciones_api_v1_simulador_ensamblajes__ens_id__articulaciones_get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Articulacion"
+                  },
+                  "title": "Response Articulaciones Api V1 Simulador Ensamblajes  Ens Id  Articulaciones Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/despiece": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Despiece",
+        "operationId": "despiece_api_v1_simulador_ensamblajes__ens_id__despiece_get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          },
+          {
+            "name": "factor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 1.0,
+              "title": "Factor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "title": "Response Despiece Api V1 Simulador Ensamblajes  Ens Id  Despiece Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/secuencia": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Secuencia",
+        "operationId": "secuencia_api_v1_simulador_ensamblajes__ens_id__secuencia_get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          },
+          {
+            "name": "modo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "desmontaje",
+                "reensamblaje"
+              ],
+              "type": "string",
+              "default": "desmontaje",
+              "title": "Modo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Secuencia Api V1 Simulador Ensamblajes  Ens Id  Secuencia Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/animacion": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Parametros Animacion",
+        "description": "Parámetros de animación: duración por pieza y orden (la animación es visual, no física).",
+        "operationId": "parametros_animacion_api_v1_simulador_ensamblajes__ens_id__animacion_get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Parametros Animacion Api V1 Simulador Ensamblajes  Ens Id  Animacion Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/cinematica": {
+      "post": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Cinematica",
+        "operationId": "cinematica_api_v1_simulador_ensamblajes__ens_id__cinematica_post",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudCinematica"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/Lectura"
+                  },
+                  "title": "Response Cinematica Api V1 Simulador Ensamblajes  Ens Id  Cinematica Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/calculo-freno": {
+      "post": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Calculo Freno",
+        "operationId": "calculo_freno_api_v1_simulador_ensamblajes__ens_id__calculo_freno_post",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntradaFreno"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoFreno"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/preguntar": {
+      "post": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Preguntar",
+        "operationId": "preguntar_api_v1_simulador_ensamblajes__ens_id__preguntar_post",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudPregunta"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaPieza"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/estados": {
+      "post": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Guardar Estado",
+        "operationId": "guardar_estado_api_v1_simulador_ensamblajes__ens_id__estados_post",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudEstado"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoGuardado"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Listar Estados",
+        "operationId": "listar_estados_api_v1_simulador_ensamblajes__ens_id__estados_get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstadoGuardado"
+                  },
+                  "title": "Response Listar Estados Api V1 Simulador Ensamblajes  Ens Id  Estados Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/estados/{estado_id}": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Obtener Estado",
+        "operationId": "obtener_estado_api_v1_simulador_estados__estado_id__get",
+        "parameters": [
+          {
+            "name": "estado_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Estado Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoGuardado"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/eventos": {
+      "post": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Registrar Evento",
+        "operationId": "registrar_evento_api_v1_simulador_ensamblajes__ens_id__eventos_post",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudEvento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Registrar Evento Api V1 Simulador Ensamblajes  Ens Id  Eventos Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Listar Eventos",
+        "operationId": "listar_eventos_api_v1_simulador_ensamblajes__ens_id__eventos_get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Listar Eventos Api V1 Simulador Ensamblajes  Ens Id  Eventos Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/maquinas": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)",
+          "Biblioteca de máquinas"
+        ],
+        "summary": "Maquinas",
+        "operationId": "maquinas_api_v1_maquinas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Maquina"
+                  },
+                  "type": "array",
+                  "title": "Response Maquinas Api V1 Maquinas Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/maquinas/{maquina_id}": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)",
+          "Biblioteca de máquinas"
+        ],
+        "summary": "Maquina",
+        "operationId": "maquina_api_v1_maquinas__maquina_id__get",
+        "parameters": [
+          {
+            "name": "maquina_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Maquina Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Maquina"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Articulacion": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoArticulacion"
+          },
+          "padre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Padre"
+          },
+          "hijo": {
+            "type": "string",
+            "title": "Hijo"
+          },
+          "eje": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Eje",
+            "default": [
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "origen": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Origen",
+            "default": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "limites": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LimitesMovimiento"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unidad": {
+            "type": "string",
+            "enum": [
+              "grados",
+              "m",
+              "-"
+            ],
+            "title": "Unidad",
+            "default": "-"
+          },
+          "valor_inicial": {
+            "type": "number",
+            "title": "Valor Inicial",
+            "default": 0.0
+          },
+          "continua": {
+            "type": "boolean",
+            "title": "Continua",
+            "default": false
+          },
+          "procedencia": {
+            "type": "string",
+            "enum": [
+              "especificacion",
+              "demostrativo"
+            ],
+            "title": "Procedencia",
+            "default": "demostrativo"
+          },
+          "descripcion": {
+            "type": "string",
+            "title": "Descripcion",
+            "default": ""
+          },
+          "maestra": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maestra"
+          },
+          "relacion": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relacion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "tipo",
+          "padre",
+          "hijo"
+        ],
+        "title": "Articulacion"
+      },
+      "DatoEmpresa": {
+        "properties": {
+          "texto": {
+            "type": "string",
+            "title": "Texto"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "fragmento_id": {
+            "type": "string",
+            "title": "Fragmento Id"
+          },
+          "origen": {
+            "type": "string",
+            "title": "Origen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "texto",
+          "url",
+          "fragmento_id",
+          "origen"
+        ],
+        "title": "DatoEmpresa"
+      },
+      "EjecucionDTO": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "inicio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inicio"
+          },
+          "fin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fin"
+          },
+          "etapa": {
+            "type": "string",
+            "title": "Etapa"
+          },
+          "estado": {
+            "type": "string",
+            "title": "Estado"
+          },
+          "detalle": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Detalle"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "inicio",
+          "fin",
+          "etapa",
+          "estado",
+          "detalle"
+        ],
+        "title": "EjecucionDTO"
+      },
+      "Ensamblaje": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "type": "string",
+            "title": "Descripcion"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "advertencia": {
+            "type": "string",
+            "title": "Advertencia"
+          },
+          "subconjuntos": {
+            "items": {
+              "$ref": "#/components/schemas/Subconjunto"
+            },
+            "type": "array",
+            "title": "Subconjuntos"
+          },
+          "piezas": {
+            "items": {
+              "$ref": "#/components/schemas/Pieza"
+            },
+            "type": "array",
+            "title": "Piezas"
+          },
+          "articulaciones": {
+            "items": {
+              "$ref": "#/components/schemas/Articulacion"
+            },
+            "type": "array",
+            "title": "Articulaciones"
+          },
+          "archivo_glb": {
+            "type": "string",
+            "title": "Archivo Glb"
+          },
+          "parametros": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Parametros"
+          },
+          "procedencia_parametros": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "especificacion",
+                "demostrativo"
+              ]
+            },
+            "type": "object",
+            "title": "Procedencia Parametros"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "version",
+          "advertencia",
+          "subconjuntos",
+          "piezas",
+          "articulaciones",
+          "archivo_glb",
+          "parametros",
+          "procedencia_parametros"
+        ],
+        "title": "Ensamblaje"
+      },
+      "EntradaFreno": {
+        "properties": {
+          "presion_bar": {
+            "type": "number",
+            "maximum": 200.0,
+            "minimum": 0.0,
+            "title": "Presion Bar",
+            "description": "Presión hidráulica en la pinza",
+            "default": 25.0
+          },
+          "diametro_piston_m": {
+            "type": "number",
+            "maximum": 0.075,
+            "minimum": 0.03,
+            "title": "Diametro Piston M",
+            "default": 0.054
+          },
+          "coeficiente_friccion": {
+            "type": "number",
+            "maximum": 0.7,
+            "minimum": 0.1,
+            "title": "Coeficiente Friccion",
+            "description": "μ pastilla-disco",
+            "default": 0.4
+          },
+          "radio_efectivo_m": {
+            "type": "number",
+            "maximum": 0.2,
+            "minimum": 0.07,
+            "title": "Radio Efectivo M",
+            "default": 0.115
+          },
+          "velocidad_kmh": {
+            "type": "number",
+            "maximum": 200.0,
+            "minimum": 0.0,
+            "title": "Velocidad Kmh",
+            "default": 60.0
+          },
+          "radio_neumatico_m": {
+            "type": "number",
+            "maximum": 0.5,
+            "minimum": 0.2,
+            "title": "Radio Neumatico M",
+            "default": 0.3
+          },
+          "masa_cuarto_vehiculo_kg": {
+            "type": "number",
+            "maximum": 2000.0,
+            "minimum": 50.0,
+            "title": "Masa Cuarto Vehiculo Kg",
+            "default": 300.0
+          },
+          "inercia_rueda_kg_m2": {
+            "type": "number",
+            "maximum": 10.0,
+            "exclusiveMinimum": 0.05,
+            "title": "Inercia Rueda Kg M2",
+            "default": 1.2
+          },
+          "adherencia_neumatico": {
+            "type": "number",
+            "maximum": 1.2,
+            "minimum": 0.1,
+            "title": "Adherencia Neumatico",
+            "description": "μ neumático-calzada",
+            "default": 0.9
+          }
+        },
+        "type": "object",
+        "title": "EntradaFreno"
+      },
+      "EstadisticasBase": {
+        "properties": {
+          "documentos": {
+            "type": "integer",
+            "title": "Documentos"
+          },
+          "fragmentos": {
+            "type": "integer",
+            "title": "Fragmentos"
+          },
+          "tokens_aprox": {
+            "type": "integer",
+            "title": "Tokens Aprox"
+          },
+          "secciones": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Secciones"
+          },
+          "origenes": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Origenes"
+          },
+          "urls": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Urls"
+          },
+          "generado_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "documentos",
+          "fragmentos",
+          "tokens_aprox",
+          "secciones",
+          "origenes",
+          "urls"
+        ],
+        "title": "EstadisticasBase"
+      },
+      "EstadoGuardado": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "ensamblaje": {
+            "type": "string",
+            "title": "Ensamblaje"
+          },
+          "estado": {
+            "$ref": "#/components/schemas/EstadoVisual"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "ensamblaje",
+          "estado"
+        ],
+        "title": "EstadoGuardado"
+      },
+      "EstadoVisual": {
+        "properties": {
+          "modo": {
+            "type": "string",
+            "enum": [
+              "ensamblado",
+              "despiece",
+              "reensamblaje",
+              "frenado"
+            ],
+            "title": "Modo",
+            "default": "ensamblado"
+          },
+          "factor_despiece": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Factor Despiece",
+            "default": 0.0
+          },
+          "velocidad_animacion": {
+            "type": "number",
+            "maximum": 4.0,
+            "minimum": 0.1,
+            "title": "Velocidad Animacion",
+            "default": 1.0
+          },
+          "ocultas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ocultas"
+          },
+          "transparencia": {
+            "type": "number",
+            "maximum": 0.9,
+            "minimum": 0.0,
+            "title": "Transparencia",
+            "default": 0.0
+          },
+          "seleccionada": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seleccionada"
+          },
+          "valores_articulacion": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Valores Articulacion"
+          },
+          "camara": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array",
+                "maxItems": 3,
+                "minItems": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Camara"
+          }
+        },
+        "type": "object",
+        "title": "EstadoVisual"
+      },
+      "Fragmento": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "documento_id": {
+            "type": "string",
+            "title": "Documento Id"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "titulo": {
+            "type": "string",
+            "title": "Titulo"
+          },
+          "seccion": {
+            "type": "string",
+            "title": "Seccion"
+          },
+          "encabezado": {
+            "type": "string",
+            "title": "Encabezado",
+            "default": ""
+          },
+          "idioma": {
+            "type": "string",
+            "title": "Idioma",
+            "default": "es"
+          },
+          "texto": {
+            "type": "string",
+            "title": "Texto"
+          },
+          "tokens_aprox": {
+            "type": "integer",
+            "title": "Tokens Aprox"
+          },
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "scraping",
+              "semilla",
+              "lectura_web"
+            ],
+            "title": "Origen",
+            "default": "scraping"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "documento_id",
+          "url",
+          "titulo",
+          "seccion",
+          "texto",
+          "tokens_aprox",
+          "orden"
+        ],
+        "title": "Fragmento",
+        "description": "Fragmento (*chunk*) semánticamente coherente de la capa Gold."
+      },
+      "FragmentoBuscado": {
+        "properties": {
+          "fragmento": {
+            "$ref": "#/components/schemas/Fragmento"
+          },
+          "puntaje": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Puntaje"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fragmento"
+        ],
+        "title": "FragmentoBuscado"
+      },
+      "Fuente": {
+        "properties": {
+          "fragmento_id": {
+            "type": "string",
+            "title": "Fragmento Id"
+          },
+          "titulo": {
+            "type": "string",
+            "title": "Titulo"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fragmento_id",
+          "titulo",
+          "url"
+        ],
+        "title": "Fuente"
+      },
+      "FuenteDocumentada": {
+        "properties": {
+          "fragmento_id": {
+            "type": "string",
+            "title": "Fragmento Id"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "texto": {
+            "type": "string",
+            "title": "Texto"
+          },
+          "origen": {
+            "type": "string",
+            "title": "Origen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fragmento_id",
+          "url",
+          "texto",
+          "origen"
+        ],
+        "title": "FuenteDocumentada"
+      },
+      "Geometria": {
+        "properties": {
+          "primitiva": {
+            "type": "string",
+            "enum": [
+              "cilindro",
+              "anillo",
+              "caja",
+              "pinza",
+              "tornillo",
+              "disco_ventilado",
+              "cubo"
+            ],
+            "title": "Primitiva"
+          },
+          "parametros": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Parametros"
+          },
+          "nodo_glb": {
+            "type": "string",
+            "title": "Nodo Glb"
+          }
+        },
+        "type": "object",
+        "required": [
+          "primitiva",
+          "parametros",
+          "nodo_glb"
+        ],
+        "title": "Geometria"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InteraccionDTO": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "fecha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha"
+          },
+          "tarea": {
+            "type": "string",
+            "title": "Tarea"
+          },
+          "canal": {
+            "type": "string",
+            "title": "Canal"
+          },
+          "entrada": {
+            "type": "string",
+            "title": "Entrada"
+          },
+          "salida": {
+            "type": "string",
+            "title": "Salida"
+          },
+          "proveedor": {
+            "type": "string",
+            "title": "Proveedor"
+          },
+          "modelo": {
+            "type": "string",
+            "title": "Modelo"
+          },
+          "version_prompt": {
+            "type": "string",
+            "title": "Version Prompt"
+          },
+          "modo_contexto": {
+            "type": "string",
+            "title": "Modo Contexto"
+          },
+          "fuentes": {
+            "items": {},
+            "type": "array",
+            "title": "Fuentes"
+          },
+          "fundamentada": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fundamentada"
+          },
+          "latencia_ms": {
+            "type": "integer",
+            "title": "Latencia Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "fecha",
+          "tarea",
+          "canal",
+          "entrada",
+          "salida",
+          "proveedor",
+          "modelo",
+          "version_prompt",
+          "modo_contexto",
+          "fuentes",
+          "fundamentada",
+          "latencia_ms"
+        ],
+        "title": "InteraccionDTO"
+      },
+      "ItemFAQ": {
+        "properties": {
+          "pregunta": {
+            "type": "string",
+            "title": "Pregunta"
+          },
+          "respuesta": {
+            "type": "string",
+            "title": "Respuesta"
+          },
+          "fuentes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fuentes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pregunta",
+          "respuesta"
+        ],
+        "title": "ItemFAQ"
+      },
+      "Lectura": {
+        "properties": {
+          "posicion": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Posicion"
+          },
+          "rotacion_grados": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Rotacion Grados"
+          }
+        },
+        "type": "object",
+        "required": [
+          "posicion",
+          "rotacion_grados"
+        ],
+        "title": "Lectura"
+      },
+      "LimitesMovimiento": {
+        "properties": {
+          "minimo": {
+            "type": "number",
+            "title": "Minimo"
+          },
+          "maximo": {
+            "type": "number",
+            "title": "Maximo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "minimo",
+          "maximo"
+        ],
+        "title": "LimitesMovimiento"
+      },
+      "Maquina": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "pregunta": {
+            "type": "string",
+            "title": "Pregunta"
+          },
+          "una_linea": {
+            "type": "string",
+            "title": "Una Linea"
+          },
+          "relacion": {
+            "type": "string",
+            "title": "Relacion"
+          },
+          "ruta": {
+            "type": "string",
+            "title": "Ruta"
+          },
+          "idea_principal": {
+            "type": "string",
+            "title": "Idea Principal"
+          },
+          "datos_empresa": {
+            "items": {
+              "$ref": "#/components/schemas/DatoEmpresa"
+            },
+            "type": "array",
+            "title": "Datos Empresa"
+          },
+          "parametros": {
+            "items": {
+              "$ref": "#/components/schemas/Parametro"
+            },
+            "type": "array",
+            "title": "Parametros"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "pregunta",
+          "una_linea",
+          "relacion",
+          "ruta",
+          "idea_principal"
+        ],
+        "title": "Maquina"
+      },
+      "NodoJerarquia": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "ensamblaje",
+              "subconjunto",
+              "pieza"
+            ],
+            "title": "Tipo"
+          },
+          "hijos": {
+            "items": {
+              "$ref": "#/components/schemas/NodoJerarquia"
+            },
+            "type": "array",
+            "title": "Hijos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "tipo"
+        ],
+        "title": "NodoJerarquia"
+      },
+      "Pagina_FragmentoBuscado_": {
+        "properties": {
+          "elementos": {
+            "items": {
+              "$ref": "#/components/schemas/FragmentoBuscado"
+            },
+            "type": "array",
+            "title": "Elementos"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "pagina": {
+            "type": "integer",
+            "title": "Pagina"
+          },
+          "tamano": {
+            "type": "integer",
+            "title": "Tamano"
+          }
+        },
+        "type": "object",
+        "required": [
+          "elementos",
+          "total",
+          "pagina",
+          "tamano"
+        ],
+        "title": "Pagina[FragmentoBuscado]"
+      },
+      "Pagina_InteraccionDTO_": {
+        "properties": {
+          "elementos": {
+            "items": {
+              "$ref": "#/components/schemas/InteraccionDTO"
+            },
+            "type": "array",
+            "title": "Elementos"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "pagina": {
+            "type": "integer",
+            "title": "Pagina"
+          },
+          "tamano": {
+            "type": "integer",
+            "title": "Tamano"
+          }
+        },
+        "type": "object",
+        "required": [
+          "elementos",
+          "total",
+          "pagina",
+          "tamano"
+        ],
+        "title": "Pagina[InteraccionDTO]"
+      },
+      "Parametro": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "valor": {
+            "type": "number",
+            "title": "Valor"
+          },
+          "unidad": {
+            "type": "string",
+            "title": "Unidad"
+          },
+          "procedencia": {
+            "type": "string",
+            "title": "Procedencia"
+          },
+          "fuente": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fuente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "valor",
+          "unidad",
+          "procedencia"
+        ],
+        "title": "Parametro"
+      },
+      "Pieza": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "descripcion": {
+            "type": "string",
+            "title": "Descripcion"
+          },
+          "funcion": {
+            "type": "string",
+            "title": "Funcion"
+          },
+          "material": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material"
+          },
+          "dimensiones_m": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Dimensiones M"
+          },
+          "geometria": {
+            "$ref": "#/components/schemas/Geometria"
+          },
+          "transformacion": {
+            "$ref": "#/components/schemas/Transformacion"
+          },
+          "ancla": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Ancla"
+          },
+          "subconjunto": {
+            "type": "string",
+            "title": "Subconjunto"
+          },
+          "relacionadas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Relacionadas"
+          },
+          "articulaciones": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Articulaciones"
+          },
+          "direccion_despiece": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Direccion Despiece"
+          },
+          "distancia_despiece_m": {
+            "type": "number",
+            "maximum": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Distancia Despiece M"
+          },
+          "retirar_antes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Retirar Antes",
+            "description": "Piezas que deben retirarse antes que esta"
+          },
+          "visible": {
+            "type": "boolean",
+            "title": "Visible",
+            "default": true
+          },
+          "metadatos": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Metadatos"
+          },
+          "referencia_documental": {
+            "type": "string",
+            "title": "Referencia Documental"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "tipo",
+          "descripcion",
+          "funcion",
+          "dimensiones_m",
+          "geometria",
+          "transformacion",
+          "ancla",
+          "subconjunto",
+          "direccion_despiece",
+          "distancia_despiece_m",
+          "referencia_documental"
+        ],
+        "title": "Pieza"
+      },
+      "RespuestaPieza": {
+        "properties": {
+          "pieza_id": {
+            "type": "string",
+            "title": "Pieza Id"
+          },
+          "pregunta": {
+            "type": "string",
+            "title": "Pregunta"
+          },
+          "intencion": {
+            "type": "string",
+            "enum": [
+              "funcion",
+              "conjunto",
+              "relacionadas",
+              "movimiento",
+              "retirar",
+              "documentacion",
+              "seguridad",
+              "general"
+            ],
+            "title": "Intencion"
+          },
+          "respuesta_modelo": {
+            "type": "string",
+            "title": "Respuesta Modelo",
+            "description": "Características del modelo de demostración"
+          },
+          "documentado": {
+            "items": {
+              "$ref": "#/components/schemas/FuenteDocumentada"
+            },
+            "type": "array",
+            "title": "Documentado"
+          },
+          "advertencia": {
+            "type": "string",
+            "title": "Advertencia"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pieza_id",
+          "pregunta",
+          "intencion",
+          "respuesta_modelo",
+          "advertencia"
+        ],
+        "title": "RespuestaPieza"
+      },
+      "RespuestaQA": {
+        "properties": {
+          "pregunta": {
+            "type": "string",
+            "title": "Pregunta"
+          },
+          "respuesta": {
+            "type": "string",
+            "title": "Respuesta"
+          },
+          "fuentes": {
+            "items": {
+              "$ref": "#/components/schemas/Fuente"
+            },
+            "type": "array",
+            "title": "Fuentes"
+          },
+          "fundamentada": {
+            "type": "boolean",
+            "title": "Fundamentada"
+          },
+          "confianza": {
+            "type": "string",
+            "enum": [
+              "alta",
+              "media",
+              "baja",
+              "ninguna"
+            ],
+            "title": "Confianza",
+            "default": "media"
+          },
+          "version_prompt": {
+            "type": "string",
+            "title": "Version Prompt"
+          },
+          "proveedor": {
+            "type": "string",
+            "title": "Proveedor"
+          },
+          "modelo": {
+            "type": "string",
+            "title": "Modelo"
+          },
+          "modo_contexto": {
+            "type": "string",
+            "title": "Modo Contexto"
+          },
+          "latencia_ms": {
+            "type": "integer",
+            "title": "Latencia Ms",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "pregunta",
+          "respuesta",
+          "fundamentada",
+          "version_prompt",
+          "proveedor",
+          "modelo",
+          "modo_contexto"
+        ],
+        "title": "RespuestaQA"
+      },
+      "ResultadoFAQ": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemFAQ"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "version_prompt": {
+            "type": "string",
+            "title": "Version Prompt"
+          },
+          "proveedor": {
+            "type": "string",
+            "title": "Proveedor"
+          },
+          "modelo": {
+            "type": "string",
+            "title": "Modelo"
+          },
+          "latencia_ms": {
+            "type": "integer",
+            "title": "Latencia Ms",
+            "default": 0
+          },
+          "advertencias": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Advertencias"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "version_prompt",
+          "proveedor",
+          "modelo"
+        ],
+        "title": "ResultadoFAQ"
+      },
+      "ResultadoFreno": {
+        "properties": {
+          "area_piston_m2": {
+            "type": "number",
+            "title": "Area Piston M2"
+          },
+          "fuerza_piston_n": {
+            "type": "number",
+            "title": "Fuerza Piston N"
+          },
+          "fuerza_sujecion_por_pastilla_n": {
+            "type": "number",
+            "title": "Fuerza Sujecion Por Pastilla N"
+          },
+          "fuerza_friccion_total_n": {
+            "type": "number",
+            "title": "Fuerza Friccion Total N"
+          },
+          "par_frenado_nm": {
+            "type": "number",
+            "title": "Par Frenado Nm"
+          },
+          "inercia_equivalente_kg_m2": {
+            "type": "number",
+            "title": "Inercia Equivalente Kg M2"
+          },
+          "deceleracion_rad_s2": {
+            "type": "number",
+            "title": "Deceleracion Rad S2"
+          },
+          "deceleracion_m_s2": {
+            "type": "number",
+            "title": "Deceleracion M S2"
+          },
+          "deceleracion_g": {
+            "type": "number",
+            "title": "Deceleracion G"
+          },
+          "rueda_bloqueada": {
+            "type": "boolean",
+            "title": "Rueda Bloqueada"
+          },
+          "tiempo_detencion_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tiempo Detencion S"
+          },
+          "distancia_detencion_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia Detencion M"
+          },
+          "rpm_inicial": {
+            "type": "number",
+            "title": "Rpm Inicial"
+          },
+          "procedencia": {
+            "type": "string",
+            "title": "Procedencia",
+            "default": "Fórmulas estándar; parámetros demostrativos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "area_piston_m2",
+          "fuerza_piston_n",
+          "fuerza_sujecion_por_pastilla_n",
+          "fuerza_friccion_total_n",
+          "par_frenado_nm",
+          "inercia_equivalente_kg_m2",
+          "deceleracion_rad_s2",
+          "deceleracion_m_s2",
+          "deceleracion_g",
+          "rueda_bloqueada",
+          "tiempo_detencion_s",
+          "distancia_detencion_m",
+          "rpm_inicial"
+        ],
+        "title": "ResultadoFreno"
+      },
+      "ResultadoResumen": {
+        "properties": {
+          "resumen": {
+            "type": "string",
+            "title": "Resumen"
+          },
+          "enfoque": {
+            "type": "string",
+            "title": "Enfoque"
+          },
+          "version_prompt": {
+            "type": "string",
+            "title": "Version Prompt"
+          },
+          "proveedor": {
+            "type": "string",
+            "title": "Proveedor"
+          },
+          "modelo": {
+            "type": "string",
+            "title": "Modelo"
+          },
+          "latencia_ms": {
+            "type": "integer",
+            "title": "Latencia Ms",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "resumen",
+          "enfoque",
+          "version_prompt",
+          "proveedor",
+          "modelo"
+        ],
+        "title": "ResultadoResumen"
+      },
+      "ResumenEnsamblaje": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "type": "string",
+            "title": "Descripcion"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "piezas": {
+            "type": "integer",
+            "title": "Piezas"
+          },
+          "articulaciones": {
+            "type": "integer",
+            "title": "Articulaciones"
+          },
+          "archivo_glb": {
+            "type": "string",
+            "title": "Archivo Glb"
+          },
+          "advertencia": {
+            "type": "string",
+            "title": "Advertencia"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "version",
+          "piezas",
+          "articulaciones",
+          "archivo_glb",
+          "advertencia"
+        ],
+        "title": "ResumenEnsamblaje"
+      },
+      "SolicitudCinematica": {
+        "properties": {
+          "valores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Valores",
+            "examples": [
+              {
+                "j_piston": 0.001,
+                "j_rueda": 45.0
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "SolicitudCinematica"
+      },
+      "SolicitudEstado": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "estado": {
+            "$ref": "#/components/schemas/EstadoVisual"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "estado"
+        ],
+        "title": "SolicitudEstado"
+      },
+      "SolicitudEvento": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "seleccion",
+              "despiece",
+              "reensamblaje",
+              "frenado",
+              "visibilidad",
+              "captura",
+              "camara"
+            ],
+            "title": "Tipo"
+          },
+          "pieza_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pieza Id"
+          },
+          "detalle": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Detalle"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipo"
+        ],
+        "title": "SolicitudEvento"
+      },
+      "SolicitudFAQ": {
+        "properties": {
+          "proveedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ollama",
+                  "openai",
+                  "anthropic",
+                  "extractivo"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proveedor",
+            "description": "Sobrescribe FNA_PROVEEDOR_LLM"
+          },
+          "modelo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelo",
+            "examples": [
+              "llama3.2:3b"
+            ]
+          },
+          "version_prompt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "v1",
+                  "v2",
+                  "v3"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Prompt"
+          },
+          "n_preguntas": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 3.0,
+            "title": "N Preguntas",
+            "default": 8
+          }
+        },
+        "type": "object",
+        "title": "SolicitudFAQ"
+      },
+      "SolicitudPregunta": {
+        "properties": {
+          "pieza_id": {
+            "type": "string",
+            "title": "Pieza Id"
+          },
+          "pregunta": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Pregunta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pieza_id",
+          "pregunta"
+        ],
+        "title": "SolicitudPregunta"
+      },
+      "SolicitudQA": {
+        "properties": {
+          "proveedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ollama",
+                  "openai",
+                  "anthropic",
+                  "extractivo"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proveedor",
+            "description": "Sobrescribe FNA_PROVEEDOR_LLM"
+          },
+          "modelo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelo",
+            "examples": [
+              "llama3.2:3b"
+            ]
+          },
+          "version_prompt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "v1",
+                  "v2",
+                  "v3"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Prompt"
+          },
+          "pregunta": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Pregunta",
+            "examples": [
+              "¿Dónde queda la sede principal de Fanalca?"
+            ]
+          },
+          "modo_contexto": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "auto",
+                  "completo",
+                  "seleccion"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modo Contexto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pregunta"
+        ],
+        "title": "SolicitudQA"
+      },
+      "SolicitudReconstruccion": {
+        "properties": {
+          "fuente": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "scraping",
+              "semilla",
+              "ambas"
+            ],
+            "title": "Fuente",
+            "default": "auto"
+          }
+        },
+        "type": "object",
+        "title": "SolicitudReconstruccion"
+      },
+      "SolicitudResumen": {
+        "properties": {
+          "proveedor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ollama",
+                  "openai",
+                  "anthropic",
+                  "extractivo"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proveedor",
+            "description": "Sobrescribe FNA_PROVEEDOR_LLM"
+          },
+          "modelo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelo",
+            "examples": [
+              "llama3.2:3b"
+            ]
+          },
+          "version_prompt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "v1",
+                  "v2",
+                  "v3"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Prompt"
+          },
+          "enfoque": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enfoque",
+            "examples": [
+              "negocios y productos"
+            ]
+          }
+        },
+        "type": "object",
+        "title": "SolicitudResumen"
+      },
+      "Subconjunto": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "padre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Padre"
+          },
+          "descripcion": {
+            "type": "string",
+            "title": "Descripcion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "padre",
+          "descripcion"
+        ],
+        "title": "Subconjunto"
+      },
+      "TipoArticulacion": {
+        "type": "string",
+        "enum": [
+          "fija",
+          "rotacional",
+          "prismatica",
+          "esferica",
+          "compuesta"
+        ],
+        "title": "TipoArticulacion"
+      },
+      "Transformacion": {
+        "properties": {
+          "posicion": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Posicion",
+            "default": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "rotacion_grados": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Rotacion Grados",
+            "default": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Transformacion",
+        "description": "Posición (m) y rotación de Euler XYZ (grados) respecto al sistema del ensamblaje."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

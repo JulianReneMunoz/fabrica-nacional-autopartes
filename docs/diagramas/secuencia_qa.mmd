@@ -1,0 +1,23 @@
+sequenceDiagram
+  actor U as Usuario
+  participant UI as Streamlit
+  participant S as ServicioAsistente
+  participant G as Salvaguardas
+  participant K as BaseConocimiento
+  participant L as LLM (Ollama)
+  participant A as Auditoría (SQLite)
+  U->>UI: Pregunta
+  UI->>S: responder(pregunta, opciones)
+  S->>G: detectar_inyeccion()
+  alt inyección
+    G-->>S: bloqueado
+  else válida
+    S->>K: armar_contexto(modo)
+    K-->>S: fragmentos <contexto>
+    S->>L: prompt v3 (sistema + pregunta)
+    L-->>S: JSON {respuesta, fuentes, confianza}
+    S->>G: validar citas + fundamentación
+  end
+  S->>A: registrar_interaccion()
+  S-->>UI: RespuestaQA
+  UI-->>U: respuesta + fuentes + etiquetas

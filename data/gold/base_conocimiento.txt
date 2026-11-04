@@ -1,0 +1,256 @@
+BASE DE CONOCIMIENTO — Fábrica Nacional de Autopartes (Fanalca)
+Generada: 2026-11-04T21:54:14+00:00
+Fragmentos: 48
+
+[autopartes-clientes#000] (autopartes/clientes | https://autopartesfanalca.com.co/clientes/)
+# Nuestros clientes
+Los productos de Autopartes Fanalca se despachan principalmente a ensambladoras de automóviles y camiones de la región Andina. La empresa declara buscar el crecimiento mutuo con sus clientes, la mejora continua de sus procesos y el cumplimiento de altos estándares de calidad.
+Los logotipos de clientes publicados en el sitio corresponden a: Renault, UpTime Parts, Morgan Olson, Morgan Corp, Marcopolo, Iveco, General Motors, Hino y EAM.
+
+[autopartes-contacto#000] (autopartes/contacto | https://autopartesfanalca.com.co/contacto/)
+# Contacto de Autopartes Fanalca
+La dirección publicada es Calle 13 # 31A - 80, Urbanización Industrial Acopi, Yumbo (Valle del Cauca), Colombia. El teléfono de contacto es +57 310 211 23 08 y el correo es info@autopartesfanalca.com.co. La página no publica horario de atención.
+
+[autopartes-contacto#001] (autopartes/contacto | https://autopartesfanalca.com.co/contacto/)
+## Formulario de contacto
+El formulario "Contáctenos" permite elegir el asunto de la solicitud (cotización de equipo o asesoría de equipo) y pide nombre completo, empresa, correo electrónico, teléfono móvil (opcional), ciudad, país, mensaje y la aceptación del tratamiento de datos personales. Según la página, un asesor atiende la solicitud por WhatsApp.
+
+[autopartes-contacto#002] (autopartes/contacto | https://autopartesfanalca.com.co/contacto/)
+## Otros enlaces
+El sitio enlaza las vacantes del grupo en https://fanalca.com/vacantes/, el portal de colaboradores y la política de tratamiento de datos (aviso de privacidad).
+
+[autopartes-inicio#000] (autopartes/inicio | https://autopartesfanalca.com.co/)
+# Autopartes Fanalca
+Autopartes Fanalca acredita más de 60 años de experiencia y se presenta como uno de los líderes regionales en la fabricación de piezas metálicas para el sector automotriz. Exporta a Ecuador, Brasil y Estados Unidos.
+
+[autopartes-inicio#001] (autopartes/inicio | https://autopartesfanalca.com.co/)
+## Plantas de producción
+La unidad opera tres plantas: una planta de fabricación en Yumbo y plantas de ensamble en Medellín y Bogotá.
+
+[autopartes-inicio#002] (autopartes/inicio | https://autopartesfanalca.com.co/)
+## Planta de fabricación en Yumbo
+La planta de Yumbo tiene una capacidad de 1.300 toneladas al año de partes metálicas para automóviles y vehículos comerciales (camiones, pick up, buses y busetas). Sus productos y procesos incluyen:
+- Largueros de bastidor de chasis.
+- Paneles estampados.
+- Travesaños, refuerzos y soportes para chasis.
+- Partes de carrocería y partes estructurales para cajas secas y refrigeradas.
+- Pintura en polvo electrostática.
+- Puertas para automóviles y piezas para baúl y capó.
+- Estructuras metálicas de sillas para camiones de reparto tipo walk-in van.
+- Elevadores para personas con movilidad reducida.
+- Mobiliario urbano.
+
+[autopartes-inicio#003] (autopartes/inicio | https://autopartesfanalca.com.co/)
+## Planta de ensamble en Medellín
+La planta de Medellín tiene capacidad para hasta 300.000 ensambles al año: ensamble por soldadura de chasises para pick up y camiones, paneles de piso para automóviles, trenes traseros, cunas de motor y tanques de combustible para automóviles.
+
+[autopartes-inicio#004] (autopartes/inicio | https://autopartesfanalca.com.co/)
+## Planta de ensamble en Bogotá
+La planta de Bogotá tiene capacidad para hasta 24.000 chasises al año: ensamble por soldadura y remachado de chasises de camiones, buses y busetas, ensamble de platones de carga para pick up, entregas justo a tiempo a ensambladoras y pintura en polvo.
+
+[autopartes-nosotros#000] (autopartes/quienes-somos | https://autopartesfanalca.com.co/nosotros/)
+# Nosotros
+## Fanalca S.A.
+Fanalca es una organización colombiana fundada en 1958, con presencia en Colombia, Chile, Ecuador, El Salvador y Panamá y más de 28.000 empleados. Sus empresas participan en los sectores de transporte, servicios públicos, textil, financiero y metalmecánico.
+
+[autopartes-nosotros#001] (autopartes/quienes-somos | https://autopartesfanalca.com.co/nosotros/)
+## Autopartes Fanalca
+El negocio de autopartes comenzó en 1958 suministrando partes metálicas estampadas a las principales ensambladoras de vehículos y camiones del Grupo Andino. Cuenta con una plataforma de manufactura descrita como moderna y de alta capacidad, exporta partes a Ecuador, Brasil y Estados Unidos y también fabrica piezas metalmecánicas para otros sectores industriales, por ejemplo elevadores para personas con movilidad reducida en vehículos de servicio público.
+Opera 3 plantas de producción ubicadas en Bogotá, Medellín y Yumbo. Sus productos incluyen partes metálicas para chasis y partes de carrocería.
+
+[autopartes-nosotros#002] (autopartes/quienes-somos | https://autopartesfanalca.com.co/nosotros/)
+## Capacidades
+La página presenta secciones de capacidad de diseño, laboratorio de metrología y capacidad de planta, ilustradas con imágenes sin texto descriptivo.
+
+[autopartes-nosotros#003] (autopartes/quienes-somos | https://autopartesfanalca.com.co/nosotros/)
+## Certificaciones y compromisos
+La página muestra dos sellos sin descripción textual; por el nombre de los archivos corresponden a un sello ICONTEC de inventario de gases de efecto invernadero (GEI) y a un distintivo "Semilla". No se publican detalles adicionales.
+
+[autopartes-productos#000] (autopartes/productos | https://autopartesfanalca.com.co/productos/)
+# Productos y servicios
+La página de productos de Autopartes Fanalca presenta tres líneas ilustradas con imágenes:
+- Panel interior estampado.
+- Ensambles de carrocería con paneles estampados.
+- Travesaños (crossmembers) para camión y bus.
+La página no publica dimensiones, materiales, capacidades ni precios de estos productos.
+
+[contacto#000] (contacto | https://fanalca.com/en/contact/)
+# Contacto
+La dirección de la sede principal de Fanalca es Calle 13 # 31A - 80, Acopi, Yumbo (Valle del Cauca). El teléfono publicado en la página de contacto es (57) 2 651 5343.
+
+[contacto#001] (contacto | https://fanalca.com/en/contact/)
+## Formulario de contacto
+Las solicitudes se envían mediante un formulario en línea que pide nombre y apellidos, teléfono, correo electrónico, la unidad de negocio relacionada con la solicitud y comentarios. El formulario exige aceptar la Política de Tratamiento de Datos.
+Las opciones de unidad de negocio del formulario son: información general de la empresa, Honda Motocicletas, Honda Autos, tubos y perfiles de acero, autopartes, ambiental y Fanalvías.
+
+[contacto#002] (contacto | https://fanalca.com/en/contact/)
+## Enlaces relacionados
+- Vacantes: portal "Trabaja con nosotros" en https://empleoscolombia.fnservicios.com/.
+- Aviso de privacidad: https://fanalca.com/en/privacy-notice/.
+- La Política de Tratamiento de Datos está disponible en formato PDF.
+
+[inicio#000] (inicio | https://fanalca.com/en/)
+# Fanalca: organización y unidades de negocio
+Fanalca (Fábrica Nacional de Autopartes) es un grupo empresarial colombiano con sede en Acopi, Yumbo, Valle del Cauca. Su portal corporativo presenta la cultura de la organización, sus unidades de negocio, las noticias más relevantes y las vacantes disponibles.
+
+[inicio#001] (inicio | https://fanalca.com/en/)
+## Unidades de negocio
+Las unidades de negocio de Fanalca son seis:
+- Honda Motocicletas: fabricación, ensamble y comercialización de motocicletas Honda en Colombia.
+- Honda Autos: importación y venta de vehículos Honda.
+- Tubos y perfiles de acero: tubería de acero soldada y perfiles abiertos para construcción.
+- Autopartes: fabricación y ensamble de partes metálicas para vehículos.
+- Ambiental: equipos para la recolección de residuos sólidos, como cajas compactadoras y contenedores.
+- Fanalvías: barreras metálicas y elementos de seguridad vial.
+
+[inicio#002] (inicio | https://fanalca.com/en/)
+## Canales generales
+La unidad Ambiental publica como contacto el teléfono (+57) 314 832 5949 y el correo fanalcambiental@fanalca.com.
+Las personas interesadas en trabajar en Fanalca pueden consultar las vacantes en el portal de empleo https://empleoscolombia.fnservicios.com/ (enlace "Trabaja con nosotros"). Los colaboradores acceden a un portal interno de la plataforma SuccessFactors.
+La gestión de la Fundación Fanalca se presenta como un eje del camino sostenible de la organización y del apoyo a las comunidades donde opera.
+
+[negocios-ambiental#000] (negocios/ambiental | https://fanalca.com/en/business/environmental/)
+# Ambiental
+La unidad Ambiental fabrica equipos para la recolección de residuos sólidos desde 1981, principalmente cajas compactadoras de basura y contenedores de acero, y se presenta como líder en Colombia en innovación de estos equipos.
+
+[negocios-ambiental#001] (negocios/ambiental | https://fanalca.com/en/business/environmental/)
+## Portafolio complementario
+Además comercializa brazos hidráulicos, cajas de carga lateral, lavacontenedores y barredoras. Sus cajas compactadoras usan componentes avanzados para una mayor vida útil y una operación flexible en los terrenos empinados de la región andina.
+
+[negocios-ambiental#002] (negocios/ambiental | https://fanalca.com/en/business/environmental/)
+## Cobertura y clientes
+- Presencia en 29 departamentos de Colombia.
+- Más de 250 clientes nacionales e internacionales.
+- Clientes internacionales en Panamá, Venezuela, Ecuador, India y Chile.
+La unidad usa aceros de alta resistencia y antidesgaste en sus cajas y posee tecnologías patentadas orientadas a una recolección más rentable.
+
+[negocios-ambiental#003] (negocios/ambiental | https://fanalca.com/en/business/environmental/)
+## Canal de la unidad
+El sitio web de la unidad es fanalcambiental.com.
+
+[negocios-autopartes#000] (negocios/autopartes | https://fanalca.com/en/business/auto-parts/)
+# Autopartes
+La unidad de Autopartes opera cuatro plantas: Acopi-Yumbo (Valle del Cauca), Yumbo (Valle del Cauca), Bogotá (Cundinamarca) y Medellín (Antioquia).
+
+[negocios-autopartes#001] (negocios/autopartes | https://fanalca.com/en/business/auto-parts/)
+## Productos por planta
+Las plantas de Yumbo y Bogotá fabrican partes metálicas para automóviles y vehículos comerciales (camiones, camionetas y buses), entre ellas puertas, travesaños y soportes de chasis.
+La planta de Medellín ensambla partes metálicas para automóviles y vehículos comerciales, como paneles de piso, cunas de motor y partes traseras.
+
+[negocios-autopartes#002] (negocios/autopartes | https://fanalca.com/en/business/auto-parts/)
+## Canal de la unidad
+El sitio web de la unidad es autopartesfanalca.com.co.
+
+[negocios-fanalvias#000] (negocios/fanalvias | https://fanalca.com/en/business/fanalvias/)
+# Fanalvías
+Fanalvías es la unidad de infraestructura vial de Fanalca, creada como parte de la estrategia de diversificación a partir de la experiencia en el procesamiento de acero.
+
+[negocios-fanalvias#001] (negocios/fanalvias | https://fanalca.com/en/business/fanalvias/)
+## Productos
+- Barreras metálicas para vías, fabricadas según las normas técnicas vigentes.
+- Amortiguadores de impacto para protección lateral.
+- Terminales especiales para los extremos de las barreras.
+
+[negocios-fanalvias#002] (negocios/fanalvias | https://fanalca.com/en/business/fanalvias/)
+## Capacidades
+Fanalvías fabrica y comercializa elementos de seguridad vial. El conformado de las barreras tiene alta precisión geométrica, lo que según la empresa reduce los costos de instalación y mantenimiento. La unidad abastece de forma continua grandes proyectos de infraestructura vial en Colombia.
+La planta de producción está en Acopi, Yumbo (Valle del Cauca). El sitio web de la unidad es fanalvias.com.
+
+[negocios-honda-autos#000] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
+# Honda Autos
+La unidad Honda Autos de Fanalca importa y comercializa vehículos Honda en Colombia; la importación y venta de automóviles Honda en el país comenzó en la década de 1990.
+
+[negocios-honda-autos#001] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
+## Garantía Total Verdadera
+Fanalca ofrece la "Garantía Total Verdadera": cubre mano de obra, insumos y repuestos sin costo durante 2 años y sin límite de kilometraje. Según la empresa, es la única garantía del mercado que incluye mantenimiento preventivo, correctivo y predictivo sin costo.
+
+[negocios-honda-autos#002] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
+## Cifras de la unidad
+- Más de 32.000 clientes.
+- 26 vitrinas en el país con servicio de ventas y posventa.
+- Flota de Renting Total de 638 vehículos.
+
+[negocios-honda-autos#003] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
+## Canales digitales
+El sitio web de la marca es autos.honda.com.co y existe una vitrina virtual en 360next.honda.com.co/tour/. La marca tiene presencia en Facebook, Twitter, Instagram y YouTube.
+
+[negocios-honda-autos#004] (negocios/honda-autos | https://fanalca.com/en/business/honda-autos/)
+## Hitos de la marca Honda mencionados
+- 1962: Honda incursionó en vehículos de cuatro ruedas; su primer deportivo, el S360, alcanzó 100 km/h.
+- 1972: lanzamiento del Honda Civic, primer compacto en cumplir las normas ambientales de Estados Unidos.
+- 2000: presentación de Asimo, robot humanoide.
+- 2003: el HondaJet realizó su primer vuelo sobre Carolina del Norte, Estados Unidos.
+
+[negocios-honda-motocicletas#000] (negocios/honda-motocicletas | https://fanalca.com/negocios/honda-motocicletas/)
+# Honda Motocicletas
+Honda se presenta como la marca de motocicletas número uno del mundo. Fanalca opera la única planta de producción nacional en el mundo con licencia para fabricar y ensamblar motocicletas Honda bajo sus estándares de calidad. La planta de ensamble está ubicada en Acopi, Yumbo, Valle del Cauca.
+
+[negocios-honda-motocicletas#001] (negocios/honda-motocicletas | https://fanalca.com/negocios/honda-motocicletas/)
+## Portafolio
+Fanalca vende motocicletas Honda de 100 cc hasta 250 cc, además de repuestos y accesorios Honda. Las motocicletas Honda de alto cilindraje se importan.
+
+[negocios-honda-motocicletas#002] (negocios/honda-motocicletas | https://fanalca.com/negocios/honda-motocicletas/)
+## Red de distribución
+La red comercial reportada incluye 450 puntos de venta en 32 departamentos de Colombia, 265 talleres de servicio y 1.265 almacenes de repuestos.
+
+[negocios-tubos-perfiles#000] (negocios/tubos-perfiles | https://fanalca.com/en/business/steel-tubes-and-profiles/)
+# Tubos y perfiles de acero
+La unidad de tubos y perfiles fabrica tubería de acero soldada con alta precisión geométrica.
+
+[negocios-tubos-perfiles#001] (negocios/tubos-perfiles | https://fanalca.com/en/business/steel-tubes-and-profiles/)
+## Productos
+- Tubería de acero soldada en lámina laminada en frío, laminada en caliente, estructural y galvanizada.
+- Perfiles abiertos de acero para construcción: perfil C, perfil para mezanine (entrepiso), vigas, Steel Deck, correa para cortina, sistema liviano de construcción en seco (Drywall) y Steel Framing.
+
+[negocios-tubos-perfiles#002] (negocios/tubos-perfiles | https://fanalca.com/en/business/steel-tubes-and-profiles/)
+## Plantas
+Las plantas de producción están en Acopi, Yumbo (Valle del Cauca) y en Guachené (Cauca).
+
+[negocios-tubos-perfiles#003] (negocios/tubos-perfiles | https://fanalca.com/en/business/steel-tubes-and-profiles/)
+## Canal de la unidad
+El sitio web de productos es tubosyperfilesfanalca.com.
+
+[quienes-somos#000] (quienes-somos | https://fanalca.com/en/who-we-are/)
+# Quiénes somos
+Fanalca nació como Fábrica Nacional de Carrocerías. El 31 de mayo de 1958 las familias Losada y Herrera constituyeron la empresa, que empezó con un grupo de 12 colaboradores. La organización acumula más de 60 años de operación y cuenta con aliados comerciales en más de 16 países.
+En 1957 Joaquín Losada Salcedo recibió la propuesta de representar en Colombia a un fabricante estadounidense de carrocerías de bus para importar carrocerías; ese antecedente dio origen a la compañía.
+
+[quienes-somos#001] (quienes-somos | https://fanalca.com/en/who-we-are/)
+## Línea de tiempo
+- 1959: junto con la familia Gómez se fundaron Super Bus Medellín y Super Bus Bogotá para ensamblar carrocerías.
+- 1962: inicio de la representación de Superior Coach para el ensamble de carrocerías metálicas.
+- 1969: Alberto Losada y Jorge Herrera asumieron la presidencia y la empresa se diversificó hacia las autopartes.
+- 1971: Fanalca tenía 40 empleados e inició negociaciones con Honda Japón.
+- 1972: inicio del negocio de fabricación de tubería metálica soldada.
+- 1974: inicio de la fabricación de autopartes de acero para Chrysler.
+- 1978: inicio de la fabricación de autopartes para General Motors.
+- 1980: importación de las primeras motocicletas Honda.
+- 1981: inicio de la venta de automóviles Honda y obtención de la licencia para fabricar cajas compactadoras de basura.
+- 1982: inicio del ensamble de motocicletas Honda en Yumbo, Valle del Cauca.
+- 1985: creación de Fanaltex como línea integrada a Fanalca (posteriormente Supertex).
+- 1991: diseño de los primeros vehículos recolectores de residuos sólidos domiciliarios.
+- 1992: inicio de la importación de motocicletas CKD y apertura de una planta de ensamble de chasis en Bogotá.
+
+[quienes-somos#002] (quienes-somos | https://fanalca.com/en/who-we-are/)
+- 1992: inicio de la importación de motocicletas CKD y apertura de una planta de ensamble de chasis en Bogotá.
+- 1993: inicio del negocio de partes para motocicletas.
+- 1998: apertura de una planta de ensamble de chasis en Medellín y de la planta de tubería Metalsur S.A. en el Cauca.
+- 2000: inicio del negocio de aire acondicionado.
+- 2003: creación de la Fundación Fanalca.
+- 2011: inicio del negocio de renting (Honda Renting Total).
+- 2014: inicio del negocio de defensas metálicas e infraestructura vial.
+- 2016: renovación de la imagen visual corporativa de la marca Fanalca.
+
+[quienes-somos#003] (quienes-somos | https://fanalca.com/en/who-we-are/)
+## Sede y operaciones
+La sede principal está en la Calle 13 # 31A - 80, Acopi, Yumbo (Valle del Cauca). La organización tiene plantas u operaciones en Yumbo, Bogotá, Medellín y el departamento del Cauca.
+
+[sostenibilidad#000] (sostenibilidad | https://fanalca.com/en/sustainability/)
+# Sostenibilidad
+## Fundación Fanalca
+La Fundación Fanalca se creó en 2003 para desarrollar proyectos de construcción de cultura ciudadana. Su trabajo incluye la recuperación de espacios públicos, principalmente parques en zonas vulnerables, y la transformación de comportamientos de la comunidad, entregando herramientas para que las acciones se sostengan.
+La Fundación trabaja en cuatro líneas de acción: cultura ciudadana, educación, generación de ingresos, y arte y cultura. Su sitio web es fundacionfanalca.org.co.
+
+[sostenibilidad#001] (sostenibilidad | https://fanalca.com/en/sustainability/)
+## Informes de sostenibilidad
+El sitio publica informes de sostenibilidad de los años 2018, 2019 y 2020 en formato PDF.

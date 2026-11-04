@@ -1,0 +1,280 @@
+\section{Windows Terminal y PowerShell 7}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Terminal y lenguaje de scripts para todos los comandos del manual.\\
+Página oficial & \url{https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows}\\
+Versión & PowerShell 7.4 LTS o superior (la sintaxis de los scripts se verificó con 7.4.6). Los scripts evitan sintaxis exclusiva de la versión 7, pero no se probaron en Windows PowerShell 5.1.\\
+Requisitos & Windows 11 actualizado; Windows Terminal viene incluido.\\
+Instalación gráfica & Microsoft Store $\rightarrow$ ''PowerShell'' $\rightarrow$ Instalar.\\
+Configuración & En Windows Terminal $\rightarrow$ Configuración $\rightarrow$ Perfil predeterminado $\rightarrow$ PowerShell.\\
+Variables & Ninguna.\\
+Verificación & \texttt{\$PSVersionTable.PSVersion}, \texttt{Get-ExecutionPolicy -List}\\
+Errores frecuentes & 'la ejecución de scripts está deshabilitada' $\rightarrow$ aplicar Set-ExecutionPolicy al usuario actual; archivos descargados $\rightarrow$ Unblock-File .\textbackslash{}scripts\textbackslash{}*.ps1.\\
+Actualización & \texttt{winget upgrade --id Microsoft.PowerShell}\\
+Seguridad & No usar -ExecutionPolicy Bypass de forma global; revisar scripts descargados antes de ejecutarlos.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+winget install --id Microsoft.PowerShell --source winget
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+\end{lstlisting}
+
+\section{Git y autenticación con GitHub}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Control de versiones y entrega del repositorio (rúbrica).\\
+Página oficial & \url{https://git-scm.com/download/win} · \url{https://cli.github.com/}\\
+Versión & Última estable de Git for Windows y GitHub CLI.\\
+Requisitos & Cuenta de GitHub con verificación en dos pasos.\\
+Instalación gráfica & Instalador de git-scm.com con opciones por defecto (incluye Git Bash y Git Credential Manager).\\
+Configuración & El repositorio incluye .gitattributes (LF para código, CRLF para .ps1).\\
+Variables & Git agrega C:\textbackslash{}\textbackslash{}Program Files\textbackslash{}\textbackslash{}Git\textbackslash{}\textbackslash{}cmd al PATH.\\
+Verificación & \texttt{git --version}, \texttt{gh auth status}\\
+Errores frecuentes & 'Authentication failed' $\rightarrow$ gh auth login y gh auth setup-git; finales de línea mezclados $\rightarrow$ git add --renormalize .\\
+Actualización & \texttt{winget upgrade --id Git.Git ; winget upgrade --id GitHub.cli}\\
+Seguridad & Nunca incrustar tokens en la URL remota; tokens con alcance mínimo y caducidad; .env fuera de Git.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+winget install --id Git.Git -e --source winget
+winget install --id GitHub.cli -e --source winget
+git config --global user.name "Nombre Apellido"
+git config --global user.email "correo@uao.edu.co"
+git config --global init.defaultBranch main
+gh auth login
+gh auth setup-git
+\end{lstlisting}
+
+\section{uv y Python}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Gestor único de Python, entornos virtuales y dependencias (obligatorio en el curso).\\
+Página oficial & \url{https://docs.astral.sh/uv/}\\
+Versión & uv 0.11 o superior (construcción con 0.11.32); Python 3.12 fijado en .python-version.\\
+Requisitos & Ninguno (uv descarga Python).\\
+Instalación gráfica & No aplica.\\
+Configuración & Opcional UV\_CACHE\_DIR para mover la caché a otro disco.\\
+Variables & El instalador agrega \%USERPROFILE\%\textbackslash{}\textbackslash{}.local\textbackslash{}\textbackslash{}bin al PATH del usuario.\\
+Verificación & \texttt{uv --version}, \texttt{uv python list --only-installed}\\
+Errores frecuentes & 'uv' no se reconoce $\rightarrow$ cerrar y abrir la terminal; antivirus bloquea el instalador $\rightarrow$ usar winget install --id astral-sh.uv -e.\\
+Actualización & \texttt{uv self update}\\
+Seguridad & Descargar el script, revisarlo y luego ejecutarlo si la política institucional lo exige.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+uv python install 3.12
+\end{lstlisting}
+
+\section{Visual Studio Code}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Editor con integración de Python, Ruff, TypeScript, YAML y LaTeX.\\
+Página oficial & \url{https://code.visualstudio.com/}\\
+Versión & Última estable.\\
+Requisitos & Ninguno.\\
+Instalación gráfica & Instalador de usuario con la opción ''Agregar a PATH''.\\
+Configuración & El repositorio incluye .vscode/settings.json (intérprete .venv, Ruff como formateador) y .vscode/extensions.json.\\
+Variables & Ninguna.\\
+Verificación & \texttt{code --version}, \texttt{code --list-extensions}\\
+Errores frecuentes & Intérprete incorrecto $\rightarrow$ Ctrl+Shift+P $\rightarrow$ 'Python: Select Interpreter' $\rightarrow$ .venv\textbackslash{}Scripts\textbackslash{}python.exe.\\
+Actualización & \texttt{Automática o winget upgrade --id Microsoft.VisualStudioCode}\\
+Seguridad & Mantener la confianza del espacio de trabajo (Workspace Trust); instalar extensiones de editores verificados.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+winget install --id Microsoft.VisualStudioCode -e --source winget
+code --install-extension ms-python.python
+code --install-extension charliermarsh.ruff
+code --install-extension redhat.vscode-yaml
+code --install-extension James-Yu.latex-workshop
+\end{lstlisting}
+
+\section{Node.js LTS}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Requisito de OpenCode (npm), de OpenSpec (Node 20.19 o superior) y del visor 3D web (Vite + React Three Fiber, carpeta web/).\\
+Página oficial & \url{https://nodejs.org/}\\
+Versión & LTS vigente (construcción con Node 22).\\
+Requisitos & Ninguno.\\
+Instalación gráfica & Instalador .msi LTS.\\
+Configuración & Ninguna.\\
+Variables & Los paquetes globales quedan en \%APPDATA\%\textbackslash{}\textbackslash{}npm (debe estar en PATH).\\
+Verificación & \texttt{node --version}, \texttt{npm --version}, \texttt{cd web; npm ci; npm run build; npm test}\\
+Errores frecuentes & Comando global no encontrado tras npm install -g $\rightarrow$ agregar \%APPDATA\%\textbackslash{}npm al PATH del usuario.\\
+Actualización & \texttt{winget upgrade --id OpenJS.NodeJS.LTS}\\
+Seguridad & Verificar el nombre exacto de cada paquete (opencode-ai, @fission-ai/openspec) para evitar paquetes impostores.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+winget install --id OpenJS.NodeJS.LTS -e --source winget
+\end{lstlisting}
+
+\section{Ollama}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Servidor local de modelos abiertos (LLM de la aplicación y embeddings del Módulo 2).\\
+Página oficial & \url{https://ollama.com/download} · \url{https://ollama.com/library}\\
+Versión & Última estable.\\
+Requisitos & 8 GB de RAM para modelos 3B; 16 GB o más para 7B-8B; GPU opcional.\\
+Instalación gráfica & OllamaSetup.exe desde la página oficial.\\
+Configuración & La aplicación fija num\_ctx con FNA\_OLLAMA\_NUM\_CTX (16384 por defecto) porque el contexto completo se inyecta en el prompt.\\
+Variables & OLLAMA\_HOST (por defecto 127.0.0.1:11434) y OLLAMA\_MODELS (carpeta de modelos).\\
+Verificación & \texttt{ollama --version}, \texttt{ollama list}, \texttt{Invoke-RestMethod http://localhost:11434/api/tags}\\
+Errores frecuentes & Sin respuesta en 11434 $\rightarrow$ iniciar la aplicación Ollama u 'ollama serve'; memoria insuficiente $\rightarrow$ modelo más pequeño.\\
+Actualización & \texttt{winget upgrade --id Ollama.Ollama ; ollama pull \textless{}modelo\textgreater{} actualiza el modelo.}\\
+Seguridad & No exponer OLLAMA\_HOST=0.0.0.0 en redes públicas; revisar la licencia de cada modelo en su ficha.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+winget install --id Ollama.Ollama -e --source winget
+ollama pull llama3.2:3b
+ollama pull nomic-embed-text-v2-moe
+\end{lstlisting}
+
+\section{OpenCode}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Consola agéntica de código abierto, multi-proveedor, con MCP, agentes y permisos.\\
+Página oficial & \url{https://opencode.ai/docs} · \url{https://github.com/anomalyco/opencode}\\
+Versión & Última estable del paquete npm opencode-ai.\\
+Requisitos & Node.js LTS; un proveedor LLM (Ollama, clave de API o servicio compatible). La documentación de OpenCode recomienda WSL para la mejor experiencia de terminal; la instalación nativa funciona.\\
+Instalación gráfica & Aplicación de escritorio opcional desde https://opencode.ai/download.\\
+Configuración & opencode.json del repositorio (agentes, permisos, MCP, proveedor Ollama). Configuración global en \%USERPROFILE\%\textbackslash{}\textbackslash{}.config\textbackslash{}\textbackslash{}opencode\textbackslash{}\textbackslash{}opencode.json.\\
+Variables & Claves de proveedor en el almacén de OpenCode (opencode auth login), nunca en opencode.json.\\
+Verificación & \texttt{opencode --version}, \texttt{En la interfaz: /models}\\
+Errores frecuentes & 'opencode' no se reconoce $\rightarrow$ \%APPDATA\%\textbackslash{}npm en PATH; el paquete se llama opencode-ai (no opencode).\\
+Actualización & \texttt{npm install -g opencode-ai@latest}\\
+Seguridad & bash en 'ask', git push en 'deny'; no usar credenciales de suscripción Claude Pro/Max (los términos de Anthropic las limitan a Claude Code y claude.ai).\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+npm install -g opencode-ai
+opencode auth login
+opencode auth list
+\end{lstlisting}
+
+\section{Claude Code}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Consola agéntica de Anthropic con subagentes, skills, hooks y MCP.\\
+Página oficial & \url{https://docs.claude.com/en/docs/claude-code/overview}\\
+Versión & Instalador nativo con actualización automática.\\
+Requisitos & Windows 10 1809+ u 11 (64 bits); suscripción Claude (Pro/Max/Team/Enterprise) o cuenta de la Consola con facturación por API. Git for Windows recomendado (Git Bash).\\
+Instalación gráfica & No aplica.\\
+Configuración & CLAUDE.md, .claude/settings.json, .claude/agents/, .claude/skills/ y .mcp.json del repositorio.\\
+Variables & El binario queda en \%USERPROFILE\%\textbackslash{}\textbackslash{}.local\textbackslash{}\textbackslash{}bin; si Git Bash no se detecta, definir CLAUDE\_CODE\_GIT\_BASH\_PATH en settings.json.\\
+Verificación & \texttt{claude --version}, \texttt{claude doctor}, \texttt{claude mcp list}\\
+Errores frecuentes & 'claude' no se reconoce $\rightarrow$ reabrir la terminal o agregar \%USERPROFILE\%\textbackslash{}.local\textbackslash{}bin al PATH; en CMD usar curl -fsSL https://claude.ai/install.cmd -o install.cmd \&\& install.cmd \&\& del install.cmd.\\
+Actualización & \texttt{Automática; manual con claude update.}\\
+Seguridad & Permisos allow/ask/deny por proyecto; lectura de .env denegada; revisar cada cambio antes de aceptarlo.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+irm https://claude.ai/install.ps1 | iex
+winget install Anthropic.ClaudeCode
+claude
+\end{lstlisting}
+
+\section{Docker Desktop (opcional)}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Contenedores para Ollama, API e interfaz (docker-compose.yml).\\
+Página oficial & \url{https://www.docker.com/products/docker-desktop/}\\
+Versión & Última estable con backend WSL2.\\
+Requisitos & Virtualización habilitada en BIOS; WSL2. Uso académico permitido; las organizaciones grandes requieren suscripción de pago según la licencia de Docker Desktop.\\
+Instalación gráfica & Instalador oficial con ''Use WSL 2 instead of Hyper-V''.\\
+Configuración & Asignar memoria suficiente a WSL2 para Ollama.\\
+Variables & Ninguna.\\
+Verificación & \texttt{docker --version}, \texttt{docker run --rm hello-world}\\
+Errores frecuentes & 'WSL 2 installation is incomplete' $\rightarrow$ wsl --update y reiniciar.\\
+Actualización & \texttt{Desde la aplicación o winget upgrade --id Docker.DockerDesktop}\\
+Seguridad & No montar el disco completo en contenedores; usar el archivo .env local sin versionarlo.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+winget install --id Docker.DockerDesktop -e --source winget
+docker compose up --build
+\end{lstlisting}
+
+\section{WSL2 (solo si es necesario)}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Requisito del backend de Docker Desktop; opcional para OpenCode.\\
+Página oficial & \url{https://learn.microsoft.com/windows/wsl/install}\\
+Versión & Kernel WSL actualizado.\\
+Requisitos & PowerShell como administrador.\\
+Instalación gráfica & No aplica.\\
+Configuración & Distribución Ubuntu por defecto.\\
+Variables & Ninguna.\\
+Verificación & \texttt{wsl --status}, \texttt{wsl --list --verbose}\\
+Errores frecuentes & Error de virtualización $\rightarrow$ habilitar VT-x/AMD-V en BIOS.\\
+Actualización & \texttt{wsl --update}\\
+Seguridad & No compartir credenciales entre Windows y WSL sin necesidad.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+wsl --install
+wsl --update
+\end{lstlisting}
+
+\section{Servidores MCP}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Servidor propio fna-conocimiento y memoria persistente Engram (opcional).\\
+Página oficial & \url{https://github.com/Gentleman-Programming/engram} · \url{https://modelcontextprotocol.io}\\
+Versión & SDK mcp 2.x en el proyecto; Engram última versión de GitHub Releases.\\
+Requisitos & Base Gold construida (uv run fabrica build).\\
+Instalación gráfica & No aplica.\\
+Configuración & .mcp.json (Claude Code) y la sección mcp de opencode.json. Engram en Windows: descargar engram\_\textless{}versión\textgreater{}\_windows\_amd64.zip de GitHub Releases, copiar engram.exe en \%USERPROFILE\%\textbackslash{}bin y agregar esa carpeta al PATH.\\
+Variables & FNA\_MCP\_PERMITIR\_LLM=false por defecto.\\
+Verificación & \texttt{uv run pytest tests/integration/test\_mcp.py -q}, \texttt{engram version}\\
+Errores frecuentes & Servidor 'failed' en claude mcp list $\rightarrow$ ejecutar uv run fabrica-mcp manualmente y leer stderr.\\
+Actualización & \texttt{uv sync (servidor propio); nueva versión del binario (Engram).}\\
+Seguridad & Solo herramientas de lectura; revisar cualquier servidor de terceros antes de registrarlo.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+uv run fabrica-mcp
+claude mcp list
+engram setup opencode
+claude plugin marketplace add Gentleman-Programming/engram
+claude plugin install engram
+\end{lstlisting}
+
+\section{Motor de base de datos (SQLite y PostgreSQL)}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Auditoría de interacciones, pipeline, evaluaciones, estados guardados y eventos del simulador 3D.\\
+Página oficial & \url{https://www.postgresql.org/download/windows/} · \url{https://alembic.sqlalchemy.org/}\\
+Versión & SQLite embebido para desarrollo; PostgreSQL 17 para el despliegue (servicio postgres de docker-compose.yml o instalador nativo).\\
+Requisitos & Ninguno para SQLite; Docker Desktop o el instalador de PostgreSQL para el motor de despliegue.\\
+Instalación gráfica & Instalador de EDB con pgAdmin (opcional) o docker compose up postgres.\\
+Configuración & FNA\_URL\_BASE\_DATOS=postgresql+psycopg://fna:fna@localhost:5432/fna (por defecto sqlite:///data/app.db).\\
+Variables & FNA\_URL\_BASE\_DATOS.\\
+Verificación & \texttt{uv run alembic current}, \texttt{uv run pytest tests/integration/test\_postgresql.py -q}\\
+Errores frecuentes & 'connection refused' $\rightarrow$ verificar que el servicio postgres esté activo (docker compose ps) y el puerto 5432 libre.\\
+Actualización & \texttt{Nuevas migraciones con uv run alembic revision --autogenerate -m \textbackslash{}''descripcion\textbackslash{}''.}\\
+Seguridad & Credenciales solo en .env (no versionado); usuario sin privilegios de superusuario; copia de seguridad con pg\_dump.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+docker compose up -d postgres
+winget install --id PostgreSQL.PostgreSQL.17 -e --source winget
+uv run alembic upgrade head
+\end{lstlisting}
+
+\section{FFmpeg (videos del recorrido)}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Codifica en MP4 los recorridos automáticos de menos de 30 s grabados por Playwright.\\
+Página oficial & \url{https://ffmpeg.org/download.html}\\
+Versión & Última estable.\\
+Requisitos & Ninguno.\\
+Instalación gráfica & No aplica.\\
+Configuración & Ninguna.\\
+Variables & ffmpeg debe estar en el PATH.\\
+Verificación & \texttt{ffmpeg -version}\\
+Errores frecuentes & 'ffmpeg' no se reconoce $\rightarrow$ cerrar y abrir la terminal tras la instalación.\\
+Actualización & \texttt{winget upgrade --id Gyan.FFmpeg}\\
+Seguridad & Descargar solo desde la fuente indicada por ffmpeg.org.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+winget install --id Gyan.FFmpeg -e --source winget
+cd web; npx playwright test --project=recorrido
+\end{lstlisting}
+
+\section{Compilador LaTeX (MiKTeX)}
+{\small\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{2.9cm}X@{}}\toprule
+Función & Compilación de este manual (docs/latex/main.tex).\\
+Página oficial & \url{https://miktex.org/download}\\
+Versión & Última estable.\\
+Requisitos & latexmk necesita Perl en Windows (Strawberry Perl); sin Perl, ejecutar pdflatex tres veces.\\
+Instalación gráfica & Instalador básico con la opción de instalar paquetes faltantes activada.\\
+Configuración & MiKTeX Console $\rightarrow$ Actualizaciones; instalación automática de paquetes habilitada.\\
+Variables & MiKTeX agrega su carpeta bin al PATH.\\
+Verificación & \texttt{pdflatex --version}, \texttt{latexmk --version}\\
+Errores frecuentes & 'latexmk: perl not found' $\rightarrow$ instalar Strawberry Perl o compilar con pdflatex.\\
+Actualización & \texttt{MiKTeX Console $\rightarrow$ Buscar actualizaciones.}\\
+Seguridad & Descargar solo desde miktex.org.\\
+\bottomrule\end{tabularx}}
+\begin{lstlisting}[style=ps]
+winget install --id MiKTeX.MiKTeX -e --source winget
+winget search StrawberryPerl
+latexmk -pdf -interaction=nonstopmode main.tex
+\end{lstlisting}

@@ -1,0 +1,231 @@
+# Fichas de instalación en Windows 11 (fuente única del capítulo 8 del manual y de
+# docs/manuales/instalacion_windows.md). Generar con: uv run python scripts/generar_guia.py
+# Regla: solo comandos oficiales o verificables; cuando un identificador no se verificó,
+# se indica el comando de búsqueda correspondiente (winget search).
+herramientas:
+  - nombre: Windows Terminal y PowerShell 7
+    funcion: Terminal y lenguaje de scripts para todos los comandos del manual.
+    url: https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows
+    version: PowerShell 7.4 LTS o superior (la sintaxis de los scripts se verificó con 7.4.6). Los scripts evitan sintaxis exclusiva de la versión 7, pero no se probaron en Windows PowerShell 5.1.
+    requisitos: Windows 11 actualizado; Windows Terminal viene incluido.
+    grafica: Microsoft Store → "PowerShell" → Instalar.
+    comandos: ["winget install --id Microsoft.PowerShell --source winget", "Set-ExecutionPolicy -Scope CurrentUser RemoteSigned"]
+    configuracion: En Windows Terminal → Configuración → Perfil predeterminado → PowerShell.
+    variables: Ninguna.
+    verificacion: ["$PSVersionTable.PSVersion", "Get-ExecutionPolicy -List"]
+    errores: "'la ejecución de scripts está deshabilitada' → aplicar Set-ExecutionPolicy al usuario actual; archivos descargados → Unblock-File .\\scripts\\*.ps1."
+    actualizacion: winget upgrade --id Microsoft.PowerShell
+    seguridad: No usar -ExecutionPolicy Bypass de forma global; revisar scripts descargados antes de ejecutarlos.
+
+  - nombre: Git y autenticación con GitHub
+    funcion: Control de versiones y entrega del repositorio (rúbrica).
+    url: https://git-scm.com/download/win · https://cli.github.com/
+    version: Última estable de Git for Windows y GitHub CLI.
+    requisitos: Cuenta de GitHub con verificación en dos pasos.
+    grafica: Instalador de git-scm.com con opciones por defecto (incluye Git Bash y Git Credential Manager).
+    comandos:
+      - "winget install --id Git.Git -e --source winget"
+      - "winget install --id GitHub.cli -e --source winget"
+      - "git config --global user.name \"Nombre Apellido\""
+      - "git config --global user.email \"correo@uao.edu.co\""
+      - "git config --global init.defaultBranch main"
+      - "gh auth login"
+      - "gh auth setup-git"
+    configuracion: El repositorio incluye .gitattributes (LF para código, CRLF para .ps1).
+    variables: Git agrega C:\\Program Files\\Git\\cmd al PATH.
+    verificacion: ["git --version", "gh auth status"]
+    errores: "'Authentication failed' → gh auth login y gh auth setup-git; finales de línea mezclados → git add --renormalize ."
+    actualizacion: winget upgrade --id Git.Git ; winget upgrade --id GitHub.cli
+    seguridad: Nunca incrustar tokens en la URL remota; tokens con alcance mínimo y caducidad; .env fuera de Git.
+
+  - nombre: uv y Python
+    funcion: Gestor único de Python, entornos virtuales y dependencias (obligatorio en el curso).
+    url: https://docs.astral.sh/uv/
+    version: uv 0.11 o superior (construcción con 0.11.32); Python 3.12 fijado en .python-version.
+    requisitos: Ninguno (uv descarga Python).
+    grafica: No aplica.
+    comandos:
+      - "powershell -ExecutionPolicy ByPass -c \"irm https://astral.sh/uv/install.ps1 | iex\""
+      - "uv python install 3.12"
+    configuracion: Opcional UV_CACHE_DIR para mover la caché a otro disco.
+    variables: El instalador agrega %USERPROFILE%\\.local\\bin al PATH del usuario.
+    verificacion: ["uv --version", "uv python list --only-installed"]
+    errores: "'uv' no se reconoce → cerrar y abrir la terminal; antivirus bloquea el instalador → usar winget install --id astral-sh.uv -e."
+    actualizacion: uv self update
+    seguridad: Descargar el script, revisarlo y luego ejecutarlo si la política institucional lo exige.
+
+  - nombre: Visual Studio Code
+    funcion: Editor con integración de Python, Ruff, TypeScript, YAML y LaTeX.
+    url: https://code.visualstudio.com/
+    version: Última estable.
+    requisitos: Ninguno.
+    grafica: Instalador de usuario con la opción "Agregar a PATH".
+    comandos:
+      - "winget install --id Microsoft.VisualStudioCode -e --source winget"
+      - "code --install-extension ms-python.python"
+      - "code --install-extension charliermarsh.ruff"
+      - "code --install-extension redhat.vscode-yaml"
+      - "code --install-extension James-Yu.latex-workshop"
+    configuracion: El repositorio incluye .vscode/settings.json (intérprete .venv, Ruff como formateador) y .vscode/extensions.json.
+    variables: Ninguna.
+    verificacion: ["code --version", "code --list-extensions"]
+    errores: "Intérprete incorrecto → Ctrl+Shift+P → 'Python: Select Interpreter' → .venv\\Scripts\\python.exe."
+    actualizacion: Automática o winget upgrade --id Microsoft.VisualStudioCode
+    seguridad: Mantener la confianza del espacio de trabajo (Workspace Trust); instalar extensiones de editores verificados.
+
+  - nombre: Node.js LTS
+    funcion: Requisito de OpenCode (npm), de OpenSpec (Node 20.19 o superior) y del visor 3D web (Vite + React Three Fiber, carpeta web/).
+    url: https://nodejs.org/
+    version: LTS vigente (construcción con Node 22).
+    requisitos: Ninguno.
+    grafica: Instalador .msi LTS.
+    comandos: ["winget install --id OpenJS.NodeJS.LTS -e --source winget"]
+    configuracion: Ninguna.
+    variables: Los paquetes globales quedan en %APPDATA%\\npm (debe estar en PATH).
+    verificacion: ["node --version", "npm --version", "cd web; npm ci; npm run build; npm test"]
+    errores: "Comando global no encontrado tras npm install -g → agregar %APPDATA%\\npm al PATH del usuario."
+    actualizacion: winget upgrade --id OpenJS.NodeJS.LTS
+    seguridad: Verificar el nombre exacto de cada paquete (opencode-ai, @fission-ai/openspec) para evitar paquetes impostores.
+
+  - nombre: Ollama
+    funcion: Servidor local de modelos abiertos (LLM de la aplicación y embeddings del Módulo 2).
+    url: https://ollama.com/download · https://ollama.com/library
+    version: Última estable.
+    requisitos: 8 GB de RAM para modelos 3B; 16 GB o más para 7B-8B; GPU opcional.
+    grafica: OllamaSetup.exe desde la página oficial.
+    comandos:
+      - "winget install --id Ollama.Ollama -e --source winget"
+      - "ollama pull llama3.2:3b"
+      - "ollama pull nomic-embed-text-v2-moe"
+    configuracion: La aplicación fija num_ctx con FNA_OLLAMA_NUM_CTX (16384 por defecto) porque el contexto completo se inyecta en el prompt.
+    variables: OLLAMA_HOST (por defecto 127.0.0.1:11434) y OLLAMA_MODELS (carpeta de modelos).
+    verificacion: ["ollama --version", "ollama list", "Invoke-RestMethod http://localhost:11434/api/tags"]
+    errores: "Sin respuesta en 11434 → iniciar la aplicación Ollama u 'ollama serve'; memoria insuficiente → modelo más pequeño."
+    actualizacion: winget upgrade --id Ollama.Ollama ; ollama pull <modelo> actualiza el modelo.
+    seguridad: No exponer OLLAMA_HOST=0.0.0.0 en redes públicas; revisar la licencia de cada modelo en su ficha.
+
+  - nombre: OpenCode
+    funcion: Consola agéntica de código abierto, multi-proveedor, con MCP, agentes y permisos.
+    url: https://opencode.ai/docs · https://github.com/anomalyco/opencode
+    version: Última estable del paquete npm opencode-ai.
+    requisitos: Node.js LTS; un proveedor LLM (Ollama, clave de API o servicio compatible). La documentación de OpenCode recomienda WSL para la mejor experiencia de terminal; la instalación nativa funciona.
+    grafica: Aplicación de escritorio opcional desde https://opencode.ai/download.
+    comandos: ["npm install -g opencode-ai", "opencode auth login", "opencode auth list"]
+    configuracion: opencode.json del repositorio (agentes, permisos, MCP, proveedor Ollama). Configuración global en %USERPROFILE%\\.config\\opencode\\opencode.json.
+    variables: Claves de proveedor en el almacén de OpenCode (opencode auth login), nunca en opencode.json.
+    verificacion: ["opencode --version", "En la interfaz: /models"]
+    errores: "'opencode' no se reconoce → %APPDATA%\\npm en PATH; el paquete se llama opencode-ai (no opencode)."
+    actualizacion: npm install -g opencode-ai@latest
+    seguridad: bash en 'ask', git push en 'deny'; no usar credenciales de suscripción Claude Pro/Max (los términos de Anthropic las limitan a Claude Code y claude.ai).
+
+  - nombre: Claude Code
+    funcion: Consola agéntica de Anthropic con subagentes, skills, hooks y MCP.
+    url: https://docs.claude.com/en/docs/claude-code/overview
+    version: Instalador nativo con actualización automática.
+    requisitos: Windows 10 1809+ u 11 (64 bits); suscripción Claude (Pro/Max/Team/Enterprise) o cuenta de la Consola con facturación por API. Git for Windows recomendado (Git Bash).
+    grafica: No aplica.
+    comandos:
+      - "irm https://claude.ai/install.ps1 | iex"
+      - "winget install Anthropic.ClaudeCode"
+      - "claude"
+    configuracion: CLAUDE.md, .claude/settings.json, .claude/agents/, .claude/skills/ y .mcp.json del repositorio.
+    variables: El binario queda en %USERPROFILE%\\.local\\bin; si Git Bash no se detecta, definir CLAUDE_CODE_GIT_BASH_PATH en settings.json.
+    verificacion: ["claude --version", "claude doctor", "claude mcp list"]
+    errores: "'claude' no se reconoce → reabrir la terminal o agregar %USERPROFILE%\\.local\\bin al PATH; en CMD usar curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd."
+    actualizacion: Automática; manual con claude update.
+    seguridad: Permisos allow/ask/deny por proyecto; lectura de .env denegada; revisar cada cambio antes de aceptarlo.
+
+  - nombre: Docker Desktop (opcional)
+    funcion: Contenedores para Ollama, API e interfaz (docker-compose.yml).
+    url: https://www.docker.com/products/docker-desktop/
+    version: Última estable con backend WSL2.
+    requisitos: Virtualización habilitada en BIOS; WSL2. Uso académico permitido; las organizaciones grandes requieren suscripción de pago según la licencia de Docker Desktop.
+    grafica: Instalador oficial con "Use WSL 2 instead of Hyper-V".
+    comandos: ["winget install --id Docker.DockerDesktop -e --source winget", "docker compose up --build"]
+    configuracion: Asignar memoria suficiente a WSL2 para Ollama.
+    variables: Ninguna.
+    verificacion: ["docker --version", "docker run --rm hello-world"]
+    errores: "'WSL 2 installation is incomplete' → wsl --update y reiniciar."
+    actualizacion: Desde la aplicación o winget upgrade --id Docker.DockerDesktop
+    seguridad: No montar el disco completo en contenedores; usar el archivo .env local sin versionarlo.
+
+  - nombre: WSL2 (solo si es necesario)
+    funcion: Requisito del backend de Docker Desktop; opcional para OpenCode.
+    url: https://learn.microsoft.com/windows/wsl/install
+    version: Kernel WSL actualizado.
+    requisitos: PowerShell como administrador.
+    grafica: No aplica.
+    comandos: ["wsl --install", "wsl --update"]
+    configuracion: Distribución Ubuntu por defecto.
+    variables: Ninguna.
+    verificacion: ["wsl --status", "wsl --list --verbose"]
+    errores: "Error de virtualización → habilitar VT-x/AMD-V en BIOS."
+    actualizacion: wsl --update
+    seguridad: No compartir credenciales entre Windows y WSL sin necesidad.
+
+  - nombre: Servidores MCP
+    funcion: Servidor propio fna-conocimiento y memoria persistente Engram (opcional).
+    url: https://github.com/Gentleman-Programming/engram · https://modelcontextprotocol.io
+    version: SDK mcp 2.x en el proyecto; Engram última versión de GitHub Releases.
+    requisitos: Base Gold construida (uv run fabrica build).
+    grafica: No aplica.
+    comandos:
+      - "uv run fabrica-mcp"
+      - "claude mcp list"
+      - "engram setup opencode"
+      - "claude plugin marketplace add Gentleman-Programming/engram"
+      - "claude plugin install engram"
+    configuracion: ".mcp.json (Claude Code) y la sección mcp de opencode.json. Engram en Windows: descargar engram_<versión>_windows_amd64.zip de GitHub Releases, copiar engram.exe en %USERPROFILE%\\bin y agregar esa carpeta al PATH."
+    variables: FNA_MCP_PERMITIR_LLM=false por defecto.
+    verificacion: ["uv run pytest tests/integration/test_mcp.py -q", "engram version"]
+    errores: "Servidor 'failed' en claude mcp list → ejecutar uv run fabrica-mcp manualmente y leer stderr."
+    actualizacion: uv sync (servidor propio); nueva versión del binario (Engram).
+    seguridad: Solo herramientas de lectura; revisar cualquier servidor de terceros antes de registrarlo.
+
+  - nombre: Motor de base de datos (SQLite y PostgreSQL)
+    funcion: Auditoría de interacciones, pipeline, evaluaciones, estados guardados y eventos del simulador 3D.
+    url: https://www.postgresql.org/download/windows/ · https://alembic.sqlalchemy.org/
+    version: SQLite embebido para desarrollo; PostgreSQL 17 para el despliegue (servicio postgres de docker-compose.yml o instalador nativo).
+    requisitos: Ninguno para SQLite; Docker Desktop o el instalador de PostgreSQL para el motor de despliegue.
+    grafica: "Instalador de EDB con pgAdmin (opcional) o docker compose up postgres."
+    comandos:
+      - "docker compose up -d postgres"
+      - "winget install --id PostgreSQL.PostgreSQL.17 -e --source winget"
+      - "uv run alembic upgrade head"
+    configuracion: FNA_URL_BASE_DATOS=postgresql+psycopg://fna:fna@localhost:5432/fna (por defecto sqlite:///data/app.db).
+    variables: FNA_URL_BASE_DATOS.
+    verificacion: ["uv run alembic current", "uv run pytest tests/integration/test_postgresql.py -q"]
+    errores: "'connection refused' → verificar que el servicio postgres esté activo (docker compose ps) y el puerto 5432 libre."
+    actualizacion: Nuevas migraciones con uv run alembic revision --autogenerate -m \"descripcion\".
+    seguridad: Credenciales solo en .env (no versionado); usuario sin privilegios de superusuario; copia de seguridad con pg_dump.
+
+  - nombre: FFmpeg (videos del recorrido)
+    funcion: Codifica en MP4 los recorridos automáticos de menos de 30 s grabados por Playwright.
+    url: https://ffmpeg.org/download.html
+    version: Última estable.
+    requisitos: Ninguno.
+    grafica: No aplica.
+    comandos: ["winget install --id Gyan.FFmpeg -e --source winget", "cd web; npx playwright test --project=recorrido"]
+    configuracion: Ninguna.
+    variables: ffmpeg debe estar en el PATH.
+    verificacion: ["ffmpeg -version"]
+    errores: "'ffmpeg' no se reconoce → cerrar y abrir la terminal tras la instalación."
+    actualizacion: winget upgrade --id Gyan.FFmpeg
+    seguridad: Descargar solo desde la fuente indicada por ffmpeg.org.
+
+  - nombre: Compilador LaTeX (MiKTeX)
+    funcion: Compilación de este manual (docs/latex/main.tex).
+    url: https://miktex.org/download
+    version: Última estable.
+    requisitos: latexmk necesita Perl en Windows (Strawberry Perl); sin Perl, ejecutar pdflatex tres veces.
+    grafica: "Instalador básico con la opción de instalar paquetes faltantes activada."
+    comandos:
+      - "winget install --id MiKTeX.MiKTeX -e --source winget"
+      - "winget search StrawberryPerl"
+      - "latexmk -pdf -interaction=nonstopmode main.tex"
+    configuracion: MiKTeX Console → Actualizaciones; instalación automática de paquetes habilitada.
+    variables: MiKTeX agrega su carpeta bin al PATH.
+    verificacion: ["pdflatex --version", "latexmk --version"]
+    errores: "'latexmk: perl not found' → instalar Strawberry Perl o compilar con pdflatex."
+    actualizacion: MiKTeX Console → Buscar actualizaciones.
+    seguridad: Descargar solo desde miktex.org.

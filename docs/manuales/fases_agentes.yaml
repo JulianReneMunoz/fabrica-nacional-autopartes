@@ -1,0 +1,520 @@
+# Guía cronológica de desarrollo con agentes (fuente única).
+# Se transforma en Markdown y LaTeX con: uv run python scripts/generar_guia.py
+# Regla: no avanzar a una fase si la condición de la fase anterior no se cumple.
+fases:
+  - id: F01
+    etapa: Preparación del equipo
+    herramienta: Windows Terminal + PowerShell 7
+    terminal: PowerShell (usuario normal)
+    comandos:
+      - "winget --version"
+      - "Set-ExecutionPolicy -Scope CurrentUser RemoteSigned"
+      - "wsl --status"
+    explicacion: >-
+      Verifica el gestor de paquetes winget, habilita la ejecución de scripts firmados o locales para el
+      usuario actual y consulta si WSL2 está presente (solo se instala si Docker Desktop lo requiere).
+    agente: "Ninguno (fase manual)"
+    contexto: "Equipo con Windows 11 actualizado, 16 GB de RAM recomendados para modelos locales de 3B-8B."
+    prompt: ""
+    archivos: []
+    pruebas: ["winget --version devuelve una versión", "Get-ExecutionPolicy -Scope CurrentUser devuelve RemoteSigned"]
+    resultado: "Terminal lista para instalar herramientas."
+    errores:
+      - {error: "winget no se reconoce", correccion: "Instalar o actualizar 'App Installer' desde Microsoft Store."}
+      - {error: "Los scripts .ps1 se bloquean", correccion: "Repetir Set-ExecutionPolicy en la misma cuenta; desbloquear con Unblock-File."}
+    condicion: "winget operativo y política de ejecución configurada."
+
+  - id: F02
+    etapa: Instalación de herramientas
+    herramienta: winget, instaladores oficiales de uv y Claude Code, npm
+    terminal: PowerShell
+    comandos:
+      - ".\\scripts\\instalar_herramientas.ps1"
+      - ".\\scripts\\instalar_herramientas.ps1 -Opcionales"
+      - ".\\scripts\\verificar_entorno.ps1"
+    explicacion: >-
+      Instala Git, VS Code, Node.js LTS, Ollama, uv, Claude Code y OpenCode de forma idempotente; con
+      -Opcionales agrega GitHub CLI, MiKTeX y Docker Desktop. El verificador imprime una tabla de versiones.
+    agente: "Ninguno (fase manual)"
+    contexto: "Repositorio clonado o carpeta del proyecto descomprimida."
+    prompt: ""
+    archivos: []
+    pruebas: ["verificar_entorno.ps1 termina con 'Entorno verificado.'"]
+    resultado: "git, uv, node y ollama disponibles en PATH."
+    errores:
+      - {error: "El comando instalado no se reconoce", correccion: "Cerrar y abrir la terminal para recargar PATH."}
+      - {error: "opencode no se encuentra tras npm install -g", correccion: "Agregar %APPDATA%\\npm al PATH del usuario."}
+    condicion: "Todas las herramientas obligatorias en estado OK."
+
+  - id: F03
+    etapa: Inicialización del repositorio
+    herramienta: Git, GitHub CLI y uv
+    terminal: PowerShell en la carpeta del proyecto
+    comandos:
+      - "uv sync"
+      - "Copy-Item .env.example .env"
+      - "gh auth login --hostname github.com --git-protocol https --web"
+      - ".\\scripts\\publicar_github.ps1"
+    explicacion: >-
+      Materializa el entorno virtual desde uv.lock, prepara el archivo de secretos local (excluido por
+      .gitignore) y publica todo el proyecto en https://github.com/JulianReneMunoz/fabrica-nacional-autopartes:
+      el script inicializa Git (rama main), crea el primer commit, crea el repositorio con 'gh repo create'
+      (público por defecto; -Privado para privado) y publica la rama.
+    agente: "Ninguno"
+    contexto: "Cuenta de GitHub JulianReneMunoz autenticada con 'gh auth login'."
+    prompt: ""
+    archivos: [".venv/", ".env"]
+    pruebas: ["uv run python -c \"import fabrica_autopartes; print('ok')\"", "git status sin cambios pendientes", "gh repo view JulianReneMunoz/fabrica-nacional-autopartes --web abre el repositorio", "La pestaña Actions muestra el flujo CI en ejecución"]
+    resultado: "Repositorio versionado y entorno reproducible."
+    errores:
+      - {error: "uv sync falla por versión de Python", correccion: "uv python install 3.12 y repetir uv sync."}
+    condicion: "Importación del paquete correcta y primer commit publicado."
+
+  - id: F04
+    etapa: Análisis de requisitos
+    herramienta: OpenCode (agente plan) o Claude Code (subagente analista-requisitos)
+    terminal: PowerShell → opencode
+    comandos: ["opencode", "claude"]
+    explicacion: "Con el agente en modo plan (solo lectura) se extraen requisitos de los PDF del taller y de las clases."
+    agente: analista-requisitos
+    contexto: "PDF del Taller 1 y de las clases 1-3 copiados en docs/requisitos/fuentes/ (no versionar si son confidenciales)."
+    prompt: >-
+      Leer AGENTS.md y los PDF de docs/requisitos/fuentes/. Construir docs/requisitos/matriz_trazabilidad.csv
+      con las columnas id;origen;descripcion;tipo;prioridad;componente;historia;caso_uso;prueba;estado.
+      Clasificar cada fila como Documentado (citar documento y página), Diseño o Extensión. No inventar
+      requisitos. Registrar en docs/requisitos/analisis_documentos.md la información ausente, ambigua o
+      contradictoria. Redacción impersonal. No modificar archivos fuera de docs/requisitos/.
+    archivos: ["docs/requisitos/matriz_trazabilidad.csv", "docs/requisitos/analisis_documentos.md"]
+    pruebas: ["uv run python scripts/generar_matriz.py"]
+    resultado: "Matriz con al menos los 20 requisitos del taller y su origen."
+    errores:
+      - {error: "El agente atribuye al taller funciones no pedidas", correccion: "Rechazar el cambio y exigir cita de página."}
+    condicion: "Cada requisito documentado tiene página de origen verificable."
+
+  - id: F05
+    etapa: Configuración de agentes
+    herramienta: OpenCode y Claude Code
+    terminal: PowerShell
+    comandos:
+      - "opencode auth login"
+      - "opencode auth list"
+      - "claude"
+      - "uv run python scripts/sincronizar_skills.py"
+    explicacion: >-
+      Autentica proveedores. En OpenCode se usa un proveedor con clave de API o Ollama local; la
+      suscripción Claude Pro/Max solo se usa en Claude Code y claude.ai según los términos vigentes.
+    agente: "Ninguno"
+    contexto: "opencode.json, .claude/settings.json, .claude/agents/ y skills/ del repositorio."
+    prompt: >-
+      Revisar opencode.json y .claude/settings.json. Confirmar que bash está en 'ask' salvo pruebas y
+      lint, que 'git push' está denegado y que la lectura de .env está bloqueada. Listar los agentes y
+      skills cargados y reportar diferencias con AGENTS.md. No editar archivos.
+    archivos: [".opencode/skills/", ".claude/skills/"]
+    pruebas: ["En OpenCode: /models muestra el modelo elegido", "En Claude Code: /agents lista los 4 subagentes"]
+    resultado: "Ambas consolas operan con permisos mínimos."
+    errores:
+      - {error: "OpenCode no muestra modelos de Anthropic", correccion: "Usar clave de API de la Consola u otro proveedor; no usar credenciales de suscripción."}
+      - {error: "Modelo local lento o sin herramientas", correccion: "Usar un modelo de código ≥14B o un proveedor en la nube para el agente; llama3.2:3b se reserva para la aplicación."}
+    condicion: "Agentes visibles y una tarea de solo lectura ejecutada con éxito."
+
+  - id: F06
+    etapa: Integración MCP
+    herramienta: Servidor MCP fna-conocimiento, Engram (opcional)
+    terminal: PowerShell
+    comandos:
+      - "uv run fabrica build --fuente semilla"
+      - "uv run pytest tests/integration/test_mcp.py -q"
+      - "claude mcp list"
+      - "engram setup opencode"
+    explicacion: "Construye la base para que el servidor tenga datos, prueba el protocolo por stdio y registra servidores."
+    agente: revisor-calidad
+    contexto: ".mcp.json y la sección mcp de opencode.json."
+    prompt: >-
+      Usar la herramienta MCP estadisticas_base y luego buscar_fragmentos con la consulta "sede principal".
+      Reportar los identificadores devueltos y confirmar que las herramientas son de solo lectura.
+    archivos: []
+    pruebas: ["6 pruebas MCP aprobadas"]
+    resultado: "El agente consulta la base sin permisos de escritura."
+    errores:
+      - {error: "El servidor no inicia", correccion: "Ejecutar 'uv run fabrica-mcp' manualmente y revisar stderr."}
+    condicion: "claude mcp list muestra fna-conocimiento conectado."
+
+  - id: F07
+    etapa: Generación de especificaciones
+    herramienta: OpenSpec
+    terminal: PowerShell
+    comandos:
+      - "npm install -g @fission-ai/openspec@latest"
+      - "openspec init --tools claude,opencode"
+      - "openspec validate --all"
+    explicacion: "Inicializa OpenSpec (si no existe) y valida especificaciones y cambios propuestos."
+    agente: analista-requisitos
+    contexto: "openspec/config.yaml y matriz de trazabilidad."
+    prompt: >-
+      /opsx:propose agregar-<capacidad>. Redactar proposal.md, design.md, tasks.md y el delta de spec con
+      Requirements y Scenarios (WHEN/THEN). Cada tarea termina con un comando de verificación ejecutable.
+    archivos: ["openspec/changes/<cambio>/"]
+    pruebas: ["openspec validate --all sin errores"]
+    resultado: "Especificaciones validadas (evidencia: docs/evidencias/openspec_validate.txt)."
+    errores:
+      - {error: "Requirement must have at least one scenario", correccion: "Agregar '#### Scenario:' con viñetas **WHEN**/**THEN**."}
+    condicion: "Validación sin errores."
+
+  - id: F08
+    etapa: Diseño de arquitectura
+    herramienta: Claude Code (plan) + skill fna-arquitectura
+    terminal: claude
+    comandos: ["uv run python scripts/verificar_capas.py"]
+    explicacion: "Revisa la dirección de dependencias entre capas y registra decisiones en ADR."
+    agente: revisor-calidad
+    contexto: "docs/arquitectura/adr/ y docs/diagramas/."
+    prompt: >-
+      Aplicar la skill fna-arquitectura sobre src/. Ejecutar scripts/verificar_capas.py. Si aparece una
+      violación, proponer una inversión de dependencia (protocolo en domain/puertos.py) y el ADR asociado.
+    archivos: ["docs/arquitectura/adr/ADR-0NN-*.md"]
+    pruebas: ["verificar_capas.py → 0 violaciones"]
+    resultado: "Arquitectura por capas verificable."
+    errores:
+      - {error: "scraping -> pipelines", correccion: "Tipar el rastreador contra el protocolo AlmacenCapturas (hallazgo real corregido)."}
+    condicion: "0 violaciones de capas."
+
+  - id: F09
+    etapa: Implementación y ejecución del scraping
+    herramienta: Claude Code + subagente ingeniero-datos (Sonnet); OpenCode como alternativa
+    terminal: PowerShell en C:\fabrica-nacional-autopartes (o la terminal integrada de Claude Code)
+    comandos:
+      - "uv run pytest tests/unit/test_scraping.py tests/integration/test_rastreo.py -q"
+      - "uv run fabrica pipeline --max-paginas 60"
+      - "uv run fabrica stats"
+      - ".\\scripts\\ejecutar_pipeline.ps1 -MaxPaginas 60 -Publicar"
+    explicacion: >-
+      Implementa y prueba el rastreador con un sitio simulado; luego ejecuta el proceso real desde la
+      consola del equipo con Windows 11: 'uv run fabrica pipeline' rastrea autopartesfanalca.com.co y
+      fanalca.com (Bronze), construye Silver y Gold con '--fuente scraping', valida el corpus y genera
+      las gráficas de cada etapa en docs/graficas. El scraping no se ejecuta dentro de un agente sin
+      aprobación: Claude Code solicita permiso porque el comando accede a la red.
+    agente: ingeniero-datos
+    contexto: "Skill fna-scraping-medallion, spec openspec/specs/extraccion-datos."
+    prompt: >-
+      Implementar en src/fabrica_autopartes/scraping/ un rastreador BFS que: lea robots.txt antes de cada
+      host, descubra sitemaps, respete Disallow y Crawl-delay, use User-Agent identificable, pausa mínima de
+      2 s, timeout de 20 s, reintentos con backoff ante 429/5xx, filtre dominios y extensiones no HTML y
+      guarde cada captura en Bronze (HTML + JSONL con url, url_final, fecha, estado, sha256). Escribir pruebas
+      con tests/fixtures/sitio y la biblioteca responses; ninguna prueba accede a Internet.
+    archivos: ["src/fabrica_autopartes/scraping/*.py", "src/fabrica_autopartes/pipelines/bronze.py", "tests/integration/test_rastreo.py"]
+    pruebas: ["Pruebas de scraping en verde", "data/bronze/manifiesto.jsonl con capturas reales", "data/gold/metricas_etapas.json con fuente 'scraping'", "seis PNG en docs/graficas sin la marca 'semilla'"]
+    resultado: "Capturas de los sitios oficiales en Bronze, base Gold reconstruida y gráficas por etapa."
+    errores:
+      - {error: "HTTP 403 o 429", correccion: "Aumentar FNA_PAUSA_ENTRE_PETICIONES_S; nunca rotar User-Agent ni eludir bloqueos."}
+      - {error: "Texto vacío por contenido JavaScript", correccion: "uv sync --extra dinamico y usar scraping/dinamico.py."}
+    condicion: "Al menos 10 páginas capturadas sin rutas prohibidas."
+
+  - id: F10
+    etapa: Construcción de pipelines
+    herramienta: Claude Code + subagente ingeniero-datos
+    terminal: claude
+    comandos:
+      - "uv run fabrica build --fuente scraping"
+      - "uv run fabrica validate"
+    explicacion: "Genera Silver (limpieza y deduplicación) y Gold (Markdown, fragmentos y base consolidada)."
+    agente: ingeniero-datos
+    contexto: "Spec openspec/specs/base-conocimiento."
+    prompt: >-
+      Revisar data/gold/base_conocimiento.txt generado desde el scraping. Identificar líneas de menú,
+      avisos legales o textos repetidos que sobrevivieron a la limpieza y ajustar las reglas de
+      pipelines/silver.py (no editar Gold a mano). Agregar una prueba por cada regla nueva.
+    archivos: ["src/fabrica_autopartes/pipelines/silver.py", "tests/unit/test_pipelines.py"]
+    pruebas: ["fabrica validate → aprobado: true"]
+    resultado: "Corpus limpio y trazable."
+    errores:
+      - {error: "Fragmentos > 600 tokens", correccion: "Reducir FNA_TAMANO_FRAGMENTO."}
+    condicion: "Validación aprobada y revisión humana del archivo consolidado."
+
+  - id: F11
+    etapa: Implementación de persistencia
+    herramienta: Claude Code
+    terminal: PowerShell
+    comandos:
+      - "uv run alembic upgrade head"
+      - "uv run pytest tests/integration/test_persistencia_y_evaluacion.py -q"
+    explicacion: "Aplica las migraciones del esquema de auditoría y verifica el repositorio."
+    agente: ingeniero-datos
+    contexto: "ADR-003."
+    prompt: >-
+      Si se agrega una columna al modelo ORM, generar la migración con
+      'uv run alembic revision --autogenerate -m "<descripcion>"', revisarla manualmente y probar upgrade y
+      downgrade sobre una base temporal.
+    archivos: ["alembic/versions/*.py"]
+    pruebas: ["test_migracion_alembic_crea_esquema"]
+    resultado: "Esquema versionado."
+    errores:
+      - {error: "Tabla ya existe", correccion: "Usar una base nueva o 'alembic stamp head' si el esquema se creó con create_all."}
+    condicion: "Migraciones aplicadas sin errores."
+
+  - id: F12
+    etapa: Construcción de la API
+    herramienta: Claude Code + skill fna-api
+    terminal: PowerShell
+    comandos:
+      - ".\\scripts\\ejecutar_api.ps1"
+      - "uv run fabrica openapi"
+    explicacion: "Levanta FastAPI con recarga y exporta el contrato OpenAPI."
+    agente: ingeniero-llm
+    contexto: "docs/api/openapi.json, postman/."
+    prompt: >-
+      Aplicar la skill fna-api para agregar el endpoint solicitado. Contrato con Pydantic, sin lógica de
+      negocio en la ruta, errores como subclases de ErrorFNA, prueba con TestClient y actualización de la
+      colección Postman.
+    archivos: ["src/fabrica_autopartes/api/", "tests/integration/test_api.py"]
+    pruebas: ["http://127.0.0.1:8000/docs responde 200", "Colección Postman sin fallos"]
+    resultado: "API documentada y probada."
+    errores:
+      - {error: "503 proveedor_llm_no_disponible", correccion: "Iniciar Ollama (ollama serve) o configurar clave del proveedor."}
+    condicion: "Pruebas de API en verde."
+
+  - id: F13
+    etapa: Desarrollo del frontend
+    herramienta: Claude Code
+    terminal: PowerShell
+    comandos: [".\\scripts\\ejecutar_app.ps1", "uv run pytest tests/e2e -q"]
+    explicacion: "Ejecuta Streamlit y sus pruebas extremo a extremo con AppTest."
+    agente: ingeniero-llm
+    contexto: "Spec openspec/specs/interfaz-prueba."
+    prompt: >-
+      Mejorar frontend/app.py sin romper las pruebas e2e: las pestañas Q&A, Resumen y FAQ deben quedar
+      visibles; cada respuesta muestra fundamentación, confianza, modo de contexto y fuentes.
+    archivos: ["frontend/app.py", "tests/e2e/test_streamlit.py"]
+    pruebas: ["3 pruebas e2e aprobadas"]
+    resultado: "Interfaz lista para la demostración."
+    errores:
+      - {error: "Puerto 8501 ocupado", correccion: "uv run streamlit run frontend/app.py --server.port 8502"}
+    condicion: "Demostración manual de las tres funcionalidades."
+
+  - id: F14
+    etapa: Integración de componentes
+    herramienta: Claude Code + subagente revisor-calidad
+    terminal: claude
+    comandos: ["uv run fabrica ask \"¿Dónde queda la sede principal?\" --proveedor ollama"]
+    explicacion: "Prueba el recorrido completo con el LLM real."
+    agente: revisor-calidad
+    contexto: "Ollama activo con llama3.2:3b."
+    prompt: >-
+      Ejecutar las preguntas P01, P05, P20 y P24 de evaluacion/preguntas.yaml por CLI con el proveedor
+      ollama y prompts v1, v2 y v3. Registrar respuestas literales en docs/prompts/bitacora_experimentos.md.
+    archivos: ["docs/prompts/bitacora_experimentos.md"]
+    pruebas: ["P20 devuelve la frase de rechazo con v2 y v3", "P24 queda bloqueada"]
+    resultado: "Integración verificada con LLM real."
+    errores:
+      - {error: "JSON inválido en v3", correccion: "El analizador tolerante extrae el objeto; si persiste, bajar temperatura a 0."}
+    condicion: "Recorrido completo sin errores."
+
+  - id: F15
+    etapa: Pruebas
+    herramienta: pytest, Ruff, mypy, evaluación
+    terminal: PowerShell
+    comandos:
+      - ".\\scripts\\verificar_calidad.ps1"
+      - "uv run fabrica evaluate --proveedor ollama --version-prompt v1"
+      - "uv run fabrica evaluate --proveedor ollama --version-prompt v3"
+    explicacion: "Ejecuta la batería de calidad y la evaluación de 24 preguntas por versión de prompt."
+    agente: revisor-calidad
+    contexto: "Skill fna-pruebas."
+    prompt: >-
+      Aplicar la skill fna-pruebas. Comparar los informes de evaluacion/resultados/ de v1 y v3: exactitud,
+      rechazo correcto y tasa fundamentada. Explicar diferencias con ejemplos de respuestas. No inventar cifras.
+    archivos: ["docs/evidencias/calidad_*.txt", "evaluacion/resultados/*.md"]
+    pruebas: ["0 pruebas fallidas", "Cobertura ≥ 85 %"]
+    resultado: "Evidencia cuantitativa para el informe."
+    errores:
+      - {error: "Evaluación lenta", correccion: "Usar --modo-contexto seleccion o un modelo más pequeño."}
+    condicion: "Métricas registradas."
+
+  - id: F16
+    etapa: Corrección de defectos
+    herramienta: Claude Code
+    terminal: claude
+    comandos: ["uv run pytest -q --lf"]
+    explicacion: "Reejecuta solo las pruebas que fallaron en la última corrida."
+    agente: ingeniero-llm / ingeniero-datos
+    contexto: "Salida de la prueba fallida y archivo afectado."
+    prompt: >-
+      Reproducir el fallo con una prueba mínima, corregir la causa raíz (no la prueba) y ejecutar la
+      batería completa. Documentar el hallazgo en el CHANGELOG del informe.
+    archivos: ["Según defecto"]
+    pruebas: ["uv run pytest -q"]
+    resultado: "Defecto corregido con prueba de regresión."
+    errores: []
+    condicion: "Batería en verde."
+
+  - id: F17
+    etapa: Despliegue
+    herramienta: Docker Desktop (opcional) o ejecución local
+    terminal: PowerShell
+    comandos:
+      - "docker compose up --build"
+      - "docker compose exec ollama ollama pull llama3.2:3b"
+    explicacion: "Levanta Ollama, API e interfaz en contenedores."
+    agente: "Ninguno"
+    contexto: "Docker Desktop con backend WSL2."
+    prompt: ""
+    archivos: []
+    pruebas: ["http://localhost:8501 y http://localhost:8000/salud responden"]
+    resultado: "Servicios en contenedores."
+    errores:
+      - {error: "WSL2 no instalado", correccion: "wsl --install en PowerShell como administrador y reiniciar."}
+    condicion: "Servicios saludables."
+
+  - id: F18
+    etapa: "v2.0 · Diseño del modelo de componentes y articulaciones"
+    herramienta: Claude Code + subagente arquitecto-mecanico-3d (Opus)
+    terminal: claude --model opus
+    comandos:
+      - "uv run pytest tests/unit/test_simulador.py -q"
+    explicacion: "Define piezas, subconjuntos, articulaciones, límites, despiece reversible y orden de desmontaje del freno de disco."
+    agente: arquitecto-mecanico-3d
+    contexto: "Skill fna-simulador-3d; docs/prompt_maestro_v2.md secciones 30 a 33."
+    prompt: >-
+      Diseñar en src/fabrica_autopartes/simulador/ el modelo Pydantic de Pieza, Articulacion (fija,
+      rotacional, prismática, esférica, compuesta), Subconjunto y Ensamblaje, y el catálogo del freno de
+      disco con pinza flotante (cubo, disco, espárragos, soporte, cuerpo de pinza, pistón, pastillas,
+      pasadores y tornillos). Toda dimensión se marca 'demostrativo'. Definir límites, retirar_antes sin
+      ciclos y direcciones de despiece. No redactar procedimientos de reparación ni de seguridad.
+    archivos: ["src/fabrica_autopartes/simulador/*.py", "tests/unit/test_simulador.py"]
+    pruebas: ["Jerarquía, identificadores, transformaciones, límites y reversibilidad en verde"]
+    resultado: "Modelo mecánico validado y documentado."
+    errores:
+      - {error: "Ciclo en retirar_antes", correccion: "Revisar dependencias; la secuencia usa orden topológico."}
+    condicion: "Revisión del revisor-calidad (Opus) sin hallazgos bloqueantes."
+
+  - id: F19
+    etapa: "v2.0 · Generación procedural del modelo 3D"
+    herramienta: Claude Code + subagente ingeniero-3d-frontend (Sonnet)
+    terminal: PowerShell
+    comandos:
+      - "uv run fabrica simulador generar"
+      - "uv run fabrica simulador validar"
+      - "uv run pytest tests/integration/test_generacion_3d.py -q"
+    explicacion: "Genera web/public/modelos/freno_disco.glb y su manifiesto con trimesh y manifold3d desde la CLI."
+    agente: ingeniero-3d-frontend
+    contexto: "ADR del motor geométrico (trimesh frente a Blender CLI y CadQuery)."
+    prompt: >-
+      Implementar simulador/generacion.py: una malla cerrada por pieza según su primitiva, material PBR,
+      nodo GLB con el id de la pieza y manifiesto con sha256, volumen y límites. La salida debe ser
+      reproducible (mismo hash con los mismos parámetros).
+    archivos: ["src/fabrica_autopartes/simulador/generacion.py", "web/public/modelos/freno_disco.glb"]
+    pruebas: ["Mallas cerradas", "GLB con 15 nodos", "hash reproducible"]
+    resultado: "Modelo GLB demostrativo y trazable."
+    errores:
+      - {error: "Malla no cerrada", correccion: "Revisar operaciones booleanas de manifold3d y parámetros positivos."}
+    condicion: "simulador validar → aprobado."
+
+  - id: F20
+    etapa: "v2.0 · API del simulador, RAG y persistencia en PostgreSQL"
+    herramienta: Claude Code + subagentes ingeniero-3d-frontend e ingeniero-llm (Sonnet)
+    terminal: PowerShell
+    comandos:
+      - "docker compose up -d postgres"
+      - "uv run alembic upgrade head"
+      - "uv run pytest tests/integration/test_api_simulador.py tests/integration/test_postgresql.py -q"
+    explicacion: "Expone /api/v1/simulador (cinemática, despiece, cálculo, preguntas, estados y eventos) y /api/v1/maquinas."
+    agente: ingeniero-3d-frontend
+    contexto: "docs/prompt_maestro_v2.md secciones 36 a 38."
+    prompt: >-
+      Implementar las rutas del simulador con validación Pydantic; rechazar con 422 identificadores
+      inexistentes, valores no finitos o fuera de límites. En /preguntar separar información documentada
+      (fragmentos con URL) de datos del modelo y rechazar preguntas de reparación o seguridad.
+    archivos: ["src/fabrica_autopartes/api/routes/simulador.py", "src/fabrica_autopartes/services/simulador.py", "alembic/versions/0002_simulador.py"]
+    pruebas: ["Pruebas de API y PostgreSQL en verde"]
+    resultado: "API documentada en /docs."
+    errores:
+      - {error: "connection refused en PostgreSQL", correccion: "docker compose ps; verificar FNA_URL_BASE_DATOS."}
+    condicion: "Pruebas de API en verde."
+
+  - id: F21
+    etapa: "v2.0 · Visor 3D y biblioteca de máquinas (Anatomy)"
+    herramienta: Claude Code + subagente ingeniero-3d-frontend (Sonnet) + skill Anatomy
+    terminal: PowerShell en web/
+    comandos:
+      - "npx skills add wheresryan22/anatomy -g -a claude-code"
+      - "npm ci"
+      - "npm run typecheck"
+      - "npm test"
+      - "npm run build"
+    explicacion: "Construye el visor React Three Fiber y la biblioteca de máquinas con datos del scraping."
+    agente: ingeniero-3d-frontend
+    contexto: "Skills fna-maquinas-anatomia y /anatomy; secciones 35 y 39 del prompt maestro v2."
+    prompt: >-
+      Implementar en web/ la biblioteca (tarjetas con pregunta, una línea, relación, datos de empresa con
+      URL y botón Abrir máquina) y las máquinas freno 3D, prensa y línea. Cada máquina: 2–4 controles,
+      correr/pausar/reiniciar, cámara lenta, cifras junto a las piezas, idea principal, revisión crítica,
+      recorrido ?tour=1 menor a 30 s y modo experimento. El freno incluye órbita, zoom, selección, árbol,
+      ficha, despiece/reensamblaje, visibilidad, transparencia, sección, reinicio de cámara, PNG y lecturas.
+    archivos: ["web/src/**/*.tsx", "web/src/modelos/*.ts", "web/src/__tests__/*.ts*"]
+    pruebas: ["Vitest en verde (réplica TS comparada con Python)", "npm run build sin errores"]
+    resultado: "Visor servido por FastAPI en http://127.0.0.1:8000/app/."
+    errores:
+      - {error: "Pantalla en blanco en /app", correccion: "Ejecutar npm run build; la API monta web/dist solo si existe."}
+    condicion: "Pruebas del visor en verde."
+
+  - id: F22
+    etapa: "v2.0 · Pruebas de extremo a extremo y videos del recorrido"
+    herramienta: Playwright con Chrome del sistema + FFmpeg
+    terminal: PowerShell en web/
+    comandos:
+      - "npx playwright test --project=funcional"
+      - "npx playwright test --project=recorrido"
+    explicacion: "Verifica biblioteca, freno 3D, prensa y línea; mide FPS; graba los recorridos en docs/videos/*.mp4."
+    agente: revisor-calidad
+    contexto: "web/e2e/."
+    prompt: >-
+      Ejecutar las pruebas de extremo a extremo y revisar las capturas de docs/capturas/v2 y los videos de
+      docs/videos. Reportar errores de consola, textos superpuestos y cualquier cifra sin procedencia.
+    archivos: ["docs/capturas/v2/*.png", "docs/videos/*.mp4"]
+    pruebas: ["7 pruebas en verde", "videos de menos de 30 s"]
+    resultado: "Evidencias visuales para la presentación."
+    errores:
+      - {error: "ffmpeg no se reconoce", correccion: "winget install --id Gyan.FFmpeg -e y reabrir la terminal."}
+    condicion: "Sin hallazgos bloqueantes."
+
+  - id: F23
+    etapa: "v2.0 · Integración en Streamlit"
+    herramienta: Claude Code (Sonnet)
+    terminal: PowerShell
+    comandos:
+      - ".\\scripts\\ejecutar_api.ps1"
+      - "uv run streamlit run frontend/app.py"
+      - "uv run pytest tests/e2e/test_streamlit.py -q"
+    explicacion: "Streamlit sigue como interfaz principal: pestañas Proceso de datos (gráficas por etapa) y Simulador 3D (enlace e iframe)."
+    agente: ingeniero-3d-frontend
+    contexto: "frontend/app.py."
+    prompt: >-
+      Agregar las pestañas Proceso de datos y Simulador 3D. La primera muestra el flujo, las métricas y
+      las seis gráficas con su explicación; la segunda enlaza e incrusta el visor y lista las máquinas con
+      sus datos y URL.
+    archivos: ["frontend/app.py", "tests/e2e/test_streamlit.py"]
+    pruebas: ["AppTest sin excepciones"]
+    resultado: "Interfaz empresarial integrada."
+    errores:
+      - {error: "El iframe no carga", correccion: "Iniciar la API y compilar web/; revisar FNA_URL_VISOR."}
+    condicion: "Pestañas operativas."
+
+  - id: F24
+    etapa: Documentación final
+    herramienta: MiKTeX/TeX Live + subagente documentador (Sonnet) + skill fna-documentacion
+    terminal: PowerShell en docs/latex
+    comandos:
+      - "uv run python scripts/generar_matriz.py"
+      - "uv run python scripts/generar_guia.py"
+      - "latexmk -pdf -interaction=nonstopmode main.tex"
+    explicacion: "Regenera tablas desde las fuentes y compila el manual."
+    agente: documentador
+    contexto: "docs/latex/."
+    prompt: >-
+      Aplicar la skill fna-documentacion. Actualizar el capítulo de resultados únicamente con cifras de
+      evaluacion/resultados/. Mantener redacción impersonal y verificar que no queden referencias sin resolver.
+    archivos: ["docs/latex/main.pdf", "README.md"]
+    pruebas: ["El PDF compila sin errores"]
+    resultado: "Manual y README listos para la entrega."
+    errores:
+      - {error: "Paquete LaTeX faltante", correccion: "MiKTeX instala paquetes bajo demanda; habilitar la instalación automática."}
+    condicion: "Entrega completa."

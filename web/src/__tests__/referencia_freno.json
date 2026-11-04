@@ -1,0 +1,349 @@
+{
+  "casos": [
+    {
+      "entrada": {
+        "presion_bar": 25.0,
+        "diametro_piston_m": 0.054,
+        "coeficiente_friccion": 0.4,
+        "radio_efectivo_m": 0.115,
+        "velocidad_kmh": 60.0,
+        "radio_neumatico_m": 0.3,
+        "masa_cuarto_vehiculo_kg": 300.0,
+        "inercia_rueda_kg_m2": 1.2,
+        "adherencia_neumatico": 0.9
+      },
+      "salida": {
+        "area_piston_m2": 0.00229022,
+        "fuerza_piston_n": 5725.553,
+        "fuerza_sujecion_por_pastilla_n": 5725.553,
+        "fuerza_friccion_total_n": 4580.442,
+        "par_frenado_nm": 526.751,
+        "inercia_equivalente_kg_m2": 28.2,
+        "deceleracion_rad_s2": 18.6791,
+        "deceleracion_m_s2": 5.6037,
+        "deceleracion_g": 0.5714,
+        "rueda_bloqueada": false,
+        "tiempo_detencion_s": 2.9742,
+        "distancia_detencion_m": 24.7851,
+        "rpm_inicial": 530.516,
+        "procedencia": "Fórmulas estándar; parámetros demostrativos"
+      }
+    },
+    {
+      "entrada": {
+        "presion_bar": 10.0,
+        "diametro_piston_m": 0.054,
+        "coeficiente_friccion": 0.4,
+        "radio_efectivo_m": 0.115,
+        "velocidad_kmh": 60.0,
+        "radio_neumatico_m": 0.3,
+        "masa_cuarto_vehiculo_kg": 300.0,
+        "inercia_rueda_kg_m2": 1.2,
+        "adherencia_neumatico": 0.9
+      },
+      "salida": {
+        "area_piston_m2": 0.00229022,
+        "fuerza_piston_n": 2290.221,
+        "fuerza_sujecion_por_pastilla_n": 2290.221,
+        "fuerza_friccion_total_n": 1832.177,
+        "par_frenado_nm": 210.7,
+        "inercia_equivalente_kg_m2": 28.2,
+        "deceleracion_rad_s2": 7.4716,
+        "deceleracion_m_s2": 2.2415,
+        "deceleracion_g": 0.2286,
+        "rueda_bloqueada": false,
+        "tiempo_detencion_s": 7.4355,
+        "distancia_detencion_m": 61.9627,
+        "rpm_inicial": 530.516,
+        "procedencia": "Fórmulas estándar; parámetros demostrativos"
+      }
+    },
+    {
+      "entrada": {
+        "presion_bar": 40.0,
+        "diametro_piston_m": 0.054,
+        "coeficiente_friccion": 0.4,
+        "radio_efectivo_m": 0.115,
+        "velocidad_kmh": 60.0,
+        "radio_neumatico_m": 0.3,
+        "masa_cuarto_vehiculo_kg": 300.0,
+        "inercia_rueda_kg_m2": 1.2,
+        "adherencia_neumatico": 0.9
+      },
+      "salida": {
+        "area_piston_m2": 0.00229022,
+        "fuerza_piston_n": 9160.884,
+        "fuerza_sujecion_por_pastilla_n": 9160.884,
+        "fuerza_friccion_total_n": 7328.707,
+        "par_frenado_nm": 842.801,
+        "inercia_equivalente_kg_m2": 28.2,
+        "deceleracion_rad_s2": 29.8866,
+        "deceleracion_m_s2": 8.826,
+        "deceleracion_g": 0.9,
+        "rueda_bloqueada": true,
+        "tiempo_detencion_s": 1.8884,
+        "distancia_detencion_m": 15.7364,
+        "rpm_inicial": 530.516,
+        "procedencia": "Fórmulas estándar; parámetros demostrativos"
+      }
+    },
+    {
+      "entrada": {
+        "presion_bar": 80.0,
+        "diametro_piston_m": 0.054,
+        "coeficiente_friccion": 0.3,
+        "radio_efectivo_m": 0.115,
+        "velocidad_kmh": 60.0,
+        "radio_neumatico_m": 0.3,
+        "masa_cuarto_vehiculo_kg": 300.0,
+        "inercia_rueda_kg_m2": 1.2,
+        "adherencia_neumatico": 0.9
+      },
+      "salida": {
+        "area_piston_m2": 0.00229022,
+        "fuerza_piston_n": 18321.768,
+        "fuerza_sujecion_por_pastilla_n": 18321.768,
+        "fuerza_friccion_total_n": 10993.061,
+        "par_frenado_nm": 1264.202,
+        "inercia_equivalente_kg_m2": 28.2,
+        "deceleracion_rad_s2": 44.8299,
+        "deceleracion_m_s2": 8.826,
+        "deceleracion_g": 0.9,
+        "rueda_bloqueada": true,
+        "tiempo_detencion_s": 1.8884,
+        "distancia_detencion_m": 15.7364,
+        "rpm_inicial": 530.516,
+        "procedencia": "Fórmulas estándar; parámetros demostrativos"
+      }
+    },
+    {
+      "entrada": {
+        "presion_bar": 25.0,
+        "diametro_piston_m": 0.06,
+        "coeficiente_friccion": 0.4,
+        "radio_efectivo_m": 0.115,
+        "velocidad_kmh": 100.0,
+        "radio_neumatico_m": 0.3,
+        "masa_cuarto_vehiculo_kg": 300.0,
+        "inercia_rueda_kg_m2": 1.2,
+        "adherencia_neumatico": 0.9
+      },
+      "salida": {
+        "area_piston_m2": 0.00282743,
+        "fuerza_piston_n": 7068.583,
+        "fuerza_sujecion_por_pastilla_n": 7068.583,
+        "fuerza_friccion_total_n": 5654.867,
+        "par_frenado_nm": 650.31,
+        "inercia_equivalente_kg_m2": 28.2,
+        "deceleracion_rad_s2": 23.0606,
+        "deceleracion_m_s2": 6.9182,
+        "deceleracion_g": 0.7055,
+        "rueda_bloqueada": false,
+        "tiempo_detencion_s": 4.0152,
+        "distancia_detencion_m": 55.7664,
+        "rpm_inicial": 884.194,
+        "procedencia": "Fórmulas estándar; parámetros demostrativos"
+      }
+    },
+    {
+      "entrada": {
+        "presion_bar": 0.0,
+        "diametro_piston_m": 0.054,
+        "coeficiente_friccion": 0.4,
+        "radio_efectivo_m": 0.115,
+        "velocidad_kmh": 60.0,
+        "radio_neumatico_m": 0.3,
+        "masa_cuarto_vehiculo_kg": 300.0,
+        "inercia_rueda_kg_m2": 1.2,
+        "adherencia_neumatico": 0.9
+      },
+      "salida": {
+        "area_piston_m2": 0.00229022,
+        "fuerza_piston_n": 0.0,
+        "fuerza_sujecion_por_pastilla_n": 0.0,
+        "fuerza_friccion_total_n": 0.0,
+        "par_frenado_nm": 0.0,
+        "inercia_equivalente_kg_m2": 28.2,
+        "deceleracion_rad_s2": 0.0,
+        "deceleracion_m_s2": 0.0,
+        "deceleracion_g": 0.0,
+        "rueda_bloqueada": false,
+        "tiempo_detencion_s": null,
+        "distancia_detencion_m": null,
+        "rpm_inicial": 530.516,
+        "procedencia": "Fórmulas estándar; parámetros demostrativos"
+      }
+    }
+  ],
+  "secuencia_desmontaje": [
+    "pasador_guia_1",
+    "tornillo_soporte_1",
+    "pasador_guia_2",
+    "tornillo_soporte_2",
+    "cuerpo_pinza",
+    "piston",
+    "pastilla_interna",
+    "pastilla_externa",
+    "soporte_pinza",
+    "disco",
+    "esparrago_1",
+    "esparrago_2",
+    "esparrago_3",
+    "esparrago_4",
+    "cubo"
+  ],
+  "despiece_1": {
+    "cubo": [
+      0.0,
+      0.0,
+      -0.136
+    ],
+    "disco": [
+      0.0,
+      0.0,
+      0.14
+    ],
+    "esparrago_1": [
+      0.035355,
+      0.035355,
+      0.24
+    ],
+    "esparrago_2": [
+      -0.035355,
+      0.035355,
+      0.24
+    ],
+    "esparrago_3": [
+      -0.035355,
+      -0.035355,
+      0.24
+    ],
+    "esparrago_4": [
+      0.035355,
+      -0.035355,
+      0.24
+    ],
+    "soporte_pinza": [
+      0.0,
+      0.12615957220377805,
+      -0.20645592058222295
+    ],
+    "cuerpo_pinza": [
+      0.0,
+      0.253,
+      0.0
+    ],
+    "piston": [
+      0.0,
+      0.22813708498984764,
+      -0.15663708498984763
+    ],
+    "pastilla_interna": [
+      0.0,
+      0.19856290217967335,
+      -0.05092516087186934
+    ],
+    "pastilla_externa": [
+      0.0,
+      0.19856290217967335,
+      0.05092516087186934
+    ],
+    "pasador_guia_1": [
+      -0.07,
+      0.123,
+      -0.15
+    ],
+    "tornillo_soporte_1": [
+      -0.0749,
+      0.07,
+      -0.22
+    ],
+    "pasador_guia_2": [
+      0.07,
+      0.123,
+      -0.15
+    ],
+    "tornillo_soporte_2": [
+      0.0749,
+      0.07,
+      -0.22
+    ]
+  },
+  "despiece_0": {
+    "cubo": [
+      0.0,
+      0.0,
+      -0.036000000000000004
+    ],
+    "disco": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "esparrago_1": [
+      0.035355,
+      0.035355,
+      0.02
+    ],
+    "esparrago_2": [
+      -0.035355,
+      0.035355,
+      0.02
+    ],
+    "esparrago_3": [
+      -0.035355,
+      -0.035355,
+      0.02
+    ],
+    "esparrago_4": [
+      0.035355,
+      -0.035355,
+      0.02
+    ],
+    "soporte_pinza": [
+      0.0,
+      0.07,
+      -0.046
+    ],
+    "cuerpo_pinza": [
+      0.0,
+      0.123,
+      0.0
+    ],
+    "piston": [
+      0.0,
+      0.115,
+      -0.0435
+    ],
+    "pastilla_interna": [
+      0.0,
+      0.115,
+      -0.0175
+    ],
+    "pastilla_externa": [
+      0.0,
+      0.115,
+      0.0175
+    ],
+    "pasador_guia_1": [
+      -0.07,
+      0.123,
+      -0.03
+    ],
+    "tornillo_soporte_1": [
+      -0.0749,
+      0.07,
+      -0.07
+    ],
+    "pasador_guia_2": [
+      0.07,
+      0.123,
+      -0.03
+    ],
+    "tornillo_soporte_2": [
+      0.0749,
+      0.07,
+      -0.07
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+%% Diagrama C4 de contenedores (Mermaid). Ver renderizado en GitHub o https://mermaid.live
+flowchart LR
+  usuario([Cliente / evaluador])
+  dev([Equipo de desarrollo])
+  subgraph sistema[Sistema de conocimiento Fanalca]
+    ui[Streamlit\nfrontend/app.py]
+    api[FastAPI\napi/main.py]
+    cli[CLI fabrica]
+    mcp[Servidor MCP\nfna-conocimiento]
+    svc[ServicioAsistente\nservices/]
+    kb[(Gold: fragmentos.jsonl\nbase_conocimiento.txt)]
+    db[(SQLite auditoría\nAlembic)]
+    pipe[Pipeline Medallion\nBronze→Silver→Gold]
+  end
+  sitio[(fanalca.com)]
+  llm[Ollama / OpenAI / Anthropic]
+  agentes[OpenCode / Claude Code]
+  usuario --> ui
+  usuario --> api
+  dev --> cli
+  agentes -- stdio JSON-RPC --> mcp
+  ui --> svc
+  api --> svc
+  cli --> svc
+  mcp --> kb
+  svc --> kb
+  svc --> db
+  svc -- HTTP --> llm
+  cli --> pipe
+  pipe -- HTTPS robots.txt --> sitio
+  pipe --> kb

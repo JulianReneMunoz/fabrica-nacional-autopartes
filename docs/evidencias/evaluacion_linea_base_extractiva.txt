@@ -1,0 +1,12 @@
+== v1 completo
+{'exactitud_respondibles': 0.632, 'cobertura_contexto': 1.0, 'rechazo_correcto': 0.4, 'tasa_fundamentada': 0.842, 'exactitud_global': 0.583}
+== v1 seleccion
+{'exactitud_respondibles': 0.684, 'cobertura_contexto': 1.0, 'rechazo_correcto': 0.4, 'tasa_fundamentada': 0.842, 'exactitud_global': 0.625}
+== v2 completo
+{'exactitud_respondibles': 0.632, 'cobertura_contexto': 1.0, 'rechazo_correcto': 0.4, 'tasa_fundamentada': 0.842, 'exactitud_global': 0.583}
+== v2 seleccion
+{'exactitud_respondibles': 0.684, 'cobertura_contexto': 1.0, 'rechazo_correcto': 0.4, 'tasa_fundamentada': 0.842, 'exactitud_global': 0.625}
+== v3 completo
+{'exactitud_respondibles': 0.632, 'cobertura_contexto': 1.0, 'rechazo_correcto': 0.4, 'tasa_fundamentada': 0.842, 'exactitud_global': 0.583}
+== v3 seleccion
+{'exactitud_respondibles': 0.684, 'cobertura_contexto': 1.0, 'rechazo_correcto': 0.4, 'tasa_fundamentada': 0.842, 'exactitud_global': 0.625}

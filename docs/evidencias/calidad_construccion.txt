@@ -1,0 +1,88 @@
+# Evidencia de calidad — 2026-11-04T22:46:33Z — Linux (entorno de construcción), Python 3.12.13
+$ uv run ruff check .
+All checks passed!
+$ uv run ruff format --check .
+202 files already formatted
+$ uv run mypy
+Success: no issues found in 60 source files
+$ uv run python scripts/verificar_capas.py
+0 violaciones de capas
+$ uv run pytest -q --cov --cov-report=term
+........................................................................ [ 58%]
+....................................................                     [100%]
+=============================== warnings summary ===============================
+tests/e2e/test_streamlit.py::test_panel_muestra_metricas
+tests/e2e/test_streamlit.py::test_pestanas_v2_proceso_y_simulador
+tests/e2e/test_streamlit.py::test_qa_desde_boton_de_ejemplo
+tests/e2e/test_streamlit.py::test_qa_desde_boton_de_ejemplo
+tests/e2e/test_streamlit.py::test_resumen_y_faq
+tests/e2e/test_streamlit.py::test_resumen_y_faq
+tests/e2e/test_streamlit.py::test_resumen_y_faq
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.13-final-0 _______________
+
+Name                                                 Stmts   Miss  Cover
+------------------------------------------------------------------------
+src/fabrica_autopartes/__init__.py                       1      0   100%
+src/fabrica_autopartes/api/__init__.py                   0      0   100%
+src/fabrica_autopartes/api/dependencias.py              12      2    83%
+src/fabrica_autopartes/api/esquemas.py                  58      0   100%
+src/fabrica_autopartes/api/main.py                      38      2    95%
+src/fabrica_autopartes/api/routes/__init__.py            0      0   100%
+src/fabrica_autopartes/api/routes/base.py               21      0   100%
+src/fabrica_autopartes/api/routes/operacion.py          21      0   100%
+src/fabrica_autopartes/api/routes/simulador.py         151      5    97%
+src/fabrica_autopartes/api/routes/tareas.py             16      0   100%
+src/fabrica_autopartes/cli.py                          156     79    49%
+src/fabrica_autopartes/core/__init__.py                  0      0   100%
+src/fabrica_autopartes/core/config.py                   60      3    95%
+src/fabrica_autopartes/core/excepciones.py              18      0   100%
+src/fabrica_autopartes/core/registro.py                 16      0   100%
+src/fabrica_autopartes/domain/__init__.py                0      0   100%
+src/fabrica_autopartes/domain/modelos.py                83      0   100%
+src/fabrica_autopartes/domain/puertos.py                 5      0   100%
+src/fabrica_autopartes/knowledge/__init__.py             0      0   100%
+src/fabrica_autopartes/knowledge/base.py                80     11    86%
+src/fabrica_autopartes/knowledge/recuperacion.py        55      1    98%
+src/fabrica_autopartes/llm/__init__.py                   0      0   100%
+src/fabrica_autopartes/llm/cadenas.py                   94      4    96%
+src/fabrica_autopartes/llm/catalogo_prompts.py          31      1    97%
+src/fabrica_autopartes/llm/extractivo.py                91      4    96%
+src/fabrica_autopartes/llm/proveedores.py               34     17    50%
+src/fabrica_autopartes/llm/salvaguardas.py              44      3    93%
+src/fabrica_autopartes/mcp_server/__init__.py            0      0   100%
+src/fabrica_autopartes/mcp_server/server.py             83     17    80%
+src/fabrica_autopartes/pipelines/__init__.py             0      0   100%
+src/fabrica_autopartes/pipelines/bronze.py              53      0   100%
+src/fabrica_autopartes/pipelines/calidad.py             43      0   100%
+src/fabrica_autopartes/pipelines/fragmentacion.py       18      0   100%
+src/fabrica_autopartes/pipelines/gold.py                35      0   100%
+src/fabrica_autopartes/pipelines/graficas.py           120      0   100%
+src/fabrica_autopartes/pipelines/orquestador.py         51      1    98%
+src/fabrica_autopartes/pipelines/silver.py             121      8    93%
+src/fabrica_autopartes/pipelines/texto.py               39      2    95%
+src/fabrica_autopartes/repositories/__init__.py          0      0   100%
+src/fabrica_autopartes/repositories/auditoria.py        91      8    91%
+src/fabrica_autopartes/repositories/orm.py              56      0   100%
+src/fabrica_autopartes/scraping/__init__.py              0      0   100%
+src/fabrica_autopartes/scraping/cliente_http.py         55      1    98%
+src/fabrica_autopartes/scraping/extraccion.py           70      2    97%
+src/fabrica_autopartes/scraping/rastreador.py          139     14    90%
+src/fabrica_autopartes/scraping/robots.py               55      5    91%
+src/fabrica_autopartes/scraping/sitemap.py              13      0   100%
+src/fabrica_autopartes/services/__init__.py              0      0   100%
+src/fabrica_autopartes/services/asistente.py            67     14    79%
+src/fabrica_autopartes/services/evaluacion.py           76     16    79%
+src/fabrica_autopartes/services/maquinas.py             65      2    97%
+src/fabrica_autopartes/services/simulador.py            96      4    96%
+src/fabrica_autopartes/simulador/__init__.py             0      0   100%
+src/fabrica_autopartes/simulador/catalogo_freno.py      54      1    98%
+src/fabrica_autopartes/simulador/cinematica.py         189     13    93%
+src/fabrica_autopartes/simulador/fisica_freno.py        43      0   100%
+src/fabrica_autopartes/simulador/generacion.py          86      4    95%
+src/fabrica_autopartes/simulador/modelos.py            115      6    95%
+------------------------------------------------------------------------
+TOTAL                                                 2918    250    91%
+124 passed, 7 warnings in 28.58s

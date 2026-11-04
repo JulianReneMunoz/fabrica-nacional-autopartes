@@ -1,0 +1,44 @@
+{
+  "documentos": 15,
+  "fragmentos": 48,
+  "tokens_aprox": 3674,
+  "secciones": {
+    "autopartes/clientes": 1,
+    "autopartes/contacto": 3,
+    "autopartes/inicio": 5,
+    "autopartes/quienes-somos": 4,
+    "autopartes/productos": 1,
+    "contacto": 3,
+    "inicio": 3,
+    "negocios/ambiental": 4,
+    "negocios/autopartes": 3,
+    "negocios/fanalvias": 3,
+    "negocios/honda-autos": 5,
+    "negocios/honda-motocicletas": 3,
+    "negocios/tubos-perfiles": 4,
+    "quienes-somos": 4,
+    "sostenibilidad": 2
+  },
+  "origenes": {
+    "lectura_web": 14,
+    "semilla": 34
+  },
+  "urls": [
+    "https://autopartesfanalca.com.co/",
+    "https://autopartesfanalca.com.co/clientes/",
+    "https://autopartesfanalca.com.co/contacto/",
+    "https://autopartesfanalca.com.co/nosotros/",
+    "https://autopartesfanalca.com.co/productos/",
+    "https://fanalca.com/en/",
+    "https://fanalca.com/en/business/auto-parts/",
+    "https://fanalca.com/en/business/environmental/",
+    "https://fanalca.com/en/business/fanalvias/",
+    "https://fanalca.com/en/business/honda-autos/",
+    "https://fanalca.com/en/business/steel-tubes-and-profiles/",
+    "https://fanalca.com/en/contact/",
+    "https://fanalca.com/en/sustainability/",
+    "https://fanalca.com/en/who-we-are/",
+    "https://fanalca.com/negocios/honda-motocicletas/"
+  ],
+  "generado_en": "2026-11-04T21:54:14.852877Z"
+}

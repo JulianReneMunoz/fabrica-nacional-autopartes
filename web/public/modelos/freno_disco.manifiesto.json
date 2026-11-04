@@ -1,0 +1,331 @@
+{
+  "ensamblaje": "freno_disco",
+  "version": "2.0.0",
+  "archivo": "freno_disco.glb",
+  "sha256": "217e76122aadcf7f447ebe25f3bfe572483b70b58bee18dafd2e4627c3f4cab3",
+  "bytes": 59356,
+  "unidades": "m",
+  "eje_arriba": "Y",
+  "generador": "trimesh 5.2.0 + manifold3d",
+  "advertencia": "Modelo de demostración con geometría procedural simplificada y dimensiones demostrativas. No es un diseño industrial certificado ni sustituye documentación técnica del fabricante.",
+  "parametros": {
+    "diametro_disco": 0.28,
+    "espesor_disco": 0.022,
+    "radio_interior_disco": 0.09,
+    "diametro_piston": 0.054,
+    "radio_efectivo": 0.115,
+    "holgura_pastilla": 0.0005,
+    "n_esparragos": 4.0
+  },
+  "procedencia_parametros": {
+    "diametro_disco": "demostrativo",
+    "espesor_disco": "demostrativo",
+    "radio_interior_disco": "demostrativo",
+    "diametro_piston": "demostrativo",
+    "radio_efectivo": "demostrativo",
+    "holgura_pastilla": "demostrativo",
+    "n_esparragos": "demostrativo"
+  },
+  "piezas": [
+    {
+      "id": "cubo",
+      "nodo": "cubo",
+      "vertices": 257,
+      "caras": 510,
+      "volumen_m3": 0.000697725,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.075,
+          -0.075,
+          -0.025
+        ],
+        [
+          0.075,
+          0.075,
+          0.025
+        ]
+      ]
+    },
+    {
+      "id": "disco",
+      "nodo": "disco",
+      "vertices": 768,
+      "caras": 1584,
+      "volumen_m3": 0.001200898,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.14,
+          -0.14,
+          -0.011
+        ],
+        [
+          0.14,
+          0.14,
+          0.011
+        ]
+      ]
+    },
+    {
+      "id": "esparrago_1",
+      "nodo": "esparrago_1",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 5.639e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.006,
+          -0.006,
+          -0.025
+        ],
+        [
+          0.006,
+          0.006,
+          0.025
+        ]
+      ]
+    },
+    {
+      "id": "esparrago_2",
+      "nodo": "esparrago_2",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 5.639e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.006,
+          -0.006,
+          -0.025
+        ],
+        [
+          0.006,
+          0.006,
+          0.025
+        ]
+      ]
+    },
+    {
+      "id": "esparrago_3",
+      "nodo": "esparrago_3",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 5.639e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.006,
+          -0.006,
+          -0.025
+        ],
+        [
+          0.006,
+          0.006,
+          0.025
+        ]
+      ]
+    },
+    {
+      "id": "esparrago_4",
+      "nodo": "esparrago_4",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 5.639e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.006,
+          -0.006,
+          -0.025
+        ],
+        [
+          0.006,
+          0.006,
+          0.025
+        ]
+      ]
+    },
+    {
+      "id": "soporte_pinza",
+      "nodo": "soporte_pinza",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 8.5e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.085,
+          -0.0125,
+          -0.01
+        ],
+        [
+          0.085,
+          0.0125,
+          0.01
+        ]
+      ]
+    },
+    {
+      "id": "cuerpo_pinza",
+      "nodo": "cuerpo_pinza",
+      "vertices": 113,
+      "caras": 222,
+      "volumen_m3": 0.000660165,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.065,
+          -0.04,
+          -0.0735
+        ],
+        [
+          0.065,
+          0.04,
+          0.0355
+        ]
+      ]
+    },
+    {
+      "id": "piston",
+      "nodo": "piston",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 9.1347e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.027,
+          -0.027,
+          -0.02
+        ],
+        [
+          0.027,
+          0.027,
+          0.02
+        ]
+      ]
+    },
+    {
+      "id": "pastilla_interna",
+      "nodo": "pastilla_interna",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 5.52e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.05,
+          -0.023,
+          -0.006
+        ],
+        [
+          0.05,
+          0.023,
+          0.006
+        ]
+      ]
+    },
+    {
+      "id": "pastilla_externa",
+      "nodo": "pastilla_externa",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 5.52e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.05,
+          -0.023,
+          -0.006
+        ],
+        [
+          0.05,
+          0.023,
+          0.006
+        ]
+      ]
+    },
+    {
+      "id": "pasador_guia_1",
+      "nodo": "pasador_guia_1",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 6.265e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.005,
+          -0.005,
+          -0.04
+        ],
+        [
+          0.005,
+          0.005,
+          0.04
+        ]
+      ]
+    },
+    {
+      "id": "tornillo_soporte_1",
+      "nodo": "tornillo_soporte_1",
+      "vertices": 62,
+      "caras": 120,
+      "volumen_m3": 5.174e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0095,
+          -0.008227,
+          -0.0225
+        ],
+        [
+          0.0095,
+          0.008227,
+          0.015
+        ]
+      ]
+    },
+    {
+      "id": "pasador_guia_2",
+      "nodo": "pasador_guia_2",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 6.265e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.005,
+          -0.005,
+          -0.04
+        ],
+        [
+          0.005,
+          0.005,
+          0.04
+        ]
+      ]
+    },
+    {
+      "id": "tornillo_soporte_2",
+      "nodo": "tornillo_soporte_2",
+      "vertices": 62,
+      "caras": 120,
+      "volumen_m3": 5.174e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0095,
+          -0.008227,
+          -0.0225
+        ],
+        [
+          0.0095,
+          0.008227,
+          0.015
+        ]
+      ]
+    }
+  ]
+}

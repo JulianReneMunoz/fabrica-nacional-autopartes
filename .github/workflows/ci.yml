@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  calidad-y-pruebas:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Sincronizar entorno reproducible
+        run: uv sync --locked
+      - name: Lint (Ruff)
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Tipos (mypy)
+        run: uv run mypy
+      - name: Verificar capas
+        run: uv run python scripts/verificar_capas.py
+      - name: Construir y validar la base (semilla)
+        run: |
+          uv run fabrica build --fuente semilla
+          uv run fabrica validate
+      - name: Pruebas con cobertura
+        env:
+          FNA_PROVEEDOR_LLM: extractivo
+        run: uv run pytest -q --cov --cov-report=term-missing --cov-fail-under=85
+
+  visor-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Dependencias exactas
+        run: npm ci
+      - name: Tipos (TypeScript)
+        run: npm run typecheck
+      - name: Pruebas (Vitest)
+        run: npm test
+      - name: Compilación (Vite)
+        run: npm run build

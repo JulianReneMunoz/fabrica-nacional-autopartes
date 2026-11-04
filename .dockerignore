@@ -1,0 +1,14 @@
+.venv
+.git
+**/__pycache__
+.mypy_cache
+.pytest_cache
+.ruff_cache
+web/node_modules
+web/dist
+web/test-results
+data/app.db
+data/bronze
+.env
+docs/latex/build
+docs/videos

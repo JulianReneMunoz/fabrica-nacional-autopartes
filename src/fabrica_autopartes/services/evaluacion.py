@@ -1,0 +1,174 @@
+"""Evaluación sistemática del Q&A con el banco de ``evaluacion/preguntas.yaml``.
+
+Métricas (todas calculadas, ninguna supuesta):
+
+* ``exactitud_respondibles``: proporción de preguntas respondibles cuya respuesta contiene
+  al menos ``minimo`` hechos clave.
+* ``cobertura_contexto``: proporción de preguntas respondibles cuyo contexto entregado al
+  modelo contenía los hechos clave (diagnostica fallas de recuperación vs. de generación).
+* ``rechazo_correcto``: proporción de preguntas ausentes/fuera de alcance/inyección que
+  recibieron rechazo o bloqueo (resistencia a la alucinación).
+* ``tasa_fundamentada``: proporción de respuestas respondibles marcadas como fundamentadas.
+* ``latencia_media_ms``.
+"""
+
+from __future__ import annotations
+
+import json
+import unicodedata
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+
+import yaml
+
+from fabrica_autopartes.core.config import RAIZ_PROYECTO
+from fabrica_autopartes.llm.salvaguardas import es_rechazo
+from fabrica_autopartes.services.asistente import ServicioAsistente
+
+ARCHIVO_PREGUNTAS = RAIZ_PROYECTO / "evaluacion" / "preguntas.yaml"
+DIR_RESULTADOS = RAIZ_PROYECTO / "evaluacion" / "resultados"
+
+
+def _norm(texto: str) -> str:
+    sin = "".join(c for c in unicodedata.normalize("NFD", texto.lower()) if unicodedata.category(c) != "Mn")
+    return " ".join(sin.replace(".", " ").replace(",", " ").split())
+
+
+def hechos_presentes(texto: str, hechos: list[str]) -> list[str]:
+    t = _norm(texto)
+    return [h for h in hechos if _norm(h) in t]
+
+
+@dataclass
+class ResultadoPregunta:
+    id: str
+    tipo: str
+    pregunta: str
+    respuesta: str
+    acierto: bool
+    hechos_encontrados: list[str] = field(default_factory=list)
+    hechos_en_contexto: list[str] = field(default_factory=list)
+    fundamentada: bool = False
+    fuentes: list[str] = field(default_factory=list)
+    latencia_ms: int = 0
+
+
+def cargar_preguntas(ruta: Path = ARCHIVO_PREGUNTAS) -> list[dict]:
+    return list(yaml.safe_load(ruta.read_text(encoding="utf-8"))["preguntas"])
+
+
+def evaluar(
+    servicio: ServicioAsistente,
+    opciones: dict[str, str | None] | None = None,
+    preguntas: list[dict] | None = None,
+    guardar: bool = True,
+) -> dict:
+    op = {k: v for k, v in (opciones or {}).items() if v}
+    preguntas = preguntas or cargar_preguntas()
+    resultados: list[ResultadoPregunta] = []
+    for p in preguntas:
+        r = servicio.responder(p["pregunta"], canal="evaluacion", **op)
+        if p["tipo"] == "respondible":
+            encontrados = hechos_presentes(r.respuesta, p["hechos"])
+            ctx = servicio.base.armar_contexto(
+                p["pregunta"],
+                r.modo_contexto if r.modo_contexto in ("completo", "seleccion") else "auto",
+                servicio.config.presupuesto_tokens_contexto,
+                servicio.config.fragmentos_seleccion,
+            )
+            en_ctx = hechos_presentes(ctx.texto, p["hechos"])
+            acierto = len(encontrados) >= p.get("minimo", 1) and not es_rechazo(r.respuesta)
+        else:
+            encontrados, en_ctx = [], []
+            acierto = es_rechazo(r.respuesta) or r.modo_contexto == "bloqueado"
+        resultados.append(
+            ResultadoPregunta(
+                id=p["id"],
+                tipo=p["tipo"],
+                pregunta=p["pregunta"],
+                respuesta=r.respuesta,
+                acierto=acierto,
+                hechos_encontrados=encontrados,
+                hechos_en_contexto=en_ctx,
+                fundamentada=r.fundamentada,
+                fuentes=[f.fragmento_id for f in r.fuentes],
+                latencia_ms=r.latencia_ms,
+            )
+        )
+
+    respondibles = [r for r in resultados if r.tipo == "respondible"]
+    negativas = [r for r in resultados if r.tipo != "respondible"]
+    pregs = {p["id"]: p for p in preguntas}
+
+    def _prop(valores: list[bool]) -> float:
+        return round(sum(valores) / len(valores), 3) if valores else 0.0
+
+    metricas = {
+        "total_preguntas": len(resultados),
+        "respondibles": len(respondibles),
+        "negativas": len(negativas),
+        "exactitud_respondibles": _prop([r.acierto for r in respondibles]),
+        "cobertura_contexto": _prop(
+            [len(r.hechos_en_contexto) >= pregs[r.id].get("minimo", 1) for r in respondibles]
+        ),
+        "rechazo_correcto": _prop([r.acierto for r in negativas]),
+        "tasa_fundamentada": _prop([r.fundamentada for r in respondibles]),
+        "exactitud_global": _prop([r.acierto for r in resultados]),
+        "latencia_media_ms": int(sum(r.latencia_ms for r in resultados) / max(1, len(resultados))),
+    }
+    proveedor = op.get("proveedor") or servicio.config.proveedor_llm
+    modelo = op.get("modelo") or ("lexico-bm25" if proveedor == "extractivo" else servicio.config.modelo_llm)
+    modo = op.get("modo_contexto") or servicio.config.modo_contexto
+    version = op.get("version_prompt") or servicio.config.version_prompt
+    informe = {
+        "fecha": datetime.now(UTC).isoformat(timespec="seconds"),
+        "proveedor": proveedor,
+        "modelo": modelo,
+        "version_prompt": version,
+        "modo_contexto": modo,
+        "metricas": metricas,
+        "detalle": [asdict(r) for r in resultados],
+    }
+    if guardar:
+        servicio.repo.registrar_evaluacion(
+            proveedor=proveedor,
+            modelo=modelo,
+            version_prompt=version,
+            metricas=metricas,
+            detalle=informe["detalle"],
+        )
+        DIR_RESULTADOS.mkdir(parents=True, exist_ok=True)
+        sello = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        nombre = f"{sello}_{proveedor}_{modelo}_{version}_{modo}".replace(":", "-").replace(".", "-")
+        ruta = DIR_RESULTADOS / nombre
+        Path(f"{ruta}.json").write_text(json.dumps(informe, ensure_ascii=False, indent=2), encoding="utf-8")
+        Path(f"{ruta}.md").write_text(informe_markdown(informe), encoding="utf-8")
+        informe["archivo"] = f"{ruta}.md"
+    return informe
+
+
+def informe_markdown(informe: dict) -> str:
+    m = informe["metricas"]
+    lineas = [
+        f"# Evaluación Q&A — {informe['proveedor']} / {informe['modelo']} / "
+        f"prompt {informe['version_prompt']}",
+        "",
+        f"Fecha: {informe['fecha']} · Modo de contexto: {informe['modo_contexto']}",
+        "",
+        "| Métrica | Valor |",
+        "|---|---|",
+        *[f"| {k} | {v} |" for k, v in m.items()],
+        "",
+        "| ID | Tipo | Acierto | Fundamentada | Hechos encontrados | Respuesta |",
+        "|---|---|---|---|---|---|",
+    ]
+    for d in informe["detalle"]:
+        resp = d["respuesta"].replace("\n", " ").replace("|", "/")
+        if len(resp) > 160:
+            resp = resp[:157] + "..."
+        lineas.append(
+            f"| {d['id']} | {d['tipo']} | {'sí' if d['acierto'] else 'no'} | "
+            f"{'sí' if d['fundamentada'] else 'no'} | {', '.join(d['hechos_encontrados'])} | {resp} |"
+        )
+    return "\n".join(lineas) + "\n"

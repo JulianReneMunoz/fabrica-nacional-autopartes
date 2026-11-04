@@ -1,0 +1,16 @@
+# Evidencia Playwright — 2026-11-04T22:49:47Z — Chrome del sistema, render por software (SwiftShader)
+$ npx playwright test
+Running 7 tests using 1 worker
+  ✓  1 [funcional] › e2e/visor.spec.ts:12:1 › biblioteca: tarjetas de máquinas alimentadas por la base de conocimiento (1.6s)
+  ✓  2 [funcional] › e2e/visor.spec.ts:27:1 › freno 3D: carga, selección, ficha, pregunta, despiece, sección y frenado (13.7s)
+FPS medidos (render por software SwiftShader): 14.3
+  ✓  3 [funcional] › e2e/visor.spec.ts:85:1 › rendimiento: fotogramas por segundo del visor 3D (5.7s)
+  ✓  4 [funcional] › e2e/visor.spec.ts:109:1 › prensa y línea: máquinas 2D con controles, lecturas y experimento (5.5s)
+  ✓  5 [recorrido] › e2e/recorrido.spec.ts:15:3 › recorrido automático: freno (36.8s)
+  ✓  6 [recorrido] › e2e/recorrido.spec.ts:15:3 › recorrido automático: prensa (36.9s)
+  ✓  7 [recorrido] › e2e/recorrido.spec.ts:15:3 › recorrido automático: linea (35.1s)
+  7 passed (2.3m)
+
+recorrido_freno.mp4: 29.366667 s
+recorrido_linea.mp4: 26.466667 s
+recorrido_prensa.mp4: 28.366667 s

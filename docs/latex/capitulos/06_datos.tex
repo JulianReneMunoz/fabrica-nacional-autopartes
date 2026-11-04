@@ -1,0 +1,212 @@
+% ============================================================ Capítulo 16
+\chapter{Desarrollo del scraping}\label{cap:scraping}
+
+\section{Análisis de fuentes}
+\begin{table}[H]\centering\small
+\caption{Análisis de la fuente principal}\label{tab:fuente}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}l X@{}}\toprule
+Sitio objetivo & \url{https://fanalca.com/} (versiones en español e inglés; subdominios incluidos por
+\texttt{dominios\_permitidos}).\\
+Tecnología observada & WordPress con constructor Elementor (indicios: rutas \texttt{/en/business/\ldots},
+menús anidados); se espera \texttt{wp-sitemap.xml}, que el rastreador descubre automáticamente.\\
+Datos a extraer & Quiénes somos (historia), negocios (seis unidades), sostenibilidad (Fundación, informes),
+noticias, contacto, aviso de privacidad.\\
+API oficial & No se identificó una API pública de contenidos; los endpoints \texttt{/wp-json} se excluyen por
+prudencia.\\
+Condiciones de uso & Aviso de privacidad y Política de Tratamiento de Datos publicados; el uso es académico,
+citando la fuente.\\
+\texttt{robots.txt} & Se lee y se respeta en cada ejecución (no se asume su contenido); un 5xx bloquea el host.\\
+Autenticación & No se requiere; los portales de colaboradores (SuccessFactors) y de empleo son dominios
+externos y quedan fuera del alcance.\\
+Frecuencia & Contenido institucional de baja rotación: ejecución mensual o ante cambios del sitio.\\
+Volumen esperado & Decenas de páginas; límite configurable \texttt{FNA\_MAX\_PAGINAS} (80).\\
+Calidad y confiabilidad & Fuente primaria oficial; algunas cifras (puntos de venta, clientes) son
+autodeclaradas y pueden estar desactualizadas: la respuesta cita siempre la URL.\\
+Fuentes complementarias & Redes sociales y prensa (La República, Las2orillas): consulta manual, fuera del
+corpus (ADR-010).\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Flujo de scraping}
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=0.4cm and 0.55cm]
+  \tikzset{p/.style={caja=2.35cm,minimum height=1.05cm}}
+  \node[p] (s) {URLs semilla\\+ sitemaps};
+  \node[p, right=of s] (f) {Filtros: dominio, extensiones, exclusiones};
+  \node[p, right=of f, fill=fnarojo!6] (r) {\texttt{robots.txt}: Disallow, Crawl-delay};
+  \node[p, right=of r] (h) {GET: User-Agent, pausa $\geq$2\,s, timeout, reintentos};
+  \node[p, below=0.9cm of h] (v) {¿200 + HTML? ¿hash nuevo?};
+  \node[p, left=of v, fill=bronce!20] (b) {Bronze: HTML + manifiesto JSONL};
+  \node[p, left=of b] (e) {Extraer enlaces internos};
+  \node[p, left=of e] (c) {Cola BFS (profundidad $\leq$ 3)};
+  \node[p, below=0.9cm of v, fill=fnaclaro] (err) {errores.jsonl};
+  \draw[flecha] (s) -- (f); \draw[flecha] (f) -- (r); \draw[flecha] (r) -- (h); \draw[flecha] (h) -- (v);
+  \draw[flecha] (v) -- node[etq,above]{sí} (b); \draw[flecha] (b) -- (e); \draw[flecha] (e) -- (c);
+  \draw[flecha] (c) -- (s.south |- c.north) -- (s.south);
+  \draw[flecha] (v) -- node[etq,right]{no} (err);
+\end{tikzpicture}
+\caption{Flujo del rastreador responsable}\label{fig:scraping}
+\end{figure}
+
+\section{Implementación}
+\begin{table}[H]\centering\small
+\caption{Módulos de \texttt{src/fabrica\_autopartes/scraping/}}\label{tab:modulos-scraping}
+\begin{tabularx}{\linewidth}{@{}l X@{}}\toprule
+Módulo & Responsabilidad\\\midrule
+\texttt{robots.py} & \texttt{RobotFileParser} con caché por host; sitemaps declarados; \texttt{Crawl-delay}; 404
+$\rightarrow$ permitido, 5xx o fallo de red $\rightarrow$ bloqueado; host sin robots cargado nunca se rastrea.\\
+\texttt{cliente\_http.py} & Sesión \texttt{requests} con \texttt{Retry} (backoff exponencial 1, 2, 4\,s ante
+429/5xx, respeta \texttt{Retry-After}), timeout, User-Agent identificable y control de frecuencia por host.\\
+\texttt{sitemap.py} & Índices y sitemaps de URLs; XML inválido $\rightarrow$ listas vacías (falla segura).\\
+\texttt{extraccion.py} & trafilatura (Markdown del cuerpo principal) con respaldo BeautifulSoup que elimina
+\texttt{script}, \texttt{nav}, \texttt{header}, \texttt{footer}, formularios y avisos de \emph{cookies}.\\
+\texttt{rastreador.py} & BFS con normalización de URL (sin fragmentos ni \texttt{utm\_*}), deduplicación por
+hash, reanudación y registro de omisiones.\\
+\texttt{dinamico.py} & Renderizado con Playwright para páginas que requieren JavaScript (extra opcional).\\\bottomrule
+\end{tabularx}
+\end{table}
+
+Extracto del bucle principal:
+\lstinputlisting[style=py,firstline=152,lastline=195]{../../src/fabrica_autopartes/scraping/rastreador.py}
+
+\section{Ejecución, recuperación y programación}
+\begin{lstlisting}[style=ps]
+uv run fabrica scrape --max-paginas 60          # primera captura
+uv run fabrica scrape                           # reanuda: no repite URL ya capturadas
+Get-Content data\bronze\errores.jsonl           # revisar errores
+uv run fabrica build --fuente scraping
+# Programación mensual en Windows (Programador de tareas):
+$accion = New-ScheduledTaskAction -Execute "uv" -Argument "run fabrica scrape" -WorkingDirectory "C:\proyectos\fabrica-nacional-autopartes"
+$disparador = New-ScheduledTaskTrigger -Weekly -WeeksInterval 4 -DaysOfWeek Monday -At 3am
+Register-ScheduledTask -TaskName "FNA-scraping" -Action $accion -Trigger $disparador
+\end{lstlisting}
+
+\section{Pruebas sin depender del sitio de producción}
+\ruta{tests/fixtures/sitio/} contiene un sitio ficticio (``Empresa Ejemplo'') con \texttt{robots.txt}, índice de
+sitemap, páginas con menús, pies, avisos de \emph{cookies}, un correo personal, un enlace con parámetros
+\texttt{utm}, una ruta prohibida, un PDF y un dominio externo. La biblioteca \texttt{responses} intercepta las
+peticiones. Las pruebas verifican que nunca se solicita \texttt{/privado/}, que el PDF y el dominio externo se
+filtran antes de pedirse, que el User-Agent es identificable, que la reanudación no repite capturas y que el
+corpus final no contiene ruido ni datos personales.
+
+% ============================================================ Capítulo 17
+\chapter{Arquitectura Medallion y procesamiento de datos}\label{cap:medallion}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=0.9cm]
+  \tikzset{capa/.style={rectangle,rounded corners=4pt,draw=#1!80!black,fill=#1!25,text width=4.1cm,
+    align=left,font=\sffamily\scriptsize,inner sep=6pt,minimum height=3.2cm}}
+  \node[capa=bronce] (b) {\textbf{\normalsize Bronze} (crudo)\\[2pt]\ruta{data/bronze/}\\
+    \textbullet\ \texttt{html/<sha256>.html}\\\textbullet\ \texttt{manifiesto.jsonl}: url, url\_final, fecha,
+    estado, tipo, sha256, bytes, User-Agent\\\textbullet\ \texttt{errores.jsonl}\\\textit{Nunca se edita a mano.}};
+  \node[capa=plata, right=of b] (s) {\textbf{\normalsize Silver} (limpio)\\[2pt]\ruta{data/silver/documentos.jsonl}\\
+    \textbullet\ texto útil sin menús ni scripts\\\textbullet\ líneas repetidas eliminadas\\\textbullet\ correos
+    no corporativos anonimizados\\\textbullet\ deduplicado (SHA-256 y Jaccard $\geq$ 0,9)};
+  \node[capa=oro, right=of s] (g) {\textbf{\normalsize Gold} (enriquecido)\\[2pt]\ruta{data/gold/}\\
+    \textbullet\ \texttt{docs/*.md} con frontmatter YAML\\\textbullet\ \texttt{fragmentos.jsonl} (id citable)\\
+    \textbullet\ \texttt{base\_conocimiento.txt}\\\textbullet\ \texttt{estadisticas.json}};
+  \draw[flecha,line width=1.2pt] (b) -- node[etq,above]{extraer} node[etq,below]{limpiar} (s);
+  \draw[flecha,line width=1.2pt] (s) -- node[etq,above]{fragmentar} node[etq,below]{consolidar} (g);
+  \node[externo=3.0cm, above=0.6cm of b] (w) {Sitio oficial};
+  \node[externo=3.0cm, above=0.6cm of g] (l) {Prompt de sistema / RAG (Módulo 2)};
+  \draw[flecha] (w) -- (b); \draw[flecha] (g) -- (l);
+\end{tikzpicture}
+\caption{Arquitectura Medallion del corpus}\label{fig:medallion}
+\end{figure}
+
+\section{Reglas de transformación}
+\begin{table}[H]\centering\small
+\caption{Reglas aplicadas por capa}\label{tab:reglas}
+\begin{tabularx}{\linewidth}{@{}l X l@{}}\toprule
+Regla & Descripción & Prueba\\\midrule
+Normalización & NFC, espacios, saltos múltiples, \texttt{\textbackslash r\textbackslash n} & \texttt{test\_normalizar\_espacios\_y\_saltos}\\
+Restos cortos & Se descartan líneas de menos de 3 palabras (botones, etiquetas) salvo encabezados y viñetas & \texttt{test\_limpiar\_texto\_\ldots}\\
+Plantilla del sitio & Línea presente en $\geq$ 60\,\% de los documentos (mín. 3) se elimina & \texttt{test\_eliminar\_lineas\_repetidas\ldots}\\
+Datos personales & Correos fuera de \texttt{fanalca.com(.co)} $\rightarrow$ \texttt{[correo omitido]} & \texttt{test\_anonimizar\_correos\ldots}\\
+Deduplicación & Exacta por hash y aproximada por Jaccard de 5-gramas & \texttt{test\_deduplicar\ldots}\\
+Sección & Inferida de la ruta (\texttt{negocios/<unidad>}, \texttt{contacto}\ldots) & \texttt{test\_inferir\_seccion}\\
+Fragmentación & Por encabezados \#/\#\#/\#\#\# y luego por tamaño (1\,200 caracteres, solapamiento 150) & \texttt{test\_fragmentacion\ldots}\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Por qué Markdown enriquecido}
+Los encabezados son fronteras naturales de fragmento, las listas y tablas sobreviven a la limpieza, el formato
+consume menos tokens que el HTML y los metadatos permiten filtrar por sección y citar la fuente (Clase~2). Ejemplo
+de un documento Gold:
+\lstinputlisting[style=yaml,firstline=1,lastline=16]{../../data/gold/docs/contacto.md}
+
+\section{Archivo consolidado}
+\ruta{data/gold/base_conocimiento.txt} es el ``archivo de texto limpio'' de la rúbrica y la ``memoria'' del
+asistente. Cada fragmento va precedido por \texttt{[id] (sección | url)} para que el modelo pueda citarlo.
+\lstinputlisting[style=txt,firstline=1,lastline=14]{../../data/gold/base_conocimiento.txt}
+
+\begin{evidencia}[uv run fabrica build --fuente semilla · uv run fabrica validate]
+10 documentos, 34 fragmentos, 2\,540 tokens aproximados de texto (unos 3\,700 con las etiquetas del contexto),
+10 secciones; validación aprobada con 0 errores y 0 advertencias.
+\end{evidencia}
+
+% ============================================================ Capítulo 18
+\chapter{Diseño de bases de datos}\label{cap:bd}
+
+\section{Justificación}
+El corpus es documental y vive en archivos (Medallion). La base relacional solo registra auditoría. Se usa
+\textbf{una sola base}, SQLite, a través de SQLAlchemy 2 y Alembic (ADR-003). PostgreSQL se reserva para la
+Fase~3 (concurrencia multiusuario) y MongoDB se descarta porque no aporta sobre los archivos JSONL existentes.
+
+\section{Modelo entidad-relación}
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=1.2cm]
+  \tikzset{tabla/.style={rectangle split,rectangle split parts=2,draw=fnagris,font=\sffamily\scriptsize,
+    text width=4.3cm,rectangle split part fill={oro!30,white}}}
+  \node[tabla] (i) {\textbf{interacciones}\nodepart{second}\underline{id} INTEGER PK\\fecha TIMESTAMP\\tarea VARCHAR(20)\\canal VARCHAR(20)\\entrada TEXT · salida TEXT\\proveedor · modelo · version\_prompt\\modo\_contexto VARCHAR(20)\\fuentes JSON · fundamentada BOOL\\latencia\_ms INTEGER\\\textit{IX (tarea, fecha)}};
+  \node[tabla, right=of i] (e) {\textbf{ejecuciones\_pipeline}\nodepart{second}\underline{id} INTEGER PK\\inicio · fin TIMESTAMP\\etapa VARCHAR(20)\\estado VARCHAR(20)\\detalle JSON};
+  \node[tabla, right=of e] (v) {\textbf{evaluaciones}\nodepart{second}\underline{id} INTEGER PK\\fecha TIMESTAMP\\proveedor · modelo\\version\_prompt\\metricas JSON\\detalle JSON};
+  \node[externo=4.3cm, below=0.8cm of e] (f) {Fragmentos Gold (archivo)\\referenciados por id en \texttt{fuentes}};
+  \draw[flechad] (i.south) |- node[etq,pos=0.75,above]{referencia lógica} (f.west);
+\end{tikzpicture}
+\caption{Modelo de datos de auditoría}\label{fig:er}
+\end{figure}
+
+\section{Diccionario de datos}
+\begin{longtable}{@{}P{3.0cm}P{2.6cm}P{1.3cm}P{8.0cm}@{}}
+\caption{Diccionario de datos}\label{tab:diccionario}\\\toprule
+Campo & Tipo & Nulo & Descripción y restricción\\\midrule\endfirsthead
+\toprule Campo & Tipo & Nulo & Descripción\\\midrule\endhead
+\multicolumn{4}{@{}l}{\textbf{interacciones}}\\
+id & INTEGER & no & Clave primaria autoincremental.\\
+fecha & TIMESTAMP TZ & no & Valor por defecto \texttt{now()} del servidor.\\
+tarea & VARCHAR(20) & no & \texttt{qa} \textbar{} \texttt{faq} \textbar{} \texttt{resumen} (validado en la API).\\
+canal & VARCHAR(20) & no & \texttt{api}, \texttt{streamlit}, \texttt{cli}, \texttt{mcp}, \texttt{evaluacion}, \texttt{laboratorio}.\\
+entrada / salida & TEXT & no & Pregunta o parámetros y respuesta generada.\\
+proveedor / modelo & VARCHAR & no & Trazabilidad del modelo usado.\\
+version\_prompt & VARCHAR(10) & no & \texttt{v1}--\texttt{v3}.\\
+modo\_contexto & VARCHAR(20) & no & \texttt{completo}, \texttt{seleccion}, \texttt{bloqueado}.\\
+fuentes & JSON & no & Lista de ids de fragmento citados y válidos.\\
+fundamentada & BOOLEAN & sí & Resultado de las salvaguardas (nulo en FAQ/Resumen).\\
+latencia\_ms & INTEGER & no & Tiempo de extremo a extremo.\\
+\multicolumn{4}{@{}l}{\textbf{ejecuciones\_pipeline}}\\
+etapa / estado & VARCHAR(20) & no & \texttt{scraping}/\texttt{construccion}; \texttt{en\_curso}, \texttt{ok}, \texttt{error}, \texttt{sin\_capturas}.\\
+detalle & JSON & no & Conteos, advertencias o error.\\
+\multicolumn{4}{@{}l}{\textbf{evaluaciones}}\\
+metricas / detalle & JSON & no & Métricas agregadas y resultado por pregunta.\\\bottomrule
+\end{longtable}
+
+\section{Migraciones, datos de prueba y duplicados}
+\begin{lstlisting}[style=ps]
+uv run alembic upgrade head                                  # aplica 0001_esquema_inicial
+uv run alembic revision --autogenerate -m "agregar columna"  # nueva migración (revisar antes de aplicar)
+uv run alembic downgrade -1
+\end{lstlisting}
+Los datos de prueba se generan en bases temporales por prueba (\texttt{tmp\_path}). El control de duplicados del
+corpus ocurre en Silver (hash y Jaccard); en auditoría cada interacción es un evento único por diseño.
+
+\section{Respaldo, recuperación y auditoría}
+\begin{lstlisting}[style=ps]
+# Respaldo en caliente consistente (API de copia de SQLite)
+uv run python -c "import sqlite3; s=sqlite3.connect('data/app.db'); d=sqlite3.connect('data/respaldo.db'); s.backup(d); d.close()"
+# Recuperación: detener API e interfaz, reemplazar data/app.db por el respaldo y ejecutar
+uv run alembic upgrade head
+\end{lstlisting}
+El corpus se recupera reprocesando Bronze (\cmd{uv run fabrica build --fuente scraping}); Bronze se respalda como
+carpeta comprimida. La auditoría de operaciones cubre interacciones, ejecuciones y evaluaciones, visibles en la
+pestaña ``Auditoría'' y en \texttt{GET /api/v1/auditoria/interacciones}.

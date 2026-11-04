@@ -1,0 +1,26 @@
+# Instalar: uv run pre-commit install   ·   Ejecutar manualmente: uv run pre-commit run --all-files
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=5120"]   # manual PDF (~3 MB) y videos del recorrido
+      - id: detect-private-key
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: verificar-capas
+        name: verificar dirección de dependencias entre capas
+        entry: uv run python scripts/verificar_capas.py
+        language: system
+        pass_filenames: false
+        files: ^src/

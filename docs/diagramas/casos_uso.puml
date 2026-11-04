@@ -1,0 +1,29 @@
+@startuml casos_uso
+left to right direction
+actor "Cliente" as C
+actor "Equipo de desarrollo" as D
+actor "Agente de código" as A
+rectangle "Sistema de conocimiento Fanalca" {
+  usecase "CU-01 Configurar fuentes" as CU1
+  usecase "CU-02 Ejecutar scraping" as CU2
+  usecase "CU-03 Construir base" as CU3
+  usecase "CU-04 Consultar Q&A" as CU4
+  usecase "CU-05 Generar FAQ" as CU5
+  usecase "CU-06 Generar resumen" as CU6
+  usecase "CU-07 Comparar prompts" as CU7
+  usecase "CU-08 Evaluar" as CU8
+  usecase "CU-09 Consultar vía MCP" as CU9
+  usecase "CU-10 Auditar" as CU10
+}
+C --> CU4
+C --> CU5
+C --> CU6
+D --> CU1
+D --> CU2
+D --> CU3
+D --> CU7
+D --> CU8
+D --> CU10
+A --> CU9
+CU2 ..> CU3 : <<precede>>
+@enduml
