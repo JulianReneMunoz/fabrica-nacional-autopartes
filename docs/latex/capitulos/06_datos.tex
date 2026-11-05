@@ -133,12 +133,17 @@ Fragmentación & Por encabezados \#/\#\#/\#\#\# y luego por tamaño (1\,200 cara
 Los encabezados son fronteras naturales de fragmento, las listas y tablas sobreviven a la limpieza, el formato
 consume menos tokens que el HTML y los metadatos permiten filtrar por sección y citar la fuente (Clase~2). Ejemplo
 de un documento Gold:
-\lstinputlisting[style=yaml,firstline=1,lastline=16]{../../data/gold/docs/contacto.md}
+% Extracto copiado por scripts/preparar_manual.py desde la última construcción de la base.
+\IfFileExists{generado/ejemplo_gold.md}{%
+  \lstinputlisting[style=yaml]{generado/ejemplo_gold.md}}{%
+  \begin{nota}Documento de ejemplo no disponible: ejecutar \cmd{uv run python scripts/preparar_manual.py}.\end{nota}}
 
 \section{Archivo consolidado}
 \ruta{data/gold/base_conocimiento.txt} es el ``archivo de texto limpio'' de la rúbrica y la ``memoria'' del
 asistente. Cada fragmento va precedido por \texttt{[id] (sección | url)} para que el modelo pueda citarlo.
-\lstinputlisting[style=txt,firstline=1,lastline=14]{../../data/gold/base_conocimiento.txt}
+\IfFileExists{generado/base_extracto.txt}{%
+  \lstinputlisting[style=txt]{generado/base_extracto.txt}}{%
+  \begin{nota}Extracto no disponible: ejecutar \cmd{uv run python scripts/preparar_manual.py}.\end{nota}}
 
 \begin{evidencia}[uv run fabrica build --fuente semilla · uv run fabrica validate]
 10 documentos, 34 fragmentos, 2\,540 tokens aproximados de texto (unos 3\,700 con las etiquetas del contexto),

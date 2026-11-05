@@ -26,7 +26,9 @@ cd C:\fabrica-nacional-autopartes
 .\scripts\publicar_github.ps1                   # -Privado para un repositorio privado
 # 3. Scraping real + gráficas + evidencias publicadas en GitHub
 .\scripts\ejecutar_pipeline.ps1 -MaxPaginas 80 -DesdeCero -Publicar
-# 4. Demostración
+# 4. Manual PDF (pdflatex, sin Perl)
+.\scripts\compilar_manual.ps1
+# 5. Demostración
 .\scripts\ejecutar_api.ps1                      # API y visor 3D → http://127.0.0.1:8000/app/
 .\scripts\ejecutar_app.ps1                      # Streamlit → http://localhost:8501
 ```

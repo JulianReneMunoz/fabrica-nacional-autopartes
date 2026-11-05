@@ -555,16 +555,16 @@ Agregar las pestañas Proceso de datos y Simulador 3D. La primera muestra el flu
 ## F24 · Documentación final
 
 1. **Herramienta:** MiKTeX/TeX Live + subagente documentador (Sonnet) + skill fna-documentacion
-2. **Terminal:** PowerShell en docs/latex
+2. **Terminal:** PowerShell en la carpeta del proyecto
 3. **Comandos:**
 
 ```powershell
 uv run python scripts/generar_matriz.py
 uv run python scripts/generar_guia.py
-latexmk -pdf -interaction=nonstopmode main.tex
+.\scripts\compilar_manual.ps1
 ```
 
-4. **Explicación:** Regenera tablas desde las fuentes y compila el manual.
+4. **Explicación:** Regenera tablas desde las fuentes, copia los extractos de la base actual a docs/latex/generado y compila el manual con pdflatex (tres pasadas). No requiere Perl; latexmk es opcional si Strawberry Perl está instalado.
 5. **Agente y prompt:** documentador
 
 ```text
@@ -574,6 +574,6 @@ Aplicar la skill fna-documentacion. Actualizar el capítulo de resultados única
 6. **Archivos:** docs/latex/main.pdf, README.md
 7. **Pruebas:** El PDF compila sin errores
 8. **Resultado esperado:** Manual y README listos para la entrega.
-9. **Errores frecuentes:** Paquete LaTeX faltante → MiKTeX instala paquetes bajo demanda; habilitar la instalación automática.
+9. **Errores frecuentes:** Paquete LaTeX faltante → MiKTeX instala paquetes bajo demanda; habilitar la instalación automática.; latexmk: MiKTeX could not find the script engine 'perl' → Usar .\scripts\compilar_manual.ps1 (pdflatex) o instalar Strawberry Perl.
 10. **Condición para continuar:** Entrega completa.
 
