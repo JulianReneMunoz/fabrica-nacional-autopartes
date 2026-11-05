@@ -1,9 +1,9 @@
 {
   "ensamblaje": "moto_honda",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "archivo": "modelos/moto_honda.glb",
-  "sha256": "76d720e7cfabd4c1ba1d725068fffc8c39dc996ddbb4e3d8a3f7f9a333c0d39e",
-  "bytes": 318672,
+  "sha256": "151645ec659de9bce6a3f2ac53cf0e32171ecd4683fdcebaf98049298dba6563",
+  "bytes": 518220,
   "unidades": "m",
   "eje_arriba": "Y",
   "generador": "trimesh 5.2.0 + manifold3d",
@@ -17,12 +17,46 @@
     "relacion_final": 3.0,
     "radio_llanta_trasera_m": 0.3069,
     "radio_llanta_delantera_m": 0.2879,
-    "distancia_entre_ejes_m": 1.339975,
-    "angulo_lanzamiento_grados": 27.0,
+    "distancia_entre_ejes_m": 1.3,
+    "altura_sillin_m": 0.79,
+    "angulo_lanzamiento_grados": 26.0,
+    "inclinacion_cilindro_grados": 15.0,
     "recorrido_horquilla_m": 0.12,
     "recorrido_monoamortiguador_m": 0.05,
     "oscilacion_basculante_grados": 8.0,
-    "levante_valvula_m": 0.005
+    "levante_valvula_m": 0.005,
+    "cadena_radio_paso_pinon_m": 0.03,
+    "cadena_radio_paso_corona_m": 0.09,
+    "cadena_entre_centros_m": 0.49,
+    "cadena_z_m": 0.075,
+    "cadena_dientes_pinon": 14.0,
+    "cadena_dientes_corona": 42.0,
+    "cadena_pinon_x_m": -0.15,
+    "cadena_pinon_y_m": 0.3069,
+    "cadena_corona_x_m": -0.64,
+    "cadena_corona_y_m": 0.3069,
+    "tolerancia_conectividad_m": 0.002,
+    "entre_ejes_nominal_m": 1.3,
+    "punto_eje_trasero_x_m": -0.64,
+    "punto_eje_trasero_y_m": 0.3069,
+    "punto_eje_delantero_x_m": 0.66,
+    "punto_eje_delantero_y_m": 0.2879,
+    "punto_pipa_direccion_x_m": 0.439496,
+    "punto_pipa_direccion_y_m": 0.74,
+    "punto_pivote_basculante_x_m": -0.26,
+    "punto_pivote_basculante_y_m": 0.345,
+    "punto_ciguenal_x_m": 0.1,
+    "punto_ciguenal_y_m": 0.33,
+    "punto_amortiguador_superior_x_m": -0.19,
+    "punto_amortiguador_superior_y_m": 0.685,
+    "punto_amortiguador_inferior_x_m": -0.45,
+    "punto_amortiguador_inferior_y_m": 0.33,
+    "punto_soporte_motor_delantero_x_m": 0.22,
+    "punto_soporte_motor_delantero_y_m": 0.3,
+    "punto_soporte_motor_inferior_x_m": 0.15,
+    "punto_soporte_motor_inferior_y_m": 0.205,
+    "punto_soporte_motor_trasero_x_m": -0.2,
+    "punto_soporte_motor_trasero_y_m": 0.275
   },
   "procedencia_parametros": {
     "carrera_m": "demostrativo",
@@ -34,30 +68,444 @@
     "radio_llanta_trasera_m": "demostrativo",
     "radio_llanta_delantera_m": "demostrativo",
     "distancia_entre_ejes_m": "demostrativo",
+    "altura_sillin_m": "demostrativo",
     "angulo_lanzamiento_grados": "demostrativo",
+    "inclinacion_cilindro_grados": "demostrativo",
     "recorrido_horquilla_m": "demostrativo",
     "recorrido_monoamortiguador_m": "demostrativo",
     "oscilacion_basculante_grados": "demostrativo",
-    "levante_valvula_m": "demostrativo"
+    "levante_valvula_m": "demostrativo",
+    "cadena_radio_paso_pinon_m": "demostrativo",
+    "cadena_radio_paso_corona_m": "demostrativo",
+    "cadena_entre_centros_m": "demostrativo",
+    "cadena_z_m": "demostrativo",
+    "cadena_dientes_pinon": "demostrativo",
+    "cadena_dientes_corona": "demostrativo",
+    "cadena_pinon_x_m": "demostrativo",
+    "cadena_pinon_y_m": "demostrativo",
+    "cadena_corona_x_m": "demostrativo",
+    "cadena_corona_y_m": "demostrativo",
+    "tolerancia_conectividad_m": "demostrativo",
+    "entre_ejes_nominal_m": "demostrativo",
+    "punto_eje_trasero_x_m": "demostrativo",
+    "punto_eje_trasero_y_m": "demostrativo",
+    "punto_eje_delantero_x_m": "demostrativo",
+    "punto_eje_delantero_y_m": "demostrativo",
+    "punto_pipa_direccion_x_m": "demostrativo",
+    "punto_pipa_direccion_y_m": "demostrativo",
+    "punto_pivote_basculante_x_m": "demostrativo",
+    "punto_pivote_basculante_y_m": "demostrativo",
+    "punto_ciguenal_x_m": "demostrativo",
+    "punto_ciguenal_y_m": "demostrativo",
+    "punto_amortiguador_superior_x_m": "demostrativo",
+    "punto_amortiguador_superior_y_m": "demostrativo",
+    "punto_amortiguador_inferior_x_m": "demostrativo",
+    "punto_amortiguador_inferior_y_m": "demostrativo",
+    "punto_soporte_motor_delantero_x_m": "demostrativo",
+    "punto_soporte_motor_delantero_y_m": "demostrativo",
+    "punto_soporte_motor_inferior_x_m": "demostrativo",
+    "punto_soporte_motor_inferior_y_m": "demostrativo",
+    "punto_soporte_motor_trasero_x_m": "demostrativo",
+    "punto_soporte_motor_trasero_y_m": "demostrativo"
   },
   "piezas": [
     {
-      "id": "cilindro",
-      "nodo": "cilindro",
-      "vertices": 132,
-      "caras": 260,
-      "volumen_m3": 0.000155824,
+      "id": "chasis",
+      "nodo": "chasis",
+      "vertices": 242,
+      "caras": 480,
+      "volumen_m3": 0.000371414,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.0405,
-          -0.0405,
-          -0.06
+          -0.315844,
+          -0.052225,
+          -0.014
         ],
         [
-          0.0405,
+          0.314492,
+          0.05242,
+          0.014
+        ]
+      ]
+    },
+    {
+      "id": "pipa_direccion",
+      "nodo": "pipa_direccion",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000366518,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.03,
+          -0.03,
+          -0.065
+        ],
+        [
+          0.03,
+          0.03,
+          0.065
+        ]
+      ]
+    },
+    {
+      "id": "cuna_chasis",
+      "nodo": "cuna_chasis",
+      "vertices": 434,
+      "caras": 864,
+      "volumen_m3": 0.000454545,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.36962,
+          -0.259876,
+          -0.054239
+        ],
+        [
+          0.372224,
+          0.258858,
+          0.05312
+        ]
+      ]
+    },
+    {
+      "id": "cuna_chasis_derecha",
+      "nodo": "cuna_chasis_derecha",
+      "vertices": 434,
+      "caras": 864,
+      "volumen_m3": 0.00045457,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.36962,
+          -0.259876,
+          -0.05312
+        ],
+        [
+          0.372224,
+          0.258858,
+          0.054239
+        ]
+      ]
+    },
+    {
+      "id": "subchasis",
+      "nodo": "subchasis",
+      "vertices": 146,
+      "caras": 288,
+      "volumen_m3": 0.000352801,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.200999,
+          -0.013406,
+          -0.110689
+        ],
+        [
+          0.179977,
+          0.016,
+          0.111
+        ]
+      ]
+    },
+    {
+      "id": "tanque",
+      "nodo": "tanque",
+      "vertices": 386,
+      "caras": 768,
+      "volumen_m3": 0.008938679,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.1,
+          -0.1,
+          -0.19
+        ],
+        [
+          0.1,
+          0.1,
+          0.195
+        ]
+      ]
+    },
+    {
+      "id": "sillin",
+      "nodo": "sillin",
+      "vertices": 16,
+      "caras": 28,
+      "volumen_m3": 0.013416,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.29,
+          -0.041,
+          -0.15
+        ],
+        [
+          0.29,
+          0.041,
+          0.15
+        ]
+      ]
+    },
+    {
+      "id": "estribo_izquierdo",
+      "nodo": "estribo_izquierdo",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 2.0299e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.009,
+          -0.009,
+          -0.04
+        ],
+        [
+          0.009,
+          0.009,
+          0.04
+        ]
+      ]
+    },
+    {
+      "id": "estribo_derecho",
+      "nodo": "estribo_derecho",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 2.0299e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.009,
+          -0.009,
+          -0.04
+        ],
+        [
+          0.009,
+          0.009,
+          0.04
+        ]
+      ]
+    },
+    {
+      "id": "caballete_lateral",
+      "nodo": "caballete_lateral",
+      "vertices": 62,
+      "caras": 120,
+      "volumen_m3": 4.3815e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.017594,
+          -0.110575,
+          -0.047585
+        ],
+        [
+          0.022421,
+          0.110837,
+          0.047373
+        ]
+      ]
+    },
+    {
+      "id": "colin",
+      "nodo": "colin",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.0013454,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.085,
+          -0.0385,
+          -0.07
+        ],
+        [
+          0.085,
+          0.0385,
+          0.07
+        ]
+      ]
+    },
+    {
+      "id": "porta_placa",
+      "nodo": "porta_placa",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.000144,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.003,
+          -0.06,
+          -0.1
+        ],
+        [
+          0.003,
+          0.06,
+          0.1
+        ]
+      ]
+    },
+    {
+      "id": "cubierta_izquierda",
+      "nodo": "cubierta_izquierda",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.0004695,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.2,
+          -0.0575,
+          -0.006
+        ],
+        [
+          0.2,
+          0.0575,
+          0.006
+        ]
+      ]
+    },
+    {
+      "id": "cubierta_derecha",
+      "nodo": "cubierta_derecha",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.0004695,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.2,
+          -0.0575,
+          -0.006
+        ],
+        [
+          0.2,
+          0.0575,
+          0.006
+        ]
+      ]
+    },
+    {
+      "id": "tapa_tanque",
+      "nodo": "tapa_tanque",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 3.8494e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.032,
+          -0.032,
+          -0.006
+        ],
+        [
+          0.032,
+          0.032,
+          0.006
+        ]
+      ]
+    },
+    {
+      "id": "guardabarros_delantero",
+      "nodo": "guardabarros_delantero",
+      "vertices": 44,
+      "caras": 84,
+      "volumen_m3": 0.001065354,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.24737,
+          -0.084475,
+          -0.095
+        ],
+        [
+          0.24737,
+          0.084475,
+          0.095
+        ]
+      ]
+    },
+    {
+      "id": "guardabarros_trasero",
+      "nodo": "guardabarros_trasero",
+      "vertices": 48,
+      "caras": 92,
+      "volumen_m3": 0.001310241,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.201136,
+          -0.099206,
+          -0.075
+        ],
+        [
+          0.201136,
+          0.099206,
+          0.075
+        ]
+      ]
+    },
+    {
+      "id": "carter",
+      "nodo": "carter",
+      "vertices": 32,
+      "caras": 60,
+      "volumen_m3": 0.005114312,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.21,
+          -0.1425,
+          -0.0275
+        ],
+        [
+          0.21,
+          0.1425,
+          0.0275
+        ]
+      ]
+    },
+    {
+      "id": "cilindro",
+      "nodo": "cilindro",
+      "vertices": 1056,
+      "caras": 2108,
+      "volumen_m3": 0.000215976,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0535,
+          -0.0535,
+          -0.0625
+        ],
+        [
+          0.0535,
           0.0,
-          0.06
+          0.0625
+        ]
+      ]
+    },
+    {
+      "id": "culata",
+      "nodo": "culata",
+      "vertices": 715,
+      "caras": 1426,
+      "volumen_m3": 0.000202445,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.058,
+          -0.058,
+          -0.036
+        ],
+        [
+          0.058,
+          0.0,
+          0.036
         ]
       ]
     },
@@ -166,76 +614,156 @@
       "nodo": "bujia",
       "vertices": 62,
       "caras": 120,
-      "volumen_m3": 3.424e-06,
+      "volumen_m3": 3.965e-06,
       "cerrada": true,
       "limites_locales_m": [
         [
           -0.0075,
           -0.006495,
-          -0.0295
+          -0.034
         ],
         [
           0.0075,
           0.006495,
-          0.02
+          0.0225
+        ]
+      ]
+    },
+    {
+      "id": "tapa_motor_izquierda",
+      "nodo": "tapa_motor_izquierda",
+      "vertices": 122,
+      "caras": 240,
+      "volumen_m3": 0.000193822,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.065,
+          -0.065,
+          -0.0075
+        ],
+        [
+          0.065,
+          0.065,
+          0.0075
+        ]
+      ]
+    },
+    {
+      "id": "tapa_motor_derecha",
+      "nodo": "tapa_motor_derecha",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000101497,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.045,
+          -0.045,
+          -0.008
+        ],
+        [
+          0.045,
+          0.045,
+          0.008
+        ]
+      ]
+    },
+    {
+      "id": "cuerpo_aceleracion",
+      "nodo": "cuerpo_aceleracion",
+      "vertices": 26,
+      "caras": 48,
+      "volumen_m3": 7.3695e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.045452,
+          -0.027421,
+          -0.017
+        ],
+        [
+          0.045452,
+          0.027421,
+          0.017
+        ]
+      ]
+    },
+    {
+      "id": "filtro_aire",
+      "nodo": "filtro_aire",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.002352,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.07,
+          -0.06,
+          -0.07
+        ],
+        [
+          0.07,
+          0.06,
+          0.07
         ]
       ]
     },
     {
       "id": "caja_cambios",
       "nodo": "caja_cambios",
-      "vertices": 8,
-      "caras": 12,
-      "volumen_m3": 0.001296,
+      "vertices": 12,
+      "caras": 20,
+      "volumen_m3": 0.003565,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.06,
-          -0.06,
-          -0.045
+          -0.095,
+          -0.1025,
+          -0.05
         ],
         [
-          0.06,
-          0.06,
-          0.045
+          0.095,
+          0.1025,
+          0.05
         ]
       ]
     },
     {
       "id": "pinon",
       "nodo": "pinon",
-      "vertices": 98,
-      "caras": 192,
-      "volumen_m3": 2.8194e-05,
+      "vertices": 160,
+      "caras": 320,
+      "volumen_m3": 1.5377e-05,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.03,
-          -0.03,
-          -0.005
+          -0.032935,
+          -0.03257,
+          -0.003
         ],
         [
-          0.03,
-          0.03,
-          0.005
+          0.032935,
+          0.03257,
+          0.003
         ]
       ]
     },
     {
       "id": "cadena",
       "nodo": "cadena",
-      "vertices": 230,
-      "caras": 460,
-      "volumen_m3": 0.000119449,
+      "vertices": 234,
+      "caras": 468,
+      "volumen_m3": 0.00013087,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.309,
+          -0.339,
           -0.094,
           -0.006
         ],
         [
-          0.249,
+          0.279,
           0.094,
           0.006
         ]
@@ -244,120 +772,100 @@
     {
       "id": "corona",
       "nodo": "corona",
-      "vertices": 544,
-      "caras": 1108,
-      "volumen_m3": 0.000120098,
+      "vertices": 584,
+      "caras": 1188,
+      "volumen_m3": 0.000116527,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.09,
-          -0.09,
+          -0.09298,
+          -0.092865,
           -0.003
         ],
         [
-          0.09,
-          0.09,
+          0.09298,
+          0.092865,
           0.003
         ]
       ]
     },
     {
-      "id": "chasis",
-      "nodo": "chasis",
-      "vertices": 98,
-      "caras": 192,
-      "volumen_m3": 0.001222394,
-      "cerrada": true,
-      "limites_locales_m": [
-        [
-          -0.022,
-          -0.022,
-          -0.403113
-        ],
-        [
-          0.022,
-          0.022,
-          0.403113
-        ]
-      ]
-    },
-    {
-      "id": "cuna_chasis",
-      "nodo": "cuna_chasis",
-      "vertices": 98,
-      "caras": 192,
-      "volumen_m3": 0.000561455,
-      "cerrada": true,
-      "limites_locales_m": [
-        [
-          -0.018,
-          -0.018,
-          -0.276586
-        ],
-        [
-          0.018,
-          0.018,
-          0.276586
-        ]
-      ]
-    },
-    {
-      "id": "pipa_direccion",
-      "nodo": "pipa_direccion",
-      "vertices": 98,
-      "caras": 192,
-      "volumen_m3": 0.000394711,
-      "cerrada": true,
-      "limites_locales_m": [
-        [
-          -0.03,
-          -0.03,
-          -0.07
-        ],
-        [
-          0.03,
-          0.03,
-          0.07
-        ]
-      ]
-    },
-    {
-      "id": "tanque",
-      "nodo": "tanque",
-      "vertices": 642,
-      "caras": 1280,
-      "volumen_m3": 0.00896992,
-      "cerrada": true,
-      "limites_locales_m": [
-        [
-          -0.2,
-          -0.09,
-          -0.12
-        ],
-        [
-          0.2,
-          0.09,
-          0.12
-        ]
-      ]
-    },
-    {
-      "id": "sillin",
-      "nodo": "sillin",
+      "id": "cubrecadena",
+      "nodo": "cubrecadena",
       "vertices": 8,
       "caras": 12,
-      "volumen_m3": 0.00819,
+      "volumen_m3": 3.784e-05,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.225,
-          -0.035,
-          -0.13
+          -0.215,
+          -0.04,
+          -0.002
         ],
         [
-          0.225,
-          0.035,
-          0.13
+          0.215,
+          0.04,
+          0.002
+        ]
+      ]
+    },
+    {
+      "id": "pedal_cambios",
+      "nodo": "pedal_cambios",
+      "vertices": 82,
+      "caras": 160,
+      "volumen_m3": 3.0295e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.081657,
+          -0.031802,
+          -0.044452
+        ],
+        [
+          0.075411,
+          0.031631,
+          0.03959
+        ]
+      ]
+    },
+    {
+      "id": "tensor_izquierdo",
+      "nodo": "tensor_izquierdo",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 2.1e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.025,
+          -0.015,
+          -0.007
+        ],
+        [
+          0.025,
+          0.015,
+          0.007
+        ]
+      ]
+    },
+    {
+      "id": "tensor_derecho",
+      "nodo": "tensor_derecho",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 2.1e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.025,
+          -0.015,
+          -0.007
+        ],
+        [
+          0.025,
+          0.015,
+          0.007
         ]
       ]
     },
@@ -366,16 +874,16 @@
       "nodo": "puente_horquilla",
       "vertices": 8,
       "caras": 12,
-      "volumen_m3": 0.000385,
+      "volumen_m3": 0.000308,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.025,
+          -0.02,
           -0.0175,
           -0.11
         ],
         [
-          0.025,
+          0.02,
           0.0175,
           0.11
         ]
@@ -386,7 +894,7 @@
       "nodo": "tubo_izquierdo",
       "vertices": 98,
       "caras": 192,
-      "volumen_m3": 0.000205579,
+      "volumen_m3": 0.000203373,
       "cerrada": true,
       "limites_locales_m": [
         [
@@ -406,18 +914,18 @@
       "nodo": "botella_izquierda",
       "vertices": 98,
       "caras": 192,
-      "volumen_m3": 0.000255857,
+      "volumen_m3": 0.000269006,
       "cerrada": true,
       "limites_locales_m": [
         [
           -0.0165,
           -0.0165,
-          -0.15
+          -0.16
         ],
         [
           0.0165,
           0.0165,
-          0.15
+          0.16
         ]
       ]
     },
@@ -426,7 +934,7 @@
       "nodo": "tubo_derecho",
       "vertices": 98,
       "caras": 192,
-      "volumen_m3": 0.000205579,
+      "volumen_m3": 0.000203373,
       "cerrada": true,
       "limites_locales_m": [
         [
@@ -446,18 +954,198 @@
       "nodo": "botella_derecha",
       "vertices": 98,
       "caras": 192,
-      "volumen_m3": 0.000255857,
+      "volumen_m3": 0.000269006,
       "cerrada": true,
       "limites_locales_m": [
         [
           -0.0165,
           -0.0165,
-          -0.15
+          -0.16
         ],
         [
           0.0165,
           0.0165,
-          0.15
+          0.16
+        ]
+      ]
+    },
+    {
+      "id": "tija_superior",
+      "nodo": "tija_superior",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.00024,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.02,
+          -0.015,
+          -0.1
+        ],
+        [
+          0.02,
+          0.015,
+          0.1
+        ]
+      ]
+    },
+    {
+      "id": "manubrio",
+      "nodo": "manubrio",
+      "vertices": 194,
+      "caras": 384,
+      "volumen_m3": 0.000265066,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.030674,
+          -0.023499,
+          -0.363141
+        ],
+        [
+          0.030998,
+          0.023366,
+          0.363141
+        ]
+      ]
+    },
+    {
+      "id": "puno_izquierdo",
+      "nodo": "puno_izquierdo",
+      "vertices": 74,
+      "caras": 144,
+      "volumen_m3": 0.000100091,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.018,
+          -0.018,
+          -0.05
+        ],
+        [
+          0.018,
+          0.018,
+          0.05
+        ]
+      ]
+    },
+    {
+      "id": "puno_derecho",
+      "nodo": "puno_derecho",
+      "vertices": 74,
+      "caras": 144,
+      "volumen_m3": 0.000100091,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.018,
+          -0.018,
+          -0.05
+        ],
+        [
+          0.018,
+          0.018,
+          0.05
+        ]
+      ]
+    },
+    {
+      "id": "manija_freno",
+      "nodo": "manija_freno",
+      "vertices": 62,
+      "caras": 120,
+      "volumen_m3": 1.767e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.028247,
+          -0.013675,
+          -0.081749
+        ],
+        [
+          0.02832,
+          0.013695,
+          0.081457
+        ]
+      ]
+    },
+    {
+      "id": "manija_embrague",
+      "nodo": "manija_embrague",
+      "vertices": 62,
+      "caras": 120,
+      "volumen_m3": 1.767e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.028247,
+          -0.013675,
+          -0.081457
+        ],
+        [
+          0.02832,
+          0.013695,
+          0.081749
+        ]
+      ]
+    },
+    {
+      "id": "espejo_izquierdo",
+      "nodo": "espejo_izquierdo",
+      "vertices": 16,
+      "caras": 28,
+      "volumen_m3": 0.00012936,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0535,
+          -0.09,
+          -0.007
+        ],
+        [
+          0.0535,
+          0.09,
+          0.007
+        ]
+      ]
+    },
+    {
+      "id": "espejo_derecho",
+      "nodo": "espejo_derecho",
+      "vertices": 16,
+      "caras": 28,
+      "volumen_m3": 0.00012936,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0535,
+          -0.09,
+          -0.007
+        ],
+        [
+          0.0535,
+          0.09,
+          0.007
+        ]
+      ]
+    },
+    {
+      "id": "velocimetro",
+      "nodo": "velocimetro",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000147415,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.04,
+          -0.04,
+          -0.015
+        ],
+        [
+          0.04,
+          0.04,
+          0.015
         ]
       ]
     },
@@ -466,118 +1154,198 @@
       "nodo": "monoamortiguador",
       "vertices": 98,
       "caras": 192,
-      "volumen_m3": 0.000592091,
+      "volumen_m3": 0.000667167,
       "cerrada": true,
       "limites_locales_m": [
         [
           -0.022,
           -0.022,
-          -0.195256
+          -0.220014
         ],
         [
           0.022,
           0.022,
-          0.195256
+          0.220014
         ]
       ]
     },
     {
       "id": "basculante",
       "nodo": "basculante",
-      "vertices": 8,
-      "caras": 12,
-      "volumen_m3": 0.000481822,
+      "vertices": 18,
+      "caras": 32,
+      "volumen_m3": 0.001053975,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.200759,
-          -0.02,
+          -0.2175,
+          -0.06,
           -0.015
         ],
         [
-          0.200759,
-          0.02,
+          0.2175,
+          0.06,
           0.015
+        ]
+      ]
+    },
+    {
+      "id": "basculante_brazo_izquierdo",
+      "nodo": "basculante_brazo_izquierdo",
+      "vertices": 18,
+      "caras": 32,
+      "volumen_m3": 0.001053975,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.2175,
+          -0.06,
+          -0.015
+        ],
+        [
+          0.2175,
+          0.06,
+          0.015
+        ]
+      ]
+    },
+    {
+      "id": "basculante_travesano",
+      "nodo": "basculante_travesano",
+      "vertices": 26,
+      "caras": 48,
+      "volumen_m3": 0.0001176,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.014,
+          -0.014,
+          -0.1
+        ],
+        [
+          0.014,
+          0.014,
+          0.1
+        ]
+      ]
+    },
+    {
+      "id": "cubo_delantero",
+      "nodo": "cubo_delantero",
+      "vertices": 322,
+      "caras": 640,
+      "volumen_m3": 0.000410234,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.058,
+          -0.058,
+          -0.095
+        ],
+        [
+          0.058,
+          0.058,
+          0.095
         ]
       ]
     },
     {
       "id": "rin_delantero",
       "nodo": "rin_delantero",
-      "vertices": 576,
-      "caras": 1176,
-      "volumen_m3": 0.002440355,
+      "vertices": 484,
+      "caras": 988,
+      "volumen_m3": 0.001244662,
       "cerrada": true,
       "limites_locales_m": [
         [
           -0.2189,
           -0.2189,
-          -0.012
+          -0.0275
         ],
         [
           0.2189,
           0.2189,
-          0.012
+          0.0275
         ]
       ]
     },
     {
       "id": "llanta_delantera",
       "nodo": "llanta_delantera",
-      "vertices": 2304,
-      "caras": 4608,
-      "volumen_m3": 0.006366202,
+      "vertices": 1440,
+      "caras": 2880,
+      "volumen_m3": 0.008608196,
       "cerrada": true,
       "limites_locales_m": [
         [
           -0.2879,
           -0.2879,
-          -0.036
+          -0.045
         ],
         [
           0.2879,
           0.2879,
-          0.036
+          0.045
+        ]
+      ]
+    },
+    {
+      "id": "cubo_trasero",
+      "nodo": "cubo_trasero",
+      "vertices": 402,
+      "caras": 800,
+      "volumen_m3": 0.000663257,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.05,
+          -0.05,
+          -0.11
+        ],
+        [
+          0.05,
+          0.05,
+          0.11
         ]
       ]
     },
     {
       "id": "rin_trasero",
       "nodo": "rin_trasero",
-      "vertices": 576,
-      "caras": 1176,
-      "volumen_m3": 0.002440355,
+      "vertices": 484,
+      "caras": 988,
+      "volumen_m3": 0.001485141,
       "cerrada": true,
       "limites_locales_m": [
         [
           -0.2189,
           -0.2189,
-          -0.012
+          -0.035
         ],
         [
           0.2189,
           0.2189,
-          0.012
+          0.035
         ]
       ]
     },
     {
       "id": "llanta_trasera",
       "nodo": "llanta_trasera",
-      "vertices": 2304,
-      "caras": 4608,
-      "volumen_m3": 0.010552992,
+      "vertices": 1440,
+      "caras": 2880,
+      "volumen_m3": 0.0150534,
       "cerrada": true,
       "limites_locales_m": [
         [
           -0.3069,
           -0.3069,
-          -0.0455
+          -0.06
         ],
         [
           0.3069,
           0.3069,
-          0.0455
+          0.06
         ]
       ]
     },
@@ -606,7 +1374,7 @@
       "nodo": "caliper_delantero",
       "vertices": 113,
       "caras": 222,
-      "volumen_m3": 0.000161475,
+      "volumen_m3": 0.000218175,
       "cerrada": true,
       "limites_locales_m": [
         [
@@ -617,7 +1385,7 @@
         [
           0.035,
           0.03,
-          0.022
+          0.0355
         ]
       ]
     },
@@ -646,7 +1414,7 @@
       "nodo": "caliper_trasero",
       "vertices": 113,
       "caras": 222,
-      "volumen_m3": 0.000161475,
+      "volumen_m3": 0.000218175,
       "cerrada": true,
       "limites_locales_m": [
         [
@@ -657,7 +1425,7 @@
         [
           0.035,
           0.03,
-          0.022
+          0.0355
         ]
       ]
     },
@@ -682,142 +1450,242 @@
       ]
     },
     {
-      "id": "cubo_delantero",
-      "nodo": "cubo_delantero",
+      "id": "bomba_freno",
+      "nodo": "bomba_freno",
       "vertices": 98,
       "caras": 192,
-      "volumen_m3": 0.000720191,
+      "volumen_m3": 3.7059e-05,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.055,
-          -0.055,
-          -0.038
+          -0.013,
+          -0.013,
+          -0.035
         ],
         [
-          0.055,
-          0.055,
-          0.038
+          0.013,
+          0.013,
+          0.035
         ]
       ]
     },
     {
-      "id": "cubo_trasero",
-      "nodo": "cubo_trasero",
+      "id": "manguera_freno",
+      "nodo": "manguera_freno",
       "vertices": 98,
       "caras": 192,
-      "volumen_m3": 0.000786603,
+      "volumen_m3": 3.3224e-05,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.045,
-          -0.045,
-          -0.062
+          -0.100739,
+          -0.207887,
+          -0.050424
         ],
         [
-          0.045,
-          0.045,
-          0.062
+          0.100798,
+          0.20657,
+          0.051937
+        ]
+      ]
+    },
+    {
+      "id": "pedal_freno",
+      "nodo": "pedal_freno",
+      "vertices": 62,
+      "caras": 120,
+      "volumen_m3": 2.3117e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.08,
+          -0.011946,
+          -0.007659
+        ],
+        [
+          0.080868,
+          0.012,
+          0.007655
         ]
       ]
     },
     {
       "id": "farola",
       "nodo": "farola",
-      "vertices": 642,
-      "caras": 1280,
-      "volumen_m3": 0.001328877,
+      "vertices": 202,
+      "caras": 400,
+      "volumen_m3": 0.002653003,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.05,
-          -0.08,
-          -0.08
+          -0.09,
+          -0.09,
+          0.0
         ],
         [
-          0.05,
-          0.08,
-          0.08
+          0.09,
+          0.09,
+          0.158
         ]
       ]
     },
     {
       "id": "stop",
       "nodo": "stop",
-      "vertices": 8,
-      "caras": 12,
-      "volumen_m3": 0.000108,
+      "vertices": 642,
+      "caras": 1280,
+      "volumen_m3": 4.9833e-05,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.015,
-          -0.015,
-          -0.06
+          -0.012,
+          -0.02,
+          -0.05
         ],
         [
-          0.015,
-          0.015,
-          0.06
+          0.012,
+          0.02,
+          0.05
         ]
       ]
     },
     {
-      "id": "velocimetro",
-      "nodo": "velocimetro",
-      "vertices": 98,
-      "caras": 192,
-      "volumen_m3": 0.000150366,
+      "id": "direccional_delantera_izquierda",
+      "nodo": "direccional_delantera_izquierda",
+      "vertices": 642,
+      "caras": 1280,
+      "volumen_m3": 1.8604e-05,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.04,
-          -0.04,
-          -0.015
+          -0.02,
+          -0.014,
+          -0.016
         ],
         [
-          0.04,
-          0.04,
-          0.015
+          0.02,
+          0.014,
+          0.016
+        ]
+      ]
+    },
+    {
+      "id": "direccional_delantera_derecha",
+      "nodo": "direccional_delantera_derecha",
+      "vertices": 642,
+      "caras": 1280,
+      "volumen_m3": 1.8604e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.02,
+          -0.014,
+          -0.016
+        ],
+        [
+          0.02,
+          0.014,
+          0.016
+        ]
+      ]
+    },
+    {
+      "id": "direccional_trasera_izquierda",
+      "nodo": "direccional_trasera_izquierda",
+      "vertices": 642,
+      "caras": 1280,
+      "volumen_m3": 1.6279e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.02,
+          -0.014,
+          -0.014
+        ],
+        [
+          0.02,
+          0.014,
+          0.014
+        ]
+      ]
+    },
+    {
+      "id": "direccional_trasera_derecha",
+      "nodo": "direccional_trasera_derecha",
+      "vertices": 642,
+      "caras": 1280,
+      "volumen_m3": 1.6279e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.02,
+          -0.014,
+          -0.014
+        ],
+        [
+          0.02,
+          0.014,
+          0.014
+        ]
+      ]
+    },
+    {
+      "id": "bateria",
+      "nodo": "bateria",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.00063,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.045,
+          -0.05,
+          -0.035
+        ],
+        [
+          0.045,
+          0.05,
+          0.035
         ]
       ]
     },
     {
       "id": "tubo_escape",
       "nodo": "tubo_escape",
-      "vertices": 98,
-      "caras": 192,
-      "volumen_m3": 0.000189644,
+      "vertices": 434,
+      "caras": 864,
+      "volumen_m3": 0.000650911,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.014,
-          -0.014,
-          -0.154434
+          -0.236945,
+          -0.215451,
+          -0.086
         ],
         [
-          0.014,
-          0.014,
-          0.154434
+          0.248872,
+          0.216898,
+          0.085982
         ]
       ]
     },
     {
       "id": "silenciador",
       "nodo": "silenciador",
-      "vertices": 98,
-      "caras": 192,
-      "volumen_m3": 0.001534988,
+      "vertices": 194,
+      "caras": 384,
+      "volumen_m3": 0.002695768,
       "cerrada": true,
       "limites_locales_m": [
         [
-          -0.035,
-          -0.035,
-          -0.2
+          -0.047,
+          -0.047,
+          -0.21
         ],
         [
-          0.035,
-          0.035,
-          0.2
+          0.047,
+          0.047,
+          0.21
         ]
       ]
     }

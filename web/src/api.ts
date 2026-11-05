@@ -61,6 +61,20 @@ export interface RespuestaPieza {
   documentado: { fragmento_id: string; texto: string; url: string; origen: string }[];
   advertencia: string;
 }
+export interface ArticulacionApi {
+  id: string;
+  tipo: string;
+  padre: string | null;
+  hijo: string;
+  eje: number[];
+  origen: number[];
+  maestra: string | null;
+  relacion: number | null;
+}
+export interface EnsamblajeApi {
+  id: string;
+  parametros: Record<string, number>;
+}
 export interface Animacion {
   duracion_por_pieza_s: number;
   solape: number;
@@ -173,6 +187,8 @@ export function crearApi(ensamblaje: string) {
     resumen: () => pedir<ResumenEnsamblaje[]>("/simulador/ensamblajes"),
     piezas: () => pedir<Pieza[]>(`${e}/piezas`),
     jerarquia: () => pedir<NodoJerarquia>(`${e}/jerarquia`),
+    articulaciones: () => pedir<ArticulacionApi[]>(`${e}/articulaciones`),
+    ensamblaje: () => pedir<EnsamblajeApi>(`${e}`),
     despiece: (factor: number) => pedir<Record<string, number[]>>(`${e}/despiece?factor=${factor}`),
     animacion: () => pedir<Animacion>(`${e}/animacion`),
     cinematica: (valores: Record<string, number>) => pedir<Record<string, Lectura>>(`${e}/cinematica`, enviar({ valores })),

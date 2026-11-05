@@ -84,8 +84,8 @@ export const MEDIDA_TRASERA_CB160F = "140/70-17";
 export const RADIO_PINON_M = 0.03;
 export const RADIO_CORONA_M = 0.09;
 /** Posiciones del modelo 3D base (llanta trasera genérica 130/70-17): ejes del piñón y de la corona (= eje de la rueda trasera). */
-export const EJE_PINON: readonly [number, number] = [-0.2, 0.3069];
-export const EJE_CORONA: readonly [number, number] = [-0.63, 0.3069];
+export const EJE_PINON: readonly [number, number] = [-0.15, 0.3069];
+export const EJE_CORONA: readonly [number, number] = [-0.64, 0.3069];
 
 /** Llanta delantera del modelo 3D (supuesto didáctico; la lámina no la publica). */
 export const MEDIDA_DELANTERA_DEMO = String(SUPUESTOS.medida_llanta_delantera.valor);

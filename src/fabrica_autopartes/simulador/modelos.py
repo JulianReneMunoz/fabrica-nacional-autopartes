@@ -49,6 +49,11 @@ class Geometria(BaseModel):
         "manivela",
         "cadena",
         "cilindro_corte",
+        "revolucion",
+        "tubo",
+        "extrusion",
+        "engranaje",
+        "rin_rayos",
     ]
     parametros: dict[str, float]
     nodo_glb: str
@@ -57,7 +62,7 @@ class Geometria(BaseModel):
     @classmethod
     def _positivos(cls, v: dict[str, float]) -> dict[str, float]:
         for k, valor in v.items():
-            if k.startswith(("n_", "lados")):
+            if k.startswith(("n_", "lados", "c_")):  # contadores y coordenadas con signo
                 continue
             if valor <= 0:
                 raise ValueError(f"El parámetro geométrico '{k}' debe ser positivo (valor={valor})")

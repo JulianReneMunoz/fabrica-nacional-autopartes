@@ -139,7 +139,11 @@ def _main(argv: list[str] | None = None) -> int:
 
         from fabrica_autopartes.simulador.catalogo_freno import ParametrosFreno
         from fabrica_autopartes.simulador.cinematica import validar_ensamblaje
-        from fabrica_autopartes.simulador.generacion import construir_ensamblaje, generar
+        from fabrica_autopartes.simulador.generacion import (
+            construir_ensamblaje,
+            generar,
+            verificar_conectividad,
+        )
 
         sobrescritos = {
             k: v
@@ -159,7 +163,10 @@ def _main(argv: list[str] | None = None) -> int:
             return 2
         parametros_freno = parametros if args.ensamblaje == "freno_disco" else None
         if args.accion == "validar":
-            errores = validar_ensamblaje(construir_ensamblaje(args.ensamblaje, parametros_freno))
+            ens_validar = construir_ensamblaje(args.ensamblaje, parametros_freno)
+            errores = validar_ensamblaje(ens_validar)
+            if not errores:  # conectividad: ninguna pieza flotando (solo si el ensamblaje declara montajes)
+                errores = verificar_conectividad(ens_validar)
             print("Ensamblaje íntegro" if not errores else "\n".join(errores))
             return 0 if not errores else 1
         manifiesto = generar(Path(args.salida), parametros_freno, args.ensamblaje)

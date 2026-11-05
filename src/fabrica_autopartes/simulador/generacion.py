@@ -33,6 +33,14 @@ from fabrica_autopartes.simulador.cinematica import (
     validar_ensamblaje,
 )
 from fabrica_autopartes.simulador.modelos import Ensamblaje, Pieza
+from fabrica_autopartes.simulador.primitivas_moto import (
+    engranaje,
+    extrusion,
+    leer_puntos,
+    revolucion,
+    rin_rayos,
+    tubo,
+)
 
 log = obtener_registro(__name__)
 
@@ -189,14 +197,65 @@ def construir_malla(pieza: Pieza) -> trimesh.Trimesh:
     elif g.primitiva == "cadena":
         m = _cadena(q)
     elif g.primitiva == "cilindro_corte":
-        tubo = trimesh.creation.annulus(
+        tubo_motor = trimesh.creation.annulus(
             r_min=q["radio_interior"], r_max=q["radio_exterior"], height=q["largo"], sections=64
         )
-        mitad = trimesh.creation.box(
-            extents=(q["radio_exterior"] * 4, q["radio_exterior"] * 2, q["largo"] * 2)
+        n_aletas = int(q.get("n_aletas", 0))
+        r_max = q["radio_exterior"]
+        if n_aletas:  # aletas de refrigeración repartidas a lo largo del eje
+            r_max = q["radio_aleta"]
+            partes = [tubo_motor]
+            paso = (q["largo"] - q.get("tapa", 0.0) - q["alto_aleta"] - 0.004) / max(n_aletas - 1, 1)
+            for i in range(n_aletas):
+                aleta = trimesh.creation.annulus(
+                    r_min=q["radio_exterior"] - 0.002, r_max=r_max, height=q["alto_aleta"], sections=64
+                )
+                aleta.apply_translation((0, 0, -q["largo"] / 2 + q["alto_aleta"] / 2 + 0.002 + i * paso))
+                partes.append(aleta)
+            tubo_motor = _union(*partes)
+        if q.get("tapa", 0.0) > 0:  # techo cerrado (culata)
+            techo = trimesh.creation.cylinder(radius=q["radio_exterior"], height=q["tapa"], sections=64)
+            techo.apply_translation((0, 0, q["largo"] / 2 - q["tapa"] / 2))
+            tubo_motor = _union(tubo_motor, techo)
+        mitad = trimesh.creation.box(extents=(r_max * 4, r_max * 2, q["largo"] * 2))
+        mitad.apply_translation((0, r_max, 0))
+        m = _diferencia(tubo_motor, mitad)
+    elif g.primitiva == "revolucion":
+        m = revolucion(
+            leer_puntos(q, ("r", "z")),
+            secciones=int(q.get("n_secciones", 48)),
+            cerrado=bool(q.get("n_cerrado", 0)),
         )
-        mitad.apply_translation((0, q["radio_exterior"], 0))
-        m = _diferencia(tubo, mitad)
+    elif g.primitiva == "tubo":
+        m = tubo(
+            leer_puntos(q, ("x", "y", "z")),
+            q["radio"],
+            secciones=int(q.get("n_secciones", 12)),
+            suavizado=int(q.get("n_suavizado", 2)),
+        )
+    elif g.primitiva == "extrusion":
+        m = extrusion(leer_puntos(q, ("x", "y")), q["espesor"])
+    elif g.primitiva == "engranaje":
+        m = engranaje(
+            int(q["n_dientes"]),
+            q["radio_punta"],
+            q["radio_raiz"],
+            q["espesor"],
+            q["radio_agujero"],
+            int(q.get("n_aligeramientos", 0)),
+            q.get("radio_aligeramiento", 0.0),
+            q.get("radio_circulo_aligeramiento", 0.0),
+        )
+    elif g.primitiva == "rin_rayos":
+        m = rin_rayos(
+            q["radio_exterior"],
+            q["ancho"],
+            int(q["n_rayos"]),
+            q["radio_cubo"],
+            q["ancho_rayo"],
+            q["espesor_rayo"],
+            q["radio_agujero"],
+        )
     else:  # pragma: no cover - el modelo Pydantic restringe las primitivas
         raise ErrorEnsamblaje(f"Primitiva no soportada: {g.primitiva}")
     material = trimesh.visual.material.PBRMaterial(
@@ -224,6 +283,114 @@ def construir_escena(ens: Ensamblaje) -> tuple[trimesh.Scene, dict[str, trimesh.
         t = homogenea(matriz_rotacion_euler(p.transformacion.rotacion_grados), p.transformacion.posicion)
         escena.add_geometry(malla, node_name=p.geometria.nodo_glb, geom_name=p.id, transform=t)
     return escena, mallas
+
+
+def mallas_en_posicion_armada(
+    ens: Ensamblaje, mallas: dict[str, trimesh.Trimesh]
+) -> dict[str, trimesh.Trimesh]:
+    """Copias de las mallas con la transformación base de cada pieza aplicada (posición armada)."""
+    salida: dict[str, trimesh.Trimesh] = {}
+    for p in ens.piezas:
+        c = mallas[p.id].copy()
+        c.apply_transform(
+            homogenea(matriz_rotacion_euler(p.transformacion.rotacion_grados), p.transformacion.posicion)
+        )
+        salida[p.id] = c
+    return salida
+
+
+def distancia_minima_mallas(
+    a: trimesh.Trimesh, b: trimesh.Trimesh, tolerancia_m: float = 0.002, maximo_puntos: int = 6000
+) -> float:
+    """Distancia mínima entre las superficies de dos mallas (0 si se solapan).
+
+    Se muestrean puntos de superficie (semilla fija) y vértices de ambas mallas, se descartan los
+    que quedan fuera de la caja envolvente de la otra ampliada, y se calcula la distancia mínima
+    entre los restantes con numpy (sin scipy). Si no se detecta cercanía, se comprueba el solape
+    por volumen (intersección booleana), que cubre las piezas incrustadas una dentro de otra.
+    """
+    holgura = tolerancia_m + 0.02
+    lo_a, hi_a = a.bounds
+    lo_b, hi_b = b.bounds
+    hueco = np.maximum(0.0, np.maximum(lo_a - hi_b, lo_b - hi_a))
+    cota = float(np.linalg.norm(hueco))
+    if cota > holgura:
+        return cota
+
+    def puntos(m: trimesh.Trimesh, otra: trimesh.Trimesh) -> np.ndarray:
+        n = int(np.clip(m.area / (0.0015**2), 500, maximo_puntos))
+        muestra = trimesh.sample.sample_surface(m, n, seed=7)[0]
+        todos = np.vstack([muestra, m.vertices])
+        lo, hi = otra.bounds
+        dentro = np.all((todos >= lo - holgura) & (todos <= hi + holgura), axis=1)
+        return cast(np.ndarray, todos[dentro])
+
+    pa, pb = puntos(a, b), puntos(b, a)
+    minimo = np.inf
+    if len(pa) and len(pb):
+        pb32 = pb.astype(np.float32)
+        for i in range(0, len(pa), 800):
+            bloque = pa[i : i + 800].astype(np.float32)
+            d2 = ((bloque[:, None, :] - pb32[None, :, :]) ** 2).sum(axis=2)
+            minimo = min(minimo, float(d2.min()))
+        minimo = math.sqrt(minimo)
+    if minimo <= tolerancia_m:
+        return minimo
+    try:
+        inter = trimesh.boolean.intersection([a, b], engine="manifold")
+        if len(inter.faces) and abs(float(inter.volume)) > 1e-12:
+            return 0.0
+    except Exception:
+        pass
+    return float(max(minimo, cota)) if np.isfinite(minimo) else cota
+
+
+def verificar_conectividad(
+    ens: Ensamblaje, mallas: dict[str, trimesh.Trimesh] | None = None, tolerancia_m: float = 0.002
+) -> list[str]:
+    """Comprueba que cada pieza toque (o se solape con) la pieza en la que se monta.
+
+    Cada pieza declara su montaje en ``metadatos["montada_en"]``. Un ensamblaje que no declara
+    ningún montaje (p. ej. el freno de disco) no se comprueba y devuelve una lista vacía. En uno
+    que sí los declara, todas las piezas salvo una (la raíz) deben declararlo, el árbol de montaje
+    no puede tener ciclos y la distancia mínima entre cada par debe ser ≤ ``tolerancia_m``.
+    """
+    montajes = {p.id: p.metadatos["montada_en"] for p in ens.piezas if "montada_en" in p.metadatos}
+    if not montajes:
+        return []
+    errores: list[str] = []
+    ids = {p.id for p in ens.piezas}
+    raices = [p.id for p in ens.piezas if p.id not in montajes]
+    if len(raices) != 1:
+        errores.append(
+            f"Debe haber exactamente una pieza raíz sin 'montada_en' (hay {len(raices)}: {raices})"
+        )
+    for hijo, padre in montajes.items():
+        if padre not in ids:
+            errores.append(f"{hijo}: montada en pieza inexistente '{padre}'")
+        if padre == hijo:
+            errores.append(f"{hijo}: montada en sí misma")
+    for pid in montajes:  # ciclos en el árbol de montaje
+        visto: set[str] = set()
+        actual = pid
+        while actual in montajes and actual not in visto:
+            visto.add(actual)
+            actual = montajes[actual]
+        if actual in visto:
+            errores.append(f"{pid}: ciclo en el árbol de montaje")
+    if errores:
+        return errores
+    if mallas is None:
+        mallas = {p.id: construir_malla(p) for p in ens.piezas}
+    armadas = mallas_en_posicion_armada(ens, mallas)
+    for hijo, padre in montajes.items():
+        d = distancia_minima_mallas(armadas[hijo], armadas[padre], tolerancia_m)
+        if d > tolerancia_m:
+            errores.append(
+                f"{hijo} flota: dista {d * 1000:.1f} mm de la pieza en la que se monta ('{padre}'); "
+                f"tolerancia {tolerancia_m * 1000:.0f} mm"
+            )
+    return errores
 
 
 ENSAMBLAJES_GENERABLES = ("freno_disco", "moto_honda")

@@ -36,7 +36,7 @@ def test_catalogo_incluye_moto_y_animacion_condiciona_frenado(cliente) -> None: 
     moto = cliente.get("/api/v1/simulador/ensamblajes/moto_honda/animacion").json()
     assert "frenado" not in moto
     assert moto["duracion_por_pieza_s"] == 0.35 and moto["solape"] == 0.5
-    assert len(moto["orden_desmontaje"]) == len(moto["orden_reensamblaje"]) == 39
+    assert len(moto["orden_desmontaje"]) == len(moto["orden_reensamblaje"]) == 79
     ok = cliente.post(
         "/api/v1/simulador/ensamblajes/moto_honda/cinematica",
         json={"valores": {"j_ciguenal": 90, "j_rueda_trasera": 30, "j_piston": -0.02}},

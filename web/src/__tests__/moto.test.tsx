@@ -5,7 +5,10 @@ import MaquinaMoto from "../paginas/MaquinaMoto";
 import Biblioteca from "../paginas/Biblioteca";
 
 // El lienzo WebGL no existe en jsdom: la escena se sustituye por un marcador.
-vi.mock("../paginas/EscenaMoto", () => ({ default: () => <div data-testid="escena-falsa" /> }));
+vi.mock("../paginas/EscenaMoto", async (original) => ({
+  ...(await original<typeof import("../paginas/EscenaMoto")>()),
+  default: () => <div data-testid="escena-falsa" />,
+}));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -30,6 +33,13 @@ const FAQ_MODELO = [
   { id: "potencia", pregunta: "¿Qué potencia tiene?", respuesta: "Potencia: No publicado.", campos: ["motor.potencia"], fuentes: [], estado: "no_publicado" },
 ];
 const PIEZAS = [{ id: "piston", nombre: "Pistón", tipo: "p", descripcion: "", funcion: "Recibe la presión", material: null, subconjunto: "motor", dimensiones_m: {}, relacionadas: [], retirar_antes: [], metadatos: {}, referencia_documental: "demo" }];
+const ARTICULACIONES = [
+  { id: "j_piston", tipo: "prismatica", padre: "cilindro", hijo: "piston", eje: [0.2588, 0.9659, 0], origen: [0, 0, 0], maestra: null, relacion: null },
+  { id: "j_ciguenal", tipo: "rotacional", padre: null, hijo: "ciguenal", eje: [0, 0, 1], origen: [0.1, 0.33, 0], maestra: null, relacion: null },
+  { id: "j_rueda_trasera", tipo: "rotacional", padre: "basculante", hijo: "rin_trasero", eje: [0, 0, 1], origen: [-0.64, 0.3069, 0], maestra: null, relacion: null },
+  { id: "j_llanta_trasera", tipo: "compuesta", padre: "basculante", hijo: "llanta_trasera", eje: [0, 0, 1], origen: [-0.64, 0.3069, 0], maestra: "j_rueda_trasera", relacion: 1 },
+  { id: "j_pinon", tipo: "compuesta", padre: "chasis", hijo: "pinon", eje: [0, 0, 1], origen: [-0.15, 0.3069, 0], maestra: "j_rueda_trasera", relacion: 3 },
+];
 const MAQUINA = { id: "moto_honda", pregunta: "¿Cómo convierte?", una_linea: "Motocicleta (referencia genérica) con fichas Honda", relacion: "v", ruta: "#/maquina/moto_honda", idea_principal: "idea", datos_empresa: [], parametros: [] };
 
 let contenedor: HTMLDivElement;
@@ -51,6 +61,8 @@ beforeEach(() => {
       if (url.endsWith("/faq-visor")) return ok(faqVisor.cuerpo, faqVisor.status);
       if (url.includes("/motos/cb160f/calculo")) return ok({ resultado: { velocidad_kmh: 0, estado_motor: "neutro", radio_llanta_m: 0.3069, relacion_total: null, rpm_efectivas: 1400 }, ficha_aplicada: null });
       if (url.endsWith("/tareas/qa")) return ok({ pregunta: "x", respuesta: "Respuesta en vivo [f1]", fuentes: [{ fragmento_id: "f1", titulo: "t", url: "https://fanalca.com/" }], fundamentada: true, confianza: "alta", proveedor: "p", modelo: "m" });
+      if (url.endsWith("/articulaciones")) return ok(ARTICULACIONES);
+      if (url.endsWith("/simulador/ensamblajes/moto_honda")) return ok({ id: "moto_honda", parametros: { cadena_z_m: 0.075 } });
       if (url.endsWith("/piezas")) return ok(PIEZAS);
       if (url.endsWith("/jerarquia")) return ok({ id: "r", nombre: "r", tipo: "raiz", hijos: [{ id: "motor", nombre: "Motor en corte", tipo: "subconjunto", hijos: [] }] });
       if (url.endsWith("/animacion")) return ok({ duracion_por_pieza_s: 0.35, solape: 0.5, orden_desmontaje: ["piston"], orden_reensamblaje: ["piston"] });

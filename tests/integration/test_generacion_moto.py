@@ -53,3 +53,10 @@ def test_freno_sigue_generando_igual(tmp_path) -> None:  # type: ignore[no-untyp
     ruta = Path(__file__).resolve().parents[2] / "web" / "public" / "modelos" / "freno_disco.manifiesto.json"
     publicado = json.loads(ruta.read_text(encoding="utf-8"))
     assert generar(tmp_path)["sha256"] == publicado["sha256"]
+
+
+def test_presupuesto_de_rendimiento(generado) -> None:  # type: ignore[no-untyped-def]
+    destino, manifiesto = generado
+    assert (destino / "moto_honda.glb").stat().st_size < 3 * 1024 * 1024
+    assert sum(p["caras"] for p in manifiesto["piezas"]) <= 150_000
+    assert len(manifiesto["piezas"]) >= 70

@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { apiMoto, type Animacion, type FaqVisor, type FichaMotoApi, type NodoJerarquia, type Pieza, type RespuestaModeloApi, type RespuestaQa } from "../api";
+import { apiMoto, type Animacion, type ArticulacionApi, type FaqVisor, type FichaMotoApi, type NodoJerarquia, type Pieza, type RespuestaModeloApi, type RespuestaQa } from "../api";
 import { BandaTour, Chip, Deslizador, Insignia, ModoExperimento, PanelEmpresa, Reproduccion, RevisionCritica, useMaquina, useTour, type Experimento, type PasoTour } from "../componentes/anatomia";
 import { DiagramaCiclo, FaqFanalca, FaqModelos, FichaTecnica, fmt, InsigniaSupuesto, NO_PUBLICADO, Pestanas, piezasDeCampo } from "../componentes/panelesMoto";
 import { estadoRueda } from "../modelos/freno";
@@ -47,7 +47,7 @@ import {
   type PalancaMoto,
   type VersionMoto,
 } from "../modelos/moto";
-import EscenaMoto, { type EstadoMoto, type GeometriaDespieceMoto, type PeticionCamara, type Vec3 } from "./EscenaMoto";
+import EscenaMoto, { type Calidad, GEOMETRIA_MOVIL_DEFECTO, geometriaMovil, type EstadoMoto, type GeometriaDespieceMoto, type GeometriaMovil, type PeticionCamara, type Vec3 } from "./EscenaMoto";
 
 const ID_FICHA = "cb160f";
 const G = 9.80665;
@@ -81,12 +81,15 @@ interface Ctl {
 }
 const CTL0: Ctl = { acelerador: 0, marcha: 0, palanca: "delantera", fuerza: 0, cbs: false, freno: false };
 
+// Presets de cámara para la moto de ~1,30 m entre ejes (puntos duros del backend): centro hacia x ≈ 0,01 m.
 const CAMARAS: Record<string, { pos: Vec3; objetivo: Vec3; nombre: string }> = {
-  general: { nombre: "General", pos: [0.75, 0.75, 2.3], objetivo: [0.05, 0.42, 0] },
-  motor: { nombre: "Motor", pos: [0.3, 0.5, 0.58], objetivo: [0, 0.43, 0] },
-  despiece: { nombre: "Despiece", pos: [1.3, 0.95, 3.7], objetivo: [0.05, 0.5, 0] },
-  transmision: { nombre: "Transmisión", pos: [-0.42, 0.48, 1.05], objetivo: [-0.42, 0.31, 0.06] },
-  frenos: { nombre: "Frenos", pos: [0.1, 0.5, 2.35], objetivo: [0.05, 0.3, 0] },
+  lateral: { nombre: "Lateral", pos: [0.01, 0.5, 2.55], objetivo: [0.01, 0.43, 0] },
+  cuartos: { nombre: "3/4", pos: [1.55, 0.9, 2.1], objetivo: [0.01, 0.43, 0] },
+  general: { nombre: "General", pos: [0.9, 0.75, 2.25], objetivo: [0.01, 0.43, 0] },
+  motor: { nombre: "Motor", pos: [0.52, 0.5, 0.66], objetivo: [0.11, 0.43, 0] },
+  despiece: { nombre: "Despiece", pos: [1.9, 1.0, 2.9], objetivo: [0.0, 0.45, 0] },
+  transmision: { nombre: "Transmisión", pos: [-0.4, 0.45, 1.15], objetivo: [-0.4, 0.31, 0.075] },
+  frenos: { nombre: "Frenos", pos: [0.1, 0.5, 2.4], objetivo: [0.01, 0.3, 0] },
 };
 
 const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1);
@@ -121,6 +124,8 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
   const [animacion, setAnimacion] = useState<Animacion | null>(null);
   const [geometria, setGeometria] = useState<GeometriaDespieceMoto | null>(null);
   const [errorSim, setErrorSim] = useState<string | null>(null);
+  const [articulaciones, setArticulaciones] = useState<ArticulacionApi[] | null>(null);
+  const [parametrosEns, setParametrosEns] = useState<Record<string, number> | null>(null);
   const [ficha, setFicha] = useState<FichaMotoApi | null>(null);
   const [errorFicha, setErrorFicha] = useState<string | null>(null);
   const [faqModelo, setFaqModelo] = useState<RespuestaModeloApi[] | null>(null);
@@ -143,6 +148,8 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
       },
       (e: Error) => setErrorSim(e.message),
     );
+    apiMoto.articulaciones().then(setArticulaciones, () => setArticulaciones(null));
+    apiMoto.ensamblaje().then((e) => setParametrosEns(e.parametros), () => setParametrosEns(null));
     apiMoto.fichaMoto(ID_FICHA).then(setFicha, (e: Error) => setErrorFicha(e.message));
     apiMoto.faqModelo(ID_FICHA).then(setFaqModelo, (e: Error) => setErrorFaqModelo(e.message));
     apiMoto.faqVisor().then(setFaqVisor, (e: Error) => {
@@ -188,6 +195,8 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
   const [pasoSec, setPasoSec] = useState(-1);
   const [secActiva, setSecActiva] = useState(false);
   const [verificacion, setVerificacion] = useState<string | null>(null);
+  const [calidad, setCalidad] = useState<Calidad>("ligera");
+  const [ssao, setSsao] = useState(!/[?&]ssao=0/.test(window.location.hash));
   const [avisoFreno, setAvisoFreno] = useState<string | null>(null);
   const controles = useRef<OrbitControlsImpl | null>(null);
   const divsEtiqueta = useRef<Record<string, HTMLDivElement | null>>({});
@@ -213,15 +222,47 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
     ocultas: new Set(),
     subconjuntoAislado: null,
     subconjuntoDe: {},
+    tipoDe: {},
     enfoque: null,
     transparencia: 0,
     autoGiro: false,
     camara: null,
+    geom: GEOMETRIA_MOVIL_DEFECTO,
+    giraTrasera: new Set(["rin_trasero", "llanta_trasera", "cubo_trasero", "disco_trasero", "corona"]),
+    giraDelantera: new Set(["rin_delantero", "llanta_delantera", "cubo_delantero", "disco_delantero"]),
+    grupoHorquilla: new Set(["botella_izquierda", "botella_derecha", "cubo_delantero", "rin_delantero", "llanta_delantera", "disco_delantero", "caliper_delantero"]),
   });
+  const lineas = useRef<Record<string, { linea: SVGLineElement | null; punto: SVGCircleElement | null }>>({});
+  // Ejes, orígenes y conjuntos solidarios se derivan de las articulaciones y del árbol `montada_en` (no hay ids fijos).
+  const geom: GeometriaMovil = useMemo(() => geometriaMovil(articulaciones, parametrosEns), [articulaciones, parametrosEns]);
+  const conjuntos = useMemo(() => {
+    const sigue = (maestra: string) =>
+      new Set((articulaciones ?? []).filter((a) => a.id === maestra || a.maestra === maestra).filter((a) => a.relacion === null || a.relacion === 1).map((a) => a.hijo));
+    const trasera = sigue("j_rueda_trasera");
+    const delantera = sigue("j_rueda_delantera");
+    const horquilla = new Set(["botella_izquierda", "botella_derecha"]);
+    let crece = true;
+    while (crece) {
+      crece = false;
+      for (const p of piezas) {
+        const madre = p.metadatos?.montada_en;
+        if (madre && horquilla.has(madre) && !horquilla.has(p.id)) {
+          horquilla.add(p.id);
+          crece = true;
+        }
+      }
+    }
+    return { trasera, delantera, horquilla };
+  }, [articulaciones, piezas]);
   const subconjuntoDe = useMemo(() => Object.fromEntries(piezas.map((p) => [p.id, p.subconjunto])), [piezas]);
   const enfoque = useMemo(() => (corte ? new Set(piezas.filter((p) => p.subconjunto === "motor" || PIEZAS_MOTOR.has(p.id)).map((p) => p.id)) : null), [corte, piezas]);
   const radioTrasero = radioLlantaM(medida ?? String(SUPUESTOS.medida_llanta_trasera.valor));
+  const tipoDe = useMemo(() => Object.fromEntries(piezas.map((p) => [p.id, p.tipo])), [piezas]);
   Object.assign(escena.current, {
+    geom,
+    tipoDe,
+    ...(articulaciones && conjuntos.trasera.size > 0 ? { giraTrasera: conjuntos.trasera, giraDelantera: conjuntos.delantera } : {}),
+    ...(piezas.length > 0 ? { grupoHorquilla: conjuntos.horquilla } : {}),
     seleccion,
     resaltadas,
     subconjuntoAislado: aislado,
@@ -538,7 +579,6 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
   const bloqueoDel = resultado.rueda_delantera_bloqueada;
   const bloqueoTras = resultado.rueda_trasera_bloqueada;
   const hayBloqueo = bloqueoDel || bloqueoTras;
-  const etiquetaTras = traseroGenerico ? "Tras. (disco genérico — supuesto didáctico)" : "Tras.";
   // Con la palanca cargada y sin frenar, F/T/bloqueo son «previstos»; solo con el freno activo son reales.
   const textoDisco = (f: typeof fd, bloqueada: boolean, lado: string) => {
     if (!f) return `${lado}: sin accionar`;
@@ -856,7 +896,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
 
         {/* ---------------- centro ---------------- */}
         <section className="moto-centro" aria-label="Motocicleta en 3D">
-          <div className="escenario moto-escenario" data-testid="escenario-moto" data-modo={estadoTexto}>
+          <div className="escenario moto-escenario" data-testid="escenario-moto" data-modo={estadoTexto} data-calidad={calidad}>
             <div className="superpuesto" role="toolbar" aria-label="Reproducción y vista">
               <Reproduccion corriendo={corriendo} alCorrer={() => setCorriendo(true)} alPausar={() => setCorriendo(false)} alReiniciar={() => reiniciar()} escala={escala} alEscala={setEscala} />
             </div>
@@ -872,7 +912,25 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
               <b data-testid="escala-lenta">animación a 1/{factorLento} de la velocidad real</b>
               <small>giros a 1/{factorLento}; dinámica del frenado en tiempo real ({escala}×)</small>
             </div>
-            <EscenaMoto estado={escena} geometria={geometria} alSeleccionar={seleccionar} etiquetas={divsEtiqueta} etiquetasVisibles={etiquetasVisibles} controles={controles} />
+            <EscenaMoto estado={escena} geometria={geometria} alSeleccionar={seleccionar} etiquetas={divsEtiqueta} lineas={lineas} etiquetasVisibles={etiquetasVisibles} controles={controles} ssao={ssao} alCalidad={setCalidad} />
+            <svg className="guias-etiquetas" aria-hidden="true">
+              {["motor", "cilindrada", "transmision", "rueda", "disco_del", "disco_tras"].map((k) => (
+                <g key={k}>
+                  <line
+                    ref={(l) => {
+                      lineas.current[k] = { ...(lineas.current[k] ?? { punto: null }), linea: l };
+                    }}
+                    data-guia={k}
+                  />
+                  <circle
+                    ref={(c) => {
+                      lineas.current[k] = { ...(lineas.current[k] ?? { linea: null }), punto: c };
+                    }}
+                    r="3.5"
+                  />
+                </g>
+              ))}
+            </svg>
             {(
               [
                 ["motor", "etiqueta-3d", <>{fmt(est.rpm_motor)} rpm · θ {fmt(snap.theta720 % 360)}°<br />{FASES_INFO[faseActual].nombre} · 1/{factorLento} real</>],
@@ -880,7 +938,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
                 ["transmision", "etiqueta-3d movimiento", <>cadena {fmt(vCadenaPinon, 2)} m/s = ω·r<br />piñón {fmt(wPinon, 1)} rad/s</>],
                 ["rueda", "etiqueta-3d movimiento", <>{ctl.marcha === 0 ? "neutro: sin tracción" : `i total ${fmt(resultado.relacion_total ?? 0, 2)}`} · {fmt(vKmh, 1)} km/h<br />ω rueda {fmt(wCorona, 1)} rad/s</>],
                 ["disco_del", `etiqueta-3d fuerza${frenando && bloqueoDel ? " alerta" : ""}`, <>{textoDisco(fd, bloqueoDel, "Del.")}</>],
-                ["disco_tras", `etiqueta-3d fuerza${frenando && bloqueoTras ? " alerta" : ""}`, <>{textoDisco(ft, bloqueoTras, etiquetaTras)}</>],
+                ["disco_tras", `etiqueta-3d fuerza${frenando && bloqueoTras ? " alerta" : ""}`, <>{textoDisco(ft, bloqueoTras, "Tras.")}{traseroGenerico && <><br /><small>disco genérico — supuesto didáctico</small></>}</>],
               ] as const
             ).map(([k, clase, contenido]) => (
               <div
@@ -890,7 +948,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
                 }}
                 className={`${clase} etiqueta-moto`}
                 data-etiqueta={k}
-                style={{ position: "absolute", left: 0, top: 0, zIndex: 1 }}
+                style={{ position: "absolute", left: 0, top: 0, zIndex: 2 }}
               >
                 {contenido}
               </div>
@@ -1061,6 +1119,8 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
                   <label className="cbs"><input type="checkbox" checked={etiquetas} onChange={(e) => setEtiquetas(e.target.checked)} /> Etiquetas con cifras</label>
                   <label className="cbs"><input type="checkbox" checked={despieceOn} onChange={(e) => { setDespieceOn(e.target.checked); irACamara(e.target.checked ? "despiece" : "general"); }} /> Despiece por ensamblaje</label>
                   <label className="cbs"><input type="checkbox" checked={corte} onChange={(e) => { setCorte(e.target.checked); if (e.target.checked) irACamara("motor"); }} /> Corte del motor</label>
+                  <label className="cbs"><input type="checkbox" checked={ssao} disabled={calidad !== "alta"} onChange={(e) => setSsao(e.target.checked)} /> Oclusión ambiental (SSAO)</label>
+                  <p className="aviso" data-testid="calidad-grafica">Calidad gráfica: {calidad === "alta" ? "alta (GPU: entorno de estudio con Lightformers y SSAO)" : "ligera (render por software: luces analíticas, sin SSAO)"}.</p>
                   <label className="cbs"><input type="checkbox" checked={autoGiro} onChange={(e) => setAutoGiro(e.target.checked)} /> Giro automático</label>
                   <Deslizador etiqueta="Transparencia" valor={transparencia} min={0} max={0.9} paso={0.05} unidad="" alCambiar={setTransparencia} formato={(v) => fmt(v, 2)} />
                   <h4>Cámara</h4>

@@ -21,6 +21,8 @@ SUBCONJUNTOS = {
     "ruedas",
     "electrico",
     "escape",
+    "direccion",
+    "carroceria",
 }
 REQUERIDAS = {
     "cilindro", "piston", "biela", "ciguenal", "valvula_admision", "valvula_escape", "bujia",
@@ -135,11 +137,10 @@ def test_diametro_exterior_de_los_neumaticos(ens) -> None:  # type: ignore[no-un
         627.8, abs=0.01
     )
     assert dele.dimensiones_m["radio_exterior"] == pytest.approx(d_del / 2000, abs=0.001)
-    for pieza in (tra, dele):  # el toro (radio mayor + radio menor) reproduce el radio exterior
+    for pieza in (tra, dele):  # el perfil de revolución del neumático alcanza exactamente el radio exterior
         q = pieza.geometria.parametros
-        assert q["radio_mayor"] + q["radio_menor"] == pytest.approx(
-            pieza.dimensiones_m["radio_exterior"], abs=1e-5
-        )
+        radios = [v for k, v in q.items() if k.startswith("c_r")]
+        assert max(radios) == pytest.approx(pieza.dimensiones_m["radio_exterior"], abs=1e-5)
     assert (
         "130/70-17" in tra.descripcion
         and "140/70-17" in tra.descripcion
@@ -153,16 +154,16 @@ def test_cubos_unen_rin_disco_y_giran_con_la_rueda(ens) -> None:  # type: ignore
         cubo = ens.pieza(f"cubo_{tag}")
         art = ens.articulacion(f"j_cubo_{tag}")
         assert art.maestra == f"j_rueda_{tag_f}" and art.relacion == 1.0
-        assert cubo.geometria.primitiva == "cilindro" and cubo.geometria.nodo_glb == cubo.id
+        assert cubo.geometria.primitiva == "revolucion" and cubo.geometria.nodo_glb == cubo.id
         disco = ens.pieza(f"disco_{tag}")
         # el cubo llega al radio interior del disco y cubre su plano axial (no flota)
-        assert cubo.geometria.parametros["radio"] > disco.geometria.parametros["radio_interior"]
-        z, mitad = cubo.transformacion.posicion[2], cubo.geometria.parametros["largo"] / 2
+        assert cubo.dimensiones_m["radio_maximo"] > disco.geometria.parametros["radio_interior"]
+        z, mitad = cubo.transformacion.posicion[2], cubo.dimensiones_m["largo_axial"] / 2
         assert z - mitad <= disco.transformacion.posicion[2] <= z + mitad
         assert {f"rin_{tag}", f"disco_{tag}"} <= set(cubo.retirar_antes)
     corona = ens.pieza("corona")
     cubo_t = ens.pieza("cubo_trasero")
-    z, mitad = cubo_t.transformacion.posicion[2], cubo_t.geometria.parametros["largo"] / 2
+    z, mitad = cubo_t.transformacion.posicion[2], cubo_t.dimensiones_m["largo_axial"] / 2
     assert z - mitad <= corona.transformacion.posicion[2] <= z + mitad
 
 
@@ -194,3 +195,145 @@ def test_sin_marcas_comerciales(ens) -> None:  # type: ignore[no-untyped-def]
 def test_construccion_determinista() -> None:
     a, b = construir_moto(), construir_moto()
     assert a.model_dump_json() == b.model_dump_json()
+
+
+# ----------------------------------------------------------------- fase 7a: fidelidad 3D
+NUEVAS = {
+    "direccion": ["tija_superior", "manubrio", "manija_freno", "manija_embrague", "puno_izquierdo",
+                  "puno_derecho", "espejo_izquierdo", "espejo_derecho"],
+    "carroceria": ["guardabarros_delantero", "guardabarros_trasero", "cubierta_izquierda", "cubierta_derecha",
+                   "colin", "tapa_tanque", "porta_placa"],
+    "motor": ["carter", "culata", "tapa_motor_izquierda", "tapa_motor_derecha", "filtro_aire",
+              "cuerpo_aceleracion"],
+    "transmision": ["pedal_cambios", "tensor_izquierdo", "tensor_derecho", "cubrecadena"],
+    "frenos": ["bomba_freno", "manguera_freno", "pedal_freno"],
+    "chasis_tanque": ["estribo_izquierdo", "estribo_derecho", "caballete_lateral", "cuna_chasis_derecha",
+                      "subchasis"],
+    "electrico": ["direccional_delantera_izquierda", "direccional_delantera_derecha",
+                  "direccional_trasera_izquierda", "direccional_trasera_derecha", "bateria"],
+    "suspension_trasera": ["basculante_brazo_izquierdo", "basculante_travesano"],
+}  # fmt: skip
+
+ORIGINALES = {
+    "cilindro", "piston", "biela", "ciguenal", "valvula_admision", "valvula_escape", "bujia",
+    "caja_cambios", "pinon", "cadena", "corona", "chasis", "cuna_chasis", "pipa_direccion", "tanque",
+    "sillin", "puente_horquilla", "tubo_izquierdo", "botella_izquierda", "tubo_derecho",
+    "botella_derecha", "monoamortiguador", "basculante", "rin_delantero", "llanta_delantera",
+    "rin_trasero", "llanta_trasera", "cubo_delantero", "cubo_trasero", "disco_delantero",
+    "caliper_delantero", "disco_trasero", "caliper_trasero", "unidad_cbs", "farola", "stop",
+    "velocimetro", "tubo_escape", "silenciador",
+}  # fmt: skip
+ARTICULACIONES_ORIGINALES = {
+    "j_cilindro", "j_piston", "j_biela", "j_ciguenal", "j_valvula_admision", "j_valvula_escape",
+    "j_bujia", "j_caja_cambios", "j_pinon", "j_cadena", "j_corona", "j_chasis", "j_cuna_chasis",
+    "j_pipa", "j_tanque", "j_sillin", "j_puente", "j_tubo_izquierdo", "j_tubo_derecho",
+    "j_botella_izquierda", "j_botella_derecha", "j_monoamortiguador", "j_basculante",
+    "j_rueda_delantera", "j_llanta_delantera", "j_rueda_trasera", "j_llanta_trasera",
+    "j_cubo_delantero", "j_cubo_trasero", "j_disco_delantero", "j_caliper_delantero",
+    "j_disco_trasero", "j_caliper_trasero", "j_unidad_cbs", "j_farola", "j_stop", "j_velocimetro",
+    "j_tubo_escape", "j_silenciador",
+}  # fmt: skip
+
+
+def test_piezas_nuevas_por_subconjunto_y_total(ens) -> None:  # type: ignore[no-untyped-def]
+    assert len(ens.piezas) >= 70 and len(ens.articulaciones) == len(ens.piezas)
+    for sub, ids in NUEVAS.items():
+        for pid in ids:
+            assert ens.pieza(pid).subconjunto == sub, pid
+
+
+def test_ids_originales_se_conservan(ens) -> None:  # type: ignore[no-untyped-def]
+    assert {p.id for p in ens.piezas} >= ORIGINALES
+    assert {a.id for a in ens.articulaciones} >= ARTICULACIONES_ORIGINALES
+
+
+def test_conectividad_ninguna_pieza_flota(ens) -> None:  # type: ignore[no-untyped-def]
+    from fabrica_autopartes.simulador.generacion import construir_escena, verificar_conectividad
+
+    _, mallas = construir_escena(ens)
+    assert verificar_conectividad(ens, mallas) == []
+    raices = [p.id for p in ens.piezas if "montada_en" not in p.metadatos]
+    assert raices == ["chasis"]
+
+
+def test_conectividad_detecta_una_pieza_flotando(ens) -> None:  # type: ignore[no-untyped-def]
+    from fabrica_autopartes.simulador.generacion import construir_escena, verificar_conectividad
+
+    copia = ens.model_copy(deep=True)
+    _, mallas = construir_escena(copia)
+    p = copia.pieza("bateria")
+    x, y, z = p.transformacion.posicion
+    p.transformacion = p.transformacion.model_copy(update={"posicion": (x, y - 0.05, z)})
+    errores = verificar_conectividad(copia, mallas)
+    assert len(errores) == 1 and "bateria flota" in errores[0] and "chasis" in errores[0]
+    assert "mm" in errores[0]
+
+
+def test_conectividad_rechaza_ciclos_y_montajes_inexistentes(ens) -> None:  # type: ignore[no-untyped-def]
+    from fabrica_autopartes.simulador.generacion import verificar_conectividad
+
+    copia = ens.model_copy(deep=True)
+    copia.pieza("chasis").metadatos["montada_en"] = "bateria"
+    assert any("ciclo" in e for e in verificar_conectividad(copia, {}))
+    copia2 = ens.model_copy(deep=True)
+    copia2.pieza("bateria").metadatos["montada_en"] = "no_existe"
+    assert any("inexistente" in e for e in verificar_conectividad(copia2, {}))
+
+
+def test_freno_no_declara_montajes_y_valida_igual() -> None:
+    from fabrica_autopartes.simulador.catalogo_freno import construir_freno
+    from fabrica_autopartes.simulador.generacion import verificar_conectividad
+
+    freno = construir_freno()
+    assert all("montada_en" not in p.metadatos for p in freno.piezas)
+    assert verificar_conectividad(freno) == []
+
+
+def test_puntos_duros_proporciones(ens) -> None:  # type: ignore[no-untyped-def]
+    from fabrica_autopartes.simulador.puntos_duros_moto import PUNTOS, tabla_puntos_duros
+
+    assert PUNTOS.eje_delantero[0] - PUNTOS.eje_trasero[0] == pytest.approx(1.30, abs=1e-6)
+    assert ens.parametros["distancia_entre_ejes_m"] == pytest.approx(1.30, abs=1e-3)
+    sillin = ens.pieza("sillin")
+    alturas = [v for k, v in sillin.geometria.parametros.items() if k.startswith("c_y")]
+    assert max(alturas) + sillin.transformacion.posicion[1] == pytest.approx(0.79, abs=0.005)
+    ux, uy = PUNTOS.eje_horquilla
+    assert math.degrees(math.atan2(ux, -uy)) == pytest.approx(26.0, abs=1e-6)
+    dx = PUNTOS.eje_delantero[0] - PUNTOS.pipa[0]
+    dy = PUNTOS.eje_delantero[1] - PUNTOS.pipa[1]
+    assert dx * uy - dy * ux == pytest.approx(0.0, abs=1e-9)
+    nombres = {n for n, _, _ in tabla_puntos_duros()}
+    esperados = {"eje_delantero", "eje_trasero", "pipa_direccion", "pivote_basculante",
+                 "amortiguador_superior", "amortiguador_inferior", "soporte_motor_delantero"}  # fmt: skip
+    assert esperados <= nombres
+    for n, x, y in tabla_puntos_duros():
+        assert ens.parametros[f"punto_{n}_x_m"] == pytest.approx(x, abs=1e-5)
+        assert ens.parametros[f"punto_{n}_y_m"] == pytest.approx(y, abs=1e-5)
+
+
+def test_cilindro_inclinado_y_piston_recorren_la_carrera(ens) -> None:  # type: ignore[no-untyped-def]
+    inc = math.radians(ens.parametros["inclinacion_cilindro_grados"])
+    eje = ens.articulacion("j_piston").eje
+    assert eje[0] == pytest.approx(math.sin(inc), abs=1e-5)
+    assert eje[1] == pytest.approx(math.cos(inc), abs=1e-5)
+    base = cin.transformaciones(ens)
+    abajo = cin.transformaciones(ens, {"j_piston": -ens.parametros["carrera_m"]})
+    d = abajo["piston"][:3, 3] - base["piston"][:3, 3]
+    assert math.hypot(*d) == pytest.approx(ens.parametros["carrera_m"], abs=1e-6)
+    c = ens.pieza("cilindro").transformacion.posicion
+    p = ens.pieza("piston").transformacion.posicion
+    assert math.hypot(p[0] - c[0], p[1] - c[1]) < 0.1
+
+
+def test_trayectoria_de_la_cadena_en_los_parametros(ens) -> None:  # type: ignore[no-untyped-def]
+    q = ens.parametros
+    assert q["cadena_dientes_pinon"] == 14 and q["cadena_dientes_corona"] == 42
+    assert q["cadena_radio_paso_corona_m"] / q["cadena_radio_paso_pinon_m"] == pytest.approx(
+        q["relacion_final"]
+    )
+    d = math.hypot(
+        q["cadena_pinon_x_m"] - q["cadena_corona_x_m"], q["cadena_pinon_y_m"] - q["cadena_corona_y_m"]
+    )
+    assert q["cadena_entre_centros_m"] == pytest.approx(d, abs=1e-5)
+    assert ens.pieza("pinon").geometria.parametros["n_dientes"] == 14
+    assert ens.pieza("corona").geometria.parametros["n_dientes"] == 42

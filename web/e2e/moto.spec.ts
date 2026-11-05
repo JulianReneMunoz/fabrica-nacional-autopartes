@@ -360,3 +360,186 @@ test("moto: recorrido automático ?tour=1 termina en menos de 30 s sin errores (
   expect((Date.now() - t0) / 1000).toBeLessThan(30.5);
   expect(errores).toEqual([]);
 });
+
+async function medirFps(page: Page, ms = 3000) {
+  return page.evaluate(
+    (dur) =>
+      new Promise<number>((ok) => {
+        let n = 0;
+        const t0 = performance.now();
+        const f = () => {
+          n++;
+          if (performance.now() - t0 < dur) requestAnimationFrame(f);
+          else ok((n * 1000) / (performance.now() - t0));
+        };
+        requestAnimationFrame(f);
+      }),
+    ms,
+  );
+}
+
+test("moto: rendimiento ≥ 50 fps con SwiftShader (79 piezas, PBR, sombras y entorno de estudio)", async ({ page }) => {
+  await abrir(page);
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __moto3d?: { piezas: () => number } }).__moto3d?.piezas())).toBe(79);
+  await marcha(page, 1);
+  await acelerador(page, 60);
+  await page.waitForTimeout(1500);
+  const fps = await medirFps(page);
+  test.info().annotations.push({ type: "fps", description: fps.toFixed(1) });
+  console.log(`FPS moto (SwiftShader, 1440×900): ${fps.toFixed(1)}`);
+  expect(fps).toBeGreaterThanOrEqual(50);
+});
+
+/* ---------- fase 7a: fidelidad 3D (79 piezas, eje inclinado, contorno, etiquetas con guía) ---------- */
+type Gancho = {
+  mundo: (id: string) => number[] | null;
+  color: (id: string) => { hex: string; emisivo: number } | null;
+  contorno: (id: string) => boolean;
+  geom: () => { ejeCilindro: [number, number]; centroCiguenal: [number, number] };
+  piezas: () => number;
+};
+/** Ejecuta `f(window.__moto3d)` en la página (gancho de pruebas que expone EscenaMoto). */
+const gancho = <T,>(page: Page, f: (g: Gancho) => T): Promise<T> =>
+  page.evaluate((cuerpo) => new Function("g", `return (${cuerpo})(g)`)((window as unknown as { __moto3d: Gancho }).__moto3d), f.toString()) as Promise<T>;
+
+test("moto 7a: el GLB trae 79 piezas y los chips de ensamblajes incluyen dirección y carrocería", async ({ page }) => {
+  await abrir(page);
+  await expect.poll(() => gancho(page, (g) => g.piezas())).toBe(79);
+  await page.getByRole("tab", { name: "Ensamblajes" }).click();
+  await expect(page.locator(".chips-ensamblaje button")).toHaveCount(12); // Todo + 11 ensamblajes
+  await page.locator('button[data-ensamblaje="direccion"]').click();
+  await expect(page.locator('button[data-pieza="manubrio"]')).toBeVisible();
+  await page.locator('button[data-ensamblaje="carroceria"]').click();
+  await expect(page.locator('button[data-pieza="guardabarros_delantero"]')).toBeVisible();
+});
+
+test("moto 7a: el pistón se mueve sobre el EJE INCLINADO del cilindro (distancia al eje ≈ 0)", async ({ page }) => {
+  await abrir(page);
+  await page.getByLabel("Factor de cámara lenta").selectOption("50");
+  await acelerador(page, 100); // rpm libres altas: el cigüeñal da varias vueltas durante el muestreo
+  const g = await gancho(page, (m) => m.geom());
+  const ang = (Math.atan2(g.ejeCilindro[0], g.ejeCilindro[1]) * 180) / Math.PI;
+  expect(ang).toBeGreaterThan(14.9);
+  expect(ang).toBeLessThan(15.1);
+  const proy: number[] = [];
+  for (let i = 0; i < 30; i++) {
+    const p = (await gancho(page, (m) => m.mundo("piston")))!;
+    const dx = p[0] - g.centroCiguenal[0];
+    const dy = p[1] - g.centroCiguenal[1];
+    const distancia = Math.abs(dx * g.ejeCilindro[1] - dy * g.ejeCilindro[0]); // |(p − C) × u|
+    expect(distancia).toBeLessThan(0.002); // el pistón queda a < 2 mm del eje (tolerancia de conectividad)
+    proy.push(dx * g.ejeCilindro[0] + dy * g.ejeCilindro[1]);
+    await page.waitForTimeout(90);
+  }
+  expect(Math.max(...proy) - Math.min(...proy)).toBeGreaterThan(0.045); // recorre casi toda la carrera (58,7 mm)
+  expect(Math.max(...proy) - Math.min(...proy)).toBeLessThan(0.0605);
+});
+
+test("moto 7a: la selección usa CONTORNO y no recolorea la pieza (llanta trasera, tanque, resaltado de la ficha)", async ({ page }) => {
+  const errores = vigilarConsola(page);
+  await abrir(page);
+  const antes = await gancho(page, (g) => g.color("llanta_trasera"));
+  expect(await gancho(page, (g) => g.contorno("llanta_trasera"))).toBe(false);
+  await page.getByRole("tab", { name: "Ensamblajes" }).click();
+  await page.locator('button[data-pieza="llanta_trasera"]').click();
+  await expect.poll(() => gancho(page, (g) => g.contorno("llanta_trasera"))).toBe(true);
+  expect(await gancho(page, (g) => g.color("llanta_trasera"))).toEqual(antes); // mismo color y sin emisivo naranja
+  expect(antes!.emisivo).toBe(0);
+  const tanque = await gancho(page, (g) => g.color("tanque"));
+  await page.locator('button[data-pieza="tanque"]').click();
+  await expect.poll(() => gancho(page, (g) => g.contorno("tanque"))).toBe(true);
+  expect(await gancho(page, (g) => g.contorno("llanta_trasera"))).toBe(false);
+  expect(await gancho(page, (g) => g.color("tanque"))).toEqual(tanque);
+  // resaltado desde la ficha técnica: también por contorno
+  await page.getByRole("tab", { name: "Ficha técnica" }).click();
+  await page.locator('.ficha-tecnica button[data-campo="llantas.trasera"]').click();
+  await expect.poll(() => gancho(page, (g) => g.contorno("llanta_trasera"))).toBe(true);
+  expect(await gancho(page, (g) => g.color("llanta_trasera"))).toEqual(antes);
+  expect(errores).toEqual([]); // sin errores de shader ni de WebGL
+});
+
+for (const [ancho, alto] of [
+  [1440, 900],
+  [1280, 800],
+] as const) {
+  test(`moto 7a: etiquetas con línea guía, sin solapes y sin recortes (${ancho}×${alto})`, async ({ page }) => {
+    const errores = vigilarConsola(page);
+    await page.setViewportSize({ width: ancho, height: alto });
+    await abrir(page);
+    const revisar = async () => {
+      // Una sola lectura síncrona en la página (las etiquetas se reposicionan en cada fotograma).
+      const lectura = await page.evaluate(() => {
+        const esc = document.querySelector<HTMLElement>('[data-testid="escenario-moto"]')!.getBoundingClientRect();
+        const zonas = Array.from(document.querySelectorAll<HTMLElement>(".superpuesto, .lento, .leyenda-escena")).map((z) => z.getBoundingClientRect());
+        return ["motor", "cilindrada", "transmision", "rueda", "disco_del", "disco_tras"].flatMap((clave) => {
+          const el = document.querySelector<HTMLElement>(`[data-etiqueta="${clave}"]`)!;
+          if (getComputedStyle(el).visibility !== "visible") return [];
+          const b = el.getBoundingClientRect();
+          const l = document.querySelector<SVGLineElement>(`line[data-guia="${clave}"]`)!;
+          return [{ clave, x: b.left - esc.left, y: b.top - esc.top, w: b.width, h: b.height, ew: esc.width, eh: esc.height, x2: Number(l.getAttribute("x2")), y2: Number(l.getAttribute("y2")), guia: getComputedStyle(l).visibility, sobreZona: zonas.some((z) => b.left < z.right && b.right > z.left && b.top < z.bottom && b.bottom > z.top) }];
+        });
+      });
+      expect(lectura.length).toBeGreaterThanOrEqual(5);
+      for (const c of lectura) {
+        expect(c.x, `${c.clave} recortada a la izquierda`).toBeGreaterThanOrEqual(-0.5);
+        expect(c.y, `${c.clave} recortada arriba`).toBeGreaterThanOrEqual(-0.5);
+        expect(c.x + c.w, `${c.clave} recortada a la derecha`).toBeLessThanOrEqual(c.ew + 0.5);
+        expect(c.y + c.h, `${c.clave} recortada abajo`).toBeLessThanOrEqual(c.eh + 0.5);
+        expect(c.guia).toBe("visible");
+        expect(c.sobreZona, `${c.clave} tapa la barra de herramientas, el cuadro de cámara lenta o la leyenda`).toBe(false);
+        expect(c.x2).toBeGreaterThanOrEqual(c.x - 3);
+        expect(c.x2).toBeLessThanOrEqual(c.x + c.w + 3);
+        expect(c.y2).toBeGreaterThanOrEqual(c.y - 3);
+        expect(c.y2).toBeLessThanOrEqual(c.y + c.h + 3);
+      }
+      for (let i = 0; i < lectura.length; i++)
+        for (let j = i + 1; j < lectura.length; j++) {
+          const a = lectura[i];
+          const b = lectura[j];
+          const solapa = a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+          expect(solapa, `${a.clave} se solapa con ${b.clave}`).toBe(false);
+        }
+    };
+    await revisar();
+    await page.getByRole("tab", { name: "Vista" }).click();
+    for (const camara of ["3/4", "Lateral", "Frenos"]) {
+      await page.getByRole("button", { name: camara, exact: true }).click();
+      await page.waitForTimeout(2500);
+      await revisar();
+    }
+    // textos exactos: ni «ficha 150» ni etiquetas lejos de su pieza
+    const texto = await page.getByTestId("escenario-moto").innerText();
+    expect(texto).toContain("150 cm³ nominal — supuesto didáctico");
+    expect(texto).not.toMatch(/ficha\s*150/);
+    await expect(page.locator('[data-etiqueta="disco_tras"]')).toContainText("Tras.: sin accionar");
+    expect(errores).toEqual([]);
+  });
+}
+
+test("moto 7a: calidad ligera por software y, forzando calidad alta, entorno de estudio local sin errores", async ({ page }) => {
+  const errores = vigilarConsola(page);
+  await abrir(page);
+  await expect(page.getByTestId("escenario-moto")).toHaveAttribute("data-calidad", "ligera");
+  await page.goto("/app/#/maquina/moto_honda?calidad=alta"); // IBL con Lightformers locales + SSAO
+  await page.reload();
+  await expect(page.getByTestId("escenario-moto").locator("canvas")).toBeVisible();
+  await expect(page.getByTestId("escenario-moto")).toHaveAttribute("data-calidad", "alta");
+  await expect.poll(() => gancho(page, (g) => g.piezas()), { timeout: 30_000 }).toBe(79);
+  await page.waitForTimeout(2500);
+  expect(errores.filter((e) => !/404/.test(e))).toEqual([]); // sin errores de shader/WebGL
+});
+
+test("moto 7a: capturas lateral, 3/4 y despiece (mismo encuadre y tamaño que la línea base «antes»)", async ({ page }) => {
+  await abrir(page);
+  await page.getByRole("tab", { name: "Vista" }).click();
+  await page.getByRole("button", { name: "Lateral", exact: true }).click();
+  await page.waitForTimeout(2500);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: `${FIGURAS}/moto_7a_despues_lateral.png` });
+  await page.getByRole("button", { name: "3/4", exact: true }).click();
+  await page.waitForTimeout(2500);
+  await page.screenshot({ path: `${FIGURAS}/moto_7a_despues_3cuartos.png` });
+  await page.getByLabel("Despiece por ensamblaje").check();
+  await page.waitForTimeout(9000);
+  await page.screenshot({ path: `${FIGURAS}/moto_7a_despues_despiece.png` });
+});
