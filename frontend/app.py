@@ -8,6 +8,8 @@ from __future__ import annotations
 import io
 import json
 import os
+import sys
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -16,28 +18,20 @@ import streamlit.components.v1 as componentes
 from fabrica_autopartes.core.config import RAIZ_PROYECTO, Configuracion
 from fabrica_autopartes.core.excepciones import ErrorFNA
 from fabrica_autopartes.llm.catalogo_prompts import catalogo
+from fabrica_autopartes.llm.salvaguardas import es_rechazo
 from fabrica_autopartes.pipelines.calidad import validar_fragmentos
 from fabrica_autopartes.pipelines.graficas import ETAPAS, generar_graficas
 from fabrica_autopartes.services.asistente import ServicioAsistente
 from fabrica_autopartes.services.maquinas import construir_biblioteca
 
-st.set_page_config(page_title="Fanalca · Base de conocimiento y Q&A", page_icon="⚙️", layout="wide")
+# El estilo (tokens del visor, CSS, insignias, chips, tarjetas) vive en frontend/estilo.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import estilo as est
 
-st.markdown(
-    """
-    <style>
-      .block-container {padding-top: 1.6rem;}
-      .fna-encabezado {border-left: 6px solid #C8102E; padding: .4rem 1rem; background: #f7f7f9;
-                       border-radius: 6px; margin-bottom: .8rem;}
-      .fna-encabezado h1 {font-size: 1.55rem; margin: 0;}
-      .fna-encabezado p {margin: .2rem 0 0 0; color: #555;}
-      .fna-etiqueta {display:inline-block; padding:.1rem .55rem; border-radius: 999px;
-                     font-size:.78rem; margin-right:.3rem; background:#eef1f6; color:#223;}
-      .fna-ok {background:#e5f5ea; color:#145a2a;} .fna-alerta {background:#fdecea; color:#8a1c12;}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+st.set_page_config(page_title="Fanalca · Base de conocimiento y Q&A", page_icon="⚙️", layout="wide")
+URL_VISOR = os.environ.get("FNA_URL_VISOR", "http://127.0.0.1:8000/app/")
+est.inyectar_estilo(est.cabecera_html(URL_VISOR))
+TOKENS = est.leer_tokens()
 
 
 @st.cache_resource
@@ -96,10 +90,22 @@ def ejecutar(funcion, *args, **kwargs):  # type: ignore[no-untyped-def]
     return None
 
 
+def origenes_de(fuentes):  # type: ignore[no-untyped-def]
+    """Origen (scraping, lectura_web, semilla) de cada fragmento citado; solo lectura de la base Gold."""
+    mapa: dict[str, str] = {}
+    for f in fuentes:
+        try:
+            mapa[f.fragmento_id] = base.obtener(f.fragmento_id).origen
+        except ErrorFNA:
+            continue
+    return mapa
+
+
 st.markdown(
-    """<div class="fna-encabezado"><h1>Fábrica Nacional de Autopartes — Asistente de conocimiento</h1>
-    <p>Resumen · Preguntas frecuentes · Preguntas y respuestas ancladas a la base de conocimiento</p>
-    </div>""",
+    est.encabezado_html(
+        "Fábrica Nacional de Autopartes — Asistente de conocimiento",
+        "Resumen · Preguntas frecuentes · Preguntas y respuestas ancladas a la base de conocimiento",
+    ),
     unsafe_allow_html=True,
 )
 
@@ -127,16 +133,29 @@ if stats.origenes.get("semilla"):
 
 # ------------------------------------------------------------------------ panel
 with t_panel:
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Documentos", stats.documentos)
-    c2.metric("Fragmentos", stats.fragmentos)
-    c3.metric("Tokens aprox.", f"{stats.tokens_aprox:,}".replace(",", "."))
-    c4.metric("Fuentes (URL)", len(stats.urls))
+    st.markdown(
+        est.fila_chips(
+            [
+                est.chip("Documentos", stats.documentos, "dato"),
+                est.chip("Fragmentos", stats.fragmentos, "dato"),
+                est.chip("Tokens aprox.", f"{stats.tokens_aprox:,}".replace(",", "."), "dato"),
+                est.chip("Fuentes (URL)", len(stats.urls), "dato"),
+            ]
+        )
+        + '<p class="fna-procedencia">Procedencia: '
+        + est.insignia("base_conocimiento", "capa gold")
+        + " · ".join(f"{est.insignia(o)}{n} fragmentos" for o, n in stats.origenes.items())
+        + "</p>",
+        unsafe_allow_html=True,
+    )
     izq, der = st.columns([3, 2])
     with izq:
         st.subheader("Fragmentos por sección")
         if stats.secciones:
-            st.bar_chart(pd.Series(stats.secciones, name="fragmentos").sort_values(ascending=False))
+            st.altair_chart(est.grafica_barras(stats.secciones, TOKENS), theme=None, width="stretch")
+            st.caption(
+                "Fuente: capa Gold (estadisticas.json) · una barra por sección, cifra al final de cada barra."
+            )
     with der:
         st.subheader("Procedencia")
         st.dataframe(pd.DataFrame({"url": stats.urls}), hide_index=True, width="stretch")
@@ -184,24 +203,23 @@ with t_qa:
         if r is not None:
             st.session_state.historial.append(r)
     for r in reversed(st.session_state.historial[-10:]):
-        with st.chat_message("user"):
-            st.write(r.pregunta)
-        with st.chat_message("assistant"):
-            st.write(r.respuesta)
-            clase = "fna-ok" if r.fundamentada else "fna-alerta"
-            estado = "fundamentada" if r.fundamentada else "sin respaldo"
-            st.markdown(
-                f'<span class="fna-etiqueta {clase}">{estado}</span>'
-                f'<span class="fna-etiqueta">confianza: {r.confianza}</span>'
-                f'<span class="fna-etiqueta">contexto: {r.modo_contexto}</span>'
-                f'<span class="fna-etiqueta">{r.proveedor} · {r.modelo} · {r.version_prompt}</span>'
-                f'<span class="fna-etiqueta">{r.latencia_ms} ms</span>',
-                unsafe_allow_html=True,
-            )
-            if r.fuentes:
-                with st.expander(f"Fuentes ({len(r.fuentes)})"):
-                    for f in r.fuentes:
-                        st.markdown(f"- `{f.fragmento_id}` · [{f.titulo}]({f.url})")
+        st.markdown(
+            est.tarjeta_respuesta(
+                pregunta=r.pregunta,
+                respuesta=r.respuesta,
+                fundamentada=r.fundamentada,
+                confianza=r.confianza,
+                modo_contexto=r.modo_contexto,
+                proveedor=r.proveedor,
+                modelo=r.modelo,
+                version_prompt=r.version_prompt,
+                latencia_ms=r.latencia_ms,
+                fuentes=r.fuentes,
+                origenes=origenes_de(r.fuentes),
+                es_rechazo=es_rechazo(r.respuesta),
+            ),
+            unsafe_allow_html=True,
+        )
 
 # ---------------------------------------------------------------------- resumen
 with t_res:
@@ -285,11 +303,20 @@ with t_eval:
     if "evaluacion" in st.session_state:
         inf = st.session_state.evaluacion
         m = inf["metricas"]
-        c = st.columns(4)
-        c[0].metric("Exactitud respondibles", f"{m['exactitud_respondibles']:.0%}")
-        c[1].metric("Rechazo correcto", f"{m['rechazo_correcto']:.0%}")
-        c[2].metric("Fundamentadas", f"{m['tasa_fundamentada']:.0%}")
-        c[3].metric("Latencia media", f"{m['latencia_media_ms']} ms")
+        st.markdown(
+            est.fila_chips(
+                [
+                    est.chip("Exactitud respondibles", f"{m['exactitud_respondibles']:.0%}", "dato"),
+                    est.chip("Rechazo correcto", f"{m['rechazo_correcto']:.0%}", "dato"),
+                    est.chip("Fundamentadas", f"{m['tasa_fundamentada']:.0%}", "dato"),
+                    est.chip("Latencia media", f"{m['latencia_media_ms']} ms"),
+                ]
+            )
+            + '<p class="fna-procedencia">Procedencia: banco de 24 preguntas, ejecución local · '
+            + est.insignia("base_conocimiento")
+            + "</p>",
+            unsafe_allow_html=True,
+        )
         st.dataframe(
             pd.DataFrame(inf["detalle"])[["id", "tipo", "acierto", "fundamentada", "pregunta", "respuesta"]],
             hide_index=True,
@@ -372,25 +399,37 @@ EXPLICACION_ETAPAS = {
 with t_proc:
     st.subheader("Proceso de la información: del sitio oficial a la base de conocimiento")
     st.graphviz_chart(
-        r"""digraph G { rankdir=LR; node [shape=box, style="rounded,filled", fillcolor="#fcfcfb",
-        fontname="Helvetica", fontsize=10, color="#52514e"]; edge [color="#52514e"];
-        web [label="Sitios oficiales\nautopartesfanalca.com.co\nfanalca.com", fillcolor="#e8f0fb"];
+        r"""digraph G { rankdir=LR; node [shape=box, style="rounded,filled", fillcolor="@PAPEL@",
+        fontname="Helvetica", fontsize=10, color="@TINTA2@"]; edge [color="@TINTA2@"];
+        web [label="Sitios oficiales\nautopartesfanalca.com.co\nfanalca.com", fillcolor="@DATOFONDO@"];
         r [label="1. Rastreo\nrobots.txt · sitemap · pausa"]; b [label="2. Bronze\nHTML crudo + metadatos"];
         s [label="3–4. Silver\nextracción · limpieza · dedupe"];
         g [label="5–6. Gold\nfragmentos + procedencia"];
-        kb [label="Base de conocimiento\nBM25 + LangChain", fillcolor="#fdeee7"];
+        kb [label="Base de conocimiento\nBM25 + LangChain", fillcolor="@ACENTOSUAVE@"];
         qa [label="Resumen · FAQ · Q&A\nAPI · MCP · Simulador"];
-        web -> r -> b -> s -> g -> kb -> qa; }"""
+        web -> r -> b -> s -> g -> kb -> qa; }""".replace("@PAPEL@", TOKENS["papel"])
+        .replace("@TINTA2@", TOKENS["tinta-2"])
+        .replace("@DATOFONDO@", TOKENS["dato-fondo"])
+        .replace("@ACENTOSUAVE@", TOKENS["acento-suave"])
     )
     ruta_metricas = servicio.config.dir_datos / "gold" / "metricas_etapas.json"
     dir_graficas = RAIZ_PROYECTO / "docs" / "graficas"
     if ruta_metricas.exists():
         metricas = json.loads(ruta_metricas.read_text(encoding="utf-8"))
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Capturas Bronze", (metricas.get("bronze") or {}).get("capturas", 0))
-        m2.metric("Documentos Silver", metricas["silver"]["documentos"])
-        m3.metric("Fragmentos Gold", metricas["gold"]["fragmentos"])
-        m4.metric("Fuente", metricas["fuente"])
+        st.markdown(
+            est.fila_chips(
+                [
+                    est.chip("Capturas Bronze", (metricas.get("bronze") or {}).get("capturas", 0), "dato"),
+                    est.chip("Documentos Silver", metricas["silver"]["documentos"], "dato"),
+                    est.chip("Fragmentos Gold", metricas["gold"]["fragmentos"], "dato"),
+                    est.chip("Fuente", metricas["fuente"]),
+                ]
+            )
+            + '<p class="fna-procedencia">Procedencia: '
+            + est.insignia(str(metricas["fuente"]))
+            + f"métricas de etapas ({ruta_metricas.name})</p>",
+            unsafe_allow_html=True,
+        )
         st.caption(f"Métricas generadas en {metricas['generado_en'][:19]} UTC · {ruta_metricas.name}")
         if metricas["fuente"] != "scraping":
             st.info(
@@ -412,7 +451,7 @@ with t_proc:
 # ------------------------------------------------------------------ simulador 3D
 with t_sim:
     st.subheader("Simulador 3D v2.0 y biblioteca de máquinas")
-    url_visor = os.environ.get("FNA_URL_VISOR", "http://127.0.0.1:8000/app/")
+    url_visor = URL_VISOR
     st.markdown(
         f"El visor web (React Three Fiber) se sirve desde FastAPI en **{url_visor}**. "
         "Iniciar la API con `.\\scripts\\ejecutar_api.ps1` y compilar el visor con `npm run build` "
@@ -428,10 +467,14 @@ with t_sim:
         with st.container(border=True):
             st.markdown(f"**{maquina.pregunta}**  \n{maquina.una_linea} · `{maquina.relacion}`")
             for dato in maquina.datos_empresa:
-                st.caption(f"[{dato.origen}] {dato.texto} — {dato.url}")
+                st.markdown(est.ficha_dato(dato.origen, dato.texto, dato.url), unsafe_allow_html=True)
             for par in maquina.parametros:
-                st.caption(
-                    f"[{par.procedencia}] {par.nombre}: {par.valor:,.0f} {par.unidad}".replace(",", ".")
+                st.markdown(
+                    est.ficha_dato(
+                        par.procedencia,
+                        f"{par.nombre}: {par.valor:,.0f} {par.unidad}".replace(",", "."),
+                    ),
+                    unsafe_allow_html=True,
                 )
     if st.toggle("Incrustar el visor en esta pestaña", value=False):
         componentes.iframe(url_visor + "#/maquina/freno", height=900, scrolling=True)

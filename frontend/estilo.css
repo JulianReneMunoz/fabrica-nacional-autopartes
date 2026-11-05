@@ -1,0 +1,137 @@
+/* CSS propio y estático de la interfaz Streamlit. Todo valor sale de las variables de web/src/tema/tokens.css,
+   que frontend/estilo.py antepone en :root. Selectores internos de Streamlit: ver SELECTORES_STREAMLIT. */
+
+/* Base: papel claro con retícula, tinta, sans-serif */
+[data-testid="stApp"] {
+  background-color: var(--papel);
+  background-image: linear-gradient(var(--reticula) 1px, transparent 1px),
+    linear-gradient(90deg, var(--reticula) 1px, transparent 1px);
+  background-size: var(--cuadricula) var(--cuadricula);
+  background-position: -1px -1px;
+  color: var(--tinta);
+  font-family: var(--sans);
+  line-height: var(--interlineado);
+}
+[data-testid="stApp"] :where(p, li, label, span, div, button, input, textarea, h1, h2, h3, h4, summary, a, small):not([data-testid="stIconMaterial"]) {
+  font-family: var(--sans);
+}
+[data-testid="stApp"] :where(h1, h2, h3, h4) { letter-spacing: -.01em; }
+[data-testid="stApp"] a { color: var(--dato-texto); }
+[data-testid="stMainBlockContainer"] {
+  padding: 0 var(--e5) var(--e8); max-width: var(--ancho-max);
+}
+[data-testid="stHeading"] h2, [data-testid="stHeading"] h3 { font-size: var(--t-lg); font-weight: 700; padding: var(--e2) 0; }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * { color: var(--tinta-2); opacity: 1; }
+
+/* Foco visible en todos los controles (accesibilidad) */
+[data-testid="stApp"] :focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; border-radius: var(--radio-sm); }
+.fna-cabecera :focus-visible, [data-testid="stHeader"] :focus-visible { outline-color: var(--foco-inverso); }
+
+/* Barra superior negra: la cabecera de Streamlit se vuelve transparente y la barra propia queda debajo */
+[data-testid="stHeader"] { background: transparent; height: var(--alto-cabecera); color: var(--papel); }
+[data-testid="stHeader"] button, [data-testid="stHeader"] svg, [data-testid="stToolbar"] { color: var(--papel); fill: var(--papel); }
+.fna-cabecera {
+  display: flex; align-items: center; gap: var(--e4); flex-wrap: wrap; min-height: var(--alto-cabecera);
+  background: var(--tinta); color: var(--papel); padding: var(--e2) 9rem var(--e2) var(--e5);
+  margin: 0 calc(-1 * var(--e5)) var(--e4);
+  position: relative; z-index: 999980;
+}
+.fna-cabecera .fna-marca {
+  font-family: var(--mono); font-size: var(--t-sm); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; color: var(--papel);
+}
+.fna-cabecera .fna-marca b { color: var(--acento); }
+.fna-cabecera nav { margin-left: auto; display: flex; gap: var(--e1); flex-wrap: wrap; }
+.fna-cabecera nav a {
+  color: var(--papel) !important; text-decoration: none; font-size: var(--t-sm); padding: var(--e1) var(--e3);
+  border-radius: var(--radio-sm); border-bottom: 2px solid transparent; white-space: nowrap;
+}
+.fna-cabecera nav a:hover { background: var(--tinta-2); }
+.fna-cabecera nav a[aria-current="page"] { border-bottom-color: var(--acento); font-weight: 700; background: var(--tinta-2); }
+[data-testid="stApp"] h1.fna-titular { font-size: var(--t-xl); line-height: 1.15; letter-spacing: -.02em; margin: var(--e4) 0 var(--e1); padding: 0; font-weight: 700; }
+.fna-bajada { color: var(--tinta-2); margin: 0 0 var(--e4); }
+
+/* Barra lateral: papel secundario con borde fino */
+[data-testid="stSidebar"] { background: var(--papel-2); border-right: 1px solid var(--tinta); }
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] * {
+  font-family: var(--mono); font-size: var(--t-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--tinta-2);
+}
+
+/* Pestañas: franja de borde fino, estado activo invertido (no depende solo del color) */
+[data-testid="stTabs"] [role="tablist"] {
+  flex-wrap: wrap; gap: 0; overflow: visible; border: 1px solid var(--tinta); border-radius: var(--radio);
+  background: var(--papel-2); box-shadow: none;
+}
+[data-testid="stTabs"] [role="tablist"] > * { box-shadow: none; }
+[data-testid="stTab"] {
+  border-right: var(--borde-suave); padding: var(--e2) var(--e3); background: transparent; border-radius: 0; margin: 0;
+}
+[data-testid="stTab"], [data-testid="stTab"] * {
+  font-family: var(--mono); font-size: var(--t-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--tinta-2); white-space: nowrap;
+}
+[data-testid="stTab"]:hover { background: var(--papel); }
+[data-testid="stTab"][aria-selected="true"] { background: var(--tinta); box-shadow: inset 0 -3px 0 var(--acento); }
+[data-testid="stTab"][aria-selected="true"], [data-testid="stTab"][aria-selected="true"] * { color: var(--papel); font-weight: 700; }
+[data-testid="stTab"]:focus-visible { outline-offset: -3px; }
+
+/* Botones */
+[data-testid="stBaseButton-secondary"], [data-testid="stBaseLinkButton-secondary"], [data-testid="stDownloadButton"] button {
+  border: var(--borde); background: var(--papel); color: var(--tinta); border-radius: var(--radio); font-size: var(--t-sm);
+}
+[data-testid="stBaseButton-secondary"]:hover, [data-testid="stBaseLinkButton-secondary"]:hover { background: var(--papel-2); border-color: var(--tinta); color: var(--tinta); }
+[data-testid="stBaseButton-primary"] { border: var(--borde); background: var(--tinta); color: var(--papel); border-radius: var(--radio); font-size: var(--t-sm); }
+[data-testid="stBaseButton-primary"] *, [data-testid="stBaseButton-primary"] p { color: var(--papel); }
+[data-testid="stBaseButton-primary"]:hover { background: var(--acento); border-color: var(--acento); }
+[data-testid="stBaseButton-primary"]:hover *, [data-testid="stBaseButton-primary"]:hover p { color: var(--tinta); }
+
+/* Paneles de borde fino, sin sombras */
+[data-testid="stExpander"] details { border: var(--borde); border-radius: var(--radio); background: var(--papel); box-shadow: none; }
+[data-testid="stExpander"] summary { font-size: var(--t-sm); }
+[data-testid="stAlert"] { background: var(--papel); border: var(--borde-punteado); border-radius: var(--radio); color: var(--tinta-2); box-shadow: none; }
+[data-testid="stChatInput"] { border: var(--borde); border-radius: var(--radio); background: var(--papel); box-shadow: none; }
+
+/* Insignias de procedencia: UNA línea, color + texto */
+.fna-insignia {
+  display: inline-block; white-space: nowrap; font-family: var(--mono); font-size: var(--t-xs); padding: 1px 6px;
+  border-radius: 3px; margin-right: 6px; border: 1px solid currentColor; text-transform: uppercase; letter-spacing: .04em;
+  line-height: 1.5; vertical-align: baseline; background: var(--papel);
+}
+.fna-insignia.fna-fuente-scraping, .fna-insignia.fna-fuente-base_conocimiento, .fna-insignia.fna-fuente-ficha { color: var(--ok-texto); }
+.fna-insignia.fna-fuente-lectura_web { color: var(--dato-texto); }
+.fna-insignia.fna-fuente-semilla, .fna-insignia.fna-fuente-otra { color: var(--tinta-2); }
+.fna-insignia.fna-fuente-supuesto { color: var(--acento-texto); border-style: dashed; }
+.fna-insignia.fna-fuente-no_publicado { color: var(--tinta-3); border-style: dotted; }
+
+/* Chips de métrica */
+.fna-lecturas { display: flex; flex-wrap: wrap; gap: var(--e2); margin: var(--e3) 0; }
+.fna-chip {
+  background: var(--papel); border: var(--borde-suave); border-radius: var(--radio-pildora); padding: var(--e1) var(--e3);
+  font-size: var(--t-sm); display: inline-flex; gap: 6px; align-items: baseline; flex-wrap: wrap; color: var(--tinta);
+}
+.fna-chip b { font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+.fna-chip-etiqueta { color: var(--tinta-2); }
+.fna-chip-dato { border-color: var(--dato); background: var(--dato-fondo); color: var(--dato-texto); }
+.fna-chip-dato .fna-chip-etiqueta { color: var(--dato-texto); }
+.fna-chip-supuesto { border: var(--borde-punteado); }
+.fna-chip-ok { border-color: var(--ok); background: var(--ok-fondo); color: var(--ok-texto); }
+.fna-chip-ok .fna-chip-etiqueta { color: var(--ok-texto); }
+.fna-chip-alerta { border-color: var(--alerta); background: var(--alerta-fondo); color: var(--alerta-texto); }
+.fna-chip-alerta .fna-chip-etiqueta { color: var(--alerta-texto); }
+.fna-chip-icono { font-weight: 700; }
+.fna-procedencia { font-size: var(--t-sm); color: var(--tinta-2); margin: 0 0 var(--e3); }
+
+/* Tarjeta de respuesta del Q&A */
+.fna-tarjeta { background: var(--papel); border: var(--borde); border-radius: var(--radio); padding: var(--e4); margin: 0 0 var(--e4); display: grid; gap: var(--e2); }
+[data-testid="stApp"] h4.fna-rotulo { font: var(--t-xs) var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--tinta-2); margin: 0; padding: 0; }
+[data-testid="stApp"] p.fna-pregunta { font-size: var(--t-lg); line-height: 1.3; font-weight: 700; margin: 0; }
+.fna-respuesta { font-size: var(--t-md); border-left: 4px solid var(--acento); padding: var(--e1) var(--e3); background: var(--papel); }
+.fna-respuesta p { margin: 0 0 var(--e2); } .fna-respuesta p:last-child { margin: 0; }
+.fna-respuesta ul { margin: 0 0 var(--e2); padding-left: var(--e5); }
+.fna-rechazo { border: var(--borde-punteado); border-left: 4px solid var(--tinta-3); border-radius: var(--radio); color: var(--tinta-2); display: flex; gap: var(--e2); align-items: baseline; flex-wrap: wrap; }
+.fna-citas { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e2); font-size: var(--t-sm); }
+.fna-citas li { border-left: 3px solid var(--dato); padding-left: var(--e2); color: var(--tinta-2); }
+.fna-citas code { font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta-2); background: none; }
+.fna-citas a { word-break: break-all; }
+.fna-citas .fna-url { display: block; font: var(--t-xs) var(--mono); color: var(--tinta-3); word-break: break-all; }
+.fna-ficha { border-left: 3px solid var(--dato); padding-left: var(--e2); font-size: var(--t-sm); color: var(--tinta-2); margin: var(--e1) 0; }
+.fna-ficha a { word-break: break-all; }
+@media (max-width: 899px) { .fna-cabecera { padding-right: var(--e4); } }

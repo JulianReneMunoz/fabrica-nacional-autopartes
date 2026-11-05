@@ -1,0 +1,18 @@
+# Tema derivado de web/src/tema/tokens.css (fuente única de verdad). tests/unit/test_estilo_streamlit.py
+# verifica que estos valores coincidan con los tokens; el CSS adicional lo inyecta frontend/estilo.py.
+[theme]
+primaryColor = "#eb6834"
+backgroundColor = "#fcfcfb"
+secondaryBackgroundColor = "#f3f2ee"
+textColor = "#0b0b0b"
+borderColor = "#cfcdc6"
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+
+[server]
+enableXsrfProtection = true
