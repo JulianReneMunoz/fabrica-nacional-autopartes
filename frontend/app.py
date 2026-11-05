@@ -81,8 +81,7 @@ with st.sidebar:
     opciones = {"proveedor": proveedor, "modelo": modelo, "version_prompt": version}
     st.divider()
     st.caption(
-        "Prototipo académico · Taller 1 TAAML · Universidad Autónoma de Occidente. "
-        "Información pública del sitio oficial; no constituye un canal oficial de Fanalca."
+        "Prototipo técnico. Información pública del sitio oficial; no constituye un canal oficial de Fanalca."
     )
 
 

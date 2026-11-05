@@ -1,6 +1,6 @@
 # Análisis verificable de los documentos
 
-Documentos examinados (copias PDF de la plataforma UAO Virtual, impresas el 17/10/2026 y el 24/10/2026):
+Documentos examinados (copias PDF impresas el 17/10/2026 y el 24/10/2026):
 
 | Documento | Páginas útiles | Observación |
 |---|---|---|

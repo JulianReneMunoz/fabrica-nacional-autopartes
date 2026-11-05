@@ -36,7 +36,7 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 winget install --id Git.Git -e --source winget
 winget install --id GitHub.cli -e --source winget
 git config --global user.name "Nombre Apellido"
-git config --global user.email "correo@uao.edu.co"
+git config --global user.email "correo@ejemplo.com"
 git config --global init.defaultBranch main
 gh auth login
 gh auth setup-git
@@ -288,26 +288,4 @@ cd web; npx playwright test --project=recorrido
 - **Errores frecuentes:** 'ffmpeg' no se reconoce → cerrar y abrir la terminal tras la instalación.
 - **Actualización:** `winget upgrade --id Gyan.FFmpeg`
 - **Seguridad:** Descargar solo desde la fuente indicada por ffmpeg.org.
-
-## 14. Compilador LaTeX (MiKTeX)
-
-- **Función:** Compilación de este manual (docs/latex/main.tex).
-- **Página oficial:** https://miktex.org/download
-- **Versión recomendada:** Última estable.
-- **Requisitos previos:** latexmk necesita Perl en Windows (Strawberry Perl); sin Perl, ejecutar pdflatex tres veces.
-- **Instalación gráfica:** Instalador básico con la opción de instalar paquetes faltantes activada.
-- **Instalación por PowerShell:**
-
-```powershell
-winget install --id MiKTeX.MiKTeX -e --source winget
-winget search StrawberryPerl
-latexmk -pdf -interaction=nonstopmode main.tex
-```
-
-- **Configuración inicial:** MiKTeX Console → Actualizaciones; instalación automática de paquetes habilitada.
-- **Variables de entorno:** MiKTeX agrega su carpeta bin al PATH.
-- **Verificación:** `pdflatex --version`; `latexmk --version`
-- **Errores frecuentes:** 'latexmk: perl not found' → instalar Strawberry Perl o compilar con pdflatex.
-- **Actualización:** `MiKTeX Console → Buscar actualizaciones.`
-- **Seguridad:** Descargar solo desde miktex.org.
 

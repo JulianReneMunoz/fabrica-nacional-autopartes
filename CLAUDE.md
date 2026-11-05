@@ -17,7 +17,7 @@ Claude Code CLI es la consola principal (Windows 11, PowerShell, carpeta
 | Scraping, Medallion, gráficas por etapa | ingeniero-datos | sonnet |
 | Prompts, LangChain, RAG del simulador | ingeniero-llm | sonnet |
 | Generación GLB, API del simulador, visor 3D, animaciones, controles, pruebas | ingeniero-3d-frontend | sonnet |
-| Documentación, LaTeX, guías | documentador | sonnet |
+| Documentación, README, ADR, guías | documentador | sonnet |
 | Verificaciones rápidas | verificador-rapido | haiku |
 
 - La variable `CLAUDE_CODE_SUBAGENT_MODEL`, si se define, reemplaza el campo `model` de todos los

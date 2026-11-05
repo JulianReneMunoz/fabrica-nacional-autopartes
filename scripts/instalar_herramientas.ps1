@@ -54,7 +54,6 @@ if (-not (Test-Comando 'opencode')) {
 
 if ($Opcionales) {
     Install-Winget 'GitHub.cli' 'gh'
-    Install-Winget 'MiKTeX.MiKTeX' 'pdflatex'
     Install-Winget 'Docker.DockerDesktop' 'docker'
 }
 

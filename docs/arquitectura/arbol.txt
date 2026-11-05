@@ -11,7 +11,7 @@ fabrica-nacional-autopartes/
 │   │   ├── revisor-calidad.md
 │   │   └── verificador-rapido.md
 │   ├── skills/
-│   │   └── … (11 archivos)
+│   │   └── … (21 archivos)
 │   └── settings.json
 ├── .github/
 │   └── workflows/
@@ -27,13 +27,19 @@ fabrica-nacional-autopartes/
 │   └── script.py.mako
 ├── data/
 │   ├── bronze/
-│   │   └── html/
-│   │       └── … (0 archivos)
+│   │   ├── html/
+│   │   │   └── … (75 archivos)
+│   │   ├── errores.jsonl
+│   │   ├── manifiesto.jsonl
+│   │   └── resumen_rastreo.json
+│   ├── catalogo/
+│   │   └── motos_honda.yaml
 │   ├── gold/
 │   │   ├── docs/
-│   │   │   └── … (15 archivos)
+│   │   │   └── … (64 archivos)
 │   │   ├── base_conocimiento.txt
 │   │   ├── estadisticas.json
+│   │   ├── faq_visor.json
 │   │   ├── fragmentos.jsonl
 │   │   └── metricas_etapas.json
 │   ├── seed/
@@ -60,24 +66,40 @@ fabrica-nacional-autopartes/
 │   ├── api/
 │   │   └── openapi.json
 │   ├── arquitectura/
-│   │   └── adr/
-│   │       ├── ADR-001-python-uv.md
-│   │       ├── ADR-002-medallion-archivos.md
-│   │       ├── ADR-003-sqlite-auditoria.md
-│   │       ├── ADR-004-langchain-proveedores.md
-│   │       ├── ADR-005-contexto-completo-bm25.md
-│   │       ├── ADR-006-streamlit.md
-│   │       ├── ADR-007-fastapi.md
-│   │       ├── ADR-008-mcp-propio.md
-│   │       ├── ADR-009-prompts-versionados.md
-│   │       ├── ADR-010-fuentes-redes-sociales.md
-│   │       ├── ADR-011-geometria-procedural-trimesh.md
-│   │       ├── ADR-012-postgresql-despliegue.md
-│   │       ├── ADR-013-visor-react-three-fiber.md
-│   │       └── ADR-014-sin-notebooks.md
+│   │   ├── adr/
+│   │   │   ├── ADR-001-python-uv.md
+│   │   │   ├── ADR-002-medallion-archivos.md
+│   │   │   ├── ADR-003-sqlite-auditoria.md
+│   │   │   ├── ADR-004-langchain-proveedores.md
+│   │   │   ├── ADR-005-contexto-completo-bm25.md
+│   │   │   ├── ADR-006-streamlit.md
+│   │   │   ├── ADR-007-fastapi.md
+│   │   │   ├── ADR-008-mcp-propio.md
+│   │   │   ├── ADR-009-prompts-versionados.md
+│   │   │   ├── ADR-010-fuentes-redes-sociales.md
+│   │   │   ├── ADR-011-geometria-procedural-trimesh.md
+│   │   │   ├── ADR-012-postgresql-despliegue.md
+│   │   │   ├── ADR-013-visor-react-three-fiber.md
+│   │   │   ├── ADR-014-sin-notebooks.md
+│   │   │   ├── ADR-015-proteccion-antibots.md
+│   │   │   ├── ADR-016-proveedor-claude-code.md
+│   │   │   └── ADR-017-motocicleta-referencia-fichas-honda.md
+│   │   └── arbol.txt
 │   ├── capturas/
-│   │   └── v2/
-│   │       └── … (7 archivos)
+│   │   ├── v2/
+│   │   │   └── … (7 archivos)
+│   │   ├── moto_01_general.png
+│   │   ├── moto_02_corte_motor.png
+│   │   ├── moto_03_despiece.png
+│   │   ├── moto_04_ficha_faq.png
+│   │   ├── moto_05_frenado_cbs.png
+│   │   ├── moto_06_cambio_marcha.png
+│   │   ├── moto_7a_antes_3cuartos.png
+│   │   ├── moto_7a_antes_despiece.png
+│   │   ├── moto_7a_antes_lateral.png
+│   │   ├── moto_7a_despues_3cuartos.png
+│   │   ├── moto_7a_despues_despiece.png
+│   │   └── moto_7a_despues_lateral.png
 │   ├── diagramas/
 │   │   ├── c4_contenedores.mmd
 │   │   ├── casos_uso.puml
@@ -85,6 +107,7 @@ fabrica-nacional-autopartes/
 │   │   └── secuencia_qa.mmd
 │   ├── evidencias/
 │   │   ├── api_en_vivo.txt
+│   │   ├── calidad_20261105-101630.txt
 │   │   ├── calidad_construccion.txt
 │   │   ├── e2e_playwright.txt
 │   │   ├── evaluacion_linea_base_extractiva.txt
@@ -99,36 +122,18 @@ fabrica-nacional-autopartes/
 │   │   ├── 05_fragmentos_seccion.png
 │   │   └── 06_tokens_fragmento.png
 │   ├── latex/
-│   │   ├── capitulos/
-│   │   │   ├── 01_contexto.tex
-│   │   │   ├── 02_requisitos.tex
-│   │   │   ├── 03_arquitectura.tex
-│   │   │   ├── 04_instalacion.tex
-│   │   │   ├── 05_agentes_mcp.tex
-│   │   │   ├── 06_datos.tex
-│   │   │   ├── 06b_proceso_graficas.tex
-│   │   │   ├── 07_aplicacion.tex
-│   │   │   ├── 08_calidad.tex
-│   │   │   ├── 09_operacion.tex
-│   │   │   ├── 10_cierre.tex
-│   │   │   ├── 11_simulador.tex
-│   │   │   └── 12_anatomia.tex
-│   │   ├── figuras/
-│   │   │   ├── ui_faq.png
-│   │   │   ├── ui_laboratorio.png
-│   │   │   ├── ui_panel.png
-│   │   │   └── ui_qa.png
-│   │   ├── generado/
-│   │   │   └── … (4 archivos)
-│   │   ├── main.pdf
-│   │   └── main.tex
+│   │   └── main.pdf
 │   ├── manuales/
 │   │   ├── fases_agentes.yaml
 │   │   ├── guia_operativa_agentes.md
 │   │   ├── herramientas_windows.yaml
 │   │   └── instalacion_windows.md
 │   ├── prompts/
-│   │   └── bitacora_experimentos.md
+│   │   ├── bitacora_experimentos.md
+│   │   ├── fase_10_readme_y_limpieza.md
+│   │   ├── fase_7a_fidelidad_3d.md
+│   │   ├── fase_7b_estandarizacion_frontend.md
+│   │   └── prompt_moto_honda_3d.md
 │   ├── requisitos/
 │   │   ├── analisis_documentos.md
 │   │   ├── matriz_trazabilidad.csv
@@ -136,6 +141,7 @@ fabrica-nacional-autopartes/
 │   ├── videos/
 │   │   ├── recorrido_freno.mp4
 │   │   ├── recorrido_linea.mp4
+│   │   ├── recorrido_moto_honda.mp4
 │   │   └── recorrido_prensa.mp4
 │   └── prompt_maestro_v2.md
 ├── evaluacion/
@@ -152,7 +158,15 @@ fabrica-nacional-autopartes/
 │   │   ├── 20261104T162649Z_extractivo_lexico-bm25_v3_completo.json
 │   │   ├── 20261104T162649Z_extractivo_lexico-bm25_v3_completo.md
 │   │   ├── 20261104T162651Z_extractivo_lexico-bm25_v3_seleccion.json
-│   │   └── 20261104T162651Z_extractivo_lexico-bm25_v3_seleccion.md
+│   │   ├── 20261104T162651Z_extractivo_lexico-bm25_v3_seleccion.md
+│   │   ├── 20261105T005207Z_claude_code_sonnet_v1_auto.json
+│   │   ├── 20261105T005207Z_claude_code_sonnet_v1_auto.md
+│   │   ├── 20261105T005410Z_claude_code_sonnet_v2_auto.json
+│   │   ├── 20261105T005410Z_claude_code_sonnet_v2_auto.md
+│   │   ├── 20261105T005553Z_claude_code_sonnet_v3_auto.json
+│   │   ├── 20261105T005553Z_claude_code_sonnet_v3_auto.md
+│   │   ├── 20261105T024711Z_claude_code_sonnet_v3_completo.json
+│   │   └── 20261105T024711Z_claude_code_sonnet_v3_completo.md
 │   └── preguntas.yaml
 ├── frontend/
 │   └── app.py
@@ -209,13 +223,15 @@ fabrica-nacional-autopartes/
 │   ├── verificar_capas.py
 │   └── verificar_entorno.ps1
 ├── skills/
-│   └── … (11 archivos)
+│   └── … (21 archivos)
 ├── src/
 │   └── fabrica_autopartes/
 │       ├── api/
 │       │   ├── routes/
 │       │   │   ├── __init__.py
 │       │   │   ├── base.py
+│       │   │   ├── faq_visor.py
+│       │   │   ├── motos.py
 │       │   │   ├── operacion.py
 │       │   │   ├── simulador.py
 │       │   │   └── tareas.py
@@ -244,6 +260,7 @@ fabrica-nacional-autopartes/
 │       │   ├── __init__.py
 │       │   ├── cadenas.py
 │       │   ├── catalogo_prompts.py
+│       │   ├── claude_code.py
 │       │   ├── extractivo.py
 │       │   ├── proveedores.py
 │       │   └── salvaguardas.py
@@ -276,15 +293,21 @@ fabrica-nacional-autopartes/
 │       │   ├── __init__.py
 │       │   ├── asistente.py
 │       │   ├── evaluacion.py
+│       │   ├── faq_visor.py
 │       │   ├── maquinas.py
+│       │   ├── motos.py
 │       │   └── simulador.py
 │       ├── simulador/
 │       │   ├── __init__.py
 │       │   ├── catalogo_freno.py
+│       │   ├── catalogo_moto_honda.py
 │       │   ├── cinematica.py
 │       │   ├── fisica_freno.py
+│       │   ├── fisica_moto.py
 │       │   ├── generacion.py
-│       │   └── modelos.py
+│       │   ├── modelos.py
+│       │   ├── primitivas_moto.py
+│       │   └── puntos_duros_moto.py
 │       ├── __init__.py
 │       └── cli.py
 ├── tests/
@@ -304,8 +327,11 @@ fabrica-nacional-autopartes/
 │   ├── integration/
 │   │   ├── __init__.py
 │   │   ├── test_api.py
+│   │   ├── test_api_motos.py
 │   │   ├── test_api_simulador.py
+│   │   ├── test_faq_visor.py
 │   │   ├── test_generacion_3d.py
+│   │   ├── test_generacion_moto.py
 │   │   ├── test_graficas.py
 │   │   ├── test_mcp.py
 │   │   ├── test_persistencia_y_evaluacion.py
@@ -313,36 +339,54 @@ fabrica-nacional-autopartes/
 │   │   └── test_rastreo.py
 │   ├── unit/
 │   │   ├── __init__.py
+│   │   ├── test_claude_code.py
+│   │   ├── test_dinamica_moto.py
+│   │   ├── test_fisica_moto.py
 │   │   ├── test_llm.py
+│   │   ├── test_moto_ensamblaje.py
 │   │   ├── test_pipelines.py
+│   │   ├── test_proteccion.py
+│   │   ├── test_recuperacion_expansion.py
 │   │   ├── test_scraping.py
 │   │   └── test_simulador.py
 │   ├── __init__.py
 │   └── conftest.py
 ├── web/
 │   ├── e2e/
+│   │   ├── moto.spec.ts
 │   │   ├── recorrido.spec.ts
 │   │   └── visor.spec.ts
 │   ├── public/
 │   │   └── modelos/
 │   │       ├── freno_disco.glb
-│   │       └── freno_disco.manifiesto.json
+│   │       ├── freno_disco.manifiesto.json
+│   │       ├── moto_honda.glb
+│   │       └── moto_honda.manifiesto.json
 │   ├── src/
 │   │   ├── __tests__/
+│   │   │   ├── fidelidad.test.ts
 │   │   │   ├── interfaz.test.tsx
 │   │   │   ├── modelos.test.ts
-│   │   │   └── referencia_freno.json
+│   │   │   ├── moto.test.tsx
+│   │   │   ├── referencia_freno.json
+│   │   │   └── referencia_moto.json
 │   │   ├── componentes/
-│   │   │   └── anatomia.tsx
+│   │   │   ├── anatomia.tsx
+│   │   │   └── panelesMoto.tsx
 │   │   ├── modelos/
+│   │   │   ├── etiquetas.ts
 │   │   │   ├── freno.ts
 │   │   │   ├── linea.ts
+│   │   │   ├── mecanismo.ts
+│   │   │   ├── moto.ts
 │   │   │   └── prensa.ts
 │   │   ├── paginas/
 │   │   │   ├── Biblioteca.tsx
 │   │   │   ├── EscenaFreno.tsx
+│   │   │   ├── EscenaMoto.tsx
 │   │   │   ├── MaquinaFreno.tsx
 │   │   │   ├── MaquinaLinea.tsx
+│   │   │   ├── MaquinaMoto.tsx
 │   │   │   └── MaquinaPrensa.tsx
 │   │   ├── api.ts
 │   │   ├── App.tsx
@@ -356,6 +400,7 @@ fabrica-nacional-autopartes/
 │   └── vite.config.ts
 ├── .coverage
 ├── .dockerignore
+├── .env
 ├── .env.example
 ├── .gitattributes
 ├── .gitignore

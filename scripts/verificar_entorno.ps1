@@ -16,7 +16,6 @@ $herramientas = @(
     @{ Nombre = 'opencode'; Args = @('--version'); Obligatoria = $false },
     @{ Nombre = 'claude';   Args = @('--version'); Obligatoria = $false },
     @{ Nombre = 'docker';   Args = @('--version'); Obligatoria = $false },
-    @{ Nombre = 'pdflatex'; Args = @('--version'); Obligatoria = $false },
     @{ Nombre = 'engram';   Args = @('version');   Obligatoria = $false }
 )
 

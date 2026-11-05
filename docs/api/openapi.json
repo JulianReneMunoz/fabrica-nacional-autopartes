@@ -4,7 +4,7 @@
     "title": "Fanalca — Base de Conocimiento y Q&A",
     "description": "\nAPI del sistema de conocimiento de **Fábrica Nacional de Autopartes (Fanalca)**.\n\n* **Tareas LLM**: Resumen, FAQ y Q&A anclados al contexto (LangChain).\n* **Base de conocimiento**: consulta de fragmentos Gold con procedencia.\n* **Operación**: salud, auditoría e historial del pipeline Medallion.\n* **Simulador 3D (v2.0)**: ensamblajes, piezas, articulaciones, despiece, cinemática validada,\n  cálculo del freno, estados, eventos y preguntas sobre piezas.\n* **Biblioteca de máquinas**: explicadores interactivos alimentados por el scraping.\n",
     "contact": {
-      "name": "Proyecto académico TAAML — UAO"
+      "name": "Proyecto técnico FNA"
     },
     "license": {
       "name": "MIT"
@@ -1354,6 +1354,206 @@
           }
         }
       }
+    },
+    "/api/v1/motos": {
+      "get": {
+        "tags": [
+          "Motocicleta de referencia (v2.0)"
+        ],
+        "summary": "Listar",
+        "operationId": "listar_api_v1_motos_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResumenMoto"
+                  },
+                  "type": "array",
+                  "title": "Response Listar Api V1 Motos Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/motos/{moto_id}": {
+      "get": {
+        "tags": [
+          "Motocicleta de referencia (v2.0)"
+        ],
+        "summary": "Ficha",
+        "operationId": "ficha_api_v1_motos__moto_id__get",
+        "parameters": [
+          {
+            "name": "moto_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Moto Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaMoto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/motos/{moto_id}/faq": {
+      "get": {
+        "tags": [
+          "Motocicleta de referencia (v2.0)"
+        ],
+        "summary": "Faq",
+        "operationId": "faq_api_v1_motos__moto_id__faq_get",
+        "parameters": [
+          {
+            "name": "moto_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Moto Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RespuestaModelo"
+                  },
+                  "title": "Response Faq Api V1 Motos  Moto Id  Faq Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/motos/{moto_id}/calculo": {
+      "post": {
+        "tags": [
+          "Motocicleta de referencia (v2.0)"
+        ],
+        "summary": "Calculo",
+        "operationId": "calculo_api_v1_motos__moto_id__calculo_post",
+        "parameters": [
+          {
+            "name": "moto_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Moto Id"
+            }
+          },
+          {
+            "name": "con_ficha",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Aplica los campos publicados de la ficha",
+              "default": true,
+              "title": "Con Ficha"
+            },
+            "description": "Aplica los campos publicados de la ficha"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntradaMoto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculoMoto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/faq-visor": {
+      "get": {
+        "tags": [
+          "FAQ del visor"
+        ],
+        "summary": "Faq Visor",
+        "operationId": "faq_visor_api_v1_faq_visor_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Faq Visor Api V1 Faq Visor Get"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1507,6 +1707,115 @@
           "hijo"
         ],
         "title": "Articulacion"
+      },
+      "CalculoMoto": {
+        "properties": {
+          "resultado": {
+            "$ref": "#/components/schemas/ResultadoMoto"
+          },
+          "ficha_aplicada": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FichaAplicada"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "resultado",
+          "ficha_aplicada"
+        ],
+        "title": "CalculoMoto"
+      },
+      "CampoFicha": {
+        "properties": {
+          "valor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor"
+          },
+          "unidad": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unidad"
+          },
+          "fuente": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fuente"
+          },
+          "fecha_consulta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Consulta"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "publicado",
+              "no_publicado",
+              "supuesto"
+            ],
+            "title": "Estado"
+          },
+          "observacion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observacion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado"
+        ],
+        "title": "CampoFicha"
       },
       "DatoEmpresa": {
         "properties": {
@@ -1745,6 +2054,71 @@
         "type": "object",
         "title": "EntradaFreno"
       },
+      "EntradaMoto": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "enum": [
+              "STD",
+              "DLX"
+            ],
+            "title": "Version",
+            "default": "DLX"
+          },
+          "rpm": {
+            "type": "number",
+            "maximum": 20000.0,
+            "minimum": 0.0,
+            "title": "Rpm",
+            "default": 1400.0
+          },
+          "marcha": {
+            "type": "integer",
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Marcha",
+            "description": "0 = neutro",
+            "default": 0
+          },
+          "palanca": {
+            "type": "string",
+            "enum": [
+              "delantera",
+              "trasera"
+            ],
+            "title": "Palanca",
+            "default": "delantera"
+          },
+          "fuerza_palanca_n": {
+            "type": "number",
+            "maximum": 600.0,
+            "minimum": 0.0,
+            "title": "Fuerza Palanca N",
+            "default": 0.0
+          },
+          "cbs": {
+            "type": "boolean",
+            "title": "Cbs",
+            "default": false
+          },
+          "velocidad_inicial_kmh": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 200.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Velocidad Inicial Kmh"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "EntradaMoto"
+      },
       "EstadisticasBase": {
         "properties": {
           "documentos": {
@@ -1910,6 +2284,132 @@
         "type": "object",
         "title": "EstadoVisual"
       },
+      "FichaAplicada": {
+        "properties": {
+          "modelo": {
+            "type": "string",
+            "title": "Modelo"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "aplicados": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Aplicados",
+            "description": "Campo publicado aplicado → valor"
+          },
+          "conservados_genericos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Conservados Genericos",
+            "description": "Campos no publicados: supuesto didáctico"
+          }
+        },
+        "type": "object",
+        "required": [
+          "modelo",
+          "version",
+          "aplicados",
+          "conservados_genericos"
+        ],
+        "title": "FichaAplicada"
+      },
+      "FichaMoto": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "categoria": {
+            "type": "string",
+            "title": "Categoria"
+          },
+          "versiones": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Versiones"
+          },
+          "grupos": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/CampoFicha"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Grupos"
+          },
+          "por_version": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/CampoFicha"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Por Version"
+          },
+          "pendientes_de_confirmar": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Pendientes De Confirmar"
+          },
+          "fuentes": {
+            "items": {
+              "$ref": "#/components/schemas/FuenteFicha"
+            },
+            "type": "array",
+            "title": "Fuentes"
+          },
+          "supuestos": {
+            "items": {
+              "$ref": "#/components/schemas/SupuestoDidactico"
+            },
+            "type": "array",
+            "title": "Supuestos"
+          },
+          "ensamblaje_id": {
+            "type": "string",
+            "title": "Ensamblaje Id",
+            "default": "moto_honda"
+          },
+          "titulo_biblioteca": {
+            "type": "string",
+            "title": "Titulo Biblioteca",
+            "default": "Motocicleta (referencia genérica) con fichas Honda"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "categoria",
+          "versiones",
+          "grupos",
+          "por_version",
+          "pendientes_de_confirmar",
+          "fuentes",
+          "supuestos"
+        ],
+        "title": "FichaMoto"
+      },
       "Fragmento": {
         "properties": {
           "id": {
@@ -2053,6 +2553,57 @@
         ],
         "title": "FuenteDocumentada"
       },
+      "FuenteFicha": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "descripcion": {
+            "type": "string",
+            "title": "Descripcion"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "fecha_consulta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Consulta"
+          },
+          "estado_acceso": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estado Acceso"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "descripcion"
+        ],
+        "title": "FuenteFicha"
+      },
       "Geometria": {
         "properties": {
           "primitiva": {
@@ -2064,7 +2615,17 @@
               "pinza",
               "tornillo",
               "disco_ventilado",
-              "cubo"
+              "cubo",
+              "toro",
+              "elipsoide",
+              "manivela",
+              "cadena",
+              "cilindro_corte",
+              "revolucion",
+              "tubo",
+              "extrusion",
+              "engranaje",
+              "rin_rayos"
             ],
             "title": "Primitiva"
           },
@@ -2593,6 +3154,56 @@
         ],
         "title": "Pieza"
       },
+      "RespuestaModelo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "pregunta": {
+            "type": "string",
+            "title": "Pregunta"
+          },
+          "respuesta": {
+            "type": "string",
+            "title": "Respuesta"
+          },
+          "campos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Campos",
+            "description": "Rutas grupo.campo que sustentan la respuesta"
+          },
+          "fuentes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fuentes"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "publicado",
+              "no_publicado",
+              "supuesto"
+            ],
+            "title": "Estado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "pregunta",
+          "respuesta",
+          "campos",
+          "fuentes",
+          "estado"
+        ],
+        "title": "RespuestaModelo"
+      },
       "RespuestaPieza": {
         "properties": {
           "pieza_id": {
@@ -2845,6 +3456,129 @@
         ],
         "title": "ResultadoFreno"
       },
+      "ResultadoMoto": {
+        "properties": {
+          "radio_llanta_m": {
+            "type": "number",
+            "title": "Radio Llanta M"
+          },
+          "medida_llanta": {
+            "type": "string",
+            "title": "Medida Llanta"
+          },
+          "relacion_total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relacion Total"
+          },
+          "rpm_efectivas": {
+            "type": "number",
+            "title": "Rpm Efectivas"
+          },
+          "estado_motor": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "limitador",
+              "ahogado",
+              "neutro",
+              "patinaje",
+              "embrague"
+            ],
+            "title": "Estado Motor"
+          },
+          "velocidad_kmh": {
+            "type": "number",
+            "title": "Velocidad Kmh"
+          },
+          "angulo_fase": {
+            "type": "string",
+            "title": "Angulo Fase"
+          },
+          "cilindrada_calculada_cm3": {
+            "type": "number",
+            "title": "Cilindrada Calculada Cm3"
+          },
+          "cilindrada_referencia_cm3": {
+            "type": "number",
+            "title": "Cilindrada Referencia Cm3"
+          },
+          "diferencia_cilindrada_pct": {
+            "type": "number",
+            "title": "Diferencia Cilindrada Pct"
+          },
+          "freno_delantero": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResultadoFreno"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "freno_trasero": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResultadoFreno"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fuerza_pistones_total_n": {
+            "type": "number",
+            "title": "Fuerza Pistones Total N"
+          },
+          "rueda_delantera_bloqueada": {
+            "type": "boolean",
+            "title": "Rueda Delantera Bloqueada"
+          },
+          "rueda_trasera_bloqueada": {
+            "type": "boolean",
+            "title": "Rueda Trasera Bloqueada"
+          },
+          "supuestos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supuestos"
+          },
+          "advertencia": {
+            "type": "string",
+            "title": "Advertencia",
+            "default": "Cálculo didáctico: los valores marcados como supuesto no provienen de la ficha oficial; no validan propiedades mecánicas."
+          }
+        },
+        "type": "object",
+        "required": [
+          "radio_llanta_m",
+          "medida_llanta",
+          "relacion_total",
+          "rpm_efectivas",
+          "estado_motor",
+          "velocidad_kmh",
+          "angulo_fase",
+          "cilindrada_calculada_cm3",
+          "cilindrada_referencia_cm3",
+          "diferencia_cilindrada_pct",
+          "freno_delantero",
+          "freno_trasero",
+          "fuerza_pistones_total_n",
+          "rueda_delantera_bloqueada",
+          "rueda_trasera_bloqueada",
+          "supuestos"
+        ],
+        "title": "ResultadoMoto"
+      },
       "ResultadoResumen": {
         "properties": {
           "resumen": {
@@ -2930,6 +3664,47 @@
           "advertencia"
         ],
         "title": "ResumenEnsamblaje"
+      },
+      "ResumenMoto": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "categoria": {
+            "type": "string",
+            "title": "Categoria"
+          },
+          "versiones": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Versiones"
+          },
+          "campos_publicados": {
+            "type": "integer",
+            "title": "Campos Publicados"
+          },
+          "campos_no_publicados": {
+            "type": "integer",
+            "title": "Campos No Publicados"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "categoria",
+          "versiones",
+          "campos_publicados",
+          "campos_no_publicados"
+        ],
+        "title": "ResumenMoto"
       },
       "SolicitudCinematica": {
         "properties": {
@@ -3017,6 +3792,7 @@
                   "ollama",
                   "openai",
                   "anthropic",
+                  "claude_code",
                   "extractivo"
                 ]
               },
@@ -3098,6 +3874,7 @@
                   "ollama",
                   "openai",
                   "anthropic",
+                  "claude_code",
                   "extractivo"
                 ]
               },
@@ -3197,6 +3974,7 @@
                   "ollama",
                   "openai",
                   "anthropic",
+                  "claude_code",
                   "extractivo"
                 ]
               },
@@ -3290,6 +4068,58 @@
           "descripcion"
         ],
         "title": "Subconjunto"
+      },
+      "SupuestoDidactico": {
+        "properties": {
+          "clave": {
+            "type": "string",
+            "title": "Clave"
+          },
+          "valor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Valor"
+          },
+          "unidad": {
+            "type": "string",
+            "title": "Unidad"
+          },
+          "descripcion": {
+            "type": "string",
+            "title": "Descripcion"
+          },
+          "estado": {
+            "type": "string",
+            "const": "supuesto",
+            "title": "Estado",
+            "default": "supuesto"
+          },
+          "etiqueta": {
+            "type": "string",
+            "title": "Etiqueta",
+            "default": "supuesto didáctico"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clave",
+          "valor",
+          "unidad",
+          "descripcion"
+        ],
+        "title": "SupuestoDidactico"
       },
       "TipoArticulacion": {
         "type": "string",

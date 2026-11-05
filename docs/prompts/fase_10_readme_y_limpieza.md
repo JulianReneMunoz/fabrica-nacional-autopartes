@@ -27,7 +27,7 @@ editar o conservar). Debe cubrir:
 2. **Carpeta de documentos del curso** (la que se llama «documentos» o equivalente, con los PDF del taller y de
    las clases). Se quita de Git y se añade a `.gitignore`.
 3. **El informe:** identificar qué archivos lo componen y proponerlo al usuario antes de quitarlo. Candidatos:
-   - el manual LaTeX y `main.pdf`;
+   - (el manual LaTeX y `main.pdf` ya se eliminaron en la fase 7c);
    - capítulos de rúbrica, validación contra el taller y guion de la demostración;
    - `docs/requisitos/analisis_documentos.md`;
    - prompts maestros con referencias al curso;

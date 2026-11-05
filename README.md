@@ -6,8 +6,7 @@ base de conocimiento consolidada y tres tareas LLM con LangChain — **Resumen**
 expuestas en Streamlit, API REST, CLI y MCP. La **versión 2.0** agrega un simulador 3D de ensamblajes
 (freno de disco) y una biblioteca de máquinas interactivas alimentada por los datos del scraping.
 
-Proyecto académico del Taller 1 (Módulo 1) del curso *Técnicas Avanzadas de IA aplicadas en Modelos de
-Lenguaje* — Maestría en IA y Ciencia de Datos, Universidad Autónoma de Occidente. No es un canal oficial de Fanalca.
+Proyecto técnico independiente. No es un canal oficial de Fanalca.
 Especificación vigente: [`docs/prompt_maestro_v2.md`](docs/prompt_maestro_v2.md).
 
 > **Estado de los datos:** el repositorio incluye una base de demostración (corpus semilla y lectura web de
@@ -26,9 +25,7 @@ cd C:\fabrica-nacional-autopartes
 .\scripts\publicar_github.ps1                   # -Privado para un repositorio privado
 # 3. Scraping real + gráficas + evidencias publicadas en GitHub
 .\scripts\ejecutar_pipeline.ps1 -MaxPaginas 80 -DesdeCero -Publicar
-# 4. Manual PDF (pdflatex, sin Perl)
-.\scripts\compilar_manual.ps1
-# 5. Demostración
+# 4. Demostración
 .\scripts\ejecutar_api.ps1                      # API y visor 3D → http://127.0.0.1:8000/app/
 .\scripts\ejecutar_app.ps1                      # Streamlit → http://localhost:8501
 ```
@@ -293,7 +290,7 @@ Código: MIT. Contenido del corpus: propiedad de Fanalca, usado con fines acadé
 Modelo 3D: generado por el propio proyecto (sin modelos externos). Dependencias con sus licencias (`uv tree`, `npm ls`).
 
 ## Referencias
-Documentos del Taller 1 y Clases 1-3 (UAO, 2026-2S) · LangChain · Ollama · FastAPI · Streamlit · Model Context
+LangChain · Ollama · FastAPI · Streamlit · Model Context
 Protocol · uv (Astral) · OpenSpec (Fission-AI) · Engram y GGA (Gentleman-Programming) · SkillSpector (NVIDIA) ·
 trimesh · manifold3d · three.js · React Three Fiber · Anatomy (wheresryan22) · RFC 9309 (robots.txt) ·
-Ley 1581 de 2012. Detalle y enlaces en el manual (`docs/latex/main.pdf`).
+Ley 1581 de 2012.

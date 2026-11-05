@@ -62,7 +62,7 @@ $remoto = git remote 2>$null
 if ($remoto -notcontains 'origin') {
     $visibilidad = if ($Privado) { '--private' } else { '--public' }
     gh repo create "$Usuario/$Repositorio" $visibilidad --source . --remote origin --push `
-        --description 'Base de conocimiento semántico, sistema Q&A y simulador 3D — Fábrica Nacional de Autopartes (Taller 1, UAO)'
+        --description 'Base de conocimiento semántico, sistema Q&A y simulador 3D — Fábrica Nacional de Autopartes'
 } else {
     git push -u origin main
 }

@@ -18,16 +18,8 @@ data/*.db
 evaluacion/resultados/*.json
 !evaluacion/resultados/.gitkeep
 
-# LaTeX (artefactos intermedios)
-docs/latex/*.aux
-docs/latex/*.log
-docs/latex/*.out
-docs/latex/*.toc
-docs/latex/*.lof
-docs/latex/*.lot
-docs/latex/*.fls
-docs/latex/*.fdb_latexmk
-docs/latex/*.synctex.gz
+# Manual LaTeX eliminado: no volver a versionar
+docs/latex/
 
 # Sistema operativo / editores
 .DS_Store

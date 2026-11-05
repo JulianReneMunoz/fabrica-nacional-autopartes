@@ -83,9 +83,7 @@ class Configuracion(BaseSettings):
     )
 
     # --- Scraping responsable ---------------------------------------------
-    agente_usuario: str = (
-        "FNA-KnowledgeBot/0.1 (proyecto academico UAO; contacto: ver README del repositorio)"
-    )
+    agente_usuario: str = "FNA-KB/1.0 (+https://github.com/JulianReneMunoz/fabrica-nacional-autopartes)"
     tiempo_espera_s: float = 20.0
     pausa_entre_peticiones_s: float = 2.0
     reintentos: int = 3

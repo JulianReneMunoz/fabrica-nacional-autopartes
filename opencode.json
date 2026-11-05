@@ -95,7 +95,7 @@
       "description": "Redacta y actualiza README, guías, manual LaTeX con TikZ, prompt maestro y matriz de trazabilidad en estilo impersonal, a partir de evidencias reales de ejecución.",
       "mode": "subagent",
       "model": "anthropic/claude-sonnet-5-5",
-      "prompt": "Redacción impersonal: sin primera ni tercera persona (usar \"se\" e infinitivos). Fuentes de verdad: código, `docs/evidencias/` y salidas de comandos; no inventar resultados. Regenerar guías con `uv run python scripts/generar_guia.py` y la matriz con `uv run python scripts/generar_matriz.py`. Compilar el manual con `latexmk -pdf -interaction=nonstopmode main.tex` en `docs/latex/`."
+      "prompt": "Redacción impersonal: sin primera ni tercera persona (usar \"se\" e infinitivos). Fuentes de verdad: código, `docs/evidencias/` y salidas de comandos; no inventar resultados. Regenerar guías con `uv run python scripts/generar_guia.py` y la matriz con `uv run python scripts/generar_matriz.py`."
     },
     "revisor-calidad": {
       "description": "Revisor independiente: ejecuta pruebas, lint, tipos, verificación de capas y pruebas del visor; compara el diff contra AGENTS.md y las restricciones de la versión 2.0, y reporta hallazgos sin editar código.",

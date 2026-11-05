@@ -64,7 +64,7 @@ def test_rastreo_completo_respeta_robots_y_limites(config) -> None:  # type: ign
     # el PDF y el dominio externo se filtran antes de solicitarse
     assert not any(c.request.url.endswith(".pdf") or "externo.test" in c.request.url for c in responses.calls)
     # User-Agent identificable
-    assert all(c.request.headers["User-Agent"].startswith("FNA-KnowledgeBot") for c in responses.calls)
+    assert all(c.request.headers["User-Agent"].startswith("FNA-KB") for c in responses.calls)
     # manifiesto Bronze con hash y HTML guardado
     registros = list(almacen.registros())
     assert len(registros) == 4 and all(len(r.sha256) == 64 for r in registros)

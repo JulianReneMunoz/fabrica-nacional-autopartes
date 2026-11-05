@@ -4,9 +4,9 @@ import { resolve } from "node:path";
 
 /**
  * Capturas del visor de la moto. Por omisión se escriben en test-results/ (no versionado);
- * con FNA_CAPTURAS=1 se escriben en docs/latex/figuras para el manual.
+ * con FNA_CAPTURAS=1 se escriben en docs/capturas.
  */
-const FIGURAS = process.env.FNA_CAPTURAS === "1" ? resolve("../docs/latex/figuras") : resolve("test-results/capturas");
+const FIGURAS = process.env.FNA_CAPTURAS === "1" ? resolve("../docs/capturas") : resolve("test-results/capturas");
 mkdirSync(FIGURAS, { recursive: true });
 
 function vigilarConsola(page: Page) {

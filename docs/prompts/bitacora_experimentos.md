@@ -103,3 +103,14 @@ Procedimiento: `fna-seguridad`, paso 5. Herramienta: SkillSpector v2.12.0 (`skil
 | threejs-performance | 0/100 | LOW | CAUTION | 0 | parcial (0 %) |
 
 La recomendación CAUTION de `threejs-performance` proviene de cobertura parcial del analizador estático (mismo caso que fundamentals, loaders y react-three-fiber en S-01), no de hallazgos. Resultado: las cuatro skills quedan por debajo del umbral de 51 y se copian a `skills/`, con sincronización hacia `.claude/skills/` y `.opencode/skills/`. Se usan en la fase 7a (fidelidad 3D de la moto).
+
+## R-01 · Redacción del registro histórico del rastreo Bronze (2026-11-05)
+
+Archivo: `data/bronze/manifiesto.jsonl` (75 registros de rastreo real). Cada registro conserva el
+`agente_usuario` con el que se realizó la petición, que incluía una sigla institucional. Para mantener
+veraz el registro histórico, **no se normalizó** el User-Agent: solo se sustituyó la sigla por
+«[institución omitida]» dentro del campo `agente_usuario`, y el resto del texto y de cada registro
+permanece igual (se verificó, registro por registro, que `agente_usuario` es el único campo que difiere).
+A partir de esta fecha el rastreador usa `FNA-KB/1.0 (+https://github.com/JulianReneMunoz/fabrica-nacional-autopartes)`,
+que sigue siendo identificable. Tipo de cambio: redacción de un dato personal/institucional en un registro
+histórico, no corrección de datos.

@@ -10,5 +10,5 @@ web/test-results
 data/app.db
 data/bronze
 .env
-docs/latex/build
+docs/latex
 docs/videos

@@ -498,27 +498,3 @@ fases:
     errores:
       - {error: "El iframe no carga", correccion: "Iniciar la API y compilar web/; revisar FNA_URL_VISOR."}
     condicion: "Pestañas operativas."
-
-  - id: F24
-    etapa: Documentación final
-    herramienta: MiKTeX/TeX Live + subagente documentador (Sonnet) + skill fna-documentacion
-    terminal: PowerShell en la carpeta del proyecto
-    comandos:
-      - "uv run python scripts/generar_matriz.py"
-      - "uv run python scripts/generar_guia.py"
-      - ".\\scripts\\compilar_manual.ps1"
-    explicacion: >-
-      Regenera tablas desde las fuentes, copia los extractos de la base actual a docs/latex/generado y compila
-      el manual con pdflatex (tres pasadas). No requiere Perl; latexmk es opcional si Strawberry Perl está instalado.
-    agente: documentador
-    contexto: "docs/latex/."
-    prompt: >-
-      Aplicar la skill fna-documentacion. Actualizar el capítulo de resultados únicamente con cifras de
-      evaluacion/resultados/. Mantener redacción impersonal y verificar que no queden referencias sin resolver.
-    archivos: ["docs/latex/main.pdf", "README.md"]
-    pruebas: ["El PDF compila sin errores"]
-    resultado: "Manual y README listos para la entrega."
-    errores:
-      - {error: "Paquete LaTeX faltante", correccion: "MiKTeX instala paquetes bajo demanda; habilitar la instalación automática."}
-      - {error: "latexmk: MiKTeX could not find the script engine 'perl'", correccion: "Usar .\\scripts\\compilar_manual.ps1 (pdflatex) o instalar Strawberry Perl."}
-    condicion: "Entrega completa."

@@ -37,7 +37,7 @@ def crear_app() -> FastAPI:
         title="Fanalca — Base de Conocimiento y Q&A",
         version=__version__,
         description=DESCRIPCION,
-        contact={"name": "Proyecto académico TAAML — UAO"},
+        contact={"name": "Proyecto técnico FNA"},
         license_info={"name": "MIT"},
     )
     app.add_middleware(

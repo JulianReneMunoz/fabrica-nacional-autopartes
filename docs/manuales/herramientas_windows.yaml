@@ -27,7 +27,7 @@ herramientas:
       - "winget install --id Git.Git -e --source winget"
       - "winget install --id GitHub.cli -e --source winget"
       - "git config --global user.name \"Nombre Apellido\""
-      - "git config --global user.email \"correo@uao.edu.co\""
+      - "git config --global user.email \"correo@ejemplo.com\""
       - "git config --global init.defaultBranch main"
       - "gh auth login"
       - "gh auth setup-git"
@@ -212,20 +212,3 @@ herramientas:
     errores: "'ffmpeg' no se reconoce → cerrar y abrir la terminal tras la instalación."
     actualizacion: winget upgrade --id Gyan.FFmpeg
     seguridad: Descargar solo desde la fuente indicada por ffmpeg.org.
-
-  - nombre: Compilador LaTeX (MiKTeX)
-    funcion: Compilación de este manual (docs/latex/main.tex).
-    url: https://miktex.org/download
-    version: Última estable.
-    requisitos: latexmk necesita Perl en Windows (Strawberry Perl); sin Perl, ejecutar pdflatex tres veces.
-    grafica: "Instalador básico con la opción de instalar paquetes faltantes activada."
-    comandos:
-      - "winget install --id MiKTeX.MiKTeX -e --source winget"
-      - "winget search StrawberryPerl"
-      - "latexmk -pdf -interaction=nonstopmode main.tex"
-    configuracion: MiKTeX Console → Actualizaciones; instalación automática de paquetes habilitada.
-    variables: MiKTeX agrega su carpeta bin al PATH.
-    verificacion: ["pdflatex --version", "latexmk --version"]
-    errores: "'latexmk: perl not found' → instalar Strawberry Perl o compilar con pdflatex."
-    actualizacion: MiKTeX Console → Buscar actualizaciones.
-    seguridad: Descargar solo desde miktex.org.

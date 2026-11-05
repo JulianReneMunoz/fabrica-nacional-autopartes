@@ -4,7 +4,7 @@
 Base de conocimiento semántico y sistema Q&A (Resumen, FAQ, Q&A con LangChain) para
 Fábrica Nacional de Autopartes (Fanalca), alimentada por web scraping de autopartesfanalca.com.co
 y fanalca.com. Versión 2.0: simulador 3D de ensamblajes (freno de disco) y biblioteca de máquinas
-interactivas (método Anatomy). Taller 1, Módulo 1, curso TAAML (UAO).
+interactivas (método Anatomy).
 Especificación fuente: `docs/prompt_maestro_v2.md`, `docs/requisitos/` y `openspec/specs/`.
 
 ## Comandos obligatorios (ejecutar antes de declarar terminada una tarea)

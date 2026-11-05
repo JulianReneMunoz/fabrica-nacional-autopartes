@@ -1,4 +1,4 @@
-"""Genera docs/latex/generado/arbol.txt (estructura del repositorio para el anexo del manual).
+"""Genera docs/arquitectura/arbol.txt (estructura resumida del repositorio).
 
 Uso: ``uv run python scripts/generar_arbol.py``. Omite entornos, dependencias y cachés; las carpetas
 con muchos archivos de datos se resumen con un conteo.
@@ -27,12 +27,11 @@ RESUMIR = {
     "docs/gold",
     "data/bronze/html",
     "gold/docs",
-    "docs/latex/generado",
     "docs/capturas/v2",
     ".claude/skills",
     "skills",
 }
-DESTINO = RAIZ / "docs" / "latex" / "generado" / "arbol.txt"
+DESTINO = RAIZ / "docs" / "arquitectura" / "arbol.txt"
 
 
 def _lineas(carpeta: Path, prefijo: str = "") -> list[str]:

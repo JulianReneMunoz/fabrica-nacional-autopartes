@@ -19,7 +19,7 @@ frenado?**
   biblioteca. El modelo de freno (`web/src/modelos/freno.ts`) se reutiliza, no se duplica.
 - **Stack fijo.** Windows 11, uv, FastAPI, PostgreSQL/SQLite, MCP, Vite + React + three + @react-three/fiber +
   drei. Sin notebooks, sin JupyterLab, sin Anaconda.
-- **Estilo impersonal** en código, comentarios, documentación y manual (sin primera ni tercera persona).
+- **Estilo impersonal** en código, comentarios, documentación (sin primera ni tercera persona).
 - **Datos verificables.** Ningún valor técnico se inventa. Cada dato de la ficha lleva fuente (URL o documento) y
   fecha de consulta. Un dato no encontrado se muestra como «No publicado», nunca se estima en silencio.
 - **Scraping responsable.** Respetar `robots.txt`. Prohibido eludir CAPTCHAs, autenticación o bloqueos
@@ -43,7 +43,7 @@ frenado?**
 | Escena 3D, paneles y controles | `ingeniero-3d-frontend` | sonnet |
 | Revisión crítica final | `revisor-calidad` | opus |
 | Lint, tipos y pruebas rápidas | `verificador-rapido` | haiku |
-| Manual, README, matriz y bitácora | `documentador` | sonnet |
+| README, matriz y bitácora | `documentador` | sonnet |
 
 `CLAUDE_CODE_SUBAGENT_MODEL` debe permanecer sin definir para que cada subagente use su modelo.
 
@@ -190,7 +190,7 @@ marca:
   - Rutas `/api/motos*`, con 422 ante rpm negativas o marcha inexistente.
   - `faq-visor` con un proveedor simulado.
 - **Playwright** (`e2e/moto.spec.ts`): carga, controles, ficha, FAQ y modo experimento.
-- **Capturas:** guardar en `docs/latex/figuras/`.
+- **Capturas:** guardar en `docs/capturas/`.
 - **Recorrido automático de menos de 30 s:** acelerar, cambiar a 3.ª, frenar con CBS, despiece y corte del
   motor. Se graba en `docs/videos/recorrido_moto.mp4` con CDP screencast + ffmpeg, igual que el del freno, con
   la máquina centrada y sin cursor.
@@ -209,15 +209,14 @@ La máquina termina cuando el modelo, los números y la imagen cuentan la misma 
 
 ## 8. Documentación y cierre
 
-- **Manual LaTeX:** sección nueva en `12_anatomia.tex` con las ecuaciones, los supuestos, las capturas y la
-  tabla de fuentes de las fichas.
+- **Documentación técnica:** ecuaciones, supuestos, capturas y tabla de fuentes de las fichas en el ADR-017 y
+  en `docs/`.
 - **Trazabilidad:** ADR-017, matriz (`V2-16` en adelante; sin «;» dentro de los campos), fase nueva en
   `fases_agentes.yaml` y entrada en la bitácora.
 - **README:** ruta `#/moto` y comando `faq-visor`.
 - **Streamlit:** la pestaña «Simulador 3D» enlaza la nueva máquina.
 - **Verificación local:** ejecutar `.\scripts\verificar_calidad.ps1` (Ruff, mypy, capas, pytest, Vitest,
   build). Todo debe pasar antes del commit.
-- **Recompilar** el manual con `.\scripts\compilar_manual.ps1`.
 - **Commit sugerido:** `feat: máquina 3D de motocicleta Honda con ficha técnica y preguntas frecuentes`.
   El push solo se hace tras la aprobación del usuario.
 

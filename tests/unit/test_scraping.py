@@ -13,7 +13,7 @@ BASE = "https://ejemplo-fna.test/"
 
 
 def _robots() -> PoliticaRobots:
-    p = PoliticaRobots(agente_usuario="FNA-KnowledgeBot/0.1")
+    p = PoliticaRobots(agente_usuario="FNA-KB/1.0")
     p.cargar_desde_texto(BASE, (SITIO / "robots.txt").read_text(encoding="utf-8"))
     return p
 
