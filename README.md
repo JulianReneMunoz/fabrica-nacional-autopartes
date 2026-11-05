@@ -340,9 +340,9 @@ infra/ docker-compose.yml .github/workflows/ci.yml postman/
 - Medición de rendimiento del visor en GPU real.
 
 ## Licencia
-`pyproject.toml` declara la licencia MIT, pero el repositorio todavía no incluye un archivo `LICENSE`: queda pendiente
-confirmar la licencia y añadirlo. El contenido del corpus es propiedad de Fanalca y se cita con su fuente; el modelo
-3D lo genera el propio proyecto, sin modelos externos. Las dependencias conservan sus licencias (`uv tree`, `npm ls`).
+El código se distribuye bajo la licencia MIT (ver [`LICENSE`](LICENSE)). El contenido del corpus es propiedad de
+Fanalca y se cita con su fuente; el modelo 3D lo genera el propio proyecto, sin modelos externos. Las dependencias
+conservan sus licencias (`uv tree`, `npm ls`).
 
 ## Problemas frecuentes
 | Síntoma | Solución |

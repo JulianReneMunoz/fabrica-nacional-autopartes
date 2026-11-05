@@ -21,6 +21,12 @@ OMITIR = {
     "test-results",
     "build",
     ".opencode",
+    ".claude",
+    "CLAUDE.md",
+    "opencode.json",
+    "prompt_maestro_v2.md",
+    "analisis_documentos.md",
+    "rag-embeddings-modulo2",
     "skills_cache",
 }
 RESUMIR = {

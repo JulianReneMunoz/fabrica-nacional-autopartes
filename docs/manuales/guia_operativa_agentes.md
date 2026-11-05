@@ -77,16 +77,16 @@ opencode
 claude
 ```
 
-4. **Explicación:** Con el agente en modo plan (solo lectura) se extraen requisitos de los PDF del taller y de las clases.
+4. **Explicación:** Con el agente en modo plan (solo lectura) se extraen requisitos de la documentación del proyecto.
 5. **Agente y prompt:** analista-requisitos
 
 ```text
-Leer AGENTS.md y los PDF de docs/requisitos/fuentes/. Construir docs/requisitos/matriz_trazabilidad.csv con las columnas id;origen;descripcion;tipo;prioridad;componente;historia;caso_uso;prueba;estado. Clasificar cada fila como Documentado (citar documento y página), Diseño o Extensión. No inventar requisitos. Registrar en docs/requisitos/analisis_documentos.md la información ausente, ambigua o contradictoria. Redacción impersonal. No modificar archivos fuera de docs/requisitos/.
+Leer AGENTS.md y la documentación de requisitos. Construir docs/requisitos/matriz_trazabilidad.csv con las columnas id;origen;descripcion;tipo;prioridad;componente;historia;caso_uso;prueba;estado. Clasificar cada fila como Documentado (citar documento y página), Diseño o Extensión. No inventar requisitos. Registrar en la propia matriz la información ausente, ambigua o contradictoria. Redacción impersonal. No modificar archivos fuera de docs/requisitos/.
 ```
 
-6. **Archivos:** docs/requisitos/matriz_trazabilidad.csv, docs/requisitos/analisis_documentos.md
+6. **Archivos:** docs/requisitos/matriz_trazabilidad.csv
 7. **Pruebas:** uv run python scripts/generar_matriz.py
-8. **Resultado esperado:** Matriz con al menos los 20 requisitos del taller y su origen.
+8. **Resultado esperado:** Matriz con los requisitos del proyecto y su origen.
 9. **Errores frecuentes:** El agente atribuye al taller funciones no pedidas → Rechazar el cambio y exigir cita de página.
 10. **Condición para continuar:** Cada requisito documentado tiene página de origen verificable.
 
@@ -107,10 +107,10 @@ uv run python scripts/sincronizar_skills.py
 5. **Agente y prompt:** Ninguno
 
 ```text
-Revisar opencode.json y .claude/settings.json. Confirmar que bash está en 'ask' salvo pruebas y lint, que 'git push' está denegado y que la lectura de .env está bloqueada. Listar los agentes y skills cargados y reportar diferencias con AGENTS.md. No editar archivos.
+Revisar la configuración local de los agentes. Confirmar que bash está en 'ask' salvo pruebas y lint, que 'git push' está denegado y que la lectura de .env está bloqueada. Listar los agentes y skills cargados y reportar diferencias con AGENTS.md. No editar archivos.
 ```
 
-6. **Archivos:** .opencode/skills/, .claude/skills/
+6. **Archivos:** skills/
 7. **Pruebas:** En OpenCode: /models muestra el modelo elegido; En Claude Code: /agents lista los 4 subagentes
 8. **Resultado esperado:** Ambas consolas operan con permisos mínimos.
 9. **Errores frecuentes:** OpenCode no muestra modelos de Anthropic → Usar clave de API de la Consola u otro proveedor; no usar credenciales de suscripción.; Modelo local lento o sin herramientas → Usar un modelo de código ≥14B o un proveedor en la nube para el agente; llama3.2:3b se reserva para la aplicación.

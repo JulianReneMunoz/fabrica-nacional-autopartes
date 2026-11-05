@@ -2,7 +2,7 @@
 
 ## Purpose
 Ofrecer una interfaz Streamlit donde el usuario ingrese una pregunta y vea la respuesta, y
-que muestre claramente las tres funcionalidades (Taller 1, sección 4; rúbrica 15 %).
+que muestre claramente las tres funcionalidades.
 
 ## Requirements
 

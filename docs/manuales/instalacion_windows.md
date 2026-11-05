@@ -51,7 +51,7 @@ gh auth setup-git
 
 ## 3. uv y Python
 
-- **Función:** Gestor único de Python, entornos virtuales y dependencias (obligatorio en el curso).
+- **Función:** Gestor único de Python, entornos virtuales y dependencias (estándar del proyecto).
 - **Página oficial:** https://docs.astral.sh/uv/
 - **Versión recomendada:** uv 0.11 o superior (construcción con 0.11.32); Python 3.12 fijado en .python-version.
 - **Requisitos previos:** Ninguno (uv descarga Python).
@@ -151,8 +151,8 @@ opencode auth login
 opencode auth list
 ```
 
-- **Configuración inicial:** opencode.json del repositorio (agentes, permisos, MCP, proveedor Ollama). Configuración global en %USERPROFILE%\\.config\\opencode\\opencode.json.
-- **Variables de entorno:** Claves de proveedor en el almacén de OpenCode (opencode auth login), nunca en opencode.json.
+- **Configuración inicial:** configuración local de OpenCode (agentes, permisos, MCP, proveedor Ollama; no versionada). Configuración global en %USERPROFILE%\\.config\\opencode\\opencode.json.
+- **Variables de entorno:** Claves de proveedor en el almacén de OpenCode (opencode auth login), nunca en archivos del repositorio.
 - **Verificación:** `opencode --version`; `En la interfaz: /models`
 - **Errores frecuentes:** 'opencode' no se reconoce → %APPDATA%\npm en PATH; el paquete se llama opencode-ai (no opencode).
 - **Actualización:** `npm install -g opencode-ai@latest`
@@ -173,7 +173,7 @@ winget install Anthropic.ClaudeCode
 claude
 ```
 
-- **Configuración inicial:** CLAUDE.md, .claude/settings.json, .claude/agents/, .claude/skills/ y .mcp.json del repositorio.
+- **Configuración inicial:** configuración local de Claude Code (no versionada) y .mcp.json del repositorio.
 - **Variables de entorno:** El binario queda en %USERPROFILE%\\.local\\bin; si Git Bash no se detecta, definir CLAUDE_CODE_GIT_BASH_PATH en settings.json.
 - **Verificación:** `claude --version`; `claude doctor`; `claude mcp list`
 - **Errores frecuentes:** 'claude' no se reconoce → reabrir la terminal o agregar %USERPROFILE%\.local\bin al PATH; en CMD usar curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd.
@@ -239,7 +239,7 @@ claude plugin marketplace add Gentleman-Programming/engram
 claude plugin install engram
 ```
 
-- **Configuración inicial:** .mcp.json (Claude Code) y la sección mcp de opencode.json. Engram en Windows: descargar engram_<versión>_windows_amd64.zip de GitHub Releases, copiar engram.exe en %USERPROFILE%\bin y agregar esa carpeta al PATH.
+- **Configuración inicial:** .mcp.json (Claude Code) y la sección mcp de la configuración local de OpenCode. Engram en Windows: descargar engram_<versión>_windows_amd64.zip de GitHub Releases, copiar engram.exe en %USERPROFILE%\bin y agregar esa carpeta al PATH.
 - **Variables de entorno:** FNA_MCP_PERMITIR_LLM=false por defecto.
 - **Verificación:** `uv run pytest tests/integration/test_mcp.py -q`; `engram version`
 - **Errores frecuentes:** Servidor 'failed' en claude mcp list → ejecutar uv run fabrica-mcp manualmente y leer stderr.

@@ -3,7 +3,7 @@
 Proveedores soportados:
 
 * ``ollama``: modelos abiertos locales (p. ej. ``llama3.2:3b``, ``mistral``). Opción por
-  defecto del curso: sin costo por token y los datos no salen del equipo.
+  defecto del proyecto: sin costo por token y los datos no salen del equipo.
 * ``openai``: API privada (requiere ``FNA_OPENAI_API_KEY`` con facturación activa).
 * ``anthropic``: API de Anthropic (requiere ``FNA_ANTHROPIC_API_KEY`` de la Consola;
   una suscripción Claude Pro/Max **no** incluye créditos de API).

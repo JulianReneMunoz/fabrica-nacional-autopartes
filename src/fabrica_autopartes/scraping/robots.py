@@ -1,6 +1,6 @@
 """Cumplimiento de robots.txt (RFC 9309) y del alcance de dominios permitidos.
 
-Regla del curso: lo que está en ``Disallow`` no se toca. Si robots.txt no puede
+Regla del proyecto: lo que está en ``Disallow`` no se toca. Si robots.txt no puede
 descargarse por un error de servidor (5xx), se asume prohibición total por prudencia;
 si responde 404, se asume permiso (comportamiento estándar del protocolo).
 """

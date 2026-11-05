@@ -1,8 +1,8 @@
 # Especificación: tareas LLM (Resumen, FAQ, Q&A)
 
 ## Purpose
-Implementar con LangChain las tres tareas exigidas por la rúbrica, con prompts que obligan a
-basarse en el contexto y evitar alucinaciones (Taller 1, sección 3).
+Implementar con LangChain las tres tareas (Resumen, FAQ y Q&A), con prompts que obligan a
+basarse en el contexto y evitar alucinaciones.
 
 ## Requirements
 

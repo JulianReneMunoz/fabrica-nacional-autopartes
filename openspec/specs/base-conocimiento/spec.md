@@ -2,8 +2,7 @@
 
 ## Purpose
 Transformar las capturas en un corpus limpio, segmentado y consolidado en un archivo de
-texto (Taller 1, sección 2 "Preprocesamiento y Segmentación"; rúbrica "consolidación del
-conocimiento en un archivo de texto limpio").
+texto limpio (preprocesamiento, segmentación y consolidación del conocimiento).
 
 ## Requirements
 

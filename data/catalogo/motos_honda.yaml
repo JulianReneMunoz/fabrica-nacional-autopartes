@@ -7,7 +7,7 @@
 version_esquema: 1
 fuentes:
   lamina-cb160-std-dlx:
-    descripcion: "Lámina comercial CB-160 (STD/DLX) aportada por el usuario; transcrita en docs/prompts/prompt_moto_honda_3d.md. No se muestra dentro de la aplicación."
+    descripcion: "Lámina comercial CB-160 (STD/DLX) aportada por el usuario; transcrita en docs/arquitectura/moto_honda.md (sección 3). No se muestra dentro de la aplicación."
     tipo: documento_aportado_por_el_usuario
     url: null
     fecha_consulta: "2026-11-04"

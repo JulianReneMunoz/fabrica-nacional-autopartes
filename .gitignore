@@ -33,3 +33,16 @@ web/test-results/
 web/playwright-report/
 
 texput.log
+
+# Configuración local de agentes y material de trabajo: se conservan en disco, fuera de Git
+.claude/
+.opencode/
+opencode.json
+CLAUDE.md
+docs/requisitos/fuentes/
+docs/requisitos/analisis_documentos.md
+docs/prompt_maestro_v2.md
+docs/prompts/*
+!docs/prompts/bitacora_experimentos.md
+openspec/changes/rag-embeddings-modulo2/
+docs/evidencias/calidad_20*.txt

@@ -1,21 +1,9 @@
 fabrica-nacional-autopartes/
-├── .claude/
-│   ├── agents/
-│   │   ├── analista-requisitos.md
-│   │   ├── arquitecto-mecanico-3d.md
-│   │   ├── arquitecto-sistema.md
-│   │   ├── documentador.md
-│   │   ├── ingeniero-3d-frontend.md
-│   │   ├── ingeniero-datos.md
-│   │   ├── ingeniero-llm.md
-│   │   ├── revisor-calidad.md
-│   │   └── verificador-rapido.md
-│   ├── skills/
-│   │   └── … (21 archivos)
-│   └── settings.json
 ├── .github/
 │   └── workflows/
 │       └── ci.yml
+├── .streamlit/
+│   └── config.toml
 ├── .vscode/
 │   ├── extensions.json
 │   └── settings.json
@@ -84,8 +72,72 @@ fabrica-nacional-autopartes/
 │   │   │   ├── ADR-015-proteccion-antibots.md
 │   │   │   ├── ADR-016-proveedor-claude-code.md
 │   │   │   └── ADR-017-motocicleta-referencia-fichas-honda.md
-│   │   └── arbol.txt
+│   │   ├── diagramas/
+│   │   │   ├── 01_arquitectura_ejecucion.md
+│   │   │   ├── 02_flujo_medallion.md
+│   │   │   ├── 03_secuencia_qa.md
+│   │   │   ├── 04_simulador_3d.md
+│   │   │   └── 05_ciclo_dato_ficha.md
+│   │   ├── arbol.txt
+│   │   └── moto_honda.md
 │   ├── capturas/
+│   │   ├── 7b/
+│   │   │   ├── antes_biblioteca_1280x800.png
+│   │   │   ├── antes_biblioteca_1920x1080.png
+│   │   │   ├── antes_freno_1280x800.png
+│   │   │   ├── antes_freno_1920x1080.png
+│   │   │   ├── antes_linea_1280x800.png
+│   │   │   ├── antes_linea_1920x1080.png
+│   │   │   ├── antes_moto_1280x800.png
+│   │   │   ├── antes_moto_1920x1080.png
+│   │   │   ├── antes_prensa_1280x800.png
+│   │   │   ├── antes_prensa_1920x1080.png
+│   │   │   ├── despues_biblioteca_1280x800.png
+│   │   │   ├── despues_biblioteca_1920x1080.png
+│   │   │   ├── despues_freno_1280x800.png
+│   │   │   ├── despues_freno_1920x1080.png
+│   │   │   ├── despues_linea_1280x800.png
+│   │   │   ├── despues_linea_1920x1080.png
+│   │   │   ├── despues_moto_1280x800.png
+│   │   │   ├── despues_moto_1920x1080.png
+│   │   │   ├── despues_moto_despiece_1280x800.png
+│   │   │   ├── despues_moto_despiece_1920x1080.png
+│   │   │   ├── despues_prensa_1280x800.png
+│   │   │   └── despues_prensa_1920x1080.png
+│   │   ├── 7d/
+│   │   │   ├── antes_panel_1280x800.png
+│   │   │   ├── antes_panel_1920x1080.png
+│   │   │   ├── antes_proceso_1280x800.png
+│   │   │   ├── antes_proceso_1920x1080.png
+│   │   │   ├── antes_qa_1280x800.png
+│   │   │   ├── antes_qa_1920x1080.png
+│   │   │   ├── antes_simulador_1280x800.png
+│   │   │   ├── antes_simulador_1920x1080.png
+│   │   │   ├── despues_panel_1280x800.png
+│   │   │   ├── despues_panel_1920x1080.png
+│   │   │   ├── despues_proceso_1280x800.png
+│   │   │   ├── despues_proceso_1920x1080.png
+│   │   │   ├── despues_qa_1280x800.png
+│   │   │   ├── despues_qa_1920x1080.png
+│   │   │   ├── despues_simulador_1280x800.png
+│   │   │   └── despues_simulador_1920x1080.png
+│   │   ├── readme/
+│   │   │   ├── 01_biblioteca.png
+│   │   │   ├── 02_freno.png
+│   │   │   ├── 03_prensa.png
+│   │   │   ├── 04_linea.png
+│   │   │   ├── 05_moto_ensamblada.png
+│   │   │   ├── 06_moto_despiece.png
+│   │   │   ├── 07_moto_corte_motor.png
+│   │   │   ├── 08_moto_ficha_tecnica.png
+│   │   │   ├── 09_moto_faq.png
+│   │   │   ├── 10_streamlit_qa.png
+│   │   │   ├── 11_streamlit_resumen.png
+│   │   │   ├── 12_streamlit_faq.png
+│   │   │   ├── 13_streamlit_proceso.png
+│   │   │   ├── 14_streamlit_laboratorio.png
+│   │   │   ├── 15_swagger.png
+│   │   │   └── 16_recorrido_moto.gif
 │   │   ├── v2/
 │   │   │   └── … (7 archivos)
 │   │   ├── moto_01_general.png
@@ -108,6 +160,8 @@ fabrica-nacional-autopartes/
 │   ├── evidencias/
 │   │   ├── api_en_vivo.txt
 │   │   ├── calidad_20261105-101630.txt
+│   │   ├── calidad_20261105-130121.txt
+│   │   ├── calidad_20261105-154912.txt
 │   │   ├── calidad_construccion.txt
 │   │   ├── e2e_playwright.txt
 │   │   ├── evaluacion_linea_base_extractiva.txt
@@ -121,8 +175,6 @@ fabrica-nacional-autopartes/
 │   │   ├── 04_limpieza_paginas.png
 │   │   ├── 05_fragmentos_seccion.png
 │   │   └── 06_tokens_fragmento.png
-│   ├── latex/
-│   │   └── main.pdf
 │   ├── manuales/
 │   │   ├── fases_agentes.yaml
 │   │   ├── guia_operativa_agentes.md
@@ -135,7 +187,6 @@ fabrica-nacional-autopartes/
 │   │   ├── fase_7b_estandarizacion_frontend.md
 │   │   └── prompt_moto_honda_3d.md
 │   ├── requisitos/
-│   │   ├── analisis_documentos.md
 │   │   ├── matriz_trazabilidad.csv
 │   │   └── matriz_trazabilidad.md
 │   ├── videos/
@@ -143,7 +194,7 @@ fabrica-nacional-autopartes/
 │   │   ├── recorrido_linea.mp4
 │   │   ├── recorrido_moto_honda.mp4
 │   │   └── recorrido_prensa.mp4
-│   └── prompt_maestro_v2.md
+│   └── demo.md
 ├── evaluacion/
 │   ├── resultados/
 │   │   ├── .gitkeep
@@ -169,7 +220,9 @@ fabrica-nacional-autopartes/
 │   │   └── 20261105T024711Z_claude_code_sonnet_v3_completo.md
 │   └── preguntas.yaml
 ├── frontend/
-│   └── app.py
+│   ├── app.py
+│   ├── estilo.css
+│   └── estilo.py
 ├── infra/
 │   └── docker/
 │       └── Dockerfile
@@ -177,20 +230,14 @@ fabrica-nacional-autopartes/
 │   └── README.md
 ├── openspec/
 │   ├── changes/
-│   │   ├── archive/
-│   │   │   └── 2026-11-04-seleccion-contexto-bm25/
-│   │   │       ├── specs/
-│   │   │       │   └── base-conocimiento/
-│   │   │       │       └── spec.md
-│   │   │       ├── design.md
-│   │   │       ├── proposal.md
-│   │   │       └── tasks.md
-│   │   └── rag-embeddings-modulo2/
-│   │       ├── specs/
-│   │       │   └── base-conocimiento/
-│   │       │       └── spec.md
-│   │       ├── proposal.md
-│   │       └── tasks.md
+│   │   └── archive/
+│   │       └── 2026-11-04-seleccion-contexto-bm25/
+│   │           ├── specs/
+│   │           │   └── base-conocimiento/
+│   │           │       └── spec.md
+│   │           ├── design.md
+│   │           ├── proposal.md
+│   │           └── tasks.md
 │   ├── specs/
 │   │   ├── base-conocimiento/
 │   │   │   └── spec.md
@@ -223,7 +270,7 @@ fabrica-nacional-autopartes/
 │   ├── verificar_capas.py
 │   └── verificar_entorno.ps1
 ├── skills/
-│   └── … (21 archivos)
+│   └── … (24 archivos)
 ├── src/
 │   └── fabrica_autopartes/
 │       ├── api/
@@ -339,8 +386,10 @@ fabrica-nacional-autopartes/
 │   │   └── test_rastreo.py
 │   ├── unit/
 │   │   ├── __init__.py
+│   │   ├── test_capas_interfaces.py
 │   │   ├── test_claude_code.py
 │   │   ├── test_dinamica_moto.py
+│   │   ├── test_estilo_streamlit.py
 │   │   ├── test_fisica_moto.py
 │   │   ├── test_llm.py
 │   │   ├── test_moto_ensamblaje.py
@@ -354,6 +403,7 @@ fabrica-nacional-autopartes/
 ├── web/
 │   ├── e2e/
 │   │   ├── moto.spec.ts
+│   │   ├── plantilla.spec.ts
 │   │   ├── recorrido.spec.ts
 │   │   └── visor.spec.ts
 │   ├── public/
@@ -362,17 +412,47 @@ fabrica-nacional-autopartes/
 │   │       ├── freno_disco.manifiesto.json
 │   │       ├── moto_honda.glb
 │   │       └── moto_honda.manifiesto.json
+│   ├── scripts/
+│   │   ├── capturar_7b.mjs
+│   │   ├── capturar_7d.mjs
+│   │   ├── capturar_readme.mjs
+│   │   ├── validar_paleta.mjs
+│   │   └── verificar_streamlit_7d.mjs
 │   ├── src/
 │   │   ├── __tests__/
 │   │   │   ├── fidelidad.test.ts
 │   │   │   ├── interfaz.test.tsx
 │   │   │   ├── modelos.test.ts
 │   │   │   ├── moto.test.tsx
+│   │   │   ├── plantilla.test.tsx
 │   │   │   ├── referencia_freno.json
 │   │   │   └── referencia_moto.json
 │   │   ├── componentes/
+│   │   │   ├── plantilla/
+│   │   │   │   ├── BarraLienzo.tsx
+│   │   │   │   ├── ChipDato.tsx
+│   │   │   │   ├── controles.tsx
+│   │   │   │   ├── EtiquetaPieza.tsx
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── InsigniaFuente.tsx
+│   │   │   │   ├── ListaComponentes.tsx
+│   │   │   │   ├── ModoExperimento.tsx
+│   │   │   │   ├── PanelEmpresa.tsx
+│   │   │   │   ├── PanelFaq.tsx
+│   │   │   │   ├── PanelLateral.tsx
+│   │   │   │   ├── PasoAPaso.tsx
+│   │   │   │   ├── PlantillaMaquina.tsx
+│   │   │   │   ├── TarjetaMaquina.tsx
+│   │   │   │   └── TextoEnLinea.tsx
 │   │   │   ├── anatomia.tsx
 │   │   │   └── panelesMoto.tsx
+│   │   ├── maquinas/
+│   │   │   ├── freno.ts
+│   │   │   ├── index.ts
+│   │   │   ├── linea.ts
+│   │   │   ├── moto_honda.ts
+│   │   │   ├── prensa.ts
+│   │   │   └── tipos.ts
 │   │   ├── modelos/
 │   │   │   ├── etiquetas.ts
 │   │   │   ├── freno.ts
@@ -388,6 +468,9 @@ fabrica-nacional-autopartes/
 │   │   │   ├── MaquinaLinea.tsx
 │   │   │   ├── MaquinaMoto.tsx
 │   │   │   └── MaquinaPrensa.tsx
+│   │   ├── tema/
+│   │   │   ├── colores.ts
+│   │   │   └── tokens.css
 │   │   ├── api.ts
 │   │   ├── App.tsx
 │   │   ├── estilos.css
@@ -409,9 +492,8 @@ fabrica-nacional-autopartes/
 ├── .python-version
 ├── AGENTS.md
 ├── alembic.ini
-├── CLAUDE.md
 ├── docker-compose.yml
-├── opencode.json
+├── LICENSE
 ├── pyproject.toml
 ├── README.md
 └── uv.lock

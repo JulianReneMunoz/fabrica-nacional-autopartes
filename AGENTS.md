@@ -5,7 +5,7 @@ Base de conocimiento semántico y sistema Q&A (Resumen, FAQ, Q&A con LangChain) 
 Fábrica Nacional de Autopartes (Fanalca), alimentada por web scraping de autopartesfanalca.com.co
 y fanalca.com. Versión 2.0: simulador 3D de ensamblajes (freno de disco) y biblioteca de máquinas
 interactivas (método Anatomy).
-Especificación fuente: `docs/prompt_maestro_v2.md`, `docs/requisitos/` y `openspec/specs/`.
+Especificación vigente: `docs/arquitectura/` (ADR y `moto_honda.md`), `docs/requisitos/` y `openspec/specs/`.
 
 ## Comandos obligatorios (ejecutar antes de declarar terminada una tarea)
 - Dependencias: `uv sync` (nunca `pip install`; nunca editar `uv.lock` a mano).
@@ -45,7 +45,7 @@ Especificación fuente: `docs/prompt_maestro_v2.md`, `docs/requisitos/` y `opens
   `semilla`); los parámetros sin fuente se marcan `demostrativo`.
 
 ## Seguridad
-- Prohibido escribir secretos en el código, en `opencode.json`, en `.mcp.json` o en commits.
+- Prohibido escribir secretos en el código, en `.mcp.json` o en commits.
 - Prohibido ejecutar `git push`, `rm -rf`, `curl | bash` o instalar herramientas globales sin
   aprobación humana.
 - Las pruebas no dependen de sitios externos: usar `tests/fixtures/` y `responses`.

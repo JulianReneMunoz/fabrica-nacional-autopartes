@@ -2,7 +2,7 @@
 
 ## Purpose
 Capturar el contenido textual público del sitio oficial de Fanalca de forma responsable y
-trazable (Taller 1, sección 2, "Extracción de Datos").
+trazable (extracción de datos).
 
 ## Requirements
 
