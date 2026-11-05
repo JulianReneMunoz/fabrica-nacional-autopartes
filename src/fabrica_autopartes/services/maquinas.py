@@ -88,6 +88,20 @@ DEFINICIONES = (
         "y la línea no alcanza la capacidad anual.",
         consultas=("Bogotá chasises al año soldadura remachado", "Medellín ensambles al año chasises"),
     ),
+    _Definicion(
+        id="moto_honda",
+        pregunta="¿Cómo convierte una motocicleta Honda el giro del motor en velocidad de la rueda, "
+        "y la palanca en fuerza de frenado?",
+        una_linea="Motocicleta (referencia genérica) con fichas Honda",
+        relacion="v = rpm · 2π · R · 60 / (1000 · i_prim · i_marcha · i_final)",
+        idea_principal="La velocidad es el giro del motor dividido por las relaciones de transmisión y "
+        "multiplicado por la circunferencia de la llanta; el freno invierte el camino y convierte la fuerza "
+        "de la mano en torque sobre la rueda.",
+        consultas=(
+            "motocicletas Honda ensamble Acopi Yumbo",
+            "negocio motocicletas Honda Fanalca",
+        ),
+    ),
 )
 
 _CHASISES = re.compile(r"(\d{1,3}(?:[.\s]\d{3})+|\d+)\s+chasis(?:es)?\s+al\s+año", re.I)

@@ -6,6 +6,8 @@ Relaciones (textos de dinámica vehicular y de máquinas alternativas):
 * Velocidad:        v [km/h] = rpm · 2π·R · 60 / (1000 · i_primaria · i_marcha · i_final)
 * Cilindrada:       V = π/4 · D² · carrera
 * Biela-manivela:   x(θ) = r·cos θ + √(L² − r²·sin² θ),  r = carrera/2   (θ = 0 en el PMS)
+* Ángulo de biela:  φ(θ) = asin(r·sin θ / L)   (inclinación de la biela respecto al eje del cilindro)
+* Cadena:           v_cadena = ω_piñón·r_piñón = ω_corona·r_corona,  ω_piñón = ω_motor / (i_primaria·i_marcha)
 * Ciclo de 4 tiempos: 720° de cigüeñal (admisión, compresión, expansión, escape)
 * Frenado:          se reutiliza ``fisica_freno.calcular`` por disco. Con CBS, la palanca trasera
   reparte la presión entre ambos discos con una proporción de supuesto didáctico.
@@ -166,6 +168,49 @@ def posicion_piston_m(theta_rad: float, carrera_m: float, biela_m: float) -> flo
     """Distancia eje del cigüeñal–bulón del pistón; máxima (PMS) en θ = 0, mínima (PMI) en θ = π."""
     r = carrera_m / 2
     return r * math.cos(theta_rad) + math.sqrt(biela_m**2 - (r * math.sin(theta_rad)) ** 2)
+
+
+def angulo_biela_rad(theta_rad: float, carrera_m: float, biela_m: float) -> float:
+    """Inclinación φ de la biela respecto al eje del cilindro: φ = asin(r·sin θ / L), r = carrera/2."""
+    r = carrera_m / 2
+    return math.asin(r * math.sin(theta_rad) / biela_m)
+
+
+# Radios de paso de la cadena (demostrativos), sobre los dientes del modelo 3D: su cociente es i_final.
+RADIO_PINON_M = 0.032
+RADIO_CORONA_M = 0.096
+
+
+def velocidad_angular_rad_s(rpm: float) -> float:
+    return rpm * 2 * math.pi / 60
+
+
+def velocidad_angular_pinon_rad_s(rpm: float, primaria: float, marcha: float) -> float:
+    """ω del piñón de salida: el giro del motor dividido por la relación primaria y la de marcha."""
+    return velocidad_angular_rad_s(rpm) / (primaria * marcha)
+
+
+def velocidad_angular_corona_rad_s(rpm: float, primaria: float, marcha: float, final: float) -> float:
+    """ω de la corona (igual a la de la rueda trasera): ω del piñón dividida por la relación final."""
+    return velocidad_angular_pinon_rad_s(rpm, primaria, marcha) / final
+
+
+def velocidad_cadena_m_s(
+    rpm: float, primaria: float, marcha: float, radio_pinon_m: float = RADIO_PINON_M
+) -> float:
+    """Velocidad lineal de la cadena en el piñón: v = ω_piñón · r_piñón."""
+    return velocidad_angular_pinon_rad_s(rpm, primaria, marcha) * radio_pinon_m
+
+
+def velocidad_cadena_desde_corona_m_s(
+    rpm: float,
+    primaria: float,
+    marcha: float,
+    final: float,
+    radio_corona_m: float = RADIO_CORONA_M,
+) -> float:
+    """Misma velocidad calculada desde la corona (ω_corona · r_corona); coincide con la del piñón."""
+    return velocidad_angular_corona_rad_s(rpm, primaria, marcha, final) * radio_corona_m
 
 
 def fase_ciclo(theta_720_grados: float) -> str:

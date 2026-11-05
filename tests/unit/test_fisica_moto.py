@@ -112,3 +112,44 @@ def test_faq_marca_no_publicado() -> None:
     assert faq["cilindrada"].respuesta == "Cilindrada: No publicado."
     assert faq["potencia"].estado == "no_publicado"
     assert faq["llanta_trasera"].fuentes == ["lamina-cb160-std-dlx (aportada por el usuario)"]
+
+
+def test_angulo_de_biela_es_cero_en_los_puntos_muertos_y_acotado() -> None:
+    carrera, biela = 0.0587, 0.105
+    assert fm.angulo_biela_rad(0.0, carrera, biela) == pytest.approx(0.0)
+    assert fm.angulo_biela_rad(math.pi, carrera, biela) == pytest.approx(0.0, abs=1e-12)
+    limite = math.asin(carrera / 2 / biela)
+    angulos = [fm.angulo_biela_rad(math.radians(t), carrera, biela) for t in range(0, 361, 5)]
+    assert max(angulos) == pytest.approx(limite, rel=1e-3)
+    assert min(angulos) == pytest.approx(-limite, rel=1e-3)
+    # φ cumple r·sin θ = L·sin φ (la biela cierra el triángulo con la manivela).
+    t = math.radians(70)
+    assert biela * math.sin(fm.angulo_biela_rad(t, carrera, biela)) == pytest.approx(
+        carrera / 2 * math.sin(t)
+    )
+
+
+def test_cadena_piñon_y_corona_dan_la_misma_velocidad_lineal() -> None:
+    prim, final = 3.35, 3.0
+    for rpm, marcha in ((1400, 1.9), (5000, 1.4), (9500, 0.95)):
+        w_pinon = fm.velocidad_angular_pinon_rad_s(rpm, prim, marcha)
+        w_corona = fm.velocidad_angular_corona_rad_s(rpm, prim, marcha, final)
+        assert w_pinon == pytest.approx(final * w_corona)
+        v_pinon = fm.velocidad_cadena_m_s(rpm, prim, marcha)
+        assert v_pinon == pytest.approx(w_pinon * fm.RADIO_PINON_M)
+        assert v_pinon == pytest.approx(fm.velocidad_cadena_desde_corona_m_s(rpm, prim, marcha, final))
+
+
+def test_cadena_coherente_con_la_velocidad_de_la_moto() -> None:
+    # La corona gira con la rueda: ω_corona · R = v de la moto.
+    r = fm.radio_llanta_m("140/70-17")
+    rpm, prim, marcha, final = 6000, 3.35, 1.4, 3.0
+    v_ms = fm.velocidad_kmh(rpm, r, prim, marcha, final) / 3.6
+    assert fm.velocidad_angular_corona_rad_s(rpm, prim, marcha, final) * r == pytest.approx(v_ms)
+
+
+def test_cadena_crece_con_rpm_y_decrece_con_la_marcha() -> None:
+    assert fm.velocidad_cadena_m_s(6000, 3.35, 1.4) == pytest.approx(
+        2 * fm.velocidad_cadena_m_s(3000, 3.35, 1.4)
+    )
+    assert fm.velocidad_cadena_m_s(6000, 3.35, 1.1) > fm.velocidad_cadena_m_s(6000, 3.35, 1.4)

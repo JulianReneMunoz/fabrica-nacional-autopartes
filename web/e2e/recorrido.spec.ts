@@ -11,7 +11,7 @@ import { join, resolve } from "node:path";
  */
 const DESTINO = resolve("../docs/videos");
 
-for (const id of ["freno", "prensa", "linea"]) {
+for (const id of ["freno", "prensa", "linea", "moto_honda"]) {
   test(`recorrido automático: ${id}`, async ({ page }, info) => {
     const cdp = await page.context().newCDPSession(page);
     const fotogramas: { datos: string; t: number }[] = [];

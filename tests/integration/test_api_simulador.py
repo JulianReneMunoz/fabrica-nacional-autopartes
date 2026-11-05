@@ -36,7 +36,7 @@ def test_catalogo_incluye_moto_y_animacion_condiciona_frenado(cliente) -> None: 
     moto = cliente.get("/api/v1/simulador/ensamblajes/moto_honda/animacion").json()
     assert "frenado" not in moto
     assert moto["duracion_por_pieza_s"] == 0.35 and moto["solape"] == 0.5
-    assert len(moto["orden_desmontaje"]) == len(moto["orden_reensamblaje"]) == 37
+    assert len(moto["orden_desmontaje"]) == len(moto["orden_reensamblaje"]) == 39
     ok = cliente.post(
         "/api/v1/simulador/ensamblajes/moto_honda/cinematica",
         json={"valores": {"j_ciguenal": 90, "j_rueda_trasera": 30, "j_piston": -0.02}},
@@ -123,10 +123,13 @@ def test_preguntas_sobre_piezas(cliente, pregunta, intencion) -> None:  # type: 
 
 def test_biblioteca_de_maquinas_usa_la_base(cliente) -> None:  # type: ignore[no-untyped-def]
     maquinas = cliente.get("/api/v1/maquinas").json()
-    assert [m["id"] for m in maquinas] == ["freno", "prensa", "linea"]
+    assert [m["id"] for m in maquinas] == ["freno", "prensa", "linea", "moto_honda"]
     for m in maquinas:
         assert m["datos_empresa"] and all(d["url"].startswith("https://") for d in m["datos_empresa"])
     linea = cliente.get("/api/v1/maquinas/linea").json()
     capacidad = linea["parametros"][0]
     assert capacidad["valor"] == 24000 and capacidad["procedencia"] == "base_conocimiento"
+    moto = cliente.get("/api/v1/maquinas/moto_honda").json()
+    assert moto["ruta"] == "#/maquina/moto_honda"
+    assert moto["una_linea"] == "Motocicleta (referencia genérica) con fichas Honda"
     assert cliente.get("/api/v1/maquinas/otra").status_code == 404

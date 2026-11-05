@@ -24,6 +24,21 @@ function Lamina({ id }: { id: string }) {
         </defs>
       </svg>
     );
+  if (id === "moto_honda")
+    return (
+      <svg viewBox="0 0 340 150" className="lamina" role="img" aria-label="Esquema de motocicleta con piñón, cadena y corona">
+        <circle cx="85" cy="92" r="40" {...trazo} />
+        <circle cx="255" cy="92" r="38" {...trazo} />
+        <circle cx="85" cy="92" r="9" fill="#0b0b0b" />
+        <circle cx="255" cy="92" r="9" fill="#0b0b0b" />
+        <path d="M85 92 L135 60 L200 60 L255 92 M135 60 L120 40 L170 36 L205 60" {...trazo} />
+        <circle cx="150" cy="86" r="7" fill="#eb6834" stroke="#0b0b0b" strokeWidth="1.5" />
+        <path d="M85 78 L150 80 M85 106 L150 92" stroke="#2a78d6" strokeWidth="2" strokeDasharray="4 3" />
+        <rect x="165" y="30" width="38" height="12" rx="3" fill="#eb6834" stroke="#0b0b0b" strokeWidth="1.5" />
+        <text x="14" y="18" fontSize="11">v = rpm·2πR / i</text>
+        <text x="222" y="146" fontSize="11">T = 2μFr</text>
+      </svg>
+    );
   if (id === "prensa")
     return (
       <svg viewBox="0 0 340 150" className="lamina" role="img" aria-label="Esquema de prensa excéntrica">

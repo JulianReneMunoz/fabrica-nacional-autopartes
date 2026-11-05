@@ -114,10 +114,56 @@ def test_giros_continuos_y_relaciones_compuestas(ens) -> None:  # type: ignore[n
 
 
 def test_ruedas_usan_medidas_de_fisica_moto(ens) -> None:  # type: ignore[no-untyped-def]
-    r = radio_llanta_m("130/70-17")
+    r = radio_llanta_m(
+        "130/70-17"
+    )  # medida genérica (supuesto didáctico); con la ficha CB 160F pasa a 140/70-17
     assert ens.pieza("llanta_trasera").dimensiones_m["radio_exterior"] == pytest.approx(r, abs=1e-5)
     assert ens.parametros["radio_llanta_trasera_m"] == pytest.approx(r, abs=1e-5)
     assert ens.pieza("rin_trasero").transformacion.posicion[1] == pytest.approx(r, abs=1e-5)
+
+
+def test_diametro_exterior_de_los_neumaticos(ens) -> None:  # type: ignore[no-untyped-def]
+    # D = rin·25,4 + 2·ancho·perfil/100 (mm)
+    d_tra = 17 * 25.4 + 2 * 130 * 70 / 100
+    d_ficha = 17 * 25.4 + 2 * 140 * 70 / 100
+    d_del = 17 * 25.4 + 2 * 90 * 80 / 100
+    assert d_tra == pytest.approx(613.8, abs=0.01) and d_del == pytest.approx(575.8, abs=0.01)
+    tra, dele = ens.pieza("llanta_trasera"), ens.pieza("llanta_delantera")
+    assert d_tra == pytest.approx(613.8, abs=0.01)
+    assert tra.dimensiones_m["radio_exterior"] == pytest.approx(0.3069, abs=0.001)
+    assert radio_llanta_m("140/70-17") == pytest.approx(0.3139, abs=0.001) and d_ficha == pytest.approx(
+        627.8, abs=0.01
+    )
+    assert dele.dimensiones_m["radio_exterior"] == pytest.approx(d_del / 2000, abs=0.001)
+    for pieza in (tra, dele):  # el toro (radio mayor + radio menor) reproduce el radio exterior
+        q = pieza.geometria.parametros
+        assert q["radio_mayor"] + q["radio_menor"] == pytest.approx(
+            pieza.dimensiones_m["radio_exterior"], abs=1e-5
+        )
+    assert (
+        "130/70-17" in tra.descripcion
+        and "140/70-17" in tra.descripcion
+        and "Ver con ficha" in tra.descripcion
+    )
+    assert ens.pieza("rin_trasero").transformacion.posicion[1] == pytest.approx(0.3069, abs=0.001)
+
+
+def test_cubos_unen_rin_disco_y_giran_con_la_rueda(ens) -> None:  # type: ignore[no-untyped-def]
+    for tag, tag_f in (("delantero", "delantera"), ("trasero", "trasera")):
+        cubo = ens.pieza(f"cubo_{tag}")
+        art = ens.articulacion(f"j_cubo_{tag}")
+        assert art.maestra == f"j_rueda_{tag_f}" and art.relacion == 1.0
+        assert cubo.geometria.primitiva == "cilindro" and cubo.geometria.nodo_glb == cubo.id
+        disco = ens.pieza(f"disco_{tag}")
+        # el cubo llega al radio interior del disco y cubre su plano axial (no flota)
+        assert cubo.geometria.parametros["radio"] > disco.geometria.parametros["radio_interior"]
+        z, mitad = cubo.transformacion.posicion[2], cubo.geometria.parametros["largo"] / 2
+        assert z - mitad <= disco.transformacion.posicion[2] <= z + mitad
+        assert {f"rin_{tag}", f"disco_{tag}"} <= set(cubo.retirar_antes)
+    corona = ens.pieza("corona")
+    cubo_t = ens.pieza("cubo_trasero")
+    z, mitad = cubo_t.transformacion.posicion[2], cubo_t.geometria.parametros["largo"] / 2
+    assert z - mitad <= corona.transformacion.posicion[2] <= z + mitad
 
 
 def test_cinematica_de_la_horquilla_y_la_rueda(ens) -> None:  # type: ignore[no-untyped-def]

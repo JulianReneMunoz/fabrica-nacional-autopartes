@@ -2,8 +2,8 @@
   "ensamblaje": "moto_honda",
   "version": "1.0.0",
   "archivo": "modelos/moto_honda.glb",
-  "sha256": "759674db9fb4f1754046aab6ad26686bfcfb5d839f25fdcb02c40610ccdef529",
-  "bytes": 314932,
+  "sha256": "76d720e7cfabd4c1ba1d725068fffc8c39dc996ddbb4e3d8a3f7f9a333c0d39e",
+  "bytes": 318672,
   "unidades": "m",
   "eje_arriba": "Y",
   "generador": "trimesh 5.2.0 + manifold3d",
@@ -678,6 +678,46 @@
           0.035,
           0.025,
           0.025
+        ]
+      ]
+    },
+    {
+      "id": "cubo_delantero",
+      "nodo": "cubo_delantero",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000720191,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.055,
+          -0.055,
+          -0.038
+        ],
+        [
+          0.055,
+          0.055,
+          0.038
+        ]
+      ]
+    },
+    {
+      "id": "cubo_trasero",
+      "nodo": "cubo_trasero",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000786603,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.045,
+          -0.045,
+          -0.062
+        ],
+        [
+          0.045,
+          0.045,
+          0.062
         ]
       ]
     },

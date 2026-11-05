@@ -5,6 +5,7 @@ import MaquinaLinea from "./paginas/MaquinaLinea";
 
 // El simulador 3D carga three.js; se separa en su propio fragmento para que la biblioteca abra rápido.
 const MaquinaFreno = lazy(() => import("./paginas/MaquinaFreno"));
+const MaquinaMoto = lazy(() => import("./paginas/MaquinaMoto"));
 
 /** Enrutador por hash (#/, #/maquina/freno?tour=1): funciona servido como estático desde FastAPI. */
 export function leerRuta(hash: string) {
@@ -22,12 +23,14 @@ export default function App() {
   }, []);
   const { ruta, parametros } = leerRuta(hash);
   const tour = parametros.get("tour") === "1";
-  const id = ruta.startsWith("/maquina/") ? ruta.slice("/maquina/".length) : null;
+  // #/moto es un alias de #/maquina/moto_honda
+  const id = ruta === "/moto" ? "moto_honda" : ruta.startsWith("/maquina/") ? ruta.slice("/maquina/".length) : null;
 
   let pagina;
   if (id === "freno") pagina = <MaquinaFreno tour={tour} />;
   else if (id === "prensa") pagina = <MaquinaPrensa tour={tour} />;
   else if (id === "linea") pagina = <MaquinaLinea tour={tour} />;
+  else if (id === "moto_honda") pagina = <MaquinaMoto tour={tour} />;
   else pagina = <Biblioteca />;
 
   return (
@@ -41,6 +44,7 @@ export default function App() {
           <a href="#/maquina/freno" aria-current={id === "freno" ? "page" : undefined}>Freno 3D</a>
           <a href="#/maquina/prensa" aria-current={id === "prensa" ? "page" : undefined}>Prensa</a>
           <a href="#/maquina/linea" aria-current={id === "linea" ? "page" : undefined}>Línea</a>
+          <a href="#/maquina/moto_honda" aria-current={id === "moto_honda" ? "page" : undefined}>Moto</a>
           <a href="/docs" target="_blank" rel="noreferrer">API</a>
         </nav>
       </header>

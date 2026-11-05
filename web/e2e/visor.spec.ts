@@ -13,8 +13,8 @@ test("biblioteca: tarjetas de máquinas alimentadas por la base de conocimiento"
   const errores = vigilarConsola(page);
   await page.goto("/app/#/");
   const tarjetas = page.locator("article.tarjeta");
-  await expect(tarjetas).toHaveCount(3);
-  for (const id of ["freno", "prensa", "linea"]) {
+  await expect(tarjetas).toHaveCount(4);
+  for (const id of ["freno", "prensa", "linea", "moto_honda"]) {
     const t = page.locator(`article[data-maquina="${id}"]`);
     await expect(t.locator("h2")).toContainText("¿");
     await expect(t.locator("a.boton").first()).toHaveAttribute("href", `#/maquina/${id}`);

@@ -19,9 +19,10 @@ from __future__ import annotations
 
 import math
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, field_validator
 
 from fabrica_autopartes.simulador.fisica_moto import (
+    MEDIDA_TRASERA_CB160F,
     SUPUESTOS_REFERENCIA,
     parsear_medida_llanta,
     radio_llanta_m,
@@ -51,9 +52,7 @@ MEDIDA_DELANTERA_DEMO = "90/80-17"
 class ParametrosMoto(BaseModel):
     """Medidas de llanta (``ancho/perfil-rin``) que condicionan la geometría de las ruedas."""
 
-    medida_llanta_trasera: str = Field(
-        default_factory=lambda: str(SUPUESTOS_REFERENCIA["medida_llanta_trasera"].valor)
-    )
+    medida_llanta_trasera: str = str(SUPUESTOS_REFERENCIA["medida_llanta_trasera"].valor)
     medida_llanta_delantera: str = MEDIDA_DELANTERA_DEMO
 
     @field_validator("medida_llanta_trasera", "medida_llanta_delantera")
@@ -680,7 +679,9 @@ def construir_moto(p: ParametrosMoto | None = None) -> Ensamblaje:
                 rot=rot_horq,
                 relacionadas=[f"tubo_{lado}", "rin_delantero"],
                 retirar=(
-                    ["rin_delantero", "caliper_delantero"] if lado == "izquierdo" else ["rin_delantero"]
+                    ["rin_delantero", "caliper_delantero", "cubo_delantero"]
+                    if lado == "izquierdo"
+                    else ["rin_delantero"]
                 ),
             )
         )
@@ -754,7 +755,14 @@ def construir_moto(p: ParametrosMoto | None = None) -> Ensamblaje:
             "j_basculante",
             rot=(0.0, 0.0, _r(math.degrees(math.atan2(brazo_dy, brazo_dx)) + 180.0)),
             relacionadas=["chasis", "monoamortiguador", "rin_trasero"],
-            retirar=["rin_trasero", "monoamortiguador", "caliper_trasero", "disco_trasero", "corona"],
+            retirar=[
+                "rin_trasero",
+                "cubo_trasero",
+                "monoamortiguador",
+                "caliper_trasero",
+                "disco_trasero",
+                "corona",
+            ],
         ),
     ]
     arts += [
@@ -851,7 +859,13 @@ def construir_moto(p: ParametrosMoto | None = None) -> Ensamblaje:
                 "llanta",
                 "ruedas",
                 f"Neumático {nom} de medida {medida} (radio exterior {r_ll:.4f} m desde fisica_moto); "
-                "perfil circular esquemático, sin dibujo ni marcas.",
+                "perfil circular esquemático (ancho del toro menor que el nominal), sin dibujo ni marcas."
+                + (
+                    f" Medida genérica ({medida}, supuesto didáctico); con «Ver con ficha de…» CB 160F "
+                    f"la medida pasa a {MEDIDA_TRASERA_CB160F} y la rueda se reescala en el visor."
+                    if tag_f == "trasera"
+                    else " Medida delantera supuesta (demostrativo): no consta en la ficha."
+                ),
                 "Transmite al suelo las fuerzas de tracción y frenado.",
                 "Caucho (demostrativo)",
                 {"radio_exterior": r_ll, "altura_flanco": seccion, "ancho_nominal": ancho},
@@ -1007,6 +1021,49 @@ def construir_moto(p: ParametrosMoto | None = None) -> Ensamblaje:
         _fija("j_caliper_trasero", "Cáliper sujeto al basculante", "basculante", "caliper_trasero"),
         _fija("j_unidad_cbs", "Unidad CBS sujeta al chasis", "chasis", "unidad_cbs"),
     ]
+
+    # Cubos: unen rin, disco de freno (y corona en la trasera) con el eje; giran con la rueda.
+    for tag, tag_f, centro, radio_cubo, z0, z1, padre, extra in (
+        ("delantero", "delantera", eje_delantero, 0.055, -0.02, 0.056, "botella_izquierda", []),
+        ("trasero", "trasera", eje_trasero, 0.045, -0.056, 0.068, "basculante", ["corona"]),
+    ):
+        es_del = tag == "delantero"
+        piezas.append(
+            _p(
+                f"cubo_{tag}",
+                f"Cubo {tag}",
+                "cubo",
+                "ruedas",
+                f"Cubo cilíndrico simple de la rueda {tag_f}: une el rin, el disco de freno"
+                + (" y la corona" if extra else "")
+                + " con el eje (esquemático, sin rodamientos).",
+                "Transmite el giro entre el eje, el rin y el disco; evita que el disco quede flotando.",
+                "Aleación de aluminio (demostrativo)",
+                {"radio": radio_cubo, "largo": z1 - z0},
+                "cilindro",
+                {"radio": radio_cubo, "largo": z1 - z0},
+                (centro[0], centro[1], (z0 + z1) / 2),
+                ((0.0, 0.0, 1.0 if es_del else -1.0), 0.20),
+                f"j_cubo_{tag}",
+                relacionadas=[f"rin_{tag}", f"disco_{tag}", *extra],
+                retirar=[f"rin_{tag}", f"disco_{tag}", *extra],
+            )
+        )
+        arts.append(
+            Articulacion(
+                id=f"j_cubo_{tag}",
+                nombre=f"Cubo {tag} solidario a la rueda",
+                tipo=TipoArticulacion.COMPUESTA,
+                padre=padre,
+                hijo=f"cubo_{tag}",
+                eje=(0.0, 0.0, 1.0),
+                origen=(_r(centro[0]), _r(centro[1]), 0.0),
+                unidad="grados",
+                maestra=f"j_rueda_{tag_f}",
+                relacion=1.0,
+                descripcion="Mismo ángulo que la rueda.",
+            )
+        )
 
     # ================================================================== ELÉCTRICO
     piezas += [

@@ -8,6 +8,7 @@ Comandos:
   pipeline   Proceso completo: scrape → build → validate → graficas.
   ask        Responde una pregunta (Q&A).
   faq        Genera preguntas frecuentes.
+  faq-visor  Precalcula las respuestas del visor (data/gold/faq_visor.json).
   summary    Genera el resumen ejecutivo.
   evaluate   Ejecuta el banco de 24 preguntas y guarda métricas.
   stats      Muestra estadísticas de la base de conocimiento.
@@ -82,6 +83,13 @@ def construir_parser() -> argparse.ArgumentParser:
     f = sub.add_parser("faq", help="Generar FAQ")
     f.add_argument("-n", type=int, default=8)
     _opciones_llm(f)
+
+    fv = sub.add_parser(
+        "faq-visor",
+        help="Precalcular respuestas del visor (por defecto claude_code, sonnet, prompt v3)",
+    )
+    fv.add_argument("--max", type=int, default=None, help="Limitar el número de preguntas")
+    _opciones_llm(fv)
 
     r = sub.add_parser("summary", help="Generar resumen")
     r.add_argument("--enfoque")
@@ -270,6 +278,17 @@ def _main(argv: list[str] | None = None) -> int:
             print(f"{i}. {it.pregunta}\n   {it.respuesta} {it.fuentes}")
         for adv in faq.advertencias:
             print(f"ADVERTENCIA: {adv}")
+        return 0
+
+    if args.comando == "faq-visor":
+        from fabrica_autopartes.services.faq_visor import generar_faq_visor
+
+        datos = generar_faq_visor(servicio, _op(args), maximo=args.max)
+        rechazos = sum(1 for i in datos["items"] if i["rechazo"])
+        print(
+            f"{datos['total']} preguntas ({rechazos} con frase de rechazo) · "
+            f"{datos['proveedor']}/{datos['modelo']}/{datos['version_prompt']} -> {datos['archivo']}"
+        )
         return 0
 
     if args.comando == "summary":
