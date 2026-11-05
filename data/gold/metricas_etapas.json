@@ -1,5 +1,5 @@
 {
-  "generado_en": "2026-11-05T00:03:12.406220+00:00",
+  "generado_en": "2026-11-05T00:41:08.810802+00:00",
   "fuente": "mixta",
   "bronze": {
     "capturas": 75,
@@ -791,14 +791,14 @@
     }
   ],
   "silver": {
-    "documentos": 63,
+    "documentos": 64,
     "duplicados_descartados": 0,
-    "caracteres": 85472
+    "caracteres": 85551
   },
   "gold": {
-    "fragmentos": 166,
-    "caracteres": 83513,
-    "tokens_aprox": 20934,
+    "fragmentos": 167,
+    "caracteres": 83591,
+    "tokens_aprox": 20954,
     "tokens_por_fragmento": [
       142,
       11,
@@ -952,6 +952,7 @@
       292,
       278,
       118,
+      20,
       115,
       70,
       89,
@@ -983,6 +984,7 @@
       "negocios/fanalca": 1,
       "negocios/renting-total": 1,
       "negocios/supermotos": 1,
+      "contacto": 1,
       "autopartes/clientes": 1,
       "autopartes/contacto": 3,
       "autopartes/inicio": 5,
@@ -995,6 +997,7 @@
       "autopartes/inicio": 398,
       "autopartes/productos": 82,
       "autopartes/quienes-somos": 335,
+      "contacto": 20,
       "inicio": 634,
       "negocios": 30,
       "negocios/ambiental": 497,
@@ -1012,7 +1015,7 @@
       "talento-humano": 858
     },
     "origenes": {
-      "scraping": 152,
+      "scraping": 153,
       "lectura_web": 14
     }
   }

@@ -1,6 +1,6 @@
 BASE DE CONOCIMIENTO — Fábrica Nacional de Autopartes (Fanalca)
-Generada: 2026-11-05T00:03:12+00:00
-Fragmentos: 166
+Generada: 2026-11-05T00:41:08+00:00
+Fragmentos: 167
 
 [inicio#000] (inicio | https://fanalca.com/)
 ## Orgullo colombiano
@@ -1082,6 +1082,10 @@ PRESIDENTE DE FANALCA
 [informe-sostenibilidad-capitulo-3#011] (sostenibilidad | https://fanalca.com/informe-sostenibilidad/capitulo-3/)
 ## Conoce la página web de nuestra fundación fanalca
 La Fundación Fanalca ha participado activamente en las mesas temáticas de Emprendimiento y Liderazgo Sólido, logrando el intercambio de conocimientos entre sus participantes y la inclusión de proyectos que desarrollamos en alianza como el Premio Cívico por una Ciudad Mejor, que durante el 2021 y 2022 tiene una edición especial conjunta entre Cali y Yumbo que logrará beneficiar a 45 organizaciones de origen social.
+
+[contacto-sitio#000] (contacto | https://fanalca.com/)
+# Datos de contacto publicados en el sitio
+- Calle 13 # 31A - 80, Acopi Yumbo.
 
 [autopartes-clientes#000] (autopartes/clientes | https://autopartesfanalca.com.co/clientes/)
 # Nuestros clientes
