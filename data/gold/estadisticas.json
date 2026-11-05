@@ -1,8 +1,9 @@
 {
   "documentos": 64,
   "fragmentos": 167,
-  "tokens_aprox": 20954,
+  "tokens_aprox": 20958,
   "secciones": {
+    "contacto": 1,
     "inicio": 8,
     "negocios/honda-motocicletas": 3,
     "quienes-somos": 6,
@@ -18,7 +19,6 @@
     "negocios/fanalca": 1,
     "negocios/renting-total": 1,
     "negocios/supermotos": 1,
-    "contacto": 1,
     "autopartes/clientes": 1,
     "autopartes/contacto": 3,
     "autopartes/inicio": 5,
@@ -94,5 +94,5 @@
     "https://fanalca.com/sostenibilidad/",
     "https://fanalca.com/una-entrega-contra-todo-pronostico/"
   ],
-  "generado_en": "2026-11-05T00:41:08.798487Z"
+  "generado_en": "2026-11-05T00:50:06.662866Z"
 }
