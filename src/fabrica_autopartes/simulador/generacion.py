@@ -25,6 +25,7 @@ import trimesh
 
 from fabrica_autopartes.core.registro import obtener_registro
 from fabrica_autopartes.simulador.catalogo_freno import ParametrosFreno, construir_freno
+from fabrica_autopartes.simulador.catalogo_moto_honda import construir_moto
 from fabrica_autopartes.simulador.cinematica import (
     ErrorEnsamblaje,
     homogenea,
@@ -45,7 +46,30 @@ COLORES = {  # RGBA 0-255, solo para identificar materiales en visores genérico
     "pastilla": (60, 52, 46, 255),
     "pasador": (180, 182, 186, 255),
     "tornillo": (40, 42, 46, 255),
+    # Motocicleta de referencia genérica (colores neutros, sin identidad de marca)
+    "cilindro_motor": (176, 180, 186, 255),
+    "biela": (160, 164, 170, 255),
+    "ciguenal": (110, 114, 120, 255),
+    "valvula": (196, 198, 202, 255),
+    "bujia": (230, 226, 214, 255),
+    "carcasa": (96, 100, 108, 255),
+    "engranaje": (140, 144, 150, 255),
+    "cadena": (52, 54, 58, 255),
+    "estructura": (46, 50, 58, 255),
+    "tanque": (176, 52, 48, 255),
+    "sillin": (34, 34, 38, 255),
+    "tubo_suspension": (188, 190, 196, 255),
+    "botella": (120, 124, 132, 255),
+    "amortiguador": (214, 168, 40, 255),
+    "basculante": (70, 74, 82, 255),
+    "rin": (150, 154, 160, 255),
+    "llanta": (26, 26, 28, 255),
+    "unidad_hidraulica": (84, 88, 96, 255),
+    "luz": (236, 232, 200, 255),
+    "instrumento": (40, 44, 52, 255),
+    "escape": (130, 126, 120, 255),
 }
+_MATE = frozenset({"llanta", "sillin", "tanque", "estructura"})
 
 
 def _diferencia(a: trimesh.Trimesh, b: trimesh.Trimesh) -> trimesh.Trimesh:
@@ -54,6 +78,45 @@ def _diferencia(a: trimesh.Trimesh, b: trimesh.Trimesh) -> trimesh.Trimesh:
 
 def _union(*mallas: trimesh.Trimesh) -> trimesh.Trimesh:
     return trimesh.boolean.union(list(mallas), engine="manifold")
+
+
+def _prisma_trapecio(
+    c_a: tuple[float, float], r_a: float, c_b: tuple[float, float], r_b: float, altura: float
+) -> trimesh.Trimesh:
+    """Prisma recto sobre el trapecio tangente a dos circunferencias (ejes alineados en X)."""
+    d = c_a[0] - c_b[0]
+    nx = (r_b - r_a) / d
+    ny = math.sqrt(1.0 - nx * nx)
+    cuadro = [
+        (c_a[0] + r_a * nx, c_a[1] + r_a * ny),
+        (c_b[0] + r_b * nx, c_b[1] + r_b * ny),
+        (c_b[0] + r_b * nx, c_b[1] - r_b * ny),
+        (c_a[0] + r_a * nx, c_a[1] - r_a * ny),
+    ]
+    h = altura / 2
+    v = [(x, y, -h) for x, y in cuadro] + [(x, y, h) for x, y in cuadro]
+    caras = [(0, 2, 1), (0, 3, 2), (4, 5, 6), (4, 6, 7)]
+    for i in range(4):
+        j = (i + 1) % 4
+        caras += [(i, j, j + 4), (i, j + 4, i + 4)]
+    m = trimesh.Trimesh(vertices=np.array(v), faces=np.array(caras), process=True)
+    if m.volume < 0:
+        m.invert()
+    return m
+
+
+def _cadena(q: dict[str, float]) -> trimesh.Trimesh:
+    """Lazo de cadena: contorno de dos circunferencias unidas por tangentes, con hueco interior."""
+    d, ra, rb, g, ancho = q["distancia"], q["radio_pinon"], q["radio_corona"], q["grosor"], q["ancho"]
+
+    def contorno(r1: float, r2: float, h: float) -> trimesh.Trimesh:
+        a = trimesh.creation.cylinder(radius=r1, height=h, sections=48)
+        a.apply_translation((d / 2, 0, 0))
+        b = trimesh.creation.cylinder(radius=r2, height=h, sections=48)
+        b.apply_translation((-d / 2, 0, 0))
+        return _union(a, b, _prisma_trapecio((d / 2, 0.0), r1, (-d / 2, 0.0), r2, h))
+
+    return _diferencia(contorno(ra, rb, ancho), contorno(ra - g, rb - g, ancho * 1.5))
 
 
 def construir_malla(pieza: Pieza) -> trimesh.Trimesh:
@@ -105,12 +168,41 @@ def construir_malla(pieza: Pieza) -> trimesh.Trimesh:
         m = trimesh.creation.annulus(
             r_min=q["radio_interior"], r_max=q["radio_exterior"], height=q["espesor"]
         )
+    elif g.primitiva == "toro":
+        m = trimesh.creation.torus(
+            major_radius=q["radio_mayor"], minor_radius=q["radio_menor"], major_sections=96, minor_sections=24
+        )
+    elif g.primitiva == "elipsoide":
+        m = trimesh.creation.icosphere(subdivisions=3, radius=1.0)
+        m.apply_scale([q["radio_x"], q["radio_y"], q["radio_z"]])
+    elif g.primitiva == "manivela":
+        eje = trimesh.creation.cylinder(radius=q["radio_eje"], height=q["largo_eje"], sections=32)
+        muneca = trimesh.creation.cylinder(radius=q["radio_muneca"], height=q["largo_muneca"], sections=32)
+        muneca.apply_translation((0, q["excentricidad"], 0))
+        z_brazo = q["largo_muneca"] / 2 + q["espesor_brazo"] / 2
+        brazos = []
+        for signo in (-1, 1):
+            b = trimesh.creation.cylinder(radius=q["radio_brazo"], height=q["espesor_brazo"], sections=48)
+            b.apply_translation((0, 0, signo * z_brazo))
+            brazos.append(b)
+        m = _union(eje, muneca, *brazos)
+    elif g.primitiva == "cadena":
+        m = _cadena(q)
+    elif g.primitiva == "cilindro_corte":
+        tubo = trimesh.creation.annulus(
+            r_min=q["radio_interior"], r_max=q["radio_exterior"], height=q["largo"], sections=64
+        )
+        mitad = trimesh.creation.box(
+            extents=(q["radio_exterior"] * 4, q["radio_exterior"] * 2, q["largo"] * 2)
+        )
+        mitad.apply_translation((0, q["radio_exterior"], 0))
+        m = _diferencia(tubo, mitad)
     else:  # pragma: no cover - el modelo Pydantic restringe las primitivas
         raise ErrorEnsamblaje(f"Primitiva no soportada: {g.primitiva}")
     material = trimesh.visual.material.PBRMaterial(
         name=f"mat_{pieza.tipo}",
         baseColorFactor=COLORES.get(pieza.tipo, (128, 128, 128, 255)),
-        metallicFactor=0.6 if pieza.tipo not in ("pastilla", "pinza") else 0.2,
+        metallicFactor=(0.2 if pieza.tipo in ("pastilla", "pinza") else 0.05 if pieza.tipo in _MATE else 0.6),
         roughnessFactor=0.45,
     )
     m.visual = trimesh.visual.TextureVisuals(material=material)
@@ -134,13 +226,33 @@ def construir_escena(ens: Ensamblaje) -> tuple[trimesh.Scene, dict[str, trimesh.
     return escena, mallas
 
 
-def generar(salida: Path, parametros: ParametrosFreno | None = None) -> dict:
-    """Genera ``freno_disco.glb`` y ``freno_disco.manifiesto.json`` de forma reproducible."""
+ENSAMBLAJES_GENERABLES = ("freno_disco", "moto_honda")
+
+
+def construir_ensamblaje(
+    ensamblaje: str = "freno_disco", parametros: ParametrosFreno | None = None
+) -> Ensamblaje:
+    """Construye un ensamblaje del catálogo por su identificador (``parametros`` solo aplica al freno)."""
+    if ensamblaje == "freno_disco":
+        return construir_freno(parametros)
+    if ensamblaje == "moto_honda":
+        if parametros is not None:
+            raise ErrorEnsamblaje("Los parámetros del freno no aplican a 'moto_honda'")
+        return construir_moto()
+    raise ErrorEnsamblaje(f"Ensamblaje desconocido: '{ensamblaje}' (disponibles: {ENSAMBLAJES_GENERABLES})")
+
+
+def generar(salida: Path, parametros: ParametrosFreno | None = None, ensamblaje: str = "freno_disco") -> dict:
+    """Genera ``<ensamblaje>.glb`` y ``<ensamblaje>.manifiesto.json`` de forma reproducible.
+
+    Por defecto se genera el freno de disco (comportamiento original). El nombre del archivo en
+    disco es el último componente de ``archivo_glb`` del ensamblaje.
+    """
     salida.mkdir(parents=True, exist_ok=True)
-    ens = construir_freno(parametros)
+    ens = construir_ensamblaje(ensamblaje, parametros)
     escena, mallas = construir_escena(ens)
     datos = escena.export(file_type="glb")
-    ruta_glb = salida / ens.archivo_glb
+    ruta_glb = salida / Path(ens.archivo_glb).name
     ruta_glb.write_bytes(datos)
     manifiesto = {
         "ensamblaje": ens.id,

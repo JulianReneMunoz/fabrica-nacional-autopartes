@@ -28,6 +28,26 @@ def test_consultas_basicas(cliente) -> None:  # type: ignore[no-untyped-def]
     assert len(cliente.get(f"{BASE}/articulaciones").json()) >= 7
 
 
+def test_catalogo_incluye_moto_y_animacion_condiciona_frenado(cliente) -> None:  # type: ignore[no-untyped-def]
+    ids = [e["id"] for e in cliente.get("/api/v1/simulador/ensamblajes").json()]
+    assert ids == ["freno_disco", "moto_honda"]
+    freno = cliente.get(f"{BASE}/animacion").json()
+    assert freno["frenado"]["articulaciones"]["j_piston"] == 0.001
+    moto = cliente.get("/api/v1/simulador/ensamblajes/moto_honda/animacion").json()
+    assert "frenado" not in moto
+    assert moto["duracion_por_pieza_s"] == 0.35 and moto["solape"] == 0.5
+    assert len(moto["orden_desmontaje"]) == len(moto["orden_reensamblaje"]) == 37
+    ok = cliente.post(
+        "/api/v1/simulador/ensamblajes/moto_honda/cinematica",
+        json={"valores": {"j_ciguenal": 90, "j_rueda_trasera": 30, "j_piston": -0.02}},
+    )
+    assert ok.status_code == 200
+    fuera = cliente.post(
+        "/api/v1/simulador/ensamblajes/moto_honda/cinematica", json={"valores": {"j_piston": -0.1}}
+    )
+    assert fuera.status_code == 422
+
+
 def test_despiece_y_secuencias(cliente) -> None:  # type: ignore[no-untyped-def]
     assert cliente.get(f"{BASE}/despiece", params={"factor": 2}).status_code == 422
     pos = cliente.get(f"{BASE}/despiece", params={"factor": 0}).json()

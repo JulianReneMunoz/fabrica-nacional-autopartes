@@ -93,6 +93,12 @@ def construir_parser() -> argparse.ArgumentParser:
     sim = sub.add_parser("simulador", help="Simulador 3D v2.0: generar GLB y manifiesto")
     sim.add_argument("accion", choices=["generar", "validar"])
     sim.add_argument("--salida", default="web/public/modelos")
+    sim.add_argument(
+        "--ensamblaje",
+        choices=["freno_disco", "moto_honda"],
+        default="freno_disco",
+        help="Ensamblaje a generar o validar (por defecto freno_disco)",
+    )
     sim.add_argument("--diametro-disco", type=float)
     sim.add_argument("--diametro-piston", type=float)
 
@@ -123,9 +129,9 @@ def _main(argv: list[str] | None = None) -> int:
 
         from pydantic import ValidationError
 
-        from fabrica_autopartes.simulador.catalogo_freno import ParametrosFreno, construir_freno
+        from fabrica_autopartes.simulador.catalogo_freno import ParametrosFreno
         from fabrica_autopartes.simulador.cinematica import validar_ensamblaje
-        from fabrica_autopartes.simulador.generacion import generar
+        from fabrica_autopartes.simulador.generacion import construir_ensamblaje, generar
 
         sobrescritos = {
             k: v
@@ -135,18 +141,22 @@ def _main(argv: list[str] | None = None) -> int:
             }.items()
             if v is not None
         }
+        if args.ensamblaje != "freno_disco" and sobrescritos:
+            print("Los parámetros --diametro-* solo aplican a freno_disco")
+            return 2
         try:
             parametros = ParametrosFreno(**sobrescritos)
         except ValidationError as exc:
             print(f"Parámetros inválidos: {exc}")
             return 2
+        parametros_freno = parametros if args.ensamblaje == "freno_disco" else None
         if args.accion == "validar":
-            errores = validar_ensamblaje(construir_freno(parametros))
+            errores = validar_ensamblaje(construir_ensamblaje(args.ensamblaje, parametros_freno))
             print("Ensamblaje íntegro" if not errores else "\n".join(errores))
             return 0 if not errores else 1
-        manifiesto = generar(Path(args.salida), parametros)
+        manifiesto = generar(Path(args.salida), parametros_freno, args.ensamblaje)
         print(
-            f"GLB: {Path(args.salida) / manifiesto['archivo']} ({manifiesto['bytes']} bytes, "
+            f"GLB: {Path(args.salida) / Path(manifiesto['archivo']).name} ({manifiesto['bytes']} bytes, "
             f"{len(manifiesto['piezas'])} piezas, sha256 {manifiesto['sha256'][:16]}…)"
         )
         return 0

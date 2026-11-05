@@ -1,0 +1,253 @@
+# Fichas técnicas curadas de motocicletas Honda (Honda Motos Colombia).
+# Cada campo: {valor, unidad, fuente, fecha_consulta, estado}.
+#   estado: publicado | no_publicado | supuesto
+# Regla: un dato sin fuente verificable es `no_publicado` (valor null); nada se estima en silencio.
+# Los supuestos didácticos del simulador (p. ej. relaciones de transmisión de ejemplo) NO viven en
+# este archivo: se declaran en web/src/modelos/moto.ts con marca visible «supuesto didáctico».
+version_esquema: 1
+fuentes:
+  lamina-cb160-std-dlx:
+    descripcion: "Lámina comercial CB-160 (STD/DLX) aportada por el usuario; transcrita en docs/prompts/prompt_moto_honda_3d.md. No se muestra dentro de la aplicación."
+    tipo: documento_aportado_por_el_usuario
+    url: null
+    fecha_consulta: "2026-11-04"
+  motos.honda.com.co:
+    descripcion: "Sitio oficial de Honda Motos Colombia. robots.txt permite el acceso (Allow: /). Las páginas de producto respondieron HTTP 307 sin cuerpo a la lectura automatizada: no se siguen redirecciones ni se prueban variantes. Sin página de producto de la CB 160F en el sitemap."
+    tipo: sitio_oficial
+    url: "https://motos.honda.com.co/"
+    fecha_consulta: "2026-11-04"
+    estado_acceso: "no_legible_automaticamente (HTTP 307, robots.txt permite)"
+    paginas_omitidas:
+      - "https://motos.honda.com.co/motos-honda/motos-sport/CB-125F-DLX-20"
+      - "https://motos.honda.com.co/motos-honda/motos-sport/XBLADE-160"
+    articulos_magazine_pendientes:
+      - "https://motos.honda.com.co/magazine/top-de-5-cosas-que-no-sabias-de-la-cb-160f-dlx"
+      - "https://motos.honda.com.co/magazine/descubre-por-que-la-cb-160f-std-es-una-moto-de-excelente-desempeno"
+      - "https://motos.honda.com.co/magazine/cinco-cosas-que-hacen-de-la-cb-160f-una-moto-unica"
+
+modelos:
+  - id: cb160f
+    nombre: "CB 160F"
+    categoria: "Sport (naked)"
+    fabricacion_local: "No verificado para este modelo; Fanalca ensambla en Acopi, Yumbo, motocicletas Honda de 100 a 250 cc (data/gold/docs/negocios-honda-motocicletas.md)."
+    versiones: [STD, DLX]
+    discrepancias: []
+    pendiente_de_confirmar:
+      - campo: motor.potencia
+        detalle: "La lámina indica «Pot: 15,04 / 8.000 RPM» sin unidad. No se muestra la cifra hasta confirmarla con fuente oficial."
+      - campo: suspension.trasera
+        detalle: "La lámina dice «Pro Arm». Verificar la denominación oficial antes de usarla."
+
+    # ---------- Campos comunes a STD y DLX ----------
+    motor:
+      tipo:
+        valor: "Honda 4T"
+        unidad: null
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: publicado
+      cilindrada:
+        valor: null
+        unidad: "cm3"
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+        observacion: "El nombre comercial sugiere 160 cc, pero la cifra no consta en la lámina; no se deduce del nombre."
+      diametro_x_carrera:
+        valor: null
+        unidad: "mm"
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+      potencia:
+        valor: null
+        unidad: null
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: no_publicado
+        observacion: "Transcripción de la lámina: «Pot: 15,04 / 8.000 RPM». Unidad ausente; se mantiene oculta hasta confirmar con fuente oficial."
+      regimen_potencia:
+        valor: 8000
+        unidad: "rpm"
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: publicado
+      torque:
+        valor: null
+        unidad: null
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+      regimen_torque:
+        valor: null
+        unidad: "rpm"
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+      relacion_compresion:
+        valor: null
+        unidad: null
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+      corte_encendido:
+        valor: null
+        unidad: "rpm"
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+        observacion: "Régimen de corte de encendido no publicado; el simulador usará un supuesto didáctico marcado."
+    transmision:
+      marchas:
+        valor: null
+        unidad: null
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+      relacion_primaria:
+        valor: null
+        unidad: null
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+      relaciones_por_marcha:
+        valor: null
+        unidad: null
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+      transmision_final:
+        valor: null
+        unidad: "piñón/corona (dientes)"
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+    suspension:
+      delantera:
+        valor: null
+        unidad: null
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+      trasera:
+        valor: "Monosuspensión (la lámina la rotula «Pro Arm»; denominación por verificar)"
+        unidad: null
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: publicado
+    llantas:
+      delantera:
+        valor: null
+        unidad: "ancho/perfil-rin"
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+      trasera:
+        valor: "140/70-17"
+        unidad: "ancho/perfil-rin"
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: publicado
+        observacion: "Llanta trasera ancha según la lámina."
+    capacidades:
+      tanque:
+        valor: null
+        unidad: "L"
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+        observacion: "La lámina solo califica el tanque como «robusto»; sin cifra."
+      peso:
+        valor: null
+        unidad: "kg"
+        fuente: null
+        fecha_consulta: null
+        estado: no_publicado
+    electrico:
+      arranque:
+        valor: "Eléctrico y de pedal"
+        unidad: null
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: publicado
+      iluminacion_delantera:
+        valor: "Farola multifocal"
+        unidad: null
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: publicado
+      iluminacion_trasera:
+        valor: "Stop LED en forma de X"
+        unidad: null
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: publicado
+      instrumentos:
+        valor: "Velocímetro digital"
+        unidad: null
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: publicado
+    chasis:
+      sillin:
+        valor: "Sillín de doble nivel"
+        unidad: null
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: publicado
+      tanque_descripcion:
+        valor: "Tanque robusto"
+        unidad: null
+        fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+        fecha_consulta: "2026-11-04"
+        estado: publicado
+
+    # ---------- Diferencias por versión ----------
+    frenos_por_version:
+      STD:
+        delantero:
+          valor: "Disco"
+          unidad: null
+          fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+          fecha_consulta: "2026-11-04"
+          estado: publicado
+        trasero:
+          valor: null
+          unidad: null
+          fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+          fecha_consulta: "2026-11-04"
+          estado: no_publicado
+          observacion: "La lámina atribuye el disco trasero solo a la versión DLX; el tipo de freno trasero de la STD no consta."
+        cbs:
+          valor: false
+          unidad: null
+          fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+          fecha_consulta: "2026-11-04"
+          estado: publicado
+          observacion: "La lámina asigna CBS y disco trasero solo a la DLX."
+      DLX:
+        delantero:
+          valor: "Disco"
+          unidad: null
+          fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+          fecha_consulta: "2026-11-04"
+          estado: publicado
+        trasero:
+          valor: "Disco"
+          unidad: null
+          fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+          fecha_consulta: "2026-11-04"
+          estado: publicado
+        cbs:
+          valor: true
+          unidad: null
+          fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
+          fecha_consulta: "2026-11-04"
+          estado: publicado
+        reparto_cbs:
+          valor: null
+          unidad: null
+          fuente: null
+          fecha_consulta: null
+          estado: no_publicado
+          observacion: "Proporción de reparto entre discos no publicada; el simulador usa un supuesto didáctico marcado."

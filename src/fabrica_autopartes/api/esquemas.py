@@ -8,6 +8,15 @@ from typing import Generic, Literal, TypeVar
 from pydantic import BaseModel, Field
 
 from fabrica_autopartes.domain.modelos import Fragmento
+from fabrica_autopartes.services.motos import (  # noqa: F401  (contratos de /api/v1/motos)
+    CalculoMoto,
+    CampoFicha,
+    FichaAplicada,
+    FichaMoto,
+    RespuestaModelo,
+    ResumenMoto,
+)
+from fabrica_autopartes.simulador.fisica_moto import EntradaMoto, ResultadoMoto  # noqa: F401
 
 T = TypeVar("T")
 

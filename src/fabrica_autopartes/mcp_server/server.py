@@ -133,13 +133,17 @@ def responder_pregunta(pregunta: str) -> dict:
 
 
 @mcp.tool(annotations=SOLO_LECTURA)
-def consultar_pieza(pieza_id: str, pregunta: str = "¿Qué función cumple esta pieza?") -> dict:
-    """Consulta una pieza del simulador 3D (freno de disco de demostración): función, conjunto,
-    relaciones, movimiento o piezas a retirar primero, separando el modelo de lo documentado."""
-    _auditar("consultar_pieza", {"pieza_id": pieza_id, "pregunta": pregunta})
+def consultar_pieza(
+    pieza_id: str, pregunta: str = "¿Qué función cumple esta pieza?", ensamblaje_id: str = "freno_disco"
+) -> dict:
+    """Consulta una pieza del simulador 3D (``freno_disco`` por defecto o ``moto_honda``, ambos de
+    demostración): función, conjunto, relaciones, movimiento o piezas a retirar primero,
+    separando el modelo de lo documentado."""
+    _auditar("consultar_pieza", {"pieza_id": pieza_id, "pregunta": pregunta, "ensamblaje_id": ensamblaje_id})
     from fabrica_autopartes.services.simulador import obtener_ensamblaje, responder_pieza
 
-    return responder_pieza(obtener_ensamblaje("freno_disco"), pieza_id, pregunta[:300], base()).model_dump()
+    ens = obtener_ensamblaje(ensamblaje_id[:60])
+    return responder_pieza(ens, pieza_id, pregunta[:300], base()).model_dump()
 
 
 @mcp.resource("fna://base/consolidada")

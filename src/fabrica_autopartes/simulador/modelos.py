@@ -36,7 +36,20 @@ class Transformacion(BaseModel):
 
 
 class Geometria(BaseModel):
-    primitiva: Literal["cilindro", "anillo", "caja", "pinza", "tornillo", "disco_ventilado", "cubo"]
+    primitiva: Literal[
+        "cilindro",
+        "anillo",
+        "caja",
+        "pinza",
+        "tornillo",
+        "disco_ventilado",
+        "cubo",
+        "toro",
+        "elipsoide",
+        "manivela",
+        "cadena",
+        "cilindro_corte",
+    ]
     parametros: dict[str, float]
     nodo_glb: str
 

@@ -160,19 +160,22 @@ def parametros_animacion(ens_id: str) -> dict:
     """Parámetros de animación: duración por pieza y orden (la animación es visual, no física)."""
     ens = obtener_ensamblaje(ens_id)
     orden = cin.secuencia_desmontaje(ens)
-    return {
+    respuesta: dict = {
         "duracion_por_pieza_s": 0.35,
         "solape": 0.5,
         "orden_desmontaje": orden,
         "orden_reensamblaje": list(reversed(orden)),
-        "frenado": {
+    }
+    ids_articulaciones = {a.id for a in ens.articulaciones}
+    if "holgura_pastilla" in ens.parametros and {"j_piston", "j_pinza_flotante"} <= ids_articulaciones:
+        respuesta["frenado"] = {
             "holgura_m": ens.parametros["holgura_pastilla"],
             "articulaciones": {
                 "j_piston": 2 * ens.parametros["holgura_pastilla"],
                 "j_pinza_flotante": ens.parametros["holgura_pastilla"],
             },
-        },
-    }
+        }
+    return respuesta
 
 
 @router.post("/simulador/ensamblajes/{ens_id}/cinematica", response_model=dict[str, Lectura])

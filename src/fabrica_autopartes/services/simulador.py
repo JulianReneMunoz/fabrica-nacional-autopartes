@@ -21,6 +21,7 @@ from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria
 from fabrica_autopartes.simulador import cinematica as cin
 from fabrica_autopartes.simulador.catalogo_freno import construir_freno
+from fabrica_autopartes.simulador.catalogo_moto_honda import construir_moto
 from fabrica_autopartes.simulador.modelos import Ensamblaje, Pieza, TipoArticulacion
 
 Intencion = Literal[
@@ -78,7 +79,7 @@ class RespuestaPieza(BaseModel):
 
 @lru_cache(maxsize=1)
 def catalogo() -> dict[str, Ensamblaje]:
-    return {"freno_disco": construir_freno()}
+    return {"freno_disco": construir_freno(), "moto_honda": construir_moto()}
 
 
 def obtener_ensamblaje(ens_id: str) -> Ensamblaje:

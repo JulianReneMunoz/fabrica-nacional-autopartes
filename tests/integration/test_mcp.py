@@ -85,3 +85,13 @@ async def test_consultar_pieza_separa_modelo_y_documentado(servidor) -> None:  #
     datos = r.structured_content or _json(r)
     assert datos["intencion"] == "funcion" and "F = p·A" in datos["respuesta_modelo"]  # type: ignore[index]
     assert "demostración" in datos["advertencia"]  # type: ignore[index]
+
+
+async def test_consultar_pieza_de_la_moto_con_ensamblaje_id(servidor) -> None:  # type: ignore[no-untyped-def]
+    r = await servidor.call_tool(
+        "consultar_pieza",
+        {"pieza_id": "ciguenal", "pregunta": "¿Qué función cumple?", "ensamblaje_id": "moto_honda"},
+    )
+    datos = r.structured_content or _json(r)
+    assert datos["pieza_id"] == "ciguenal" and "cigüeñal" in datos["respuesta_modelo"].lower()  # type: ignore[index]
+    assert "No es un diseño industrial" in datos["advertencia"]  # type: ignore[index]

@@ -1,0 +1,785 @@
+{
+  "ensamblaje": "moto_honda",
+  "version": "1.0.0",
+  "archivo": "modelos/moto_honda.glb",
+  "sha256": "759674db9fb4f1754046aab6ad26686bfcfb5d839f25fdcb02c40610ccdef529",
+  "bytes": 314932,
+  "unidades": "m",
+  "eje_arriba": "Y",
+  "generador": "trimesh 5.2.0 + manifold3d",
+  "advertencia": "Referencia genérica esquemática de una motocicleta naked de ~150 cc, con geometría procedural y dimensiones demostrativas. No es un diseño industrial ni una réplica de un modelo comercial, no incluye logotipos ni emblemas y la animación no valida propiedades mecánicas.",
+  "parametros": {
+    "carrera_m": 0.0587,
+    "diametro_cilindro_m": 0.057,
+    "longitud_biela_m": 0.105,
+    "cilindrada_nominal_cm3": 150.0,
+    "relacion_primaria": 3.35,
+    "relacion_final": 3.0,
+    "radio_llanta_trasera_m": 0.3069,
+    "radio_llanta_delantera_m": 0.2879,
+    "distancia_entre_ejes_m": 1.339975,
+    "angulo_lanzamiento_grados": 27.0,
+    "recorrido_horquilla_m": 0.12,
+    "recorrido_monoamortiguador_m": 0.05,
+    "oscilacion_basculante_grados": 8.0,
+    "levante_valvula_m": 0.005
+  },
+  "procedencia_parametros": {
+    "carrera_m": "demostrativo",
+    "diametro_cilindro_m": "demostrativo",
+    "longitud_biela_m": "demostrativo",
+    "cilindrada_nominal_cm3": "demostrativo",
+    "relacion_primaria": "demostrativo",
+    "relacion_final": "demostrativo",
+    "radio_llanta_trasera_m": "demostrativo",
+    "radio_llanta_delantera_m": "demostrativo",
+    "distancia_entre_ejes_m": "demostrativo",
+    "angulo_lanzamiento_grados": "demostrativo",
+    "recorrido_horquilla_m": "demostrativo",
+    "recorrido_monoamortiguador_m": "demostrativo",
+    "oscilacion_basculante_grados": "demostrativo",
+    "levante_valvula_m": "demostrativo"
+  },
+  "piezas": [
+    {
+      "id": "cilindro",
+      "nodo": "cilindro",
+      "vertices": 132,
+      "caras": 260,
+      "volumen_m3": 0.000155824,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0405,
+          -0.0405,
+          -0.06
+        ],
+        [
+          0.0405,
+          0.0,
+          0.06
+        ]
+      ]
+    },
+    {
+      "id": "piston",
+      "nodo": "piston",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000122799,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.028,
+          -0.028,
+          -0.025
+        ],
+        [
+          0.028,
+          0.028,
+          0.025
+        ]
+      ]
+    },
+    {
+      "id": "biela",
+      "nodo": "biela",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 1.5488e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.008,
+          -0.0605,
+          -0.004
+        ],
+        [
+          0.008,
+          0.0605,
+          0.004
+        ]
+      ]
+    },
+    {
+      "id": "ciguenal",
+      "nodo": "ciguenal",
+      "vertices": 450,
+      "caras": 900,
+      "volumen_m3": 0.000136703,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.04,
+          -0.04,
+          -0.045
+        ],
+        [
+          0.04,
+          0.04,
+          0.045
+        ]
+      ]
+    },
+    {
+      "id": "valvula_admision",
+      "nodo": "valvula_admision",
+      "vertices": 257,
+      "caras": 510,
+      "volumen_m3": 3.179e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0095,
+          -0.0095,
+          -0.035
+        ],
+        [
+          0.0095,
+          0.0095,
+          0.035
+        ]
+      ]
+    },
+    {
+      "id": "valvula_escape",
+      "nodo": "valvula_escape",
+      "vertices": 257,
+      "caras": 510,
+      "volumen_m3": 3.179e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0095,
+          -0.0095,
+          -0.035
+        ],
+        [
+          0.0095,
+          0.0095,
+          0.035
+        ]
+      ]
+    },
+    {
+      "id": "bujia",
+      "nodo": "bujia",
+      "vertices": 62,
+      "caras": 120,
+      "volumen_m3": 3.424e-06,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0075,
+          -0.006495,
+          -0.0295
+        ],
+        [
+          0.0075,
+          0.006495,
+          0.02
+        ]
+      ]
+    },
+    {
+      "id": "caja_cambios",
+      "nodo": "caja_cambios",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.001296,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.06,
+          -0.06,
+          -0.045
+        ],
+        [
+          0.06,
+          0.06,
+          0.045
+        ]
+      ]
+    },
+    {
+      "id": "pinon",
+      "nodo": "pinon",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 2.8194e-05,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.03,
+          -0.03,
+          -0.005
+        ],
+        [
+          0.03,
+          0.03,
+          0.005
+        ]
+      ]
+    },
+    {
+      "id": "cadena",
+      "nodo": "cadena",
+      "vertices": 230,
+      "caras": 460,
+      "volumen_m3": 0.000119449,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.309,
+          -0.094,
+          -0.006
+        ],
+        [
+          0.249,
+          0.094,
+          0.006
+        ]
+      ]
+    },
+    {
+      "id": "corona",
+      "nodo": "corona",
+      "vertices": 544,
+      "caras": 1108,
+      "volumen_m3": 0.000120098,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.09,
+          -0.09,
+          -0.003
+        ],
+        [
+          0.09,
+          0.09,
+          0.003
+        ]
+      ]
+    },
+    {
+      "id": "chasis",
+      "nodo": "chasis",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.001222394,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.022,
+          -0.022,
+          -0.403113
+        ],
+        [
+          0.022,
+          0.022,
+          0.403113
+        ]
+      ]
+    },
+    {
+      "id": "cuna_chasis",
+      "nodo": "cuna_chasis",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000561455,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.018,
+          -0.018,
+          -0.276586
+        ],
+        [
+          0.018,
+          0.018,
+          0.276586
+        ]
+      ]
+    },
+    {
+      "id": "pipa_direccion",
+      "nodo": "pipa_direccion",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000394711,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.03,
+          -0.03,
+          -0.07
+        ],
+        [
+          0.03,
+          0.03,
+          0.07
+        ]
+      ]
+    },
+    {
+      "id": "tanque",
+      "nodo": "tanque",
+      "vertices": 642,
+      "caras": 1280,
+      "volumen_m3": 0.00896992,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.2,
+          -0.09,
+          -0.12
+        ],
+        [
+          0.2,
+          0.09,
+          0.12
+        ]
+      ]
+    },
+    {
+      "id": "sillin",
+      "nodo": "sillin",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.00819,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.225,
+          -0.035,
+          -0.13
+        ],
+        [
+          0.225,
+          0.035,
+          0.13
+        ]
+      ]
+    },
+    {
+      "id": "puente_horquilla",
+      "nodo": "puente_horquilla",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.000385,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.025,
+          -0.0175,
+          -0.11
+        ],
+        [
+          0.025,
+          0.0175,
+          0.11
+        ]
+      ]
+    },
+    {
+      "id": "tubo_izquierdo",
+      "nodo": "tubo_izquierdo",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000205579,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0125,
+          -0.0125,
+          -0.21
+        ],
+        [
+          0.0125,
+          0.0125,
+          0.21
+        ]
+      ]
+    },
+    {
+      "id": "botella_izquierda",
+      "nodo": "botella_izquierda",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000255857,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0165,
+          -0.0165,
+          -0.15
+        ],
+        [
+          0.0165,
+          0.0165,
+          0.15
+        ]
+      ]
+    },
+    {
+      "id": "tubo_derecho",
+      "nodo": "tubo_derecho",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000205579,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0125,
+          -0.0125,
+          -0.21
+        ],
+        [
+          0.0125,
+          0.0125,
+          0.21
+        ]
+      ]
+    },
+    {
+      "id": "botella_derecha",
+      "nodo": "botella_derecha",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000255857,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.0165,
+          -0.0165,
+          -0.15
+        ],
+        [
+          0.0165,
+          0.0165,
+          0.15
+        ]
+      ]
+    },
+    {
+      "id": "monoamortiguador",
+      "nodo": "monoamortiguador",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000592091,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.022,
+          -0.022,
+          -0.195256
+        ],
+        [
+          0.022,
+          0.022,
+          0.195256
+        ]
+      ]
+    },
+    {
+      "id": "basculante",
+      "nodo": "basculante",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.000481822,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.200759,
+          -0.02,
+          -0.015
+        ],
+        [
+          0.200759,
+          0.02,
+          0.015
+        ]
+      ]
+    },
+    {
+      "id": "rin_delantero",
+      "nodo": "rin_delantero",
+      "vertices": 576,
+      "caras": 1176,
+      "volumen_m3": 0.002440355,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.2189,
+          -0.2189,
+          -0.012
+        ],
+        [
+          0.2189,
+          0.2189,
+          0.012
+        ]
+      ]
+    },
+    {
+      "id": "llanta_delantera",
+      "nodo": "llanta_delantera",
+      "vertices": 2304,
+      "caras": 4608,
+      "volumen_m3": 0.006366202,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.2879,
+          -0.2879,
+          -0.036
+        ],
+        [
+          0.2879,
+          0.2879,
+          0.036
+        ]
+      ]
+    },
+    {
+      "id": "rin_trasero",
+      "nodo": "rin_trasero",
+      "vertices": 576,
+      "caras": 1176,
+      "volumen_m3": 0.002440355,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.2189,
+          -0.2189,
+          -0.012
+        ],
+        [
+          0.2189,
+          0.2189,
+          0.012
+        ]
+      ]
+    },
+    {
+      "id": "llanta_trasera",
+      "nodo": "llanta_trasera",
+      "vertices": 2304,
+      "caras": 4608,
+      "volumen_m3": 0.010552992,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.3069,
+          -0.3069,
+          -0.0455
+        ],
+        [
+          0.3069,
+          0.3069,
+          0.0455
+        ]
+      ]
+    },
+    {
+      "id": "disco_delantero",
+      "nodo": "disco_delantero",
+      "vertices": 640,
+      "caras": 1312,
+      "volumen_m3": 0.000211205,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.14,
+          -0.14,
+          -0.002
+        ],
+        [
+          0.14,
+          0.14,
+          0.002
+        ]
+      ]
+    },
+    {
+      "id": "caliper_delantero",
+      "nodo": "caliper_delantero",
+      "vertices": 113,
+      "caras": 222,
+      "volumen_m3": 0.000161475,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.035,
+          -0.03,
+          -0.036
+        ],
+        [
+          0.035,
+          0.03,
+          0.022
+        ]
+      ]
+    },
+    {
+      "id": "disco_trasero",
+      "nodo": "disco_trasero",
+      "vertices": 576,
+      "caras": 1176,
+      "volumen_m3": 0.000130016,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.11,
+          -0.11,
+          -0.002
+        ],
+        [
+          0.11,
+          0.11,
+          0.002
+        ]
+      ]
+    },
+    {
+      "id": "caliper_trasero",
+      "nodo": "caliper_trasero",
+      "vertices": 113,
+      "caras": 222,
+      "volumen_m3": 0.000161475,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.035,
+          -0.03,
+          -0.036
+        ],
+        [
+          0.035,
+          0.03,
+          0.022
+        ]
+      ]
+    },
+    {
+      "id": "unidad_cbs",
+      "nodo": "unidad_cbs",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.000175,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.035,
+          -0.025,
+          -0.025
+        ],
+        [
+          0.035,
+          0.025,
+          0.025
+        ]
+      ]
+    },
+    {
+      "id": "farola",
+      "nodo": "farola",
+      "vertices": 642,
+      "caras": 1280,
+      "volumen_m3": 0.001328877,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.05,
+          -0.08,
+          -0.08
+        ],
+        [
+          0.05,
+          0.08,
+          0.08
+        ]
+      ]
+    },
+    {
+      "id": "stop",
+      "nodo": "stop",
+      "vertices": 8,
+      "caras": 12,
+      "volumen_m3": 0.000108,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.015,
+          -0.015,
+          -0.06
+        ],
+        [
+          0.015,
+          0.015,
+          0.06
+        ]
+      ]
+    },
+    {
+      "id": "velocimetro",
+      "nodo": "velocimetro",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000150366,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.04,
+          -0.04,
+          -0.015
+        ],
+        [
+          0.04,
+          0.04,
+          0.015
+        ]
+      ]
+    },
+    {
+      "id": "tubo_escape",
+      "nodo": "tubo_escape",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.000189644,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.014,
+          -0.014,
+          -0.154434
+        ],
+        [
+          0.014,
+          0.014,
+          0.154434
+        ]
+      ]
+    },
+    {
+      "id": "silenciador",
+      "nodo": "silenciador",
+      "vertices": 98,
+      "caras": 192,
+      "volumen_m3": 0.001534988,
+      "cerrada": true,
+      "limites_locales_m": [
+        [
+          -0.035,
+          -0.035,
+          -0.2
+        ],
+        [
+          0.035,
+          0.035,
+          0.2
+        ]
+      ]
+    }
+  ]
+}

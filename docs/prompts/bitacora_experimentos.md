@@ -71,3 +71,22 @@ repetido en al menos 2 páginas, expansión de consultas con peso 0,5 y document
 contexto. Respuesta final: Calle 13 # 31A - 80, Urbanización Industrial Acopi, Yumbo, citando
 `contacto-sitio#000` y `autopartes-contacto#000`. Pruebas: `test_recuperacion_expansion.py` y
 `test_scraping.py::pie de contacto`.
+
+## S-01 · Auditoría de skills de terceros `CloudAI-X/threejs-skills` (2026-11-04)
+
+Procedimiento: `fna-seguridad`, paso 5. Herramienta: SkillSpector v2.12.0 (`skillspector scan <ruta> --no-llm --format markdown`), sobre un clon superficial en carpeta temporal. Criterio de rechazo: puntuación ≥ 51.
+
+| Skill | Puntuación | Severidad | Recomendación | Hallazgos | Cobertura |
+|---|---|---|---|---|---|
+| threejs-fundamentals | 0/100 | LOW | CAUTION | 0 | parcial (0 %) |
+| threejs-geometry | 0/100 | LOW | SAFE | 0 | 100 % |
+| threejs-interaction | 20/100 | LOW | SAFE | 1 (TM1, línea 114) | 100 % |
+| threejs-animation | 0/100 | LOW | SAFE | 0 | 100 % |
+| threejs-loaders | 0/100 | LOW | CAUTION | 0 | parcial (0 %) |
+| threejs-react-three-fiber | 20/100 | LOW | CAUTION | 1 (AR2, línea 474) | parcial (0 %) |
+
+Revisión manual de los hallazgos: ambos son falsos positivos. TM1 corresponde a un comentario sobre capas de `Raycaster`; AR2 corresponde a una nota sobre `<Canvas shadows>` en la sección de errores comunes. Ninguna línea contiene instrucciones dirigidas al agente. La recomendación CAUTION de tres skills proviene de cobertura parcial del analizador estático (límite del analizador y referencias a archivos no incluidos), no de hallazgos.
+
+Resultado: las seis skills quedan por debajo del umbral de 51 y se copian a `skills/`, con sincronización mediante `scripts/sincronizar_skills.py` hacia `.claude/skills/` y `.opencode/skills/`. Diff: solo carpetas nuevas, sin cambios en skills existentes.
+
+Compatibilidad de versión: las skills apuntan a three.js r186; `web/package.json` declara `three ^0.187.0`, `@react-three/fiber ^9.8.2`, `@react-three/drei ^10.7.9` y `react ^19.3.1`. Diferencia anotada: una versión menor por encima de r186; las API usadas por las skills (`Timer`, `PCFShadowMap`, `HDRLoader`, imports `three/addons/`) se mantienen. Verificar contra `node_modules` tras `npm ci` (no instalado al momento del registro).
