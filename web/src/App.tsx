@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { MAQUINAS } from "./maquinas";
 import Biblioteca from "./paginas/Biblioteca";
-import MaquinaPrensa from "./paginas/MaquinaPrensa";
 import MaquinaLinea from "./paginas/MaquinaLinea";
+import MaquinaPrensa from "./paginas/MaquinaPrensa";
 
 // El simulador 3D carga three.js; se separa en su propio fragmento para que la biblioteca abra rápido.
 const MaquinaFreno = lazy(() => import("./paginas/MaquinaFreno"));
@@ -16,8 +17,12 @@ export function leerRuta(hash: string) {
 
 export default function App() {
   const [hash, setHash] = useState(window.location.hash);
+  const [menu, setMenu] = useState(false);
   useEffect(() => {
-    const alCambiar = () => setHash(window.location.hash);
+    const alCambiar = () => {
+      setHash(window.location.hash);
+      setMenu(false);
+    };
     window.addEventListener("hashchange", alCambiar);
     return () => window.removeEventListener("hashchange", alCambiar);
   }, []);
@@ -37,14 +42,16 @@ export default function App() {
     <>
       <header className="cabecera">
         <span className="marca">
-          <b>FNA</b> · Anatomía de máquinas · v2.0
+          <b>FNA</b> · Anatomía<span className="larga"> de máquinas · v2.0</span>
         </span>
-        <nav aria-label="Principal">
+        <button className="boton-menu" aria-expanded={menu} aria-controls="navegacion-principal" onClick={() => setMenu(!menu)}>
+          {menu ? "✕ Cerrar" : "☰ Menú"}
+        </button>
+        <nav id="navegacion-principal" className={menu ? "abierto" : undefined} aria-label="Principal">
           <a href="#/" aria-current={id ? undefined : "page"}>Biblioteca</a>
-          <a href="#/maquina/freno" aria-current={id === "freno" ? "page" : undefined}>Freno 3D</a>
-          <a href="#/maquina/prensa" aria-current={id === "prensa" ? "page" : undefined}>Prensa</a>
-          <a href="#/maquina/linea" aria-current={id === "linea" ? "page" : undefined}>Línea</a>
-          <a href="#/maquina/moto_honda" aria-current={id === "moto_honda" ? "page" : undefined}>Moto</a>
+          {MAQUINAS.map((m) => (
+            <a key={m.id} href={m.ruta} aria-current={id === m.id ? "page" : undefined}>{m.navegacion}</a>
+          ))}
           <a href="/docs" target="_blank" rel="noreferrer">API</a>
         </nav>
       </header>

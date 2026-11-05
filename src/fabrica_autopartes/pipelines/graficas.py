@@ -19,8 +19,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-# Paleta de referencia validada (slots categóricos 1 y 2; textos y superficie).
-AZUL, NARANJA, AGUA = "#2a78d6", "#eb6834", "#1baf7a"
+# Paleta validada (contraste >= 3:1 frente a SUPERFICIE para marcas gráficas y >= 4.5:1 para texto;
+# distinguible bajo protanopia, deuteranopia y tritanopia). Reglas de uso:
+#   - UNA escala por gráfica: un tono base (AZUL) y, como máximo, NARANJA como énfasis.
+#   - AZUL con NARANJA es el único par permitido (dE >= 97 en las tres simulaciones);
+#     AGUA (verde) solo aparece solo: NARANJA/AGUA colapsan en protanopia y AZUL/AGUA en tritanopia.
+#   - Nada se distingue solo por color: hay etiquetas directas y, en series pareadas, trama.
+AZUL, NARANJA, AGUA = "#2a78d6", "#eb6834", "#13895f"
 TEXTO, TEXTO_2, SUPERFICIE, REJILLA = "#0b0b0b", "#52514e", "#fcfcfb", "#e6e5e1"
 
 NOTA = [""]  # nota de procedencia compartida por las gráficas de una ejecución
@@ -41,7 +46,7 @@ def _estilo(ax: plt.Axes, titulo: str, subtitulo: str, nota: str = "") -> None:
     for lado in ("top", "right", "left"):
         ax.spines[lado].set_visible(False)
     ax.spines["bottom"].set_color(REJILLA)
-    ax.tick_params(colors=TEXTO_2, labelsize=8, length=0)
+    ax.tick_params(colors=TEXTO_2, labelsize=8.5, length=0)
     ax.grid(axis="x", color=REJILLA, linewidth=0.8)
     ax.set_axisbelow(True)
     fig = cast(Figure, ax.get_figure())
@@ -67,8 +72,13 @@ def _sin_datos(ruta: Path, titulo: str, mensaje: str) -> None:
     plt.close(fig)
 
 
-def _corto(url: str) -> str:
-    return url.replace("https://", "").replace("www.", "").rstrip("/")
+def _corto(url: str, maximo: int = 38) -> str:
+    """Quita el esquema y acorta con «…» en el medio para que la etiqueta no se corte."""
+    texto = url.replace("https://", "").replace("www.", "").rstrip("/")
+    if len(texto) <= maximo:
+        return texto
+    cabeza = (maximo - 1) // 2
+    return texto[:cabeza] + "…" + texto[-(maximo - 1 - cabeza) :]
 
 
 def _barras_h(
@@ -79,11 +89,13 @@ def _barras_h(
     valores: list[float],
     unidad: str,
     color: str = AZUL,
+    colores: list[str] | None = None,
+    notas: list[str] | None = None,
 ) -> None:
     alto = max(2.6, 0.32 * len(etiquetas) + 1.4)
     fig, ax = plt.subplots(figsize=(8, alto))
     y = range(len(etiquetas))
-    ax.barh(list(y), valores, color=color, height=0.55)
+    ax.barh(list(y), valores, color=colores or color, height=0.55)
     ax.set_yticks(list(y), etiquetas)
     ax.invert_yaxis()
     tope = max(valores) if valores else 1
@@ -91,14 +103,15 @@ def _barras_h(
         ax.text(
             v + tope * 0.01,
             i,
-            f"{v:,.0f} {unidad}".replace(",", "."),
+            f"{v:,.0f} {unidad}".replace(",", ".") + (f" · {notas[i]}" if notas and notas[i] else ""),
             va="center",
-            fontsize=7.5,
+            fontsize=8,
             color=TEXTO_2,
         )
-    ax.set_xlim(0, tope * 1.18)
+    ax.set_xlim(0, tope * (1.3 if notas else 1.18))
+    ax.set_xlabel(f"cantidad ({unidad})", fontsize=8.5, color=TEXTO_2)
     _estilo(ax, titulo, subtitulo, NOTA[0])
-    fig.subplots_adjust(left=0.36, right=0.97, top=_margen_superior(fig), bottom=0.5 / alto)
+    fig.subplots_adjust(left=0.38, right=0.97, top=_margen_superior(fig), bottom=0.75 / alto)
     fig.savefig(ruta, dpi=160)
     plt.close(fig)
 
@@ -138,6 +151,9 @@ def generar_graficas(ruta_metricas: Path, destino: Path) -> list[Path]:
             rastreo["duplicadas"],
             rastreo.get("omitidas_proteccion", 0),
         ]
+        # Énfasis naranja solo en las incidencias; el resto en el tono base. La nota textual evita
+        # depender del color para distinguirlas.
+        incidencia = [False, False, False, True, True, False, True]
         protegidos = rastreo.get("hosts_protegidos") or {}
         _barras_h(
             ruta,
@@ -147,6 +163,8 @@ def generar_graficas(ruta_metricas: Path, destino: Path) -> list[Path]:
             etiquetas,
             valores,
             "URL",
+            colores=[NARANJA if x else AZUL for x in incidencia],
+            notas=["incidencia" if x and v else "" for x, v in zip(incidencia, valores, strict=True)],
         )
     else:
         _sin_datos(
@@ -201,20 +219,31 @@ def generar_graficas(ruta_metricas: Path, destino: Path) -> list[Path]:
         [p["caracteres_extraidos"] for p in paginas_ord],
         height=0.34,
         color=AZUL,
-        label="Texto extraído",
     )
     ax.barh(
         [i + 0.18 for i in y],
         [p["caracteres_limpios"] for p in paginas_ord],
         height=0.34,
         color=NARANJA,
-        label="Texto limpio (Silver)",
+        hatch="////",
+        edgecolor=SUPERFICIE,
+        linewidth=0,
     )
+    tope = max((p["caracteres_extraidos"] for p in paginas_ord), default=1)
+    # Etiquetas directas sobre la primera pareja (sustituyen a la leyenda).
+    if paginas_ord:
+        primera = paginas_ord[0]
+        for desplazo, valor, texto in (
+            (-0.18, primera["caracteres_extraidos"], "Texto extraído"),
+            (0.18, primera["caracteres_limpios"], "Texto limpio (Silver)"),
+        ):
+            ax.text(valor + tope * 0.01, desplazo, texto, va="center", fontsize=8, color=TEXTO)
+    ax.set_xlim(0, tope * 1.42)
+    ax.set_xlabel("caracteres por página", fontsize=8.5, color=TEXTO_2)
     ax.set_yticks(y, [_corto(p["url"]) for p in paginas_ord])
     ax.invert_yaxis()
-    ax.legend(loc="lower right", fontsize=7.5, frameon=False, labelcolor=TEXTO_2)
     _estilo(ax, ETAPAS[3][1], "Caracteres por página antes y después de limpiar", NOTA[0])
-    fig.subplots_adjust(left=0.36, right=0.97, top=_margen_superior(fig), bottom=0.5 / alto)
+    fig.subplots_adjust(left=0.38, right=0.97, top=_margen_superior(fig), bottom=0.75 / alto)
     fig.savefig(ruta, dpi=160)
     plt.close(fig)
     rutas.append(ruta)
@@ -242,7 +271,8 @@ def generar_graficas(ruta_metricas: Path, destino: Path) -> list[Path]:
     ax.text(
         594, ax.get_ylim()[1] * 0.92, "límite de validación (600) ", fontsize=7.5, color=TEXTO_2, ha="right"
     )
-    ax.set_xlabel("tokens aproximados por fragmento", fontsize=8, color=TEXTO_2)
+    ax.set_xlabel("tokens aproximados por fragmento", fontsize=8.5, color=TEXTO_2)
+    ax.set_ylabel("cantidad de fragmentos", fontsize=8.5, color=TEXTO_2)
     ax.grid(axis="y", color=REJILLA)
     _estilo(
         ax,
@@ -251,7 +281,7 @@ def generar_graficas(ruta_metricas: Path, destino: Path) -> list[Path]:
         NOTA[0],
     )
     ax.grid(axis="x", visible=False)
-    fig.subplots_adjust(left=0.08, right=0.97, top=_margen_superior(fig), bottom=0.18)
+    fig.subplots_adjust(left=0.09, right=0.97, top=_margen_superior(fig), bottom=0.2)
     fig.savefig(ruta, dpi=160)
     plt.close(fig)
     rutas.append(ruta)

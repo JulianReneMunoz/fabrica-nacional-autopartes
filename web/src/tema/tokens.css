@@ -1,0 +1,78 @@
+/* Sistema de diseño: tokens. Ningún componente define colores ni tamaños propios; todo sale de estas variables.
+   Estilo estándar: fondo claro cuadriculado, barra negra, un solo acento naranja, sans-serif + monoespaciada. */
+:root {
+  /* Superficies y tinta */
+  --papel: #fcfcfb;
+  --papel-2: #f3f2ee;
+  --tinta: #0b0b0b;
+  --tinta-2: #52514e;
+  --tinta-3: #6b6a66; /* texto terciario: 5,1:1 sobre --papel (AA) */
+  --reticula: #e6e5e1;
+  --trazo-suave: #cfcdc6;
+  --velo: rgba(11, 11, 11, 0.35);
+  --papel-translucido: rgba(252, 252, 251, 0.92);
+
+  /* Acento único (naranja) y su variante de texto */
+  --acento: #eb6834;
+  --acento-texto: #a3380b; /* 6,0:1 sobre --papel */
+  --acento-suave: #fde6dc;
+
+  /* Datos y estados */
+  --dato: #2a78d6;
+  --dato-texto: #1f5fae; /* 5,9:1 */
+  --dato-fondo: #e8f0fb;
+  --ok: #12875c;
+  --ok-texto: #0a6e49; /* 5,9:1 */
+  --ok-fondo: #e3f5ed;
+  --alerta: #a4161a;
+  --alerta-texto: #b02323; /* 6,1:1 */
+  --alerta-fondo: #fbe9e9;
+  --foco: #1f5fae;
+  --foco-inverso: #ffb599;
+
+  /* Colores de las escenas 3D (fases del ciclo, cadena, gas): paleta apta para daltonismo (Okabe-Ito) */
+  --fase-admision: #0072b2;
+  --fase-compresion: #e69f00;
+  --fase-expansion: #d55e00;
+  --fase-escape: #6b6b6b;
+
+  /* Tipografía */
+  --sans: "Inter", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", "Cascadia Mono", "Consolas", ui-monospace, monospace;
+  --t-xs: 11px;
+  --t-sm: 13px;
+  --t-md: 15px;
+  --t-lg: 18px;
+  --t-xl: 24px;
+  --t-2xl: 34px;
+  --interlineado: 1.45;
+
+  /* Espaciado (escala 4/8 px) */
+  --e1: 4px;
+  --e2: 8px;
+  --e3: 12px;
+  --e4: 16px;
+  --e5: 24px;
+  --e6: 32px;
+  --e7: 48px;
+  --e8: 64px;
+
+  /* Radios y bordes */
+  --radio: 6px;
+  --radio-sm: 4px;
+  --radio-pildora: 999px;
+  --borde: 1px solid var(--tinta);
+  --borde-suave: 1px solid var(--reticula);
+  --borde-punteado: 1px dashed var(--tinta-3);
+  --cuadricula: 32px;
+
+  /* Maquetación */
+  --ancho-max: 1760px;
+  --alto-cabecera: 48px;
+  --alto-lienzo: clamp(420px, 62vh, 700px);
+  --capa-cabecera: 20;
+  --capa-cajon: 30;
+  --capa-velo: 29;
+
+  color-scheme: light;
+}

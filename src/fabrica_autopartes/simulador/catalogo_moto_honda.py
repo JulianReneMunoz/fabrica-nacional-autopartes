@@ -325,6 +325,40 @@ class _Constructor:
                     por_id[pid].retirar_antes.append(e)
 
 
+# Centro de la moto para el despiece radial (X, Y en metros; el plano medio es Z = 0).
+CENTRO_DESPIECE_M = (0.0, 0.40)
+_FACTOR_DISTANCIA_RADIAL = 1.35
+_RADIO_MINIMO_DESPIECE_M = 0.30
+
+
+def _despiece_radial(piezas: list[Pieza]) -> None:
+    """Reorienta el despiece de cada pieza hacia afuera desde el centro de la moto (solo presentación).
+
+    La componente en el plano XY es la dirección radial desde ``CENTRO_DESPIECE_M`` hasta la pieza
+    (con un radio mínimo para las piezas centrales, que así se separan sobre todo a los lados); la
+    componente Z conserva el signo y la proporción originales, de modo que las piezas que comparten
+    posición (cubo, rin, llanta, disco) se escalonan en el eje de la rueda y las de un mismo
+    subconjunto siguen una dirección coherente con su posición. El orden de desmontaje, la
+    conectividad en posición armada y los movimientos del mecanismo no cambian.
+    """
+    cx, cy = CENTRO_DESPIECE_M
+    for p in piezas:
+        px, py, _pz = p.transformacion.posicion
+        dx0, dy0, dz0 = p.direccion_despiece
+        rx, ry = px - cx, py - cy
+        norma = max(math.hypot(rx, ry), _RADIO_MINIMO_DESPIECE_M)
+        ux, uy = rx / norma, ry / norma
+        if uy < 0:  # hacia abajo se atenúa: las piezas no deben atravesar el piso de la escena
+            uy *= 0.45
+        # Parte axial original (z) normalizada con el máximo de las componentes originales.
+        mx = max(abs(dx0), abs(dy0), abs(dz0)) or 1.0
+        uz = dz0 / mx
+        vx, vy, vz = ux, uy, uz * 0.9
+        n = math.sqrt(vx * vx + vy * vy + vz * vz) or 1.0
+        p.direccion_despiece = (_r(vx / n), _r(vy / n), _r(vz / n))
+        p.distancia_despiece_m = _r(min(p.distancia_despiece_m * _FACTOR_DISTANCIA_RADIAL, 1.0))
+
+
 def construir_moto(parametros: ParametrosMoto | None = None) -> Ensamblaje:
     """Construye el ensamblaje ``moto_honda`` a partir de los puntos duros."""
     pr = parametros or ParametrosMoto()
@@ -2002,6 +2036,7 @@ def construir_moto(parametros: ParametrosMoto | None = None) -> Ensamblaje:
         )
 
     b.cerrar()
+    _despiece_radial(b.piezas)
     # orden de desmontaje: las articulaciones hijas de otro hijo no deben introducir ciclos cinemáticos
     parametros_ens = {
         "carrera_m": _r(carrera),

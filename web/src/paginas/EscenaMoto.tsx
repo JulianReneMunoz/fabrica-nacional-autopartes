@@ -23,6 +23,7 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ArticulacionApi } from "../api";
+import { prefiereMovimientoReducido } from "../componentes/anatomia";
 import { colocarEtiquetas, puntoBorde, type Rect } from "../modelos/etiquetas";
 import { mecanismoMotor } from "../modelos/mecanismo";
 import {
@@ -44,10 +45,17 @@ import {
 export const URL_MODELO_MOTO = `${import.meta.env.BASE_URL}modelos/moto_honda.glb`;
 
 export type Vec3 = [number, number, number];
+/** Encuadre automático (fit to bounds): esfera a encuadrar y dirección de la cámara; la escena calcula la distancia. */
+export interface EncuadreCamara {
+  centro: Vec3;
+  radio: number;
+  direccion: Vec3;
+}
 export interface PeticionCamara {
   id: number;
   pos: Vec3;
   objetivo: Vec3;
+  encuadre?: EncuadreCamara;
 }
 
 /** Ejes y centros del mecanismo, leídos de las articulaciones del simulador (con valores por omisión). */
@@ -122,6 +130,8 @@ export interface Ancla {
   pieza: string;
   desfase: Vec3; // punto de anclaje respecto al origen de la pieza (m): debe caer sobre la pieza
   pref: [number, number]; // desplazamiento preferido de la etiqueta en pantalla (px)
+  /** Lado del plano medio (+1 derecho, −1 izquierdo) desde el que la pieza es visible; la etiqueta se oculta desde el otro lado. */
+  lado?: 1 | -1;
 }
 /** Etiquetas HTML con línea guía: el punto cae sobre su pieza y la caja se coloca cerca, sin solaparse. */
 export const ANCLAS: Record<string, Ancla> = {
@@ -129,12 +139,13 @@ export const ANCLAS: Record<string, Ancla> = {
   cilindrada: { pieza: "culata", desfase: [0.03, 0.02, 0.04], pref: [120, -100] },
   transmision: { pieza: "cadena", desfase: [-0.02, -0.07, 0.075], pref: [-20, 95] },
   rueda: { pieza: "llanta_trasera", desfase: [-0.2, -0.2, 0.05], pref: [-85, 45] },
-  disco_del: { pieza: "disco_delantero", desfase: [0.07, 0.05, 0.05], pref: [95, -85] },
-  disco_tras: { pieza: "disco_trasero", desfase: [-0.07, 0.07, -0.05], pref: [-95, -70] },
+  disco_del: { pieza: "disco_delantero", desfase: [0.07, 0.05, 0.05], pref: [95, -85], lado: 1 },
+  disco_tras: { pieza: "disco_trasero", desfase: [-0.07, 0.07, -0.05], pref: [-95, -70], lado: -1 },
 };
 
 export interface GeometriaDespieceMoto {
   delta: Record<string, THREE.Vector3>; // despiece completo − ensamblado
+  base?: Record<string, THREE.Vector3>; // posición ensamblada (para encuadrar el despiece)
 }
 
 interface Props {
@@ -203,7 +214,6 @@ const PBR_POR_TIPO: Record<string, Pbr> = {
 };
 export function pbrDe(tipo: string | undefined, subconjunto: string | undefined, id: string): Pbr {
   if (subconjunto === "carroceria" && tipo !== "luz") return id === "porta_placa" ? NEGRO_ESTRUCTURA : { ...PINTURA, roughness: 0.34 };
-  if (id === "filtro_aire") return { ...PINTURA, color: "#17446b", roughness: 0.4 }; // caja del filtro: pintura de carrocería, integrada con el tanque
   if (id === "monoamortiguador") return { color: "#c8362d", metalness: 0.4, roughness: 0.35 }; // resorte/depósito
   return (tipo && PBR_POR_TIPO[tipo]) || NEGRO_ESTRUCTURA;
 }
@@ -225,6 +235,32 @@ const materialContorno = (color: string, grosor: number) =>
     side: THREE.BackSide,
     toneMapped: false,
   });
+
+/**
+ * Dibujo simple del neumático por shader (sin texturas ni geometría extra): corona de rodadura con tacos
+ * alternados y surco central, a partir de la posición local (eje de la rueda = Z). Costo: unas operaciones por fragmento.
+ */
+function dibujoNeumatico(mat: THREE.MeshStandardMaterial, geo: THREE.BufferGeometry) {
+  geo.computeBoundingBox();
+  const bb = geo.boundingBox!;
+  const rMax = Math.max(bb.max.x, bb.max.y, -bb.min.x, -bb.min.y);
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.rMax = { value: rMax };
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vRodadura;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvRodadura = position;");
+    sh.fragmentShader = sh.fragmentShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vRodadura;\nuniform float rMax;")
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+        float rr = length(vRodadura.xy);
+        float corona = smoothstep(0.9 * rMax, 0.955 * rMax, rr);
+        float taco = step(0.0, sin(atan(vRodadura.y, vRodadura.x) * 32.0));
+        float surco = 1.0 - smoothstep(0.004, 0.012, abs(vRodadura.z));
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.34, 0.35, 0.37), corona * clamp(0.75 * taco + 0.9 * surco, 0.0, 1.0));`,
+      );
+  };
+  mat.customProgramCacheKey = () => "neumatico-rodadura";
+}
 
 function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiquetasVisibles, calidad }: Omit<Props, "controles" | "ssao" | "alCalidad"> & { calidad: Calidad }) {
   const { scene } = useGLTF(URL_MODELO_MOTO);
@@ -328,11 +364,28 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
       contorno: (id: string) => Boolean(nodos.get(id)?.mallas.some((m) => contornos.get(m)?.visible)),
       geom: () => estado.current.geom,
       piezas: () => nodos.size,
+      /** Piezas cuyo centro (mundo) se proyecta fuera del lienzo: con el encuadre automático debe ser vacío. */
+      fueraDeCuadro: () => {
+        const salen: string[] = [];
+        const v = new THREE.Vector3();
+        camara.updateMatrixWorld();
+        for (const [id, n] of nodos) {
+          n.obj.getWorldPosition(v).project(camara);
+          if (Math.abs(v.x) > 1 || Math.abs(v.y) > 1) salen.push(id);
+        }
+        return salen;
+      },
+      /** Coloca la cámara de inmediato (sin transición) mirando al centro de la moto. */
+      camara: (x: number, y: number, z: number) => {
+        camara.position.set(x, y, z);
+        controles?.target.set(0.01, 0.43, 0);
+        controles?.update();
+      },
     };
     return () => {
       delete w.__moto3d;
     };
-  }, [nodos, contornos, estado]);
+  }, [nodos, contornos, estado, camara, controles]);
 
   useEffect(
     () => () => {
@@ -362,10 +415,20 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
       camaraObjetivo.id = s.camara.id;
       camaraObjetivo.pos.set(...s.camara.pos);
       camaraObjetivo.objetivo.set(...s.camara.objetivo);
+      const enc = s.camara.encuadre;
+      if (enc) {
+        // Distancia para que la esfera quepa en el campo vertical y en el horizontal (con aspecto real del lienzo).
+        const persp = camara as THREE.PerspectiveCamera;
+        const semiV = THREE.MathUtils.degToRad(persp.fov) / 2;
+        const semiH = Math.atan(Math.tan(semiV) * persp.aspect);
+        const dist = (enc.radio * 0.88) / Math.sin(Math.min(semiV, semiH));
+        camaraObjetivo.objetivo.set(...enc.centro);
+        camaraObjetivo.pos.set(...enc.direccion).normalize().multiplyScalar(dist).add(camaraObjetivo.objetivo);
+      }
       camaraObjetivo.activa = true;
     }
     if (camaraObjetivo.activa && controles) {
-      const k = 1 - Math.exp(-dt * 5);
+      const k = prefiereMovimientoReducido() ? 1 : 1 - Math.exp(-dt * 5);
       camara.position.lerp(camaraObjetivo.pos, k);
       controles.target.lerp(camaraObjetivo.objetivo, k);
       controles.update();
@@ -390,6 +453,7 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
             emissiveIntensity: p.emissiveIntensity ?? 0,
             side: THREE.DoubleSide, // las piezas de corte (cilindro, culata) y las extrusiones abiertas se ven por dentro
           });
+          if (tipo === "llanta") dibujoNeumatico(mat, m.geometry);
           m.material = mat;
           viejo.dispose();
         }
@@ -592,6 +656,11 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
       // En el corte del motor solo se rotulan las piezas que se mantienen opacas.
       const fueraDeEnfoque = s.enfoque !== null && !s.enfoque.has(ancla.pieza);
       if (!div || !n || !visibles || !n.obj.visible || fueraDeEnfoque) {
+        ocultar();
+        continue;
+      }
+      // El disco del lado lejano queda tapado por la rueda: su etiqueta solo se muestra desde el lado donde se ve.
+      if (ancla.lado && ancla.lado * (camara.position.z - n.obj.getWorldPosition(tmp).z) < 0.08) {
         ocultar();
         continue;
       }

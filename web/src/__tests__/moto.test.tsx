@@ -95,6 +95,7 @@ const cambiarRango = async (etiqueta: string, valor: string) => {
   });
 };
 const leerNumero = (texto: string) => parseFloat(texto.replace(/\./g, "").replace(",", ".").replace(/[^0-9.\-]/g, ""));
+const pestana = (nombre: string) => Array.from(contenedor.querySelectorAll('[role="tab"]')).find((t) => t.textContent === nombre);
 const clic = async (el: Element | null | undefined) => {
   expect(el).toBeTruthy();
   await act(async () => (el as HTMLElement).dispatchEvent(new MouseEvent("click", { bubbles: true })));
@@ -106,7 +107,7 @@ describe("máquina moto: interfaz", () => {
     expect(porId("cab-rpm").textContent).toBe("1.400");
     expect(porId("cab-marcha").textContent).toBe("N");
     expect(porId("escala-lenta").textContent).toContain("1/200");
-    expect(contenedor.querySelector(".insignia.supuesto")).toBeTruthy();
+    expect(contenedor.querySelector(".insignia.fuente-supuesto")).toBeTruthy();
     expect(porId("idea-principal").textContent).toContain("el freno invierte el camino");
     act(() => raiz.unmount());
   });
@@ -212,6 +213,7 @@ describe("máquina moto: interfaz", () => {
 
   it("la ficha técnica muestra «No publicado» y fuente con fecha; pulsar un dato lo marca", async () => {
     const raiz = await montar(<MaquinaMoto tour={false} />);
+    await clic(pestana("Ficha técnica"));
     const ficha = contenedor.querySelector(".ficha-tecnica")!;
     expect(ficha.textContent).toContain("No publicado");
     expect(ficha.textContent).toContain("lamina-cb160-std-dlx");
@@ -224,7 +226,7 @@ describe("máquina moto: interfaz", () => {
 
   it("las FAQ de modelos se despliegan con un clic real y resaltan las piezas del campo", async () => {
     const raiz = await montar(<MaquinaMoto tour={false} />);
-    await clic(Array.from(contenedor.querySelectorAll('[role="tab"]')).find((t) => t.textContent === "FAQ modelos"));
+    await clic(pestana("FAQ"));
     const det = contenedor.querySelector<HTMLDetailsElement>('[data-faq-modelo="potencia"]')!;
     const resumen = det.querySelector("summary")!;
     expect(det.open).toBe(false);
@@ -244,7 +246,7 @@ describe("máquina moto: interfaz", () => {
 
   it("FAQ Fanalca: sin archivo indica el comando; con archivo despliega respuesta y cita", async () => {
     let raiz = await montar(<MaquinaMoto tour={false} />);
-    await clic(Array.from(contenedor.querySelectorAll('[role="tab"]')).find((t) => t.textContent === "FAQ Fanalca"));
+    await clic(pestana("FAQ"));
     expect(porId("faq-sin-archivo").textContent).toContain("uv run fabrica faq-visor");
     act(() => raiz.unmount());
     faqVisor = {
@@ -255,7 +257,7 @@ describe("máquina moto: interfaz", () => {
       },
     };
     raiz = await montar(<MaquinaMoto tour={false} />);
-    await clic(Array.from(contenedor.querySelectorAll('[role="tab"]')).find((t) => t.textContent === "FAQ Fanalca"));
+    await clic(pestana("FAQ"));
     const det = contenedor.querySelector('[data-faq-fanalca="q1"]')!;
     expect(det.textContent).toContain("En Cali");
     expect(det.querySelector("a")?.getAttribute("href")).toBe("https://fanalca.com/");
@@ -275,7 +277,7 @@ describe("máquina moto: interfaz", () => {
 
   it("los chips de ensamblajes aíslan un conjunto y la lista permite elegir una pieza", async () => {
     const raiz = await montar(<MaquinaMoto tour={false} />);
-    await clic(Array.from(contenedor.querySelectorAll('[role="tab"]')).find((t) => t.textContent === "Ensamblajes"));
+    expect(pestana("Componentes")?.getAttribute("aria-selected")).toBe("true"); // pestaña inicial estándar
     await clic(contenedor.querySelector('button[data-ensamblaje="motor"]'));
     await clic(contenedor.querySelector('button[data-pieza="piston"]'));
     expect(porId("ficha-nombre").textContent).toBe("Pistón");

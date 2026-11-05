@@ -51,7 +51,7 @@ async function abrir(page: Page, ruta = "/app/#/maquina/moto_honda", faqSimulada
   if (faqSimulada) await page.route("**/api/v1/faq-visor", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(FAQ_FALSA) }));
   await page.goto(ruta);
   await expect(page.getByTestId("escenario-moto").locator("canvas")).toBeVisible();
-  await expect(page.locator(".ficha-tecnica")).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Componentes", exact: true })).toHaveAttribute("aria-selected", "true");
   await page.waitForTimeout(1800);
 }
 
@@ -166,6 +166,7 @@ test("moto: «Ver con ficha de…» cambia la llanta a 140/70-17 y el radio", as
 test("moto: ficha técnica con «No publicado», resaltado de pieza y FAQ de modelos", async ({ page }) => {
   const errores = vigilarConsola(page);
   await abrir(page);
+  await page.getByRole("tab", { name: "Ficha técnica", exact: true }).click();
   const ficha = page.locator(".ficha-tecnica");
   await expect(ficha).toContainText("No publicado");
   await expect(ficha).toContainText("lamina-cb160-std-dlx");
@@ -174,7 +175,7 @@ test("moto: ficha técnica con «No publicado», resaltado de pieza y FAQ de mod
   await ficha.locator('button[data-campo="llantas.trasera"]').click();
   await expect(ficha.locator('button[data-campo="llantas.trasera"]')).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("moto-lab")).toHaveAttribute("data-resaltadas", /llanta_trasera/);
-  await page.getByRole("tab", { name: "FAQ modelos" }).click();
+  await page.getByRole("tab", { name: "FAQ", exact: true }).click();
   await page.locator('[data-faq-modelo="potencia"] summary').click();
   await expect(page.locator('[data-faq-modelo="potencia"]')).toContainText("No publicado");
   expect(await page.locator('[data-faq-modelo="potencia"]').innerText()).not.toContain("15,04");
@@ -192,7 +193,7 @@ test("moto: FAQ Fanalca precalculada (simulada), 404 con mensaje y pregunta en v
     }),
   );
   await abrir(page);
-  await page.getByRole("tab", { name: "FAQ Fanalca" }).click();
+  await page.getByRole("tab", { name: "FAQ", exact: true }).click();
   await page.locator('[data-faq-fanalca="q1"] summary').click();
   await expect(page.locator('[data-faq-fanalca="q1"]')).toContainText("https://fanalca.com/");
   await page.locator('[data-faq-fanalca="q2"] summary').click();
@@ -208,7 +209,7 @@ test("moto: FAQ Fanalca sin archivo (404) muestra el comando y no rompe", async 
   await page.route("**/api/v1/faq-visor", (r) => r.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ detail: "Aún no se generó faq_visor.json" }) }));
   await page.goto("/app/#/maquina/moto_honda");
   await expect(page.getByTestId("escenario-moto").locator("canvas")).toBeVisible();
-  await page.getByRole("tab", { name: "FAQ Fanalca" }).click();
+  await page.getByRole("tab", { name: "FAQ", exact: true }).click();
   await expect(page.getByTestId("faq-sin-archivo")).toContainText("uv run fabrica faq-visor");
   expect(errores).toEqual([]);
 });
@@ -216,18 +217,19 @@ test("moto: FAQ Fanalca sin archivo (404) muestra el comando y no rompe", async 
 test("moto: despiece, corte del motor y ensamblajes", async ({ page }) => {
   const errores = vigilarConsola(page);
   await abrir(page);
-  await page.getByRole("tab", { name: "Vista" }).click();
-  await page.getByLabel("Despiece por ensamblaje").check();
+  const despiece = page.getByRole("toolbar").getByRole("button", { name: "Despiece", exact: true });
+  await despiece.click();
+  await expect(despiece).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("estado")).toHaveText("DESPIECE", { timeout: 10_000 });
   await page.waitForTimeout(5500);
   await page.screenshot({ path: `${FIGURAS}/moto_03_despiece.png` });
-  await page.getByLabel("Despiece por ensamblaje").uncheck();
+  await despiece.click();
   await page.waitForTimeout(5500);
-  await page.getByLabel("Corte del motor").check();
+  await page.getByRole("button", { name: "◧ Sección" }).click();
   await page.waitForTimeout(3000);
   await page.screenshot({ path: `${FIGURAS}/moto_02_corte_motor.png` });
-  await page.getByLabel("Corte del motor").uncheck();
-  await page.getByRole("tab", { name: "Ensamblajes" }).click();
+  await page.getByRole("button", { name: "◧ Sección" }).click();
+  await page.getByRole("tab", { name: "Componentes", exact: true }).click();
   await page.locator('button[data-ensamblaje="motor"]').click();
   await page.locator('button[data-pieza="piston"]').click();
   await expect(page.getByTestId("ficha-nombre")).toContainText(/pist/i);
@@ -337,15 +339,19 @@ test("moto: A15 «Frenar» con 0 N avisa de la fuerza mínima aplicada", async (
   await expect(page.getByTestId("estado")).toHaveText("FRENANDO");
 });
 
-test("moto: secuencia, cajones en pantalla estrecha", async ({ page }) => {
+test("moto: secuencia guiada; panel lateral debajo (< 1100 px) y cajón (< 700 px)", async ({ page }) => {
   const errores = vigilarConsola(page);
   await abrir(page);
   await page.getByRole("button", { name: "▶ Reproducir secuencia" }).click();
   await expect(page.locator(".pasos-secuencia li.actual")).toBeVisible();
-  await page.setViewportSize({ width: 820, height: 900 });
-  await expect(page.getByRole("button", { name: /Ficha ☰/ })).toBeVisible();
-  await page.getByRole("button", { name: /Ficha ☰/ }).click();
-  await expect(page.locator(".moto-columna.der.cajon-abierto")).toBeVisible();
+  await page.setViewportSize({ width: 900, height: 900 });
+  const lienzo = await page.locator(".lienzo-col").boundingBox();
+  const lateral = await page.locator(".lateral-col").boundingBox();
+  expect(lateral!.y).toBeGreaterThanOrEqual(lienzo!.y + lienzo!.height - 1); // columna lateral debajo del lienzo
+  await page.setViewportSize({ width: 640, height: 900 });
+  await expect(page.getByRole("button", { name: /Controles y datos/ })).toBeVisible();
+  await page.getByRole("button", { name: /Controles y datos/ }).click();
+  await expect(page.locator(".lateral-col.cajon-abierto")).toBeVisible();
   expect(errores).toEqual([]);
 });
 
@@ -397,6 +403,8 @@ type Gancho = {
   contorno: (id: string) => boolean;
   geom: () => { ejeCilindro: [number, number]; centroCiguenal: [number, number] };
   piezas: () => number;
+  fueraDeCuadro: () => string[];
+  camara: (x: number, y: number, z: number) => void;
 };
 /** Ejecuta `f(window.__moto3d)` en la página (gancho de pruebas que expone EscenaMoto). */
 const gancho = <T,>(page: Page, f: (g: Gancho) => T): Promise<T> =>
@@ -405,7 +413,7 @@ const gancho = <T,>(page: Page, f: (g: Gancho) => T): Promise<T> =>
 test("moto 7a: el GLB trae 79 piezas y los chips de ensamblajes incluyen dirección y carrocería", async ({ page }) => {
   await abrir(page);
   await expect.poll(() => gancho(page, (g) => g.piezas())).toBe(79);
-  await page.getByRole("tab", { name: "Ensamblajes" }).click();
+  await page.getByRole("tab", { name: "Componentes", exact: true }).click();
   await expect(page.locator(".chips-ensamblaje button")).toHaveCount(12); // Todo + 11 ensamblajes
   await page.locator('button[data-ensamblaje="direccion"]').click();
   await expect(page.locator('button[data-pieza="manubrio"]')).toBeVisible();
@@ -440,7 +448,7 @@ test("moto 7a: la selección usa CONTORNO y no recolorea la pieza (llanta traser
   await abrir(page);
   const antes = await gancho(page, (g) => g.color("llanta_trasera"));
   expect(await gancho(page, (g) => g.contorno("llanta_trasera"))).toBe(false);
-  await page.getByRole("tab", { name: "Ensamblajes" }).click();
+  await page.getByRole("tab", { name: "Componentes", exact: true }).click();
   await page.locator('button[data-pieza="llanta_trasera"]').click();
   await expect.poll(() => gancho(page, (g) => g.contorno("llanta_trasera"))).toBe(true);
   expect(await gancho(page, (g) => g.color("llanta_trasera"))).toEqual(antes); // mismo color y sin emisivo naranja
@@ -501,9 +509,8 @@ for (const [ancho, alto] of [
         }
     };
     await revisar();
-    await page.getByRole("tab", { name: "Vista" }).click();
     for (const camara of ["3/4", "Lateral", "Frenos"]) {
-      await page.getByRole("button", { name: camara, exact: true }).click();
+      await page.getByRole("group", { name: "Cámara" }).getByRole("button", { name: camara, exact: true }).click();
       await page.waitForTimeout(2500);
       await revisar();
     }
@@ -531,15 +538,54 @@ test("moto 7a: calidad ligera por software y, forzando calidad alta, entorno de 
 
 test("moto 7a: capturas lateral, 3/4 y despiece (mismo encuadre y tamaño que la línea base «antes»)", async ({ page }) => {
   await abrir(page);
-  await page.getByRole("tab", { name: "Vista" }).click();
-  await page.getByRole("button", { name: "Lateral", exact: true }).click();
+  await page.getByRole("group", { name: "Cámara" }).getByRole("button", { name: "Lateral", exact: true }).click();
   await page.waitForTimeout(2500);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `${FIGURAS}/moto_7a_despues_lateral.png` });
-  await page.getByRole("button", { name: "3/4", exact: true }).click();
+  await page.getByRole("group", { name: "Cámara" }).getByRole("button", { name: "3/4", exact: true }).click();
   await page.waitForTimeout(2500);
   await page.screenshot({ path: `${FIGURAS}/moto_7a_despues_3cuartos.png` });
-  await page.getByLabel("Despiece por ensamblaje").check();
+  await page.getByRole("toolbar").getByRole("button", { name: "Despiece", exact: true }).click();
   await page.waitForTimeout(9000);
   await page.screenshot({ path: `${FIGURAS}/moto_7a_despues_despiece.png` });
+});
+
+/* ---------- fase 7b: pulido visual de la moto ---------- */
+test("moto 7b: el filtro de aire usa el mismo material neutro que el cárter (no la pintura de la carrocería)", async ({ page }) => {
+  await abrir(page);
+  await expect.poll(() => gancho(page, (g) => g.color("filtro_aire")?.hex)).toBeTruthy();
+  const filtro = await gancho(page, (g) => g.color("filtro_aire"));
+  const carter = await gancho(page, (g) => g.color("carter"));
+  const tanque = await gancho(page, (g) => g.color("tanque"));
+  expect(filtro!.hex).toBe(carter!.hex);
+  expect(filtro!.hex).not.toBe(tanque!.hex);
+});
+
+test("moto 7b: la etiqueta del disco trasero solo aparece desde el lado donde el disco se ve", async ({ page }) => {
+  await abrir(page);
+  const visible = (clave: string) => page.evaluate((c) => getComputedStyle(document.querySelector(`[data-etiqueta="${c}"]`)!).visibility === "visible", clave);
+  await page.getByRole("group", { name: "Cámara" }).getByRole("button", { name: "Lateral", exact: true }).click(); // cámara en +Z: el disco trasero (−Z) queda tapado por la rueda
+  await page.waitForTimeout(2500);
+  expect(await visible("disco_del")).toBe(true);
+  expect(await visible("disco_tras")).toBe(false);
+  // Se gira a la cámara al lado izquierdo (−Z): ahora se ve el disco trasero y no el delantero.
+  await page.waitForTimeout(500);
+  await gancho(page, (g) => g.camara(0.01, 0.6, -2.5));
+  await page.waitForTimeout(800);
+  expect(await visible("disco_tras")).toBe(true);
+  expect(await visible("disco_del")).toBe(false);
+});
+
+test("moto 7b: el despiece es radial (las ruedas se separan hacia adelante y hacia atrás) y el conjunto queda encuadrado", async ({ page }) => {
+  await abrir(page);
+  const x0 = await gancho(page, (g) => [g.mundo("llanta_delantera")![0], g.mundo("llanta_trasera")![0], g.mundo("tanque")![1]]);
+  await page.getByRole("toolbar").getByRole("button", { name: "Despiece", exact: true }).click();
+  await page.waitForTimeout(9000);
+  const x1 = await gancho(page, (g) => [g.mundo("llanta_delantera")![0], g.mundo("llanta_trasera")![0], g.mundo("tanque")![1]]);
+  expect(x1[0]).toBeGreaterThan(x0[0] + 0.25); // delantera hacia adelante
+  expect(x1[1]).toBeLessThan(x0[1] - 0.25); // trasera hacia atrás
+  expect(x1[2]).toBeGreaterThan(x0[2] + 0.2); // tanque hacia arriba
+  // Encuadre automático: todas las piezas proyectadas caen dentro del lienzo.
+  const fuera = await gancho(page, (g) => g.fueraDeCuadro());
+  expect(fuera).toEqual([]);
 });

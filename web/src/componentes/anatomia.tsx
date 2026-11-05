@@ -1,12 +1,14 @@
 /**
- * Piezas comunes del método Anatomy: una pregunta, una relación medible, 2–4 controles,
- * correr/pausar/reiniciar, cámara lenta, cifras junto a las piezas, idea principal,
- * revisión crítica, recorrido automático (< 30 s, grabable) y modo experimento.
+ * Hooks comunes del método Anatomy: datos de la máquina (base de conocimiento vía API), reloj de simulación
+ * con cámara lenta y recorrido automático (< 30 s, grabable). Con `prefers-reduced-motion: reduce` el
+ * recorrido automático no se inicia solo: solo arranca desde el botón «Recorrido 30 s».
  */
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type Maquina } from "../api";
 
-/* ---------- datos de la máquina (base de conocimiento vía API) ---------- */
+export const fmt = (v: number, d = 0) => v.toLocaleString("es-CO", { minimumFractionDigits: d, maximumFractionDigits: d });
+
+/* ---------- datos de la máquina ---------- */
 export function useMaquina(id: string) {
   const [maquina, setMaquina] = useState<Maquina | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -16,53 +18,21 @@ export function useMaquina(id: string) {
   return { maquina, error };
 }
 
-export function Insignia({ tipo }: { tipo: string }) {
-  const textos: Record<string, string> = {
-    scraping: "scraping",
-    lectura_web: "lectura web",
-    semilla: "semilla",
-    demostrativo: "demostrativo",
-    base_conocimiento: "base de conocimiento",
-  };
-  return <span className={`insignia ${tipo}`}>{textos[tipo] ?? tipo}</span>;
+/* ---------- preferencia de movimiento reducido ---------- */
+const CONSULTA_REDUCIDO = "(prefers-reduced-motion: reduce)";
+export function prefiereMovimientoReducido(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(CONSULTA_REDUCIDO).matches;
 }
-
-export function PanelEmpresa({ maquina, error }: { maquina: Maquina | null; error: string | null }) {
-  return (
-    <section className="panel" aria-label="Datos de la empresa">
-      <h3>Datos de la empresa (web scraping)</h3>
-      {error && <p className="aviso error">Sin conexión con la API: {error}</p>}
-      {!maquina && !error && <p className="aviso">Consultando la base de conocimiento…</p>}
-      {maquina && (
-        <ul className="datos">
-          {maquina.datos_empresa.map((d) => (
-            <li key={d.fragmento_id}>
-              <Insignia tipo={d.origen} />
-              {d.texto}
-              <br />
-              <a href={d.url} target="_blank" rel="noreferrer">{d.url}</a>
-            </li>
-          ))}
-          {maquina.parametros.map((p) => (
-            <li key={p.nombre}>
-              <Insignia tipo={p.procedencia} />
-              {p.nombre.replace(/_/g, " ")}: <b className="num">{p.valor.toLocaleString("es-CO")}</b> {p.unidad}
-              {p.fuente && (
-                <>
-                  <br />
-                  <a href={p.fuente} target="_blank" rel="noreferrer">{p.fuente}</a>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-      <p className="aviso" style={{ marginTop: 10 }}>
-        Las cifras de la máquina son demostrativas; los datos de la empresa provienen de los sitios oficiales y
-        se citan con su URL.
-      </p>
-    </section>
-  );
+export function useMovimientoReducido(): boolean {
+  const [reducido, setReducido] = useState(prefiereMovimientoReducido);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia(CONSULTA_REDUCIDO);
+    const alCambiar = () => setReducido(mq.matches);
+    mq.addEventListener?.("change", alCambiar);
+    return () => mq.removeEventListener?.("change", alCambiar);
+  }, []);
+  return reducido;
 }
 
 /* ---------- reloj de simulación con cámara lenta ---------- */
@@ -96,171 +66,6 @@ export function useReloj(escala: number) {
   return { t, setT, corriendo, setCorriendo, reiniciar };
 }
 
-export function Reproduccion(props: {
-  corriendo: boolean;
-  alCorrer: () => void;
-  alPausar: () => void;
-  alReiniciar: () => void;
-  escala: number;
-  alEscala: (v: number) => void;
-}) {
-  return (
-    <div className="barra" role="group" aria-label="Reproducción">
-      {props.corriendo ? (
-        <button className="boton" onClick={props.alPausar}>❚❚ Pausar</button>
-      ) : (
-        <button className="boton" onClick={props.alCorrer}>▶ Correr</button>
-      )}
-      <button className="boton secundario" onClick={props.alReiniciar}>↺ Reiniciar</button>
-      <label className="chip">
-        Velocidad
-        <select
-          aria-label="Velocidad de simulación"
-          value={props.escala}
-          onChange={(e) => props.alEscala(Number(e.target.value))}
-        >
-          <option value={1}>1×</option>
-          <option value={0.5}>0,5×</option>
-          <option value={0.25}>0,25× (lenta)</option>
-          <option value={0.1}>0,1× (muy lenta)</option>
-        </select>
-      </label>
-    </div>
-  );
-}
-
-export function Deslizador(props: {
-  etiqueta: string;
-  valor: number;
-  min: number;
-  max: number;
-  paso: number;
-  unidad: string;
-  alCambiar: (v: number) => void;
-  formato?: (v: number) => string;
-}) {
-  const id = `ctl-${props.etiqueta.replace(/\W+/g, "-")}`;
-  const texto = props.formato ? props.formato(props.valor) : props.valor.toLocaleString("es-CO");
-  return (
-    <div className="control">
-      <label htmlFor={id}>{props.etiqueta}</label>
-      <output htmlFor={id}>
-        {texto} {props.unidad}
-      </output>
-      <input
-        id={id}
-        type="range"
-        min={props.min}
-        max={props.max}
-        step={props.paso}
-        value={props.valor}
-        onChange={(e) => props.alCambiar(Number(e.target.value))}
-      />
-    </div>
-  );
-}
-
-export function Pasos({ pasos, actual }: { pasos: string[]; actual: number }) {
-  return (
-    <ol className="pasos" aria-label="Secuencia del mecanismo">
-      {pasos.map((p, i) => (
-        <li key={p} className={i === actual ? "actual" : undefined} aria-current={i === actual ? "step" : undefined}>
-          {p}
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-export function Chip({ etiqueta, valor, tono }: { etiqueta: string; valor: ReactNode; tono?: string }) {
-  return (
-    <span className={`chip ${tono ?? ""}`}>
-      {etiqueta} <b>{valor}</b>
-    </span>
-  );
-}
-
-/* ---------- modo experimento: predecir, ejecutar, comparar ---------- */
-export interface Experimento {
-  pregunta: string;
-  opciones: { texto: string; correcta: boolean }[];
-  explicacion: string;
-  aplicar: () => void;
-}
-
-export function ModoExperimento({ experimentos }: { experimentos: Experimento[] }) {
-  const [indice, setIndice] = useState(0);
-  const [elegida, setElegida] = useState<number | null>(null);
-  const [revelado, setRevelado] = useState(false);
-  const exp = experimentos[indice];
-  const siguiente = () => {
-    setIndice((indice + 1) % experimentos.length);
-    setElegida(null);
-    setRevelado(false);
-  };
-  return (
-    <section className="panel experimento" aria-label="Modo experimento">
-      <h3>Modo experimento {indice + 1}/{experimentos.length}</h3>
-      <p style={{ margin: 0 }}>
-        <b>Predicción:</b> {exp.pregunta}
-      </p>
-      <div className="opciones">
-        {exp.opciones.map((o, i) => (
-          <button
-            key={o.texto}
-            className={[elegida === i ? "elegida" : "", revelado && o.correcta ? "correcta" : ""].join(" ")}
-            onClick={() => !revelado && setElegida(i)}
-            aria-pressed={elegida === i}
-          >
-            {o.texto}
-          </button>
-        ))}
-      </div>
-      <div className="barra">
-        <button
-          className="boton"
-          disabled={elegida === null || revelado}
-          onClick={() => {
-            exp.aplicar();
-            setRevelado(true);
-          }}
-        >
-          Ejecutar y comparar
-        </button>
-        <button className="boton secundario" onClick={siguiente}>Siguiente</button>
-      </div>
-      {revelado && (
-        <p className="respuesta" role="status">
-          {elegida !== null && exp.opciones[elegida].correcta ? "Predicción correcta. " : "La predicción no coincide. "}
-          {exp.explicacion}
-        </p>
-      )}
-    </section>
-  );
-}
-
-/* ---------- revisión crítica (checklist Anatomy) ---------- */
-export function RevisionCritica({ extra = [] }: { extra?: string[] }) {
-  const base = [
-    "Responde una sola pregunta con una relación medible",
-    "Entre 2 y 4 controles; correr, pausar, reiniciar y cámara lenta",
-    "Cifras junto a las piezas que las producen",
-    "Idea principal en una frase",
-    "Datos de empresa con URL; parámetros demostrativos marcados",
-    "Sin procedimientos de reparación ni de seguridad",
-  ];
-  return (
-    <details className="panel">
-      <summary style={{ cursor: "pointer", fontSize: 13 }}>Revisión crítica</summary>
-      <ul className="critica" style={{ marginTop: 8 }}>
-        {[...base, ...extra].map((c) => (
-          <li key={c}>{c}</li>
-        ))}
-      </ul>
-    </details>
-  );
-}
-
 /* ---------- recorrido automático (< 30 s) ---------- */
 export interface PasoTour {
   en: number; // segundo de inicio
@@ -274,7 +79,12 @@ declare global {
   }
 }
 
-export function useTour(activo: boolean, pasos: PasoTour[], duracion: number) {
+export function useTour(solicitado: boolean, pasos: PasoTour[], duracion: number) {
+  const reducido = useMovimientoReducido();
+  // El botón «Recorrido 30 s» añade `inicio=manual`: es una orden explícita y sí arranca con movimiento reducido.
+  const manual = typeof window !== "undefined" && /[?&]inicio=manual/.test(window.location.hash);
+  const bloqueado = solicitado && reducido && !manual;
+  const activo = solicitado && !bloqueado;
   const [indice, setIndice] = useState(-1);
   const [transcurrido, setTranscurrido] = useState(0);
   const pasosRef = useRef(pasos);
@@ -304,31 +114,23 @@ export function useTour(activo: boolean, pasos: PasoTour[], duracion: number) {
       cancelAnimationFrame(id);
     };
   }, [activo, duracion]);
-  const texto = activo && indice >= 0 ? pasos[indice].texto : null;
-  return { texto, transcurrido: Math.min(transcurrido, duracion), duracion };
+  const texto = activo && indice >= 0 ? pasos[indice].texto : bloqueado ? "Movimiento reducido activo: el recorrido no se inicia solo. Pulsar «Recorrido 30 s» para verlo." : null;
+  return { texto, transcurrido: activo ? Math.min(transcurrido, duracion) : 0, duracion, bloqueadoPorMovimiento: bloqueado };
 }
 
-export function BandaTour({ texto, transcurrido, duracion }: { texto: string | null; transcurrido: number; duracion: number }) {
+export function BandaTour({ texto, transcurrido, duracion, bloqueadoPorMovimiento }: { texto: string | null; transcurrido: number; duracion: number; bloqueadoPorMovimiento?: boolean }) {
   if (!texto) return null;
   return (
     <div className="tour-banda" role="status" aria-live="polite">
       <span>{texto}</span>
-      <span className="progreso">
-        {transcurrido.toFixed(1)} / {duracion} s
-      </span>
+      {!bloqueadoPorMovimiento && (
+        <span className="progreso">
+          {transcurrido.toFixed(1)} / {duracion} s
+        </span>
+      )}
     </div>
   );
 }
 
-export function CabeceraMaquina({ maquina, respaldo }: { maquina: Maquina | null; respaldo: { pregunta: string; relacion: string; idea: string } }) {
-  return (
-    <>
-      <a href="#/" style={{ fontSize: 13 }}>← Biblioteca</a>
-      <h1 className="titular" style={{ maxWidth: "32ch" }}>{maquina?.pregunta ?? respaldo.pregunta}</h1>
-      <p className="idea">
-        <span className="relacion" style={{ marginRight: 10 }}>{maquina?.relacion ?? respaldo.relacion}</span>
-        {maquina?.idea_principal ?? respaldo.idea}
-      </p>
-    </>
-  );
-}
+/** Ruta del recorrido de una máquina lanzado desde el botón (orden explícita: respeta el movimiento reducido). */
+export const hashRecorrido = (ruta: string) => `${ruta}?tour=1&inicio=manual`;

@@ -64,11 +64,11 @@ describe("biblioteca de máquinas", () => {
   it("muestra una tarjeta por máquina con pregunta, relación, dato con URL y botón", async () => {
     const raiz = await montar(<Biblioteca />);
     const tarjetas = contenedor.querySelectorAll("article.tarjeta");
-    expect(tarjetas).toHaveLength(2);
+    expect(tarjetas).toHaveLength(4); // la biblioteca sale de maquinas/*.ts; la API aporta los datos de la empresa
     expect(tarjetas[0].querySelector("h2")?.textContent).toContain("freno de disco");
     expect(tarjetas[0].querySelector(".relacion")?.textContent).toBe("T = 2 · μ · p · A · r");
     expect(tarjetas[0].querySelector(".datos a")?.getAttribute("href")).toBe("https://autopartesfanalca.com.co/");
-    expect(tarjetas[0].querySelector(".insignia")?.textContent).toBe("scraping");
+    expect(tarjetas[0].querySelector(".insignia")?.textContent).toBe("scraping"); // visible en mayúsculas por CSS
     expect(tarjetas[0].querySelector("a.boton")?.getAttribute("href")).toBe("#/maquina/freno");
     act(() => raiz.unmount());
   });

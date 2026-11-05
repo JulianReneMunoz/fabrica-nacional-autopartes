@@ -21,6 +21,7 @@ test("biblioteca: tarjetas de máquinas alimentadas por la base de conocimiento"
     await expect(t.locator("a.boton").first()).toHaveAttribute("href", `#/maquina/${id}`);
     await expect(t.locator(".datos a").first()).toHaveAttribute("href", /autopartesfanalca\.com\.co|fanalca\.com/);
   }
+  expect(await page.locator("main").innerText()).not.toContain("*"); // sin Markdown sin procesar
   await page.screenshot({ path: `${CAPTURAS}/01_biblioteca.png`, fullPage: true });
   expect(errores).toEqual([]);
 });
@@ -41,7 +42,8 @@ test("freno 3D: carga, selección, ficha, pregunta, despiece, sección y frenado
   await page.getByRole("button", { name: "Verificar en API" }).click();
   await expect(page.locator(".ficha")).toContainText("θ");
 
-  // pregunta RAG
+  // pregunta RAG (pestaña FAQ)
+  await page.getByRole("tab", { name: "FAQ", exact: true }).click();
   await page.getByRole("button", { name: "¿Qué función cumple?" }).click();
   await expect(page.getByTestId("respuesta-pieza")).toBeVisible();
   await expect(page.getByTestId("respuesta-pieza")).toContainText(/demostraci/i);

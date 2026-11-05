@@ -15,5 +15,5 @@ export default defineConfig({
     },
   },
   build: { outDir: "dist", emptyOutDir: true, chunkSizeWarningLimit: 1500 },
-  test: { environment: "jsdom", include: ["src/**/*.test.ts", "src/**/*.test.tsx"] },
+  test: { environment: "jsdom", css: { include: [/estilos.css/] }, include: ["src/**/*.test.ts", "src/**/*.test.tsx"] },
 });

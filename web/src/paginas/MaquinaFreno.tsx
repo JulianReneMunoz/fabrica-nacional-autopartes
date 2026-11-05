@@ -7,22 +7,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { api, type Animacion, type NodoJerarquia, type Pieza, type RespuestaPieza, type Lectura } from "../api";
-import {
-  BandaTour,
-  CabeceraMaquina,
-  Chip,
-  Deslizador,
-  Insignia,
-  ModoExperimento,
-  PanelEmpresa,
-  Pasos,
-  Reproduccion,
-  RevisionCritica,
-  useMaquina,
-  useTour,
-  type Experimento,
-  type PasoTour,
-} from "../componentes/anatomia";
+import { fmt, hashRecorrido, useMaquina, useTour, type PasoTour } from "../componentes/anatomia";
+import { ChipDato } from "../componentes/plantilla/ChipDato";
+import { Deslizador, ControlesDeclarados } from "../componentes/plantilla/controles";
+import { EtiquetasPieza, type RefsLineas } from "../componentes/plantilla/EtiquetaPieza";
+import { InsigniaFuente } from "../componentes/plantilla/InsigniaFuente";
+import { armarExperimentos } from "../componentes/plantilla/ModoExperimento";
+import { FaqFanalcaAuto } from "../componentes/plantilla/PanelFaq";
+import { PlantillaMaquina } from "../componentes/plantilla/PlantillaMaquina";
+import { FRENO } from "../maquinas";
 import { calcularFreno, ENTRADA_FRENO_DEFECTO, estadoRueda } from "../modelos/freno";
 import EscenaFreno, { type EstadoEscena, type GeometriaDespiece, type LecturaLocal } from "./EscenaFreno";
 
@@ -31,13 +24,6 @@ type Modo = "ensamblado" | "manual" | "despiece" | "reensamblaje" | "frenado";
 const T_PRESION = 0.5; // s: la presión llega a la pinza
 const T_APRIETE = 0.8; // s: holgura cerrada, inicia la fricción
 const AMPLIACION = 20;
-const PASOS = [
-  "La presión hidráulica llega a la pinza",
-  "El pistón empuja la pastilla interna: F = p · A",
-  "La pinza flotante se desliza y aprieta la pastilla externa",
-  "La fricción en ambas caras produce el par: T = 2 · μ · F · r",
-  "El par decelera la rueda hasta detenerla",
-];
 const PREGUNTAS = [
   "¿Qué función cumple?",
   "¿Qué debe retirarse antes?",
@@ -45,7 +31,6 @@ const PREGUNTAS = [
   "¿Qué dice la documentación de la empresa?",
 ];
 
-const fmt = (v: number, d = 0) => v.toLocaleString("es-CO", { minimumFractionDigits: d, maximumFractionDigits: d });
 const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1);
 const v3 = (a: number[]) => new THREE.Vector3(a[0], a[1], a[2]);
 
@@ -108,6 +93,7 @@ export default function MaquinaFreno({ tour }: { tour: boolean }) {
   const [lecturaApi, setLecturaApi] = useState<Lectura | null>(null);
   const controles = useRef<OrbitControlsImpl | null>(null);
   const divsEtiqueta = useRef<Record<string, HTMLDivElement | null>>({});
+  const lineas: RefsLineas = useRef({});
 
   const escena = useRef<EstadoEscena>({
     despiece: {},
@@ -120,6 +106,7 @@ export default function MaquinaFreno({ tour }: { tour: boolean }) {
     transparencia: 0,
     seccion: false,
     autoGiro: false,
+    reencuadrar: 0,
   });
   Object.assign(escena.current, {
     seleccion,
@@ -230,7 +217,7 @@ export default function MaquinaFreno({ tour }: { tour: boolean }) {
 
   /* ---------- herramientas de vista ---------- */
   const captura = () => {
-    const lienzo = document.querySelector<HTMLCanvasElement>(".escenario canvas");
+    const lienzo = document.querySelector<HTMLCanvasElement>("[data-testid=escenario-freno] canvas");
     if (!lienzo) return;
     const a = document.createElement("a");
     a.href = lienzo.toDataURL("image/png");
@@ -239,7 +226,7 @@ export default function MaquinaFreno({ tour }: { tour: boolean }) {
     api.evento("captura", seleccion, { modo });
   };
   const reiniciarCamara = () => {
-    controles.current?.reset();
+    escena.current.reencuadrar += 1; // vuelve al encuadre automático (fit to bounds)
     api.evento("camara", null, { accion: "reiniciar" });
   };
   const [estadoGuardado, setEstadoGuardado] = useState<string | null>(null);
@@ -287,14 +274,8 @@ export default function MaquinaFreno({ tour }: { tour: boolean }) {
   const rMu = calcularFreno({ ...ENTRADA_FRENO_DEFECTO, coeficiente_friccion: 0.3 });
   const rBase = calcularFreno(ENTRADA_FRENO_DEFECTO);
   const r120 = calcularFreno({ ...ENTRADA_FRENO_DEFECTO, velocidad_kmh: 120 });
-  const experimentos: Experimento[] = [
+  const experimentos = armarExperimentos(FRENO.experimentos, [
     {
-      pregunta: "Si la presión pasa de 25 a 50 bar, ¿qué le ocurre al par de frenado?",
-      opciones: [
-        { texto: "Se duplica", correcta: true },
-        { texto: "Se cuadruplica", correcta: false },
-        { texto: "No cambia: depende solo de μ", correcta: false },
-      ],
       explicacion: `T = 2·μ·p·A·r es lineal en p: ${fmt(r25.par_frenado_nm)} → ${fmt(r50.par_frenado_nm)} N·m. ${
         r50.rueda_bloqueada ? "Con 50 bar la deceleración supera g·μ del neumático: la rueda se bloquea (modelo sin ABS)." : ""
       }`,
@@ -304,16 +285,7 @@ export default function MaquinaFreno({ tour }: { tour: boolean }) {
       },
     },
     {
-      pregunta: "Si μ entre pastilla y disco baja de 0,40 a 0,30, ¿qué ocurre con la distancia de detención a 25 bar?",
-      opciones: [
-        { texto: "Disminuye", correcta: false },
-        { texto: "Aumenta alrededor de un tercio", correcta: true },
-        { texto: "No cambia", correcta: false },
-      ],
-      explicacion: `a ∝ μ y d = v²/2a, así d ∝ 1/μ: ${fmt(rBase.distancia_detencion_m ?? 0, 1)} m → ${fmt(
-        rMu.distancia_detencion_m ?? 0,
-        1,
-      )} m.`,
+      explicacion: `a ∝ μ y d = v²/2a, así d ∝ 1/μ: ${fmt(rBase.distancia_detencion_m ?? 0, 1)} m → ${fmt(rMu.distancia_detencion_m ?? 0, 1)} m.`,
       aplicar: () => {
         setPresion(25);
         setVelocidad(60);
@@ -322,12 +294,6 @@ export default function MaquinaFreno({ tour }: { tour: boolean }) {
       },
     },
     {
-      pregunta: "Con la misma presión, si la velocidad pasa de 60 a 120 km/h, ¿cuánto cambia la distancia?",
-      opciones: [
-        { texto: "Se duplica", correcta: false },
-        { texto: "Se cuadruplica", correcta: true },
-        { texto: "Se mantiene", correcta: false },
-      ],
       explicacion: `d = v²/2a: al duplicar v la distancia se multiplica por 4 (${fmt(rBase.distancia_detencion_m ?? 0, 1)} m → ${fmt(
         r120.distancia_detencion_m ?? 0,
         1,
@@ -339,7 +305,7 @@ export default function MaquinaFreno({ tour }: { tour: boolean }) {
         iniciar("frenado");
       },
     },
-  ];
+  ]);
 
   /* ---------- recorrido automático (< 30 s) ---------- */
   const pasosTour: PasoTour[] = [
@@ -367,7 +333,7 @@ export default function MaquinaFreno({ tour }: { tour: boolean }) {
       escena.current.autoGiro = true;
     } },
   ];
-  const banda = useTour(tour, pasosTour, 29);
+  const banda = useTour(tour, pasosTour, FRENO.duracionRecorrido);
 
   /* ---------- render ---------- */
   const pieza = piezas.find((p) => p.id === seleccion) ?? null;
@@ -380,243 +346,208 @@ export default function MaquinaFreno({ tour }: { tour: boolean }) {
       return s;
     });
 
-  return (
+  const valores = { presion, mu, velocidad, despiece: factorManual };
+  const cambiar = (id: string, v: number) => {
+    if (id === "presion") setPresion(v);
+    else if (id === "mu") setMu(v);
+    else if (id === "velocidad") setVelocidad(v);
+    else {
+      setFactorManual(v);
+      setModo("manual");
+      setCorriendo(false);
+    }
+  };
+
+  const arbol = (
     <>
-      <CabeceraMaquina
-        maquina={maquina}
-        respaldo={{
-          pregunta: "¿Cómo convierte un freno de disco la presión hidráulica en fuerza de frenado?",
-          relacion: "T = 2 · μ · p · A · r",
-          idea: "La presión empuja un solo pistón; la pinza flotante reacciona y aprieta el disco por ambas caras.",
-        }}
-      />
-      {errorSim && <p className="aviso error">API del simulador: {errorSim}</p>}
-
-      <div className="maquina">
-        <div>
-          <div className="escenario" data-testid="escenario-freno" data-modo={modo}>
-            <div className="superpuesto" role="toolbar" aria-label="Modos y herramientas de vista">
-              <button className={`boton ${modo === "ensamblado" ? "activo" : "secundario"}`} onClick={() => iniciar("ensamblado")}>Ensamblado</button>
-              <button className={`boton ${modo === "despiece" ? "activo" : "secundario"}`} onClick={() => iniciar("despiece")}>Despiece</button>
-              <button className={`boton ${modo === "reensamblaje" ? "activo" : "secundario"}`} onClick={() => iniciar("reensamblaje")}>Reensamblar</button>
-              <button className={`boton ${modo === "frenado" ? "activo" : "secundario"}`} onClick={() => iniciar("frenado")}>Frenar</button>
-              <button className="boton secundario" onClick={reiniciarCamara} title="Reiniciar cámara">⌖ Cámara</button>
-              <button className={`boton ${seccion ? "activo" : "secundario"}`} onClick={() => setSeccion(!seccion)} aria-pressed={seccion}>◧ Sección</button>
-              <button className="boton secundario" onClick={captura}>⤓ PNG</button>
-              <button className="boton secundario" onClick={guardar}>Guardar vista</button>
-            </div>
-            <EscenaFreno
-              estado={escena}
-              geometria={geometria}
-              alSeleccionar={seleccionar}
-              alFotograma={setLectura}
-              etiquetas={divsEtiqueta}
-              controles={controles}
-            />
-            {(["piston", "disco", "rueda"] as const).map((k) => (
-              <div
-                key={k}
-                ref={(d) => {
-                  divsEtiqueta.current[k] = d;
-                }}
-                className={`etiqueta-3d ${k === "piston" ? "fuerza" : k === "rueda" ? "movimiento" : ""}`}
-                data-etiqueta={k}
-                style={{ position: "absolute", left: 0, top: 0, display: etiquetas ? "block" : "none", zIndex: 1 }}
-              >
-                {etiquetas?.[k]}
-              </div>
-            ))}
-            <span className="leyenda-escena">
-              geometría procedural demostrativa · {ampliar ? `holguras ampliadas ×${AMPLIACION} (solo visual)` : "holguras a escala real"} · arrastrar: orbitar · rueda: zoom · clic: seleccionar
-            </span>
-            <BandaTour {...banda} />
-          </div>
-
-          <div className="lecturas" aria-label="Lecturas">
-            <Chip etiqueta="p" valor={`${fmt(presion)} bar`} />
-            <Chip etiqueta="F = p·A" valor={`${fmt(resultado.fuerza_piston_n / 1000, 2)} kN`} tono="fuerza" />
-            <Chip etiqueta="F fricción" valor={`${fmt(resultado.fuerza_friccion_total_n / 1000, 2)} kN`} tono="fuerza" />
-            <Chip etiqueta="T" valor={`${fmt(resultado.par_frenado_nm)} N·m`} tono="fuerza" />
-            <Chip etiqueta="a" valor={`${fmt(resultado.deceleracion_g, 2)} g`} tono="movimiento" />
-            <Chip etiqueta="t detención" valor={`${fmt(resultado.tiempo_detencion_s ?? 0, 2)} s`} tono="movimiento" />
-            <Chip etiqueta="d detención" valor={`${fmt(resultado.distancia_detencion_m ?? 0, 1)} m`} tono="movimiento" />
-            <Chip etiqueta="v" valor={`${fmt(velocidadActual)} km/h`} tono="movimiento" />
-            <Chip etiqueta="t sim" valor={`${fmt(tSim, 2)} s`} />
-            {resultado.rueda_bloqueada ? (
-              <Chip etiqueta="Estado" valor="rueda bloqueada (a > g·μ neumático)" tono="alerta" />
-            ) : (
-              <Chip etiqueta="Estado" valor="sin bloqueo" tono="correcto" />
-            )}
-          </div>
-
-          <div className="maquina" style={{ gridTemplateColumns: "1fr 1fr" }}>
-            <section className="panel">
-              <h3>Mecanismo paso a paso</h3>
-              <Pasos pasos={PASOS} actual={pasoActual} />
-            </section>
-            <ModoExperimento experimentos={experimentos} />
-          </div>
-        </div>
-
-        <aside>
-          <section className="panel" aria-label="Controles">
-            <h3>Controles</h3>
-            <Deslizador etiqueta="Presión hidráulica" valor={presion} min={0} max={80} paso={1} unidad="bar" alCambiar={setPresion} />
-            <Deslizador etiqueta="μ pastilla-disco" valor={mu} min={0.2} max={0.6} paso={0.01} unidad="" alCambiar={setMu} formato={(v) => fmt(v, 2)} />
-            <Deslizador etiqueta="Velocidad inicial" valor={velocidad} min={10} max={140} paso={5} unidad="km/h" alCambiar={setVelocidad} />
-            <Deslizador
-              etiqueta="Despiece manual"
-              valor={factorManual}
-              min={0}
-              max={1}
-              paso={0.01}
-              unidad=""
-              formato={(v) => fmt(v, 2)}
-              alCambiar={(v) => {
-                setFactorManual(v);
-                setModo("manual");
-                setCorriendo(false);
-              }}
-            />
-            <Reproduccion
-              corriendo={corriendo}
-              alCorrer={() => (modo === "ensamblado" || modo === "manual" ? iniciar("frenado") : setCorriendo(true))}
-              alPausar={() => setCorriendo(false)}
-              alReiniciar={reiniciar}
-              escala={escala}
-              alEscala={setEscala}
-            />
-            <div style={{ marginTop: 12 }}>
-              <Deslizador etiqueta="Transparencia" valor={transparencia} min={0} max={0.9} paso={0.05} unidad="" formato={(v) => fmt(v, 2)} alCambiar={setTransparencia} />
-              <label style={{ fontSize: 13 }}>
-                <input type="checkbox" checked={ampliar} onChange={(e) => setAmpliar(e.target.checked)} /> Ampliar holguras ×{AMPLIACION} (solo visual)
-              </label>
-            </div>
-            {estadoGuardado && <p className="aviso" role="status">{estadoGuardado}</p>}
-          </section>
-
-          <section className="panel" aria-label="Árbol de componentes">
-            <h3>Árbol de componentes</h3>
-            {jerarquia ? (
+      {jerarquia ? (
+        <ul className="arbol">
+          {jerarquia.hijos.map((g) => (
+            <li key={g.id}>
+              <div className="grupo">{g.nombre}</div>
               <ul className="arbol">
-                {jerarquia.hijos.map((g) => (
-                  <li key={g.id}>
-                    <div className="grupo">{g.nombre}</div>
-                    <ul className="arbol">
-                      {g.hijos.map((h) => (
-                        <li key={h.id} className="nodo">
-                          <input
-                            type="checkbox"
-                            aria-label={`Visible: ${h.nombre}`}
-                            checked={!ocultas.has(h.id)}
-                            onChange={() => conmutar(h.id)}
-                          />
-                          <button
-                            className={`nombre ${seleccion === h.id ? "sel" : ""}`}
-                            onClick={() => seleccionar(seleccion === h.id ? null : h.id)}
-                            data-pieza={h.id}
-                          >
-                            {h.nombre}
-                          </button>
-                          <button
-                            className="nombre"
-                            title="Aislar"
-                            aria-label={`Aislar ${h.nombre}`}
-                            onClick={() => setAislada(aislada === h.id ? null : h.id)}
-                          >
-                            {aislada === h.id ? "◉" : "○"}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
+                {g.hijos.map((h) => (
+                  <li key={h.id} className="nodo">
+                    <input type="checkbox" aria-label={`Visible: ${h.nombre}`} checked={!ocultas.has(h.id)} onChange={() => conmutar(h.id)} />
+                    <button className={`nombre ${seleccion === h.id ? "sel" : ""}`} onClick={() => seleccionar(seleccion === h.id ? null : h.id)} data-pieza={h.id}>
+                      {h.nombre}
+                    </button>
+                    <button className="nombre" title="Aislar" aria-label={`Aislar ${h.nombre}`} onClick={() => setAislada(aislada === h.id ? null : h.id)}>
+                      {aislada === h.id ? "◉" : "○"}
+                    </button>
                   </li>
                 ))}
               </ul>
-            ) : (
-              <p className="aviso">Cargando jerarquía…</p>
-            )}
-            {(ocultas.size > 0 || aislada) && (
-              <button className="boton secundario" style={{ marginTop: 8 }} onClick={() => { setOcultas(new Set()); setAislada(null); }}>
-                Mostrar todo
-              </button>
-            )}
-          </section>
-
-          <section className="panel ficha" aria-label="Ficha de la pieza">
-            <h3>Ficha de la pieza</h3>
-            {!pieza && <p className="aviso">Seleccionar una pieza en la escena o en el árbol.</p>}
-            {pieza && (
-              <dl>
-                <dt>Pieza</dt>
-                <dd data-testid="ficha-nombre">{pieza.nombre}</dd>
-                <dt>Función</dt>
-                <dd>{pieza.funcion}</dd>
-                {pieza.material && (<><dt>Material (demostrativo)</dt><dd>{pieza.material}</dd></>)}
-                <dt>Dimensiones (mm)</dt>
-                <dd className="num">
-                  {Object.entries(pieza.dimensiones_m).map(([k, v]) => `${k.replace(/_/g, " ")} ${fmt(v * 1000, 1)}`).join(" · ")}
-                </dd>
-                <dt>Retirar antes</dt>
-                <dd>{pieza.retirar_antes.length ? pieza.retirar_antes.join(", ") : "—"}</dd>
-                <dt>Relacionadas</dt>
-                <dd>{pieza.relacionadas.join(", ") || "—"}</dd>
-                <dt>Posición / ángulo (escena)</dt>
-                <dd className="num" data-testid="lectura-posicion">
-                  {lectura
-                    ? `x ${fmt(lectura.posicion[0] * 1000, 1)} · y ${fmt(lectura.posicion[1] * 1000, 1)} · z ${fmt(lectura.posicion[2] * 1000, 1)} mm · θz ${fmt(lectura.angulo_z_grados, 1)}°`
-                    : "—"}
-                </dd>
-                <dt>Posición / ángulo (API, validado)</dt>
-                <dd className="num">
-                  {lecturaApi
-                    ? `x ${fmt(lecturaApi.posicion[0] * 1000, 1)} · y ${fmt(lecturaApi.posicion[1] * 1000, 1)} · z ${fmt(lecturaApi.posicion[2] * 1000, 1)} mm · θ ${lecturaApi.rotacion_grados.map((g) => fmt(g, 1)).join(", ")}°`
-                    : <button className="boton secundario" onClick={verificarApi}>Verificar en API</button>}
-                </dd>
-                <dt>Procedencia</dt>
-                <dd><Insignia tipo="demostrativo" /> {pieza.referencia_documental}</dd>
-              </dl>
-            )}
-          </section>
-
-          <section className="panel" aria-label="Preguntar sobre la pieza">
-            <h3>Preguntar (RAG)</h3>
-            <div className="barra" style={{ marginBottom: 8 }}>
-              {PREGUNTAS.map((p) => (
-                <button key={p} className="boton secundario" style={{ fontSize: 12, padding: "4px 8px" }} disabled={!seleccion} onClick={() => { setPregunta(p); preguntar(p); }}>
-                  {p}
-                </button>
-              ))}
-            </div>
-            <form onSubmit={(e) => { e.preventDefault(); preguntar(pregunta); }} className="barra">
-              <input aria-label="Pregunta" value={pregunta} onChange={(e) => setPregunta(e.target.value)} style={{ flex: 1, minWidth: 0, padding: 6 }} />
-              <button className="boton" disabled={!seleccion || consultando}>{consultando ? "…" : "Preguntar"}</button>
-            </form>
-            {respuesta && (
-              <div style={{ marginTop: 10 }} data-testid="respuesta-pieza">
-                <p className="respuesta"><Insignia tipo="demostrativo" />{respuesta.respuesta_modelo}</p>
-                {respuesta.documentado.length > 0 && (
-                  <ul className="datos">
-                    {respuesta.documentado.map((d) => (
-                      <li key={d.fragmento_id}>
-                        <Insignia tipo={d.origen} />{d.texto}<br />
-                        <a href={d.url} target="_blank" rel="noreferrer">{d.url}</a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className="aviso" style={{ marginTop: 8 }}>{respuesta.advertencia}</p>
-              </div>
-            )}
-          </section>
-
-          <div style={{ marginTop: 12 }}>
-            <PanelEmpresa maquina={maquina} error={error} />
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <RevisionCritica extra={["Despiece reversible y orden de desmontaje validado por la API", "Holguras ampliadas declaradas en la escena"]} />
-          </div>
-        </aside>
-      </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="aviso">Cargando jerarquía…</p>
+      )}
+      {(ocultas.size > 0 || aislada) && (
+        <button className="boton secundario" onClick={() => { setOcultas(new Set()); setAislada(null); }}>
+          Mostrar todo
+        </button>
+      )}
+      <section className="ficha" aria-label="Ficha de la pieza">
+        <h4>Ficha de la pieza</h4>
+        {!pieza && <p className="aviso">Seleccionar una pieza en la escena o en el árbol.</p>}
+        {pieza && (
+          <dl>
+            <dt>Pieza</dt>
+            <dd data-testid="ficha-nombre">{pieza.nombre}</dd>
+            <dt>Función</dt>
+            <dd>{pieza.funcion}</dd>
+            {pieza.material && (<><dt>Material (demostrativo)</dt><dd>{pieza.material}</dd></>)}
+            <dt>Dimensiones (mm)</dt>
+            <dd className="num">
+              {Object.entries(pieza.dimensiones_m).map(([k, v]) => `${k.replace(/_/g, " ")} ${fmt(v * 1000, 1)}`).join(" · ")}
+            </dd>
+            <dt>Retirar antes</dt>
+            <dd>{pieza.retirar_antes.length ? pieza.retirar_antes.join(", ") : "—"}</dd>
+            <dt>Relacionadas</dt>
+            <dd>{pieza.relacionadas.join(", ") || "—"}</dd>
+            <dt>Posición / ángulo (escena)</dt>
+            <dd className="num" data-testid="lectura-posicion">
+              {lectura
+                ? `x ${fmt(lectura.posicion[0] * 1000, 1)} · y ${fmt(lectura.posicion[1] * 1000, 1)} · z ${fmt(lectura.posicion[2] * 1000, 1)} mm · θz ${fmt(lectura.angulo_z_grados, 1)}°`
+                : "—"}
+            </dd>
+            <dt>Posición / ángulo (API, validado)</dt>
+            <dd className="num">
+              {lecturaApi
+                ? `x ${fmt(lecturaApi.posicion[0] * 1000, 1)} · y ${fmt(lecturaApi.posicion[1] * 1000, 1)} · z ${fmt(lecturaApi.posicion[2] * 1000, 1)} mm · θ ${lecturaApi.rotacion_grados.map((g) => fmt(g, 1)).join(", ")}°`
+                : <button className="boton secundario" onClick={verificarApi}>Verificar en API</button>}
+            </dd>
+            <dt>Procedencia</dt>
+            <dd><InsigniaFuente fuente="demostrativo" /> {pieza.referencia_documental}</dd>
+          </dl>
+        )}
+      </section>
     </>
+  );
+
+  const faq = (
+    <>
+      <section aria-label="Preguntar sobre la pieza">
+        <h4>Preguntar sobre la pieza (RAG)</h4>
+        <div className="barra">
+          {PREGUNTAS.map((p) => (
+            <button key={p} className="boton secundario" disabled={!seleccion} onClick={() => { setPregunta(p); preguntar(p); }}>
+              {p}
+            </button>
+          ))}
+        </div>
+        {!seleccion && <p className="aviso">Seleccionar una pieza (pestaña Componentes o en la escena) para preguntar.</p>}
+        <form onSubmit={(e) => { e.preventDefault(); preguntar(pregunta); }} className="barra">
+          <input aria-label="Pregunta" value={pregunta} onChange={(e) => setPregunta(e.target.value)} style={{ flex: 1, minWidth: 0 }} />
+          <button className="boton" disabled={!seleccion || consultando}>{consultando ? "…" : "Preguntar"}</button>
+        </form>
+        {respuesta && (
+          <div data-testid="respuesta-pieza">
+            <p className="respuesta"><InsigniaFuente fuente="demostrativo" />{respuesta.respuesta_modelo}</p>
+            {respuesta.documentado.length > 0 && (
+              <ul className="datos">
+                {respuesta.documentado.map((d) => (
+                  <li key={d.fragmento_id}>
+                    <InsigniaFuente fuente={d.origen} />{d.texto}<br />
+                    <a href={d.url} target="_blank" rel="noreferrer">{d.url}</a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="aviso">{respuesta.advertencia}</p>
+          </div>
+        )}
+      </section>
+      <h4>FAQ de Fanalca</h4>
+      <FaqFanalcaAuto />
+    </>
+  );
+
+  return (
+    <PlantillaMaquina
+      def={FRENO}
+      maquina={maquina}
+      errorApi={error}
+      avisos={errorSim && <p className="aviso error">API del simulador: {errorSim}</p>}
+      barra={{
+        ensamblado: { alPulsar: () => iniciar("ensamblado"), activo: modo === "ensamblado" },
+        despiece: { alPulsar: () => iniciar("despiece"), activo: modo === "despiece" },
+        seccion: { alPulsar: () => setSeccion(!seccion), activo: seccion },
+        camara: { alPulsar: reiniciarCamara, titulo: "Reiniciar cámara (encuadre automático)" },
+        png: { alPulsar: captura },
+        guardar: { alPulsar: guardar },
+        recorrido: { alPulsar: () => { window.location.hash = hashRecorrido(FRENO.ruta); }, deshabilitado: tour },
+      }}
+      escenarioProps={{ "data-testid": "escenario-freno", "data-modo": modo }}
+      lienzo={
+        <EscenaFreno
+          estado={escena}
+          geometria={geometria}
+          alSeleccionar={seleccionar}
+          alFotograma={setLectura}
+          etiquetas={divsEtiqueta}
+          lineas={lineas}
+          controles={controles}
+        />
+      }
+      capas={
+        <EtiquetasPieza
+          divs={divsEtiqueta}
+          lineas={lineas}
+          etiquetas={[
+            { clave: "piston", clase: "fuerza", contenido: etiquetas?.piston ?? null },
+            { clave: "disco", contenido: etiquetas?.disco ?? null },
+            { clave: "rueda", clase: "movimiento", contenido: etiquetas?.rueda ?? null },
+          ]}
+        />
+      }
+      leyenda={`geometría procedural demostrativa · ${ampliar ? `holguras ampliadas ×${AMPLIACION} (solo visual)` : "holguras a escala real"} · arrastrar: orbitar · rueda: zoom`}
+      banda={banda}
+      controles={<ControlesDeclarados defs={FRENO.controles} valores={valores} alCambiar={cambiar} />}
+      reproduccion={{
+        corriendo,
+        alCorrer: () => (modo === "ensamblado" || modo === "manual" ? iniciar("frenado") : setCorriendo(true)),
+        alPausar: () => setCorriendo(false),
+        alReiniciar: reiniciar,
+        escala,
+        alEscala: setEscala,
+      }}
+      controlesExtra={
+        <div className="sub-controles">
+          <div className="barra">
+            <button className={`boton ${modo === "frenado" ? "activo" : "secundario"}`} onClick={() => iniciar("frenado")}>Frenar</button>
+            <button className={`boton ${modo === "reensamblaje" ? "activo" : "secundario"}`} onClick={() => iniciar("reensamblaje")}>Reensamblar</button>
+          </div>
+          <Deslizador etiqueta="Transparencia" valor={transparencia} min={0} max={0.9} paso={0.05} unidad="" formato={(v) => fmt(v, 2)} alCambiar={setTransparencia} />
+          <label className="cbs">
+            <input type="checkbox" checked={ampliar} onChange={(e) => setAmpliar(e.target.checked)} /> Ampliar holguras ×{AMPLIACION} (solo visual)
+          </label>
+          {estadoGuardado && <p className="aviso" role="status">{estadoGuardado}</p>}
+        </div>
+      }
+      contenidoPestanas={{ componentes: arbol, faq }}
+      chips={
+        <>
+          <ChipDato etiqueta="p" valor={`${fmt(presion)} bar`} />
+          <ChipDato etiqueta="F = p·A" valor={`${fmt(resultado.fuerza_piston_n / 1000, 2)} kN`} variante="dato" />
+          <ChipDato etiqueta="F fricción" valor={`${fmt(resultado.fuerza_friccion_total_n / 1000, 2)} kN`} variante="dato" />
+          <ChipDato etiqueta="T" valor={`${fmt(resultado.par_frenado_nm)} N·m`} variante="dato" />
+          <ChipDato etiqueta="a" valor={`${fmt(resultado.deceleracion_g, 2)} g`} variante="dato" />
+          <ChipDato etiqueta="t detención" valor={`${fmt(resultado.tiempo_detencion_s ?? 0, 2)} s`} variante="dato" />
+          <ChipDato etiqueta="d detención" valor={`${fmt(resultado.distancia_detencion_m ?? 0, 1)} m`} variante="dato" />
+          <ChipDato etiqueta="v" valor={`${fmt(velocidadActual)} km/h`} variante="dato" />
+          <ChipDato etiqueta="t sim" valor={`${fmt(tSim, 2)} s`} />
+          {resultado.rueda_bloqueada ? (
+            <ChipDato etiqueta="Estado" valor="rueda bloqueada (a > g·μ neumático)" variante="estado" ok={false} />
+          ) : (
+            <ChipDato etiqueta="Estado" valor="sin bloqueo" variante="estado" ok />
+          )}
+        </>
+      }
+      pasoActual={pasoActual}
+      experimentos={experimentos}
+    />
   );
 }

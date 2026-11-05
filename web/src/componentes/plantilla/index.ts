@@ -1,0 +1,13 @@
+export { BarraLienzo } from "./BarraLienzo";
+export { ChipDato } from "./ChipDato";
+export { ControlesDeclarados, Deslizador, Reproduccion } from "./controles";
+export { EtiquetasPieza } from "./EtiquetaPieza";
+export { InsigniaFuente } from "./InsigniaFuente";
+export { armarExperimentos, ModoExperimento, type Experimento } from "./ModoExperimento";
+export { PanelEmpresa } from "./PanelEmpresa";
+export { FaqFanalcaAuto } from "./PanelFaq";
+export { PanelLateral } from "./PanelLateral";
+export { PasoAPaso } from "./PasoAPaso";
+export { PlantillaMaquina } from "./PlantillaMaquina";
+export { TarjetaMaquina } from "./TarjetaMaquina";
+export { TextoEnLinea } from "./TextoEnLinea";

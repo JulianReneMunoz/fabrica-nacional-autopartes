@@ -114,3 +114,15 @@ permanece igual (se verificó, registro por registro, que `agente_usuario` es el
 A partir de esta fecha el rastreador usa `FNA-KB/1.0 (+https://github.com/JulianReneMunoz/fabrica-nacional-autopartes)`,
 que sigue siendo identificable. Tipo de cambio: redacción de un dato personal/institucional en un registro
 histórico, no corrección de datos.
+
+## S-03 · Auditoría de skills de terceros para el pulido visual (2026-11-05)
+
+Procedimiento: `fna-seguridad`, paso 5. Herramienta: SkillSpector v2.12.0 (`skillspector scan <ruta> --no-llm --format markdown`) sobre clones superficiales en carpeta temporal. Criterio de rechazo: puntuación ≥ 51.
+
+| Skill | Origen | Puntuación | Recomendación | Hallazgos | Cobertura | Resultado |
+|---|---|---|---|---|---|---|
+| frontend-design | anthropics/claude-plugins-official, `plugins/frontend-design` (el marketplace de anthropics/claude-code ya no contiene la carpeta y remite a este repositorio) | 13/100 | SAFE | 1 (AR2, `SKILL.md:69`, confianza 55 %) | 100 % | instalada |
+| data-visualization | anthropics/knowledge-work-plugins, `data/skills/data-visualization` | 0/100 | SAFE | 0 | 100 % | instalada |
+| anatomy | wheresryan22/anatomy | 100/100 | DO NOT INSTALL (CRITICAL) | 546 MEDIUM (MP2), 43 HIGH (AE1, artefactos referenciados sin inspección completa), 12 HIGH (P6), 7 HIGH (SC3), 1 HIGH (AS1, `README.md:173`) y otros de severidad media | 41,7 % | **rechazada, no se instala** |
+
+Revisión manual: el hallazgo AR2 de frontend-design es un falso positivo (la línea trata del tono de los mensajes de error y de las pantallas vacías). Los 546 hallazgos MP2 de anatomy se concentran en los ejemplos generados (25 MB) y los 43 AE1 son límites del analizador (cobertura parcial: 91 casos `static_parse_limit`), pero la puntuación supera el umbral y la recomendación es no instalar; además, el repositorio contiene 59 scripts, un kit de Node y ejemplos de gran tamaño que no se justifican como referencia. Resultado: `frontend-design` y `data-visualization` se copian a `skills/` y se sincronizan con `.claude/skills/` y `.opencode/skills/`; `anatomy` no se copia. El método Anatomy sigue cubierto por la skill propia `fna-maquinas-anatomia`.

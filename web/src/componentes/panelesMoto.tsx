@@ -3,60 +3,36 @@
  * con fuente y estado por campo, FAQ de modelos (deterministas) y FAQ de Fanalca (precalculadas con citas).
  * Todo número muestra su procedencia: «supuesto didáctico», ficha publicada o «No publicado».
  */
-import { useId, useState, type ReactNode } from "react";
+import { useState } from "react";
 import type { FaqVisor, FichaMotoApi, ItemFaqVisor, RespuestaModeloApi, RespuestaQa } from "../api";
-import { ETIQUETA_SUPUESTO, FASES_CICLO, FASES_INFO, faseCiclo, type CampoFichaApi } from "../modelos/moto";
+import { InsigniaFuente } from "./plantilla/InsigniaFuente";
+import { ETIQUETA_SUPUESTO, FASES_CICLO, type FaseCiclo, FASES_INFO, faseCiclo, type CampoFichaApi } from "../modelos/moto";
 
 export const fmt = (v: number, d = 0) => v.toLocaleString("es-CO", { minimumFractionDigits: d, maximumFractionDigits: d });
 export const NO_PUBLICADO = "No publicado";
 export const FRASE_RECHAZO = "La información solicitada no se encuentra en la base de conocimiento de Fanalca.";
 
-/* ---------- insignias ---------- */
+/* ---------- insignias (una sola implementación: plantilla/InsigniaFuente) ---------- */
 export function InsigniaSupuesto({ texto = ETIQUETA_SUPUESTO }: { texto?: string }) {
-  return <span className="insignia supuesto">{texto}</span>;
+  return <InsigniaFuente fuente="supuesto" texto={texto} />;
 }
 export function InsigniaEstado({ estado }: { estado: CampoFichaApi["estado"] }) {
-  const texto = estado === "publicado" ? "publicado" : estado === "supuesto" ? ETIQUETA_SUPUESTO : NO_PUBLICADO.toLowerCase();
-  return <span className={`insignia estado-${estado}`}>{texto}</span>;
+  return estado === "publicado" ? (
+    <InsigniaFuente fuente="ficha" texto="publicado" />
+  ) : estado === "supuesto" ? (
+    <InsigniaFuente fuente="supuesto" texto={ETIQUETA_SUPUESTO} />
+  ) : (
+    <InsigniaFuente fuente="no_publicado" texto={NO_PUBLICADO.toLowerCase()} />
+  );
 }
 
-/* ---------- pestañas plegables ---------- */
-export interface PestanaDef {
-  id: string;
-  titulo: string;
-}
-export function Pestanas(props: {
-  etiqueta: string;
-  pestanas: PestanaDef[];
-  activa: string | null;
-  alCambiar: (id: string | null) => void;
-  children: (activa: string) => ReactNode;
-}) {
-  const base = useId();
+/** Nombre de la fase con una muestra de su color (el texto va en tinta: el color solo acompaña). */
+export function NombreFase({ fase }: { fase: FaseCiclo }) {
   return (
-    <section className="pestanas" aria-label={props.etiqueta}>
-      <div role="tablist" className="pestanas-lista" aria-label={props.etiqueta}>
-        {props.pestanas.map((p) => (
-          <button
-            key={p.id}
-            role="tab"
-            id={`${base}-${p.id}`}
-            aria-selected={props.activa === p.id}
-            aria-controls={`${base}-panel`}
-            className={props.activa === p.id ? "activa" : ""}
-            title={props.activa === p.id ? "Pulsar para plegar" : "Pulsar para desplegar"}
-            onClick={() => props.alCambiar(props.activa === p.id ? null : p.id)}
-          >
-            {p.titulo}
-          </button>
-        ))}
-      </div>
-      {props.activa && (
-        <div role="tabpanel" id={`${base}-panel`} aria-labelledby={`${base}-${props.activa}`} className="pestanas-panel">
-          {props.children(props.activa)}
-        </div>
-      )}
-    </section>
+    <span className="nombre-fase">
+      <span className="muestra-fase" style={{ background: FASES_INFO[fase].color }} aria-hidden="true" />
+      <b>{FASES_INFO[fase].nombre}</b>
+    </span>
   );
 }
 
@@ -85,23 +61,23 @@ export function DiagramaCiclo({ theta720 }: { theta720: number }) {
     <figure className="diagrama-ciclo" aria-label="Diagrama del ciclo de cuatro tiempos">
       <svg viewBox="0 0 140 140" role="img" aria-label={`Ciclo 4T: ${FASES_INFO[fase].nombre}, ${fmt(t)} grados de 720`}>
         {FASES_CICLO.map((f, i) => (
-          <path key={f} d={sector(i * 90, (i + 1) * 90)} fill={FASES_INFO[f].color} opacity={f === fase ? 1 : 0.42} stroke="#fcfcfb" strokeWidth="1.5" />
+          <path key={f} d={sector(i * 90, (i + 1) * 90)} fill={FASES_INFO[f].color} opacity={f === fase ? 1 : 0.42} stroke="var(--papel)" strokeWidth="1.5" />
         ))}
         {FASES_CICLO.map((f, i) => {
           const [x, y] = punto(i * 90 + 45, (R + r) / 2);
           return (
-            <text key={f} x={x} y={y + 3} textAnchor="middle" fontSize="9" fontWeight="700" fill="#fff">
+            <text key={f} x={x} y={y + 3} textAnchor="middle" fontSize="9" fontWeight="700" className="texto-sector">
               {["ADM", "COM", "EXP", "ESC"][i]}
             </text>
           );
         })}
-        <line x1={bx} y1={by} x2={ax} y2={ay} stroke="#0b0b0b" strokeWidth="2.4" />
-        <circle cx={ax} cy={ay} r="3.2" fill="#0b0b0b" />
+        <line x1={bx} y1={by} x2={ax} y2={ay} stroke="var(--tinta)" strokeWidth="2.4" />
+        <circle cx={ax} cy={ay} r="3.2" fill="var(--tinta)" />
         <text x={cx} y={cy - 2} textAnchor="middle" fontSize="13" fontWeight="700">{fmt(t)}°</text>
-        <text x={cx} y={cy + 11} textAnchor="middle" fontSize="8" fill="#52514e">de 720°</text>
+        <text x={cx} y={cy + 11} textAnchor="middle" fontSize="8" fill="var(--tinta-2)">de 720°</text>
       </svg>
       <figcaption>
-        <b style={{ color: FASES_INFO[fase].color }}>{FASES_INFO[fase].nombre}</b>: pistón {FASES_INFO[fase].pistón}. {FASES_INFO[fase].detalle}
+        <NombreFase fase={fase} />: pistón {FASES_INFO[fase].pistón}. {FASES_INFO[fase].detalle}
       </figcaption>
     </figure>
   );
@@ -366,7 +342,7 @@ export function FaqFanalca(props: {
               <summary>{it.pregunta}</summary>
               <p className="respuesta">{it.rechazo ? FRASE_RECHAZO : it.respuesta}</p>
               <p className="citas">
-                <span className="insignia base_conocimiento">base de conocimiento</span> confianza {it.confianza}
+                <InsigniaFuente fuente="base_conocimiento" /> confianza {it.confianza}
                 {it.rechazo && " · sin respuesta en la base"}
               </p>
               <CitasFanalca fuentes={it.fuentes} />

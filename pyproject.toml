@@ -95,6 +95,8 @@ omit = ["src/fabrica_autopartes/scraping/dinamico.py"]
 line-length = 110
 target-version = "py312"
 src = ["src", "tests", "frontend"]
+# Las skills (SKILL.md) son documentos de terceros con bloques de código de ejemplo: no se reformatean.
+extend-exclude = ["**/SKILL.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]

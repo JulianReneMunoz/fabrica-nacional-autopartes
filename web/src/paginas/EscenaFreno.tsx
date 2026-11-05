@@ -10,6 +10,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import { prefiereMovimientoReducido } from "../componentes/anatomia";
+import { colocarEtiquetas, puntoBorde, type Rect } from "../modelos/etiquetas";
 
 export const URL_MODELO = `${import.meta.env.BASE_URL}modelos/freno_disco.glb`;
 export const GIRATORIAS = new Set(["cubo", "disco", "esparrago_1", "esparrago_2", "esparrago_3", "esparrago_4"]);
@@ -25,13 +27,15 @@ export interface EstadoEscena {
   transparencia: number;
   seccion: boolean;
   autoGiro: boolean;
+  /** Contador: al incrementarse se vuelve al encuadre automático (botón «Cámara»). */
+  reencuadrar: number;
 }
 
-/** Etiquetas HTML superpuestas: se proyectan en cada fotograma desde el punto de anclaje 3D. */
-export const ANCLAS: Record<string, { pieza: string; desfase: [number, number, number] }> = {
-  piston: { pieza: "piston", desfase: [0.09, 0.02, -0.03] },
-  disco: { pieza: "disco", desfase: [0.13, -0.1, 0.02] },
-  rueda: { pieza: "cubo", desfase: [-0.06, -0.05, 0.05] },
+/** Etiquetas HTML con línea guía: el punto cae sobre su pieza y la caja se coloca cerca, sin solaparse. */
+export const ANCLAS: Record<string, { pieza: string; desfase: [number, number, number]; pref: [number, number] }> = {
+  piston: { pieza: "piston", desfase: [0.0, 0.0, 0.0], pref: [95, -70] },
+  disco: { pieza: "disco", desfase: [0.0, -0.1, 0.0], pref: [105, 60] },
+  rueda: { pieza: "cubo", desfase: [0.0, 0.0, 0.03], pref: [-110, -60] },
 };
 
 export interface GeometriaDespiece {
@@ -50,13 +54,16 @@ interface Props {
   alSeleccionar: (id: string | null) => void;
   alFotograma: (lectura: LecturaLocal | null) => void;
   etiquetas: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
+  lineas: React.MutableRefObject<Record<string, { linea: SVGLineElement | null; punto: SVGCircleElement | null }>>;
   controles: React.MutableRefObject<OrbitControlsImpl | null>;
 }
 
+const MARGEN_ENCUADRE = 0.92; // la esfera envolvente de la caja es holgada: el factor < 1 deja un margen visual de ~10 %
+const DIRECCION_INICIAL = new THREE.Vector3(0.52, 0.33, 0.72).multiplyScalar(0.9);
 const PLANO = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
 const EJE_Z = new THREE.Vector3(0, 0, 1);
 
-function Modelo({ estado, geometria, alSeleccionar, alFotograma, etiquetas: etq }: Omit<Props, "controles">) {
+function Modelo({ estado, geometria, alSeleccionar, alFotograma, etiquetas: etq, lineas }: Omit<Props, "controles">) {
   const { scene } = useGLTF(URL_MODELO);
   const gl = useThree((t) => t.gl);
   const camara = useThree((t) => t.camera);
@@ -91,15 +98,67 @@ function Modelo({ estado, geometria, alSeleccionar, alFotograma, etiquetas: etq 
     gl.localClippingEnabled = true;
   }, [gl]);
 
+  /* ---------- encuadre automático (fit to bounds): solo la cámara; el GLB no cambia ---------- */
+  const encuadre = useMemo(() => {
+    raiz.updateMatrixWorld(true);
+    const caja = new THREE.Box3();
+    const cajaDespiece = new THREE.Box3();
+    const tmpCaja = new THREE.Box3();
+    for (const [id, n] of nodos) {
+      tmpCaja.setFromObject(n.obj);
+      caja.union(tmpCaja);
+      cajaDespiece.union(tmpCaja);
+      const d = geometria?.delta[id];
+      if (d) cajaDespiece.union(tmpCaja.translate(d));
+    }
+    const esfera = (c: THREE.Box3) => c.getBoundingSphere(new THREE.Sphere());
+    return { ens: esfera(caja), des: esfera(cajaDespiece), manual: false, vistos: -1, inicializado: false };
+  }, [raiz, nodos, geometria]);
+  useEffect(() => {
+    if (!controles) return;
+    const alInteractuar = () => {
+      encuadre.manual = true;
+    };
+    controles.addEventListener("start", alInteractuar);
+    return () => controles.removeEventListener("start", alInteractuar);
+  }, [controles, encuadre]);
+  const reservadas = useRef<{ t: number; r: Rect[] }>({ t: -1e9, r: [] });
+  const medidas = useRef<Record<string, { w: number; h: number; t: number }>>({});
+
   const ultimoAviso = useRef(0);
   const tmp = useMemo(() => new THREE.Vector3(), []);
   const q = useMemo(() => new THREE.Quaternion(), []);
 
-  useFrame(() => {
+  useFrame((_, dtFotograma) => {
     const s = estado.current;
     if (controles) {
       controles.autoRotate = s.autoGiro;
       controles.autoRotateSpeed = 1.6;
+    }
+    if (controles && (s.reencuadrar !== encuadre.vistos || !encuadre.inicializado)) {
+      if (encuadre.vistos !== -1 || !encuadre.inicializado) {
+        controles.target.copy(encuadre.ens.center);
+        camara.position.copy(encuadre.ens.center).add(DIRECCION_INICIAL);
+      }
+      encuadre.manual = false;
+      encuadre.vistos = s.reencuadrar;
+      encuadre.inicializado = true;
+    }
+    if (controles && !encuadre.manual) {
+      let fMax = 0;
+      for (const v of Object.values(s.despiece)) fMax = Math.max(fMax, v);
+      const centro = tmp.copy(encuadre.ens.center).lerp(encuadre.des.center, fMax);
+      const radio = THREE.MathUtils.lerp(encuadre.ens.radius, encuadre.des.radius, fMax);
+      const persp = camara as THREE.PerspectiveCamera;
+      const semiV = THREE.MathUtils.degToRad(persp.fov) / 2;
+      const semiH = Math.atan(Math.tan(semiV) * persp.aspect);
+      const distancia = (radio * MARGEN_ENCUADRE) / Math.sin(Math.min(semiV, semiH));
+      const k = prefiereMovimientoReducido() ? 1 : 1 - Math.exp(-dtFotograma * 4);
+      controles.target.lerp(centro, k);
+      const dir = camara.position.clone().sub(controles.target).normalize();
+      const actual = camara.position.distanceTo(controles.target);
+      camara.position.copy(controles.target).addScaledVector(dir, THREE.MathUtils.lerp(actual, distancia, k));
+      controles.update();
     }
     q.setFromAxisAngle(EJE_Z, s.angulo);
     for (const [id, n] of nodos) {
@@ -127,15 +186,63 @@ function Modelo({ estado, geometria, alSeleccionar, alFotograma, etiquetas: etq 
         mat.side = s.seccion ? THREE.DoubleSide : THREE.FrontSide;
       }
     }
+    const ahora0 = performance.now();
+    const escenario = gl.domElement.closest("[data-testid=escenario-freno]") as HTMLElement | null;
+    if (escenario && ahora0 - reservadas.current.t > 400) {
+      const er = escenario.getBoundingClientRect();
+      reservadas.current = {
+        t: ahora0,
+        r: Array.from(escenario.querySelectorAll<HTMLElement>(".leyenda-escena, .tour-banda")).map((e) => {
+          const bb = e.getBoundingClientRect();
+          return { x: bb.left - er.left, y: bb.top - er.top, w: bb.width, h: bb.height };
+        }),
+      };
+    }
+    const entradas: { clave: string; px: number; py: number; pref: [number, number]; w: number; h: number }[] = [];
     for (const [clave, ancla] of Object.entries(ANCLAS)) {
       const div = etq.current[clave];
+      const g = lineas.current[clave];
       const n = nodos.get(ancla.pieza);
-      if (!div || !n) continue;
-      n.obj.getWorldPosition(tmp);
-      tmp.add(new THREE.Vector3(...ancla.desfase)).project(camara);
-      const x = (tmp.x * 0.5 + 0.5) * tamano.width;
-      const y = (-tmp.y * 0.5 + 0.5) * tamano.height;
-      div.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`;
+      const ocultar = () => {
+        if (div) div.style.visibility = "hidden";
+        if (g?.linea) g.linea.style.visibility = "hidden";
+        if (g?.punto) g.punto.style.visibility = "hidden";
+      };
+      if (!div || !n || div.style.display === "none" || !n.obj.visible) {
+        ocultar();
+        continue;
+      }
+      n.obj.localToWorld(tmp.set(...ancla.desfase));
+      tmp.project(camara);
+      if (tmp.z >= 1) {
+        ocultar();
+        continue;
+      }
+      let med = medidas.current[clave];
+      if (!med || ahora0 - med.t > 200) {
+        med = { w: div.offsetWidth, h: div.offsetHeight, t: ahora0 };
+        medidas.current[clave] = med;
+      }
+      entradas.push({ clave, px: (tmp.x * 0.5 + 0.5) * tamano.width, py: (-tmp.y * 0.5 + 0.5) * tamano.height, pref: ancla.pref, w: med.w, h: med.h });
+    }
+    for (const c of colocarEtiquetas(entradas, tamano.width, tamano.height, reservadas.current.r, 0)) {
+      const div = etq.current[c.clave]!;
+      div.style.visibility = "visible";
+      div.style.transform = `translate(${(c.cx - c.w / 2).toFixed(1)}px, ${(c.cy - c.h / 2).toFixed(1)}px)`;
+      const g = lineas.current[c.clave];
+      const [bx, by] = puntoBorde(c);
+      if (g?.linea) {
+        g.linea.setAttribute("x1", c.px.toFixed(1));
+        g.linea.setAttribute("y1", c.py.toFixed(1));
+        g.linea.setAttribute("x2", bx.toFixed(1));
+        g.linea.setAttribute("y2", by.toFixed(1));
+        g.linea.style.visibility = "visible";
+      }
+      if (g?.punto) {
+        g.punto.setAttribute("cx", c.px.toFixed(1));
+        g.punto.setAttribute("cy", c.py.toFixed(1));
+        g.punto.style.visibility = "visible";
+      }
     }
     const ahora = performance.now();
     if (ahora - ultimoAviso.current > 120) {
@@ -184,13 +291,14 @@ export default function EscenaFreno(props: Props) {
         alSeleccionar={props.alSeleccionar}
         alFotograma={props.alFotograma}
         etiquetas={props.etiquetas}
+        lineas={props.lineas}
       />
       <OrbitControls
         ref={props.controles}
         makeDefault
-        enableDamping
         minDistance={0.15}
         maxDistance={2.5}
+        enableDamping={!prefiereMovimientoReducido()}
         target={[0, 0.03, 0]}
       />
     </Canvas>
