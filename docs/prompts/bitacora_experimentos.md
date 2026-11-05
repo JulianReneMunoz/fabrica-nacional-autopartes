@@ -126,3 +126,27 @@ Procedimiento: `fna-seguridad`, paso 5. Herramienta: SkillSpector v2.12.0 (`skil
 | anatomy | wheresryan22/anatomy | 100/100 | DO NOT INSTALL (CRITICAL) | 546 MEDIUM (MP2), 43 HIGH (AE1, artefactos referenciados sin inspección completa), 12 HIGH (P6), 7 HIGH (SC3), 1 HIGH (AS1, `README.md:173`) y otros de severidad media | 41,7 % | **rechazada, no se instala** |
 
 Revisión manual: el hallazgo AR2 de frontend-design es un falso positivo (la línea trata del tono de los mensajes de error y de las pantallas vacías). Los 546 hallazgos MP2 de anatomy se concentran en los ejemplos generados (25 MB) y los 43 AE1 son límites del analizador (cobertura parcial: 91 casos `static_parse_limit`), pero la puntuación supera el umbral y la recomendación es no instalar; además, el repositorio contiene 59 scripts, un kit de Node y ejemplos de gran tamaño que no se justifican como referencia. Resultado: `frontend-design` y `data-visualization` se copian a `skills/` y se sincronizan con `.claude/skills/` y `.opencode/skills/`; `anatomy` no se copia. El método Anatomy sigue cubierto por la skill propia `fna-maquinas-anatomia`.
+
+## E-04 · Revisión crítica independiente de la motocicleta (2026-11-05)
+
+Revisor independiente (solo lectura) sobre la máquina `moto_honda`: pruebas en navegador de todos los controles y
+estados, contraste entre `moto.ts`, `fisica_moto.py` y `referencia_moto.json`, comprobación de restricciones
+(sin logotipos, validación en el backend, capas, hashes del freno) y revisión de la calidad de las pruebas.
+Resultado: las verificaciones automáticas pasaban, pero el modelo, los números y la imagen no contaban siempre la
+misma historia.
+
+### Hallazgo H-03 (corregido antes de continuar)
+
+| Id | Severidad | Hallazgo | Corrección |
+|---|---|---|---|
+| A1 | crítico | La cifra de potencia con unidad sin confirmar aparecía en la aplicación (ficha, pendientes y FAQ). | Se retiró del YAML y de las respuestas; solo queda como comentario; prueba que falla si reaparece. |
+| A2-A4 | importante | Saltos de velocidad: cambiar de marcha, pasar a neutro y soltar el freno recalculaban la velocidad de golpe. | Velocidad como variable de estado continua (`paso_moto`); las rpm se derivan de la velocidad; casos nuevos en `referencia_moto.json`. |
+| A5 | importante | «BLOQUEADA» y fuerzas de frenado visibles sin frenar o con la moto detenida. | Valores «previstos» hasta frenar; sin bloqueo con velocidad nula (también en el backend). |
+| A6 | importante | La STD calculaba un disco trasero que la ficha no publica. | Marcado como supuesto didáctico y alineado el cliente con el servidor. |
+| A7 | importante | El freno delantero usaba el radio de la llanta trasera. | Radio de la llanta delantera en Python y TypeScript. |
+| A8-A10 | importante | El limitador no cortaba la chispa en la escena; la etiqueta de cilindrada presentaba un supuesto como dato de ficha; la cámara lenta mezclaba dos bases de tiempo. | Chispa intermitente con limitador; rótulo «150 cm³ nominal — supuesto didáctico»; escala de tiempo rotulada. |
+| A11-A18 | menor | Radios de cadena distintos entre física y geometría, textos de estado, CBS que se reactivaba solo, entre otros. | Corregidos. |
+| D | pruebas | Pruebas tautológicas o débiles (FAQ sin clic real, CBS sin reparto, relación de cadena fija). | Rehechas; el end-to-end ya no sobrescribe imágenes versionadas. |
+
+Los defectos visuales (etiquetas solapadas a 1280×800, insignia partida, captura sin FAQ, despiece, piezas
+flotando) pasaron a las fases 7a y 7b. Verificación posterior: los hashes del freno no cambiaron en ninguna fase.

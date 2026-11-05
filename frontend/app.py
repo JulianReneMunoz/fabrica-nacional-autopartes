@@ -419,10 +419,11 @@ with t_sim:
         "en `web/`. El modelo del freno es **demostrativo**: geometría procedural simplificada, "
         "no un diseño certificado."
     )
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
     c1.link_button("Abrir biblioteca", url_visor + "#/")
     c2.link_button("Abrir freno 3D", url_visor + "#/maquina/freno")
-    c3.link_button("Recorrido de 30 s", url_visor + "#/maquina/freno?tour=1")
+    c3.link_button("Abrir motocicleta", url_visor + "#/maquina/moto_honda")
+    c4.link_button("Recorrido de 30 s", url_visor + "#/maquina/freno?tour=1")
     for maquina in construir_biblioteca(base):
         with st.container(border=True):
             st.markdown(f"**{maquina.pregunta}**  \n{maquina.una_linea} · `{maquina.relacion}`")

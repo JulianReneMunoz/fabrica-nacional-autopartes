@@ -40,6 +40,9 @@ def test_pestanas_v2_proceso_y_simulador(app) -> None:  # type: ignore[no-untype
     textos = " ".join(str(m.value) for m in app.markdown)
     assert "freno de disco" in textos
     assert "takt" in textos
+    assert "motocicleta Honda" in textos  # tarjeta de la moto en la biblioteca (V2-21)
+    etiquetas_enlaces = " ".join(str(b.label) for b in app.get("link_button"))
+    assert "Abrir motocicleta" in etiquetas_enlaces
 
 
 def test_qa_desde_boton_de_ejemplo(app) -> None:  # type: ignore[no-untyped-def]

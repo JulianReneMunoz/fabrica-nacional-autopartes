@@ -552,3 +552,30 @@ Agregar las pestañas Proceso de datos y Simulador 3D. La primera muestra el flu
 9. **Errores frecuentes:** El iframe no carga → Iniciar la API y compilar web/; revisar FNA_URL_VISOR.
 10. **Condición para continuar:** Pestañas operativas.
 
+## F24 · v2.0 · Motocicleta de referencia con fichas Honda
+
+1. **Herramienta:** Claude Code (Opus para el diseño, Sonnet para la implementación)
+2. **Terminal:** PowerShell
+3. **Comandos:**
+
+```powershell
+uv run fabrica simulador generar --ensamblaje moto_honda
+uv run fabrica simulador validar --ensamblaje moto_honda
+uv run fabrica faq-visor
+cd web; npm test; npx playwright test --project=funcional
+.\scripts\verificar_calidad.ps1 -ConE2E
+```
+
+4. **Explicación:** Agrega la máquina moto_honda a la biblioteca: fichas curadas con fuente y estado, cálculo didáctico con supuestos marcados, ensamblaje genérico de 79 piezas con prueba de conectividad, API de fichas, respuestas precalculadas de Fanalca y visor con plantilla común. Detalle en docs/arquitectura/moto_honda.md y ADR-017.
+5. **Agente y prompt:** ingeniero-3d-frontend
+
+```text
+Aplicar las skills fna-maquinas-anatomia y fna-simulador-3d. Mantener la geometría genérica, sin logotipos ni réplica comercial; declarar como supuesto didáctico todo valor no publicado; no cambiar el freno, la prensa ni la línea.
+```
+
+6. **Archivos:** data/catalogo/motos_honda.yaml, src/fabrica_autopartes/simulador/fisica_moto.py, src/fabrica_autopartes/simulador/catalogo_moto_honda.py, web/src/paginas/MaquinaMoto.tsx
+7. **Pruebas:** pytest; Vitest; Playwright funcional; simulador validar --ensamblaje moto_honda; hashes del freno sin cambios
+8. **Resultado esperado:** Máquina moto_honda operativa en #/maquina/moto_honda (alias #/moto).
+9. **Errores frecuentes:** La respuesta de faq-visor no aparece en el visor → Ejecutar uv run fabrica faq-visor y reiniciar la API; revisar data/gold/faq_visor.json.; uv run falla con el ejecutable fabrica-mcp.exe en uso → Usar uv run --no-sync o cerrar el servidor MCP que mantiene abierto el ejecutable y ejecutar uv sync.
+10. **Condición para continuar:** Todas las pruebas pasan y los hashes del freno no cambian.
+

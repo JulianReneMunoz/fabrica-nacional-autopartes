@@ -159,6 +159,8 @@ uv run fabrica faq -n 8
 uv run fabrica summary --enfoque "negocios y productos"
 uv run fabrica evaluate --proveedor ollama --version-prompt v3
 uv run fabrica simulador generar             # regenera web/public/modelos/freno_disco.glb
+uv run fabrica simulador generar --ensamblaje moto_honda   # regenera moto_honda.glb
+uv run fabrica faq-visor                     # precalcula data/gold/faq_visor.json (claude_code, sonnet, v3)
 ```
 
 ## API
@@ -193,6 +195,14 @@ datos de la empresa con URL y origen, botón **Abrir máquina** y **Recorrido 30
 | Freno de disco (3D) | ¿Cómo convierte un freno de disco la presión hidráulica en fuerza de frenado? | `T = 2·μ·p·A·r` | Productos y clientes |
 | Prensa de estampado | ¿Cómo convierte una prensa una lámina en un panel estampado? | `F = L·t·τ` | Planta de Yumbo, paneles estampados |
 | Línea de ensamble | ¿Cada cuánto debe salir un chasis? | `takt = disponible / demanda` | 24.000 chasises/año (base de conocimiento) |
+| Motocicleta (referencia genérica) con fichas Honda | ¿Cómo convierte una motocicleta Honda el giro del motor en velocidad de la rueda y la palanca en fuerza de frenado? | `v = rpm·2π·R / (i_prim·i_marcha·i_final)` | Planta de ensamble de motocicletas en Acopi, Yumbo |
+
+La motocicleta se abre en `#/maquina/moto_honda` (alias `#/moto`). Es un modelo genérico y esquemático de unos 150 cc,
+sin logotipos ni réplica de un modelo comercial; sus parámetros son «supuesto didáctico» salvo los campos
+`publicado` de la ficha seleccionada en «Ver con ficha de…». Fichas, supuestos, fuentes y ecuaciones:
+[`docs/arquitectura/moto_honda.md`](docs/arquitectura/moto_honda.md) y
+[`ADR-017`](docs/arquitectura/adr/ADR-017-motocicleta-referencia-fichas-honda.md). Las respuestas de Fanalca del visor
+se precalculan con `uv run fabrica faq-visor`.
 
 Freno 3D: órbita, zoom, selección, árbol, ficha de pieza, modos ensamblado/despiece/reensamblaje/frenado,
 velocidad y cámara lenta, visibilidad y aislamiento, transparencia, sección, reinicio de cámara, PNG, lecturas de

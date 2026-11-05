@@ -498,3 +498,31 @@ fases:
     errores:
       - {error: "El iframe no carga", correccion: "Iniciar la API y compilar web/; revisar FNA_URL_VISOR."}
     condicion: "Pestañas operativas."
+
+  - id: F24
+    etapa: "v2.0 · Motocicleta de referencia con fichas Honda"
+    herramienta: Claude Code (Opus para el diseño, Sonnet para la implementación)
+    terminal: PowerShell
+    comandos:
+      - "uv run fabrica simulador generar --ensamblaje moto_honda"
+      - "uv run fabrica simulador validar --ensamblaje moto_honda"
+      - "uv run fabrica faq-visor"
+      - "cd web; npm test; npx playwright test --project=funcional"
+      - '.\scripts\verificar_calidad.ps1 -ConE2E'
+    explicacion: >-
+      Agrega la máquina moto_honda a la biblioteca: fichas curadas con fuente y estado, cálculo didáctico con
+      supuestos marcados, ensamblaje genérico de 79 piezas con prueba de conectividad, API de fichas, respuestas
+      precalculadas de Fanalca y visor con plantilla común. Detalle en docs/arquitectura/moto_honda.md y ADR-017.
+    agente: ingeniero-3d-frontend
+    contexto: "docs/arquitectura/moto_honda.md, data/catalogo/motos_honda.yaml, src/fabrica_autopartes/simulador/."
+    prompt: >-
+      Aplicar las skills fna-maquinas-anatomia y fna-simulador-3d. Mantener la geometría genérica, sin logotipos
+      ni réplica comercial; declarar como supuesto didáctico todo valor no publicado; no cambiar el freno, la
+      prensa ni la línea.
+    archivos: ["data/catalogo/motos_honda.yaml", "src/fabrica_autopartes/simulador/fisica_moto.py", "src/fabrica_autopartes/simulador/catalogo_moto_honda.py", "web/src/paginas/MaquinaMoto.tsx"]
+    pruebas: ["pytest", "Vitest", "Playwright funcional", "simulador validar --ensamblaje moto_honda", "hashes del freno sin cambios"]
+    resultado: "Máquina moto_honda operativa en #/maquina/moto_honda (alias #/moto)."
+    errores:
+      - {error: "La respuesta de faq-visor no aparece en el visor", correccion: "Ejecutar uv run fabrica faq-visor y reiniciar la API; revisar data/gold/faq_visor.json."}
+      - {error: "uv run falla con el ejecutable fabrica-mcp.exe en uso", correccion: "Usar uv run --no-sync o cerrar el servidor MCP que mantiene abierto el ejecutable y ejecutar uv sync."}
+    condicion: "Todas las pruebas pasan y los hashes del freno no cambian."

@@ -51,6 +51,12 @@ Generada desde `matriz_trazabilidad.csv` con `uv run python scripts/generar_matr
 | V2-13 | Prompt maestro v2, §39 | Biblioteca de máquinas (Anatomy) con menú de tarjetas alimentado por el web scraping, recorrido < 30 s y modo experimento | Documentado | Alta | services/maquinas.py, web/src/paginas/ | CU-14 Explorar biblioteca | test_biblioteca_de_maquinas_usa_la_base, interfaz.test.tsx, e2e/recorrido.spec.ts | Implementado |
 | V2-14 | Prompt maestro v2, §40 | Pruebas de jerarquía, IDs, transformaciones, límites, reversibilidad, carga del modelo, API, frontend y rendimiento | Documentado | Alta | tests/, web/src/__tests__/, web/e2e/ | — | pytest, Vitest, Playwright | Implementado |
 | V2-15 | Prompt maestro v2, §28 | Streamlit como interfaz principal que enlaza e integra el visor | Documentado | Media | frontend/app.py (Simulador 3D) | CU-11 Explorar ensamblaje | test_pestanas_v2_proceso_y_simulador | Implementado |
+| V2-16 | Decisión del proyecto (ADR-017) | Fichas técnicas curadas de motocicletas Honda con fuente, fecha de consulta y estado (publicado, no publicado o supuesto) | Documentado | Alta | data/catalogo/motos_honda.yaml, services/motos.py | CU-14 Explorar biblioteca | test_catalogo_yaml_cumple_el_esquema, test_validador_detecta_valor_sin_fuente | Implementado |
+| V2-17 | Decisión del proyecto (ADR-017) | Cálculo didáctico de la motocicleta (velocidad, cilindrada, biela-manivela, CBS y dinámica continua) con paridad Python y TypeScript | Documentado | Alta | simulador/fisica_moto.py, web/src/modelos/moto.ts | CU-14 Explorar biblioteca | test_fisica_moto.py, test_dinamica_moto.py, referencia_moto.json (modelos.test.ts) | Implementado |
+| V2-18 | Decisión del proyecto (ADR-017) | Ensamblaje 3D genérico moto_honda de 79 piezas con puntos duros únicos y prueba de conectividad de 2 mm | Documentado | Alta | simulador/catalogo_moto_honda.py, simulador/puntos_duros_moto.py, simulador/generacion.py | CU-11 Explorar ensamblaje | test_moto_ensamblaje.py, test_generacion_moto.py, simulador validar | Implementado |
+| V2-19 | Decisión del proyecto (ADR-017) | API de fichas y cálculo de motocicletas con validación y respuestas deterministas con campo y fuente | Documentado | Media | api/routes/motos.py, services/motos.py | — | test_api_motos.py | Implementado |
+| V2-20 | Decisión del proyecto (ADR-017) | Respuestas precalculadas de las preguntas frecuentes de Fanalca para el visor con citas (comando faq-visor) | Documentado | Media | services/faq_visor.py, cli.py, api/routes/faq_visor.py | — | test_faq_visor.py | Implementado |
+| V2-21 | Decisión del proyecto (ADR-017) | Máquina de motocicleta en el visor con plantilla común, ficha técnica, preguntas frecuentes y modo experimento | Documentado | Alta | web/src/paginas/MaquinaMoto.tsx, web/src/componentes/plantilla/, web/src/maquinas/ | CU-14 Explorar biblioteca | moto.test.tsx, plantilla.test.tsx, e2e/moto.spec.ts, e2e/plantilla.spec.ts | Implementado |
 
 ## Historias de usuario
 
@@ -101,3 +107,9 @@ Generada desde `matriz_trazabilidad.csv` con `uv run python scripts/generar_matr
 - **V2-13**: Como visitante, se requiere aprender cómo funcionan las máquinas de la planta.
 - **V2-14**: Como responsable de calidad, se requiere evidencia.
 - **V2-15**: Como usuario, se requiere un único punto de entrada.
+- **V2-16**: Como visitante, se requiere distinguir lo publicado de lo supuesto.
+- **V2-17**: Como visitante, se requiere ver cómo el giro del motor se convierte en velocidad.
+- **V2-18**: Como visitante, se requiere ver todas las partes de la motocicleta conectadas.
+- **V2-19**: Como integrador, se requiere un contrato validado.
+- **V2-20**: Como visitante, se requiere ver respuestas con citas sin esperar al modelo.
+- **V2-21**: Como visitante, se requiere tocar los controles y ver los números junto a la pieza.
