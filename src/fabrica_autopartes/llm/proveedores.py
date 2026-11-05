@@ -7,6 +7,8 @@ Proveedores soportados:
 * ``openai``: API privada (requiere ``FNA_OPENAI_API_KEY`` con facturación activa).
 * ``anthropic``: API de Anthropic (requiere ``FNA_ANTHROPIC_API_KEY`` de la Consola;
   una suscripción Claude Pro/Max **no** incluye créditos de API).
+* ``claude_code``: Claude mediante la CLI de Claude Code (``claude -p``) con la sesión de la
+  suscripción, sin clave de API; para desarrollo y evaluación local (ver ``llm/claude_code.py``).
 * ``extractivo``: línea base determinista sin LLM, para pruebas y CI.
 """
 
@@ -58,6 +60,11 @@ def crear_modelo(
         if salida_json:
             kwargs["model_kwargs"] = {"response_format": {"type": "json_object"}}
         return ChatOpenAI(**kwargs)
+
+    if proveedor == "claude_code":
+        from fabrica_autopartes.llm.claude_code import ChatClaudeCode, modelo_claude_code
+
+        return ChatClaudeCode(modelo=modelo_claude_code(modelo))
 
     if proveedor == "anthropic":
         if config.anthropic_api_key is None:

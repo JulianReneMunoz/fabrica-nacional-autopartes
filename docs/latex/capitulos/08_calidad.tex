@@ -126,12 +126,30 @@ v3 & selección & 0,684 & 1,0 & 0,4 & 0,842 & 0,625\\\bottomrule
 La línea base no interpreta instrucciones, por eso las tres versiones coinciden: la tabla mide el arnés y la
 disponibilidad de los hechos, no la calidad del prompt. La cobertura de contexto de 1,0 demuestra que las 19
 preguntas respondibles tienen su respuesta en la base; un rechazo correcto de 0,4 (solo fuera de alcance e
-inyección) muestra la necesidad de un LLM con reglas para los datos ausentes. Las métricas con Ollama se registran
-con la fase F15 en la bitácora; \textbf{no se reportan aquí porque no se ejecutaron}.
+inyección) muestra la necesidad de un LLM con reglas para los datos ausentes.
+
+\subsection*{Evaluación con Claude Sonnet}
+La fase F15 se ejecutó con el proveedor \texttt{claude\_code} (sesión de suscripción de Claude Code, sin clave de
+API), modelo \texttt{sonnet}, modo automático y la base real (64 documentos, 167 fragmentos).
+\begin{table}[H]\centering\small
+\caption{Evaluación con Claude Sonnet vía Claude Code, 24 preguntas}\label{tab:eval-claude}
+\begin{tabular}{@{}lcccccc@{}}\toprule
+Prompt & Exactitud resp. & Cobertura ctx. & Rechazo correcto & Fundamentadas & Global & Latencia (ms)\\\midrule
+v1 & 0,789 & 0,842 & 0,2 & 0,895 & 0,667 & 3\,855\\
+v2 & 0,789 & 0,842 & 1,0 & 0,789 & 0,833 & 3\,523\\
+v3 & 0,789 & 0,842 & 1,0 & 0,842 & 0,833 & 3\,537\\\bottomrule
+\end{tabular}
+\end{table}
+Las reglas anti-alucinación de v2 y v3 elevan el rechazo correcto de 0,2 a 1,0: sin ellas, el modelo completa los
+datos ausentes con conocimiento general. v3 recupera parte de la fundamentación que v2 pierde (0,842 frente a
+0,789) gracias a los ejemplos \emph{few-shot} con citas, sin costo apreciable en latencia. La exactitud de
+respondibles (15 de 19) queda cerca del techo de cobertura del contexto (16 de 19), de modo que los fallos
+restantes dependen sobre todo de la cobertura del scraping y no del prompt. Se adopta v3 como versión por defecto
+(bitácora, experimentos E-01 a E-03 y hallazgo H-02).
 
 \section{Integración continua}
 El flujo de GitHub Actions reproduce la batería en Ubuntu y Windows en cada \emph{push} y \emph{pull request}.
-Su ejecución depende de publicar el repositorio en GitHub (acción pendiente).
+El repositorio está publicado en \url{https://github.com/JulianReneMunoz/fabrica-nacional-autopartes}.
 
 % ============================================================ Capítulo 23
 \chapter{Seguridad}\label{cap:seguridad}

@@ -166,3 +166,29 @@ def test_fuente_mixta_complementa_solo_dominios_sin_capturas(config) -> None:  #
     assert any("autopartesfanalca.com.co" in a for a in res.advertencias)
     urls = {f.url for f in BaseConocimiento(config.dir_gold).fragmentos}
     assert any(u.startswith("https://autopartesfanalca.com.co") for u in urls)
+
+
+SEDE = "https://sede-fna.test"
+
+
+@responses.activate
+def test_direccion_del_pie_llega_a_la_base_una_sola_vez(config) -> None:  # type: ignore[no-untyped-def]
+    """El pie con la dirección se repite en todas las páginas: se guarda una sola copia en Gold."""
+    pie = (
+        '<footer class="site-footer"><p>Sede principal: Calle 13 # 31A - 80, Acopi, Yumbo</p>'
+        "<p>PBX (602) 555 0000</p><p>Todos los derechos reservados</p></footer>"
+    )
+    cuerpo = "<p>" + " ".join(["Contenido institucional de prueba sobre la empresa"] * 6) + "</p>"
+    responses.add(responses.GET, f"{SEDE}/robots.txt", body="User-agent: *\nAllow: /")
+    for ruta, titulo in (("/", "Inicio"), ("/nosotros/", "Nosotros"), ("/negocios/", "Negocios")):
+        cabecera = f"<html><head><title>{titulo}</title></head>"
+        html = f"{cabecera}<body><main><h1>{titulo}</h1>{cuerpo}</main>{pie}</body></html>"
+        responses.add(responses.GET, f"{SEDE}{ruta}", body=html, content_type=HTML)
+    config.dominios_permitidos = ["sede-fna.test"]
+    config.urls_semilla = [f"{SEDE}/", f"{SEDE}/nosotros/", f"{SEDE}/negocios/"]
+    Rastreador(config, AlmacenBronze(config.dir_bronze)).rastrear(usar_sitemap=False)
+    construir_base(config, "scraping")
+    base = (config.dir_gold / "base_conocimiento.txt").read_text(encoding="utf-8")
+    assert base.count("Calle 13 # 31A - 80") == 1
+    assert "contacto-sitio" in base
+    assert "derechos reservados" not in base

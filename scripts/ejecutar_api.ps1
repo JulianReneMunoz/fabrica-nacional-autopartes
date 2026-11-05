@@ -2,4 +2,4 @@
 param([int]$Puerto = 8000)
 $raiz = Split-Path -Parent $PSScriptRoot
 Set-Location $raiz
-uv run uvicorn fabrica_autopartes.api.main:app --reload --host 127.0.0.1 --port $Puerto
+uv run uvicorn fabrica_autopartes.api.main:app --reload --reload-dir src --host 127.0.0.1 --port $Puerto

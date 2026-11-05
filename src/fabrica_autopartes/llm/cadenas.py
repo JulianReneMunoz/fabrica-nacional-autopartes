@@ -39,6 +39,10 @@ class Opciones:
 def _opciones(config: Configuracion, **sobrescritos: str | None) -> Opciones:
     proveedor = sobrescritos.get("proveedor") or config.proveedor_llm
     modelo = sobrescritos.get("modelo") or ("lexico-bm25" if proveedor == "extractivo" else config.modelo_llm)
+    if proveedor == "claude_code":
+        from fabrica_autopartes.llm.claude_code import modelo_claude_code
+
+        modelo = modelo_claude_code(modelo)  # registra el modelo realmente usado (p. ej. "sonnet")
     return Opciones(
         proveedor=proveedor,
         modelo=modelo,

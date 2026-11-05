@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12, <3.14"
 resolution-markers = [
     "sys_platform == 'win32'",
@@ -497,6 +497,7 @@ dependencies = [
     { name = "alembic" },
     { name = "beautifulsoup4" },
     { name = "fastapi" },
+    { name = "langchain-anthropic" },
     { name = "langchain-core" },
     { name = "langchain-ollama" },
     { name = "langchain-openai" },
@@ -547,6 +548,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "beautifulsoup4", specifier = ">=4.12" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "langchain-anthropic", specifier = ">=1.7.9" },
     { name = "langchain-anthropic", marker = "extra == 'anthropic'", specifier = ">=1.0,<2" },
     { name = "langchain-core", specifier = ">=1.0,<2" },
     { name = "langchain-ollama", specifier = ">=1.0,<2" },

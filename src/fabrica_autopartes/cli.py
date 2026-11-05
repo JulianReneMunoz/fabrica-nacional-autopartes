@@ -25,7 +25,7 @@ from fabrica_autopartes.core.registro import configurar_registro
 
 
 def _opciones_llm(p: argparse.ArgumentParser) -> None:
-    p.add_argument("--proveedor", choices=["ollama", "openai", "anthropic", "extractivo"])
+    p.add_argument("--proveedor", choices=["ollama", "openai", "anthropic", "claude_code", "extractivo"])
     p.add_argument("--modelo")
     p.add_argument("--version-prompt", choices=["v1", "v2", "v3"])
     p.add_argument("--modo-contexto", choices=["auto", "completo", "seleccion"])
@@ -101,7 +101,7 @@ def construir_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: list[str] | None = None) -> int:
+def _main(argv: list[str] | None = None) -> int:
     args = construir_parser().parse_args(argv)
     configurar_registro(args.nivel_log)
 
@@ -274,6 +274,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Informe: {informe.get('archivo')}")
         return 0
     return 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Punto de entrada: los errores del dominio se muestran como un mensaje claro, sin traza."""
+    from fabrica_autopartes.core.excepciones import ErrorFNA
+
+    try:
+        return _main(argv)
+    except ErrorFNA as exc:
+        print(f"Error ({exc.codigo}): {exc}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

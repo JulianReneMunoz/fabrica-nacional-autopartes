@@ -79,7 +79,7 @@ def test_tokenizar_sin_tildes_ni_vacias() -> None:
 # -------------------------------------------------------------- recuperación
 def test_bm25_prioriza_fragmento_correcto(config_con_base) -> None:  # type: ignore[no-untyped-def]
     base = BaseConocimiento(config_con_base.dir_gold)
-    assert base.buscar("teléfono de contacto", k=1)[0].fragmento.seccion == "contacto"
+    assert base.buscar("teléfono de contacto", k=1)[0].fragmento.seccion.endswith("contacto")
     assert base.buscar("Garantía Total Verdadera", k=1)[0].fragmento.seccion == "negocios/honda-autos"
     assert base.buscar("zzzz inexistente") == []
 

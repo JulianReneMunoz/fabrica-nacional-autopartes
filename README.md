@@ -77,7 +77,7 @@ fanalca.com ─────────────┴─robots.txt/sitemaps─�
                  ┌──────────────┬───────────┬──────────┬──────────────┬─────────────────────────────┐
              Streamlit       FastAPI      CLI    Servidor MCP   SQLite / PostgreSQL     Visor 3D (React Three Fiber, /app)
 ```
-Decisiones en `docs/arquitectura/adr/` (15 ADR). Diagramas en `docs/diagramas/` y en el manual.
+Decisiones en `docs/arquitectura/adr/` (16 ADR). Diagramas en `docs/diagramas/` y en el manual.
 
 ## Tecnologías
 Python 3.12 · uv · requests · BeautifulSoup + lxml · trafilatura · Playwright (opcional) · matplotlib · LangChain 1.x
@@ -224,6 +224,15 @@ Videos de los recorridos: `docs/videos/*.mp4`; capturas: `docs/capturas/v2/`.
 
 > Una suscripción Claude Pro/Max autentica Claude Code y claude.ai; **no** incluye créditos de API ni habilita su
 > uso en herramientas de terceros como OpenCode. Para OpenCode usar Ollama u otro proveedor con clave de API.
+
+**Claude sin clave de API (proveedor `claude_code`, ADR-016):** la aplicación invoca `claude -p` con la sesión de
+Claude Code de la persona titular de la suscripción, en una carpeta temporal aislada y sin herramientas. Uso previsto:
+desarrollo y evaluación local. Para usuarios finales se usa `anthropic` con clave de API.
+```powershell
+claude                                                   # una vez: iniciar sesión con la cuenta de la suscripción
+uv run fabrica ask "¿Dónde queda la sede principal?" --proveedor claude_code --modelo sonnet
+uv run fabrica evaluate --proveedor claude_code --modelo sonnet --version-prompt v3
+```
 
 ## Pruebas
 ```powershell

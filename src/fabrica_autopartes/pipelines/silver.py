@@ -23,7 +23,7 @@ from fabrica_autopartes.pipelines.texto import (
     normalizar,
     similitud_jaccard,
 )
-from fabrica_autopartes.scraping.extraccion import extraer_contenido
+from fabrica_autopartes.scraping.extraccion import extraer_contenido, extraer_pie_contacto
 from fabrica_autopartes.scraping.robots import url_excluida
 
 log = obtener_registro(__name__)
@@ -175,6 +175,40 @@ def deduplicar(documentos: Iterable[DocumentoLimpio]) -> tuple[list[DocumentoLim
     return unicos, descartados
 
 
+def _documentos_contacto_sitio(pies: dict[str, Counter[str]], registros: list) -> list[DocumentoLimpio]:
+    """Un documento por sitio con los datos de contacto del pie de página (una sola copia).
+
+    Se conservan las líneas presentes en el pie de al menos dos páginas (o en la única capturada), de
+    modo que solo entra información publicada de forma estable en todo el sitio.
+    """
+    documentos = []
+    for host, conteo in pies.items():
+        paginas_host = sum(1 for r in registros if urlparse(r.url_final).netloc == host)
+        minimo = 2 if paginas_host > 1 else 1
+        lineas = [anonimizar_correos(linea) for linea, n in conteo.most_common() if n >= minimo]
+        if not lineas:
+            continue
+        url = f"https://{host}/"
+        texto = f"# Dirección, teléfonos y correo publicados en {host.removeprefix('www.')}\n\n" + "\n".join(
+            f"- {linea}" for linea in lineas
+        )
+        prefijo = prefijo_sitio(url)
+        documentos.append(
+            DocumentoLimpio(
+                id=f"{prefijo}-contacto-sitio" if prefijo else "contacto-sitio",
+                url=url,
+                titulo=f"Datos de contacto del sitio {host.removeprefix('www.')} (pie de página)",
+                seccion=f"{prefijo}/contacto" if prefijo else "contacto",
+                idioma="es",
+                texto=texto,
+                sha256_texto=hash_texto(texto),
+                fecha_captura=ahora_utc(),
+                origen="scraping",
+            )
+        )
+    return documentos
+
+
 def desde_bronze(
     almacen: AlmacenBronze,
     metricas: list[dict] | None = None,
@@ -194,9 +228,13 @@ def desde_bronze(
         if not excluida(r.url_final, rutas_excluidas or [], patrones_excluidos)
     ]
     extraidas = []
+    pies: dict[str, Counter[str]] = {}
     for r in registros:
-        pagina = extraer_contenido(almacen.leer_html(r), r.url_final)
+        html = almacen.leer_html(r)
+        pagina = extraer_contenido(html, r.url_final)
         extraidas.append((r, pagina))
+        host = urlparse(r.url_final).netloc
+        pies.setdefault(host, Counter()).update(extraer_pie_contacto(html))
     textos = eliminar_lineas_repetidas([p.texto for _, p in extraidas])
     documentos = []
     for (r, pagina), texto in zip(extraidas, textos, strict=True):
@@ -231,7 +269,8 @@ def desde_bronze(
                 origen="scraping",
             )
         )
-    return documentos
+    # Los datos de contacto van primero: en modo "completo" con recorte por presupuesto se conservan.
+    return _documentos_contacto_sitio(pies, registros) + documentos
 
 
 def leer_markdown_con_frontmatter(ruta: Path) -> tuple[dict, str]:

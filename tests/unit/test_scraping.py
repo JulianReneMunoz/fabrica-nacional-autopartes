@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fabrica_autopartes.scraping.extraccion import extraer_contenido, extraer_enlaces
+from fabrica_autopartes.scraping.extraccion import extraer_contenido, extraer_enlaces, extraer_pie_contacto
 from fabrica_autopartes.scraping.rastreador import normalizar_url
 from fabrica_autopartes.scraping.robots import PoliticaRobots, esta_en_dominios
 from fabrica_autopartes.scraping.sitemap import analizar_sitemap
@@ -94,3 +94,18 @@ def test_normalizar_url_quita_rastreo_y_fragmento() -> None:
         == "https://ejemplo-fna.test/a/?id=2"
     )
     assert normalizar_url("https://ejemplo-fna.test") == "https://ejemplo-fna.test/"
+
+
+def test_pie_de_pagina_conserva_datos_de_contacto() -> None:
+    """La dirección publicada solo en el pie (caso fanalca.com) se recupera; el resto del pie no."""
+    html = (
+        "<html><body><main><p>Contenido</p></main>"
+        '<div class="elementor-location-footer"><p>Calle 13 # 31A - 80, Acopi, Yumbo</p>'
+        "<p>PBX: (602) 555 0000</p><p>info@empresa.com.co</p><p>Síguenos en redes</p>"
+        "<p>Copyright 2026 Todos los derechos reservados</p></div></body></html>"
+    )
+    lineas = extraer_pie_contacto(html)
+    assert "Calle 13 # 31A - 80, Acopi, Yumbo" in lineas
+    assert any("PBX" in linea for linea in lineas)
+    assert "info@empresa.com.co" in lineas
+    assert not any("Síguenos" in linea or "Copyright" in linea for linea in lineas)

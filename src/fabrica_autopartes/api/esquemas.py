@@ -11,7 +11,7 @@ from fabrica_autopartes.domain.modelos import Fragmento
 
 T = TypeVar("T")
 
-ProveedorAPI = Literal["ollama", "openai", "anthropic", "extractivo"]
+ProveedorAPI = Literal["ollama", "openai", "anthropic", "claude_code", "extractivo"]
 VersionAPI = Literal["v1", "v2", "v3"]
 ModoAPI = Literal["auto", "completo", "seleccion"]
 

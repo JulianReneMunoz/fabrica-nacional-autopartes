@@ -119,3 +119,36 @@ def extraer_contenido(html: str, url: str, usar_trafilatura: bool = True) -> Pag
     if not texto:
         texto = _texto_bs4(BeautifulSoup(html, "lxml"))
     return PaginaExtraida(titulo=titulo, texto=texto, idioma=idioma, enlaces=enlaces, metodo=metodo)
+
+
+# Señales de datos de contacto en el pie de página (dirección, teléfono, correo, NIT).
+_SENAL_CONTACTO = re.compile(
+    r"(?i)(\b(calle|cl\.|carrera|cra\.?|kr\.?|avenida|av\.|autopista|diagonal|transversal|km|v[ií]a)\b.*\d)"
+    r"|(\+?\d[\d\s().-]{6,}\d)"
+    r"|([\w.+-]+@[\w-]+\.[\w.]+)"
+    r"|(\b(pbx|tel[eé]fono|tel\.|nit|direcci[oó]n|sede)\b)"
+)
+
+
+def extraer_pie_contacto(html: str) -> list[str]:
+    """Líneas con datos de contacto del pie de página (footer) de una página.
+
+    La extracción del cuerpo descarta el pie de página y la limpieza elimina lo que se repite en todas
+    las páginas; sin esta función, datos publicados solo en el pie (p. ej. la dirección de la sede)
+    no llegarían a la base de conocimiento.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    pies: list[Tag] = [t for t in soup.find_all("footer") if isinstance(t, Tag)]
+    for t in soup.find_all(True):
+        if not isinstance(t, Tag) or t in pies:
+            continue
+        marca = " ".join([str(t.get("id") or ""), *[str(c) for c in (t.get("class") or [])]]).lower()
+        if "footer" in marca:
+            pies.append(t)
+    lineas: list[str] = []
+    for pie in pies:
+        for linea in pie.get_text("\n").split("\n"):
+            limpia = re.sub(r"\s+", " ", linea).strip(" |·-")
+            if 6 <= len(limpia) <= 300 and _SENAL_CONTACTO.search(limpia) and limpia not in lineas:
+                lineas.append(limpia)
+    return lineas

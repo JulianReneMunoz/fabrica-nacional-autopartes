@@ -143,6 +143,34 @@ def tokenizar(texto: str) -> list[str]:
     return resultado
 
 
+# Expansión de consultas de primer contacto: un cliente pregunta "¿dónde queda la sede?" y el sitio
+# publica "Calle 13 # 31A - 80"; sin vocabulario compartido, BM25 no encuentra el fragmento. Cada grupo
+# agrega términos relacionados con peso reducido (no reemplaza los términos de la pregunta).
+_EXPANSIONES: tuple[tuple[frozenset[str], tuple[str, ...]], ...] = (
+    (
+        frozenset(
+            {"donde", "queda", "ubica", "ubicada", "ubicado", "sede", "direccion", "oficina", "ubicacion"}
+        ),
+        ("direccion", "calle", "ubicacion", "sede", "contacto"),
+    ),
+    (
+        frozenset({"telefono", "llamar", "contacto", "correo", "email", "whatsapp", "pbx", "comunicar"}),
+        ("telefono", "correo", "contacto", "pbx"),
+    ),
+)
+PESO_EXPANSION = 0.5
+
+
+def expandir_consulta(terminos: list[str]) -> dict[str, float]:
+    """Términos con su peso: 1.0 los de la pregunta y ``PESO_EXPANSION`` los agregados por sinónimos."""
+    pesos = dict.fromkeys(terminos, 1.0)
+    for disparadores, extra in _EXPANSIONES:
+        if disparadores & set(terminos):
+            for t in tokenizar(" ".join(extra)):
+                pesos.setdefault(t, PESO_EXPANSION)
+    return pesos
+
+
 @dataclass
 class Resultado:
     fragmento: Fragmento
@@ -163,18 +191,18 @@ class IndiceBM25:
         self._idf = {t: math.log(1 + (n - f + 0.5) / (f + 0.5)) for t, f in df.items()}
 
     def buscar(self, consulta: str, k: int = 5) -> list[Resultado]:
-        terminos = tokenizar(consulta)
+        terminos = expandir_consulta(tokenizar(consulta))
         if not terminos or not self._docs:
             return []
         puntajes: list[tuple[float, int]] = []
         for i, doc in enumerate(self._docs):
             s = 0.0
-            for t in terminos:
+            for t, peso in terminos.items():
                 tf = doc.get(t, 0)
                 if not tf:
                     continue
                 norm = 1 - self.b + self.b * self._longitudes[i] / (self._promedio or 1)
-                s += self._idf.get(t, 0.0) * tf * (self.k1 + 1) / (tf + self.k1 * norm)
+                s += peso * self._idf.get(t, 0.0) * tf * (self.k1 + 1) / (tf + self.k1 * norm)
             if s > 0:
                 puntajes.append((s, i))
         puntajes.sort(reverse=True)

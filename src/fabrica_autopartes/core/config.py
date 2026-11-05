@@ -17,7 +17,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 RAIZ_PROYECTO = Path(__file__).resolve().parents[3]
 
-Proveedor = Literal["ollama", "openai", "anthropic", "extractivo"]
+Proveedor = Literal["ollama", "openai", "anthropic", "claude_code", "extractivo"]
 ModoContexto = Literal["auto", "completo", "seleccion"]
 
 

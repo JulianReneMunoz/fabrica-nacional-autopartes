@@ -51,7 +51,7 @@ base = servicio.base
 # ----------------------------------------------------------------- barra lateral
 with st.sidebar:
     st.header("⚙️ Configuración")
-    proveedores = ["ollama", "openai", "anthropic", "extractivo"]
+    proveedores = ["ollama", "openai", "anthropic", "claude_code", "extractivo"]
     proveedor = st.selectbox(
         "Proveedor LLM",
         proveedores,
@@ -61,7 +61,8 @@ with st.sidebar:
     modelo_defecto = {
         "ollama": servicio.config.modelo_llm,
         "openai": "gpt-4o-mini",
-        "anthropic": "claude-haiku-4-5",
+        "anthropic": "claude-haiku-5-5",
+        "claude_code": "sonnet",
         "extractivo": "lexico-bm25",
     }[proveedor]
     modelo = st.text_input("Modelo", value=modelo_defecto)

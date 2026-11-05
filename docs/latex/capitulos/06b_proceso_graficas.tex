@@ -90,6 +90,14 @@ complemento deja de usarse sin cambios de código.
         la sección \texttt{sostenibilidad} y las rutas en inglés, \texttt{/negocio/} y \texttt{holda-autos} se unifican
         en una sección por unidad de negocio. Base resultante: 201 fragmentos de scraping y 14 de lectura web.
   \item \texttt{-SoloReconstruir} reconstruye Silver, Gold y las gráficas desde el Bronze existente, sin red.
+  \item Datos de contacto del pie de página: la extracción del cuerpo descarta el pie y la limpieza elimina las
+        líneas repetidas, por lo que la dirección de la sede (publicada solo en el pie de fanalca.com) no llegaba a
+        la base. Ahora las líneas con dirección, teléfono o correo presentes en el pie de al menos dos páginas se
+        guardan una sola vez en el documento \texttt{contacto-sitio} de cada dominio.
+  \item Recuperación: la pregunta «¿Dónde queda la sede principal?» no comparte vocabulario con
+        «Calle 13 \# 31A - 80»; BM25 incorpora una expansión de consultas de primer contacto (ubicación y
+        contacto) con peso 0,5, y los documentos de contacto se ubican primero para que el modo completo con
+        recorte por presupuesto los conserve.
   \item Escritura de archivos con fin de línea LF en Windows.
 \end{itemize}
 
