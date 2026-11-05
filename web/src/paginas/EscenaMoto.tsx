@@ -19,7 +19,8 @@ import {
   FASES_INFO,
   faseCiclo,
   GEOMETRIA_MOTOR,
-  intensidadChispa,
+  chispaPermitida,
+  intensidadChispaMotor,
   levanteAdmision,
   levanteEscape,
   posicionPistonM,
@@ -39,6 +40,7 @@ export interface PeticionCamara {
 export interface EstadoMoto {
   despiece: Record<string, number>; // 0..1 por pieza
   theta720: number; // grados de cigüeñal (0..720) para el ciclo 4T
+  ciclo: number; // ciclos completos de 720° (el limitador suprime la chispa en ciclos alternos)
   angRuedaTras: number; // rad, acumulado (negativo = avanza hacia +X)
   angRuedaDel: number;
   angPinon: number;
@@ -317,8 +319,12 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, etiquetasVis
       gas.scale.set(1, h, 1);
       gas.rotation.set(0, 0, 0);
       gas.position.set(0, cima + h / 2, 0);
-      (gas.material as THREE.MeshBasicMaterial).color.set(FASES_INFO[faseCiclo(th720)].color);
-      const k = intensidadChispa(th720);
+      const fase = faseCiclo(th720);
+      const gm = gas.material as THREE.MeshBasicMaterial;
+      gm.color.set(FASES_INFO[fase].color);
+      // Con el limitador, en el ciclo sin chispa la expansión no tiene combustión: el gas se atenúa.
+      gm.opacity = fase === "expansion" && !chispaPermitida(s.estadoMotor, s.ciclo) ? 0.1 : 0.38;
+      const k = intensidadChispaMotor(th720, s.ciclo, s.estadoMotor);
       chispa.visible = visibleMotor && s.motorEnMarcha && k > 0;
       chispa.position.set(0, techo - 0.012, 0);
       chispa.scale.setScalar(0.6 + 1.6 * k);

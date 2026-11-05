@@ -1,0 +1,378 @@
+{
+  "version_esquema": 1,
+  "generado": "2026-11-05T04:05:20+00:00",
+  "proveedor": "claude_code",
+  "modelo": "sonnet",
+  "version_prompt": "v3",
+  "advertencia": "Respuestas generadas con la base de conocimiento verificada y guardadas con sus citas; se regeneran con «fabrica faq-visor».",
+  "total": 19,
+  "items": [
+    {
+      "id": "P01",
+      "categoria": "sedes",
+      "pregunta": "¿Dónde queda la sede principal de Fanalca?",
+      "respuesta": "La dirección publicada de Fanalca es Calle 13 # 31A - 80, Acopi Yumbo. Corresponde a la Urbanización Industrial Acopi, en Yumbo (Valle del Cauca), Colombia. El contexto no indica explícitamente cuál es la \"sede principal\", pero esta es la dirección publicada en fanalca.com.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "media",
+      "fuentes": [
+        {
+          "fragmento_id": "contacto-sitio#000",
+          "url": "https://fanalca.com/"
+        },
+        {
+          "fragmento_id": "autopartes-contacto#000",
+          "url": "https://autopartesfanalca.com.co/contacto/"
+        }
+      ],
+      "latencia_ms": 6952
+    },
+    {
+      "id": "P02",
+      "categoria": "contacto",
+      "pregunta": "¿Cuál es el teléfono de contacto de la empresa?",
+      "respuesta": "El teléfono de contacto publicado por Autopartes Fanalca es +57 310 211 23 08. Además, puede escribir al correo info@autopartesfanalca.com.co. Tenga en cuenta que la página no publica horario de atención.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "autopartes-contacto#000",
+          "url": "https://autopartesfanalca.com.co/contacto/"
+        }
+      ],
+      "latencia_ms": 4567
+    },
+    {
+      "id": "P03",
+      "categoria": "historia",
+      "pregunta": "¿En qué fecha se constituyó Fanalca?",
+      "respuesta": "Fanalca se constituyó el 31 de mayo de 1958, entre las familias Losada y Herrera, bajo el nombre de Fábrica Nacional de Carrocerías.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "inicio#000",
+          "url": "https://fanalca.com/"
+        },
+        {
+          "fragmento_id": "nosotros#000",
+          "url": "https://fanalca.com/nosotros/"
+        }
+      ],
+      "latencia_ms": 4413
+    },
+    {
+      "id": "P04",
+      "categoria": "historia",
+      "pregunta": "¿Qué familias fundaron la empresa?",
+      "respuesta": "Fanalca se constituyó el 31 de mayo de 1958 entre las familias Losada y Herrera. Un año después, en 1959, junto con la familia Gómez, fundaron Super Bus Medellín y Super Bus Bogotá para ensamblar carrocerías.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "nosotros#000",
+          "url": "https://fanalca.com/nosotros/"
+        }
+      ],
+      "latencia_ms": 4014
+    },
+    {
+      "id": "P05",
+      "categoria": "productos",
+      "pregunta": "¿Qué cilindrajes de motocicletas Honda vende Fanalca?",
+      "respuesta": "Fanalca comercializa motocicletas Honda de 100 y hasta 250 centímetros cúbicos, además de repuestos y accesorios Honda. Adicionalmente, importa motos Honda de alto cilindraje.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-honda-motocicletas#000",
+          "url": "https://fanalca.com/negocios/honda-motocicletas/"
+        },
+        {
+          "fragmento_id": "informe-sostenibilidad#028",
+          "url": "https://fanalca.com/informe-sostenibilidad/"
+        }
+      ],
+      "latencia_ms": 3938
+    },
+    {
+      "id": "P06",
+      "categoria": "productos",
+      "pregunta": "¿Cuántos puntos de venta tiene la red de Honda Motocicletas?",
+      "respuesta": "La red de Honda Motocicletas cuenta con 450 puntos de venta, con presencia en los 32 departamentos del país. Además, tiene 265 talleres de servicio y 1.265 almacenes de repuestos a nivel nacional.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-honda-motocicletas#000",
+          "url": "https://fanalca.com/negocios/honda-motocicletas/"
+        },
+        {
+          "fragmento_id": "informe-sostenibilidad#028",
+          "url": "https://fanalca.com/informe-sostenibilidad/"
+        }
+      ],
+      "latencia_ms": 3873
+    },
+    {
+      "id": "P07",
+      "categoria": "historia",
+      "pregunta": "¿Desde qué año se ensamblan motocicletas Honda en Yumbo?",
+      "respuesta": "El contexto indica que la planta de ensamble de motocicletas Honda está ubicada en Acopi, Yumbo, Valle del Cauca, pero no especifica desde qué año se ensamblan allí. Solo señala que en 1971 Fanalca inició la negociación con Honda Japón para comercializar sus motocicletas y posteriormente ensamblarlas, sin precisar el año de inicio del ensamblaje en Yumbo.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "baja",
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-honda-motocicletas#000",
+          "url": "https://fanalca.com/negocios/honda-motocicletas/"
+        },
+        {
+          "fragmento_id": "nosotros#001",
+          "url": "https://fanalca.com/nosotros/"
+        }
+      ],
+      "latencia_ms": 4763
+    },
+    {
+      "id": "P08",
+      "categoria": "negocios",
+      "pregunta": "¿Cuáles son las unidades de negocio de Fanalca?",
+      "respuesta": "Según la base de conocimiento, Fanalca cuenta con unidades de negocio como Honda motos, tubos y perfiles de acero, la unidad ambiental (cajas compactadoras y volcos para recolección de residuos) y la unidad de autopartes, que opera plantas en Yumbo, Medellín y Bogotá. Sin embargo, el contexto no presenta un listado completo y oficial de todas las unidades de negocio.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "media",
+      "fuentes": [
+        {
+          "fragmento_id": "inicio#001",
+          "url": "https://fanalca.com/"
+        },
+        {
+          "fragmento_id": "negocios#000",
+          "url": "https://fanalca.com/negocios/"
+        },
+        {
+          "fragmento_id": "una-entrega-contra-todo-pronostico#000",
+          "url": "https://fanalca.com/una-entrega-contra-todo-pronostico/"
+        },
+        {
+          "fragmento_id": "autopartes-inicio#001",
+          "url": "https://autopartesfanalca.com.co/"
+        }
+      ],
+      "latencia_ms": 4262
+    },
+    {
+      "id": "P09",
+      "categoria": "productos",
+      "pregunta": "¿Qué cubre la Garantía Total Verdadera de Honda Autos?",
+      "respuesta": "La Garantía Real Total de Honda cubre mano de obra, insumos y repuestos sin costo, por 2 años y sin límite de kilometraje. Además, la Garantía Total Honda es la única en el mercado que incluye mantenimiento preventivo, correctivo y predictivo sin costo. Fanalca es la única marca en el país que ofrece esta garantía.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-holda-autos#000",
+          "url": "https://fanalca.com/negocios/holda-autos/"
+        },
+        {
+          "fragmento_id": "negocios-holda-autos#001",
+          "url": "https://fanalca.com/negocios/holda-autos/"
+        }
+      ],
+      "latencia_ms": 4214
+    },
+    {
+      "id": "P10",
+      "categoria": "sedes",
+      "pregunta": "¿En qué ciudades están las plantas de autopartes?",
+      "respuesta": "Las plantas de autopartes de Fanalca están en Yumbo (Valle del Cauca), Bogotá (Cundinamarca) y Medellín (Antioquia). La planta de fabricación está en Yumbo, y las plantas de ensamble están en Medellín y Bogotá.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-autopartes#000",
+          "url": "https://fanalca.com/negocios/autopartes/"
+        },
+        {
+          "fragmento_id": "autopartes-inicio#001",
+          "url": "https://autopartesfanalca.com.co/"
+        }
+      ],
+      "latencia_ms": 4259
+    },
+    {
+      "id": "P11",
+      "categoria": "productos",
+      "pregunta": "¿Qué productos fabrica la unidad Ambiental?",
+      "respuesta": "Según la información disponible, la unidad de negocio ambiental presentó el equipo compactador de residuos sólidos FH-17E, diseñado con acero especial y paredes elípticas, y también entregó cajas compactadoras de basura y volcos para la recolección de residuos en el proyecto de Barranquilla. No hay más detalles sobre otros productos de esta unidad en la base de conocimiento.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "media",
+      "fuentes": [
+        {
+          "fragmento_id": "lanzamiento-del-nuevo-diseno-de-equipo-compactador-fh-17e#000",
+          "url": "https://fanalca.com/lanzamiento-del-nuevo-diseno-de-equipo-compactador-fh-17e/"
+        },
+        {
+          "fragmento_id": "una-entrega-contra-todo-pronostico#000",
+          "url": "https://fanalca.com/una-entrega-contra-todo-pronostico/"
+        }
+      ],
+      "latencia_ms": 4342
+    },
+    {
+      "id": "P12",
+      "categoria": "productos",
+      "pregunta": "¿Qué productos ofrece Fanalvías?",
+      "respuesta": "Fanalvías fabrica defensas viales metálicas de carretera y comercializa elementos para seguridad vial como amortiguadores de impacto y terminales especiales. Sus plantas de producción están en Acopi, Yumbo (Valle del Cauca) y Guachené (Cauca). Además, cuenta con certificación de Bureau Veritas en sistemas de contención de vehículos, con niveles N2 y H1.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-fanalvias#000",
+          "url": "https://fanalca.com/negocios/fanalvias/"
+        },
+        {
+          "fragmento_id": "informe-sostenibilidad#032",
+          "url": "https://fanalca.com/informe-sostenibilidad/"
+        },
+        {
+          "fragmento_id": "fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas#000",
+          "url": "https://fanalca.com/fanalvias-obtiene-certificacion-de-sistemas-de-contencion-por-bureau-veritas/"
+        }
+      ],
+      "latencia_ms": 4667
+    },
+    {
+      "id": "P13",
+      "categoria": "sedes",
+      "pregunta": "¿Dónde están las plantas de tubos y perfiles de acero?",
+      "respuesta": "Las plantas de producción de tubos y perfiles de acero de Fanalca están ubicadas en Acopi, Yumbo (Valle del Cauca) y en Guachené (Cauca).",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-tubos-y-perfiles-de-acero#000",
+          "url": "https://fanalca.com/negocios/tubos-y-perfiles-de-acero/"
+        },
+        {
+          "fragmento_id": "informe-sostenibilidad#030",
+          "url": "https://fanalca.com/informe-sostenibilidad/"
+        }
+      ],
+      "latencia_ms": 4001
+    },
+    {
+      "id": "P14",
+      "categoria": "sostenibilidad",
+      "pregunta": "¿Cuándo se creó la Fundación Fanalca y en qué líneas trabaja?",
+      "respuesta": "La Fundación Fanalca nació en el 2003. Trabaja en cinco líneas de acción: cultura ciudadana, educación, generación de ingresos, arte y cultura.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "sostenibilidad#000",
+          "url": "https://fanalca.com/sostenibilidad/"
+        }
+      ],
+      "latencia_ms": 4740
+    },
+    {
+      "id": "P15",
+      "categoria": "procesos",
+      "pregunta": "¿Cómo se puede aplicar a una vacante en Fanalca?",
+      "respuesta": "Para aplicar a una vacante en Fanalca, puedes conocer las vacantes disponibles y postularte a través del enlace https://fanalca.com/vacantes/. Allí podrás hacer parte de la organización y vivir la cultura Fanalca. El contexto no detalla pasos adicionales del proceso de postulación.",
+      "rechazo": false,
+      "fundamentada": false,
+      "confianza": "media",
+      "fuentes": [
+        {
+          "fragmento_id": "nosotros-por-que-trabajar-en-fanalca#004",
+          "url": "https://fanalca.com/nosotros/por-que-trabajar-en-fanalca/"
+        },
+        {
+          "fragmento_id": "autopartes-contacto#002",
+          "url": "https://autopartesfanalca.com.co/contacto/"
+        }
+      ],
+      "latencia_ms": 4605
+    },
+    {
+      "id": "P16",
+      "categoria": "procesos",
+      "pregunta": "¿Qué datos pide el formulario de contacto?",
+      "respuesta": "El formulario \"Contáctenos\" permite elegir el asunto de la solicitud (cotización de equipo o asesoría de equipo) y pide nombre completo, empresa, correo electrónico, ciudad, país y mensaje. También solicita la aceptación del tratamiento de datos personales, y el teléfono móvil es opcional. Según la página, un asesor atiende la solicitud por WhatsApp.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "autopartes-contacto#001",
+          "url": "https://autopartesfanalca.com.co/contacto/"
+        }
+      ],
+      "latencia_ms": 4369
+    },
+    {
+      "id": "P17",
+      "categoria": "negocios",
+      "pregunta": "¿En cuántos departamentos tiene presencia la unidad Ambiental?",
+      "respuesta": "La unidad de negocio Ambiental de Fanalca tiene presencia en 29 departamentos del territorio nacional. Además, cuenta con más de 250 clientes nacionales e internacionales.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-ambiental#000",
+          "url": "https://fanalca.com/negocios/ambiental/"
+        },
+        {
+          "fragmento_id": "informe-sostenibilidad#031",
+          "url": "https://fanalca.com/informe-sostenibilidad/"
+        }
+      ],
+      "latencia_ms": 3733
+    },
+    {
+      "id": "P18",
+      "categoria": "historia",
+      "pregunta": "¿Con cuántos colaboradores empezó la empresa?",
+      "respuesta": "La información solicitada no se encuentra en la base de conocimiento de Fanalca.",
+      "rechazo": true,
+      "fundamentada": false,
+      "confianza": "ninguna",
+      "fuentes": [],
+      "latencia_ms": 4385
+    },
+    {
+      "id": "P19",
+      "categoria": "negocios",
+      "pregunta": "¿Cuántas vitrinas tiene Honda Autos en Colombia?",
+      "respuesta": "Honda Autos cuenta con una red de concesionarios compuesta por 26 vitrinas a nivel nacional, que prestan el servicio de venta y posventa.",
+      "rechazo": false,
+      "fundamentada": true,
+      "confianza": "alta",
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-holda-autos#001",
+          "url": "https://fanalca.com/negocios/holda-autos/"
+        },
+        {
+          "fragmento_id": "informe-sostenibilidad#029",
+          "url": "https://fanalca.com/informe-sostenibilidad/"
+        }
+      ],
+      "latencia_ms": 3595
+    }
+  ]
+}

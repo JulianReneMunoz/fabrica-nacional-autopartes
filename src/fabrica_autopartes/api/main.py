@@ -6,6 +6,7 @@ Documentación interactiva: http://127.0.0.1:8000/docs (Swagger) y /redoc.
 from __future__ import annotations
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -55,6 +56,12 @@ def crear_app() -> FastAPI:
     async def _manejar_error(_: Request, exc: ErrorFNA) -> JSONResponse:
         log.warning("%s: %s", exc.codigo, exc)
         return JSONResponse(status_code=exc.estado_http, content={"codigo": exc.codigo, "mensaje": str(exc)})
+
+    @app.exception_handler(RequestValidationError)
+    async def _manejar_validacion(_: Request, exc: RequestValidationError) -> JSONResponse:
+        # Sin ``input``/``ctx`` (pueden traer NaN o Infinity, que no son JSON válido): 422 limpio.
+        detalle = [{"type": e["type"], "loc": list(e["loc"]), "msg": str(e["msg"])} for e in exc.errors()]
+        return JSONResponse(status_code=422, content={"detail": detalle})
 
     @app.exception_handler(ValueError)
     async def _manejar_valor(_: Request, exc: ValueError) -> JSONResponse:

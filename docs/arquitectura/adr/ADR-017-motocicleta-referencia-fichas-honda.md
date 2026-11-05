@@ -16,9 +16,11 @@
      `{valor, unidad, fuente, fecha_consulta, estado}` con `estado ∈ {publicado, no_publicado, supuesto}`. Un valor
      sin fuente y fecha, o un `no_publicado` con valor, invalida el catálogo (`services.motos.validar_catalogo`).
      Las fichas posteriores solo amplían el YAML.
-  3. **«Ver con ficha de…».** El selector de modelo aplica únicamente los campos `publicado` (medida de llanta,
-     freno trasero, CBS, cilindrada, diámetro × carrera, potencia, marchas). Lo no publicado conserva el valor
-     genérico con su marca de supuesto. La respuesta de cálculo informa qué se aplicó y qué se conservó.
+  3. **«Ver con ficha de…».** El selector de modelo aplica únicamente los campos `publicado` (medida de llanta
+     trasera, CBS, y cilindrada, diámetro × carrera, potencia y marchas cuando existan). El freno trasero solo se
+     aplica si la ficha lo publica: con la STD no está publicado y se conserva el disco genérico marcado como
+     «supuesto didáctico» (la lámina atribuye el disco trasero y el CBS solo a la DLX). Lo no publicado conserva el
+     valor genérico con su marca de supuesto. La respuesta de cálculo informa qué se aplicó y qué se conservó.
   4. **FAQ de modelo deterministas.** `GET /api/v1/motos/{id}/faq` responde desde la ficha, con el campo y la
      fuente que sustentan cada respuesta; un dato ausente se muestra como «No publicado».
   5. **FAQ de Fanalca precalculadas.** El comando `fabrica faq-visor` genera respuestas con el proveedor

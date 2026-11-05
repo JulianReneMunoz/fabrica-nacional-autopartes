@@ -82,6 +82,7 @@ const cambiarRango = async (etiqueta: string, valor: string) => {
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
 };
+const leerNumero = (texto: string) => parseFloat(texto.replace(/\./g, "").replace(",", ".").replace(/[^0-9.\-]/g, ""));
 const clic = async (el: Element | null | undefined) => {
   expect(el).toBeTruthy();
   await act(async () => (el as HTMLElement).dispatchEvent(new MouseEvent("click", { bubbles: true })));
@@ -98,31 +99,87 @@ describe("máquina moto: interfaz", () => {
     act(() => raiz.unmount());
   });
 
-  it("los controles actualizan velocidad, relación, rpm y estado", async () => {
+  it("al cambiar de marcha saltan las rpm, nunca la velocidad; sin acelerar en marcha alta el motor se ahoga", async () => {
     const raiz = await montar(<MaquinaMoto tour={false} />);
     await clic(contenedor.querySelector('[data-marcha="3"]'));
-    await cambiarRango("Acelerador", "6000");
     expect(porId("cab-marcha").textContent).toBe("3.ª");
-    expect(porId("cab-rpm").textContent).toBe("6.000");
-    // v = 6000·2π·0,3069·60 / (1000·3,35·1,40·3) ≈ 49,3 km/h (llanta genérica 130/70-17)
-    expect(porId("cab-velocidad").textContent).toContain("49,3");
-    expect(porId("texto-marcha").textContent).toContain("1/14,07");
-    // sobre el corte: el limitador manda
-    await cambiarRango("Acelerador", "11000");
-    expect(porId("cab-rpm").textContent).toBe("9.500");
-    expect(porId("estado").textContent).toBe("LIMITADOR");
-    // marcha engranada bajo el ralentí: se ahoga
-    await cambiarRango("Acelerador", "900");
-    expect(porId("estado").textContent).toBe("MOTOR AHOGADO");
-    expect(porId("cab-velocidad").textContent).toContain("0,0");
+    expect(porId("estado").textContent).toBe("MOTOR AHOGADO"); // 3.ª desde parado y sin acelerar
+    await cambiarRango("Acelerador", "50");
+    expect(porId("estado").textContent).toBe("EN MARCHA"); // el embrague patina en el arranque
+    expect(porId("cab-embrague").textContent).toBe("patinando");
+    // Experimento 1: 72 km/h en 3.ª con el acelerador a fondo
+    await clic(contenedor.querySelectorAll(".experimento .opciones button")[1]);
+    await clic(Array.from(contenedor.querySelectorAll("button")).find((b) => b.textContent === "Ejecutar y comparar"));
+    const v3 = leerNumero(porId("cab-velocidad").textContent!);
+    const rpm3 = leerNumero(porId("cab-rpm").textContent!);
+    expect(v3).toBeGreaterThan(71.9);
+    // rpm = v·i_total·60/(2π·R), con R = 0,3069 m (130/70-17) e i_total = 3,35·1,40·3,00
+    const esperada3 = ((v3 / 3.6 / 0.3069) * 3.35 * 1.4 * 3 * 60) / (2 * Math.PI);
+    expect(Math.abs(rpm3 - esperada3) / esperada3).toBeLessThan(0.01);
+    await clic(contenedor.querySelector('[data-marcha="5"]'));
+    const v5 = leerNumero(porId("cab-velocidad").textContent!);
+    const rpm5 = leerNumero(porId("cab-rpm").textContent!);
+    expect(Math.abs(v5 - v3)).toBeLessThan(0.6); // la velocidad no salta (solo avanza unos ms de simulación)
+    expect(rpm5).toBeLessThan(rpm3 * 0.8); // las rpm sí saltan: 5.ª es una relación más larga
     act(() => raiz.unmount());
   });
 
-  it("«Ver con ficha de…» aplica 140/70-17 y cambia la velocidad; STD desactiva el CBS", async () => {
+  it("el neutro no detiene la moto en seco: la velocidad decae pero las rpm son libres", async () => {
     const raiz = await montar(<MaquinaMoto tour={false} />);
-    await clic(contenedor.querySelector('[data-marcha="3"]'));
-    await cambiarRango("Acelerador", "6000");
-    const generica = porId("cab-velocidad").textContent;
+    await clic(contenedor.querySelectorAll(".experimento .opciones button")[1]);
+    await clic(Array.from(contenedor.querySelectorAll("button")).find((b) => b.textContent === "Ejecutar y comparar"));
+    await clic(contenedor.querySelector('[data-marcha="0"]'));
+    expect(leerNumero(porId("cab-velocidad").textContent!)).toBeGreaterThan(70);
+    expect(porId("cab-marcha").textContent).toBe("N");
+    expect(contenedor.textContent).toContain("sin tracción (neutro)");
+    act(() => raiz.unmount());
+  });
+
+  it("A5: con la palanca cargada y sin frenar no se muestra BLOQUEADA; al frenar sí", async () => {
+    const raiz = await montar(<MaquinaMoto tour={false} />);
+    await cambiarRango("Fuerza en la palanca", "400");
+    const etiqueta = () => (contenedor.querySelector('[data-etiqueta="disco_del"]') as HTMLElement).textContent!;
+    expect(etiqueta()).toContain("previsto");
+    expect(etiqueta()).not.toContain("BLOQUEADA");
+    // Experimento 3 (palanca delantera 400 N a 41 km/h): el freno se activa y la rueda se bloquea
+    const sig = Array.from(contenedor.querySelectorAll("button")).find((b) => b.textContent === "Siguiente")!;
+    await clic(sig);
+    await clic(sig);
+    await clic(contenedor.querySelectorAll(".experimento .opciones button")[0]);
+    await clic(Array.from(contenedor.querySelectorAll("button")).find((b) => b.textContent === "Ejecutar y comparar"));
+    await act(async () => new Promise((r) => setTimeout(r, 30)));
+    expect(porId("estado").textContent).toBe("FRENANDO");
+    expect(porId("cab-embrague").textContent).toContain("EMBRAGUE");
+    expect(etiqueta()).toContain("BLOQUEADA");
+    act(() => raiz.unmount());
+  });
+
+  it("A14: con la STD (CBS no publicado) el CBS no se habilita y no se reactiva solo al volver a la DLX", async () => {
+    const raiz = await montar(<MaquinaMoto tour={false} />);
+    const selector = contenedor.querySelector<HTMLSelectElement>('select[aria-label="Ver con ficha de…"]')!;
+    const fijar = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")!.set!;
+    const elegir = async (v: string) =>
+      act(async () => {
+        fijar.call(selector, v);
+        selector.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    const cbs = () => Array.from(contenedor.querySelectorAll<HTMLInputElement>("input[type=checkbox]")).find((i) => i.parentElement?.textContent?.includes("CBS"))!;
+    await elegir("dlx");
+    expect(cbs().disabled).toBe(false);
+    await clic(cbs());
+    expect(cbs().checked).toBe(true);
+    await elegir("std");
+    expect(cbs().disabled).toBe(true);
+    expect(cbs().checked).toBe(false);
+    expect(porId("nota-ficha").textContent).toContain("frenos.STD.trasero"); // A6: trasero no publicado → genérico
+    await elegir("dlx");
+    expect(cbs().checked).toBe(false); // no se reactiva solo
+    act(() => raiz.unmount());
+  });
+
+  it("«Ver con ficha de…» aplica 140/70-17 y cambia el radio de la llanta", async () => {
+    const raiz = await montar(<MaquinaMoto tour={false} />);
+    expect(contenedor.querySelector(".lecturas")?.textContent).toContain("0,3069");
     const selector = contenedor.querySelector<HTMLSelectElement>('select[aria-label="Ver con ficha de…"]')!;
     const fijar = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")!.set!;
     await act(async () => {
@@ -130,10 +187,14 @@ describe("máquina moto: interfaz", () => {
       selector.dispatchEvent(new Event("change", { bubbles: true }));
     });
     expect(porId("nota-ficha").textContent).toContain("140/70-17");
-    expect(porId("cab-velocidad").textContent).not.toBe(generica);
+    expect(contenedor.querySelector(".lecturas")?.textContent).toContain("0,3139");
     expect(porId("cab-version").textContent).toBe("STD");
-    const cbs = Array.from(contenedor.querySelectorAll<HTMLInputElement>("input[type=checkbox]")).find((i) => i.parentElement?.textContent?.includes("CBS"))!;
-    expect(cbs.disabled).toBe(true);
+    act(() => raiz.unmount());
+  });
+
+  it("A1: la cifra de potencia sin unidad no aparece en el DOM", async () => {
+    const raiz = await montar(<MaquinaMoto tour={false} />);
+    expect(contenedor.textContent).not.toContain("15,04");
     act(() => raiz.unmount());
   });
 
@@ -149,16 +210,23 @@ describe("máquina moto: interfaz", () => {
     act(() => raiz.unmount());
   });
 
-  it("las FAQ de modelos se despliegan con campo y fuente", async () => {
+  it("las FAQ de modelos se despliegan con un clic real y resaltan las piezas del campo", async () => {
     const raiz = await montar(<MaquinaMoto tour={false} />);
     await clic(Array.from(contenedor.querySelectorAll('[role="tab"]')).find((t) => t.textContent === "FAQ modelos"));
     const det = contenedor.querySelector<HTMLDetailsElement>('[data-faq-modelo="potencia"]')!;
+    const resumen = det.querySelector("summary")!;
+    expect(det.open).toBe(false);
+    expect(porId("moto-lab").getAttribute("data-resaltadas")).toBe("");
+    await clic(resumen); // clic real sobre el <summary>: el navegador (jsdom) alterna `open`
+    await act(async () => new Promise((r) => setTimeout(r, 10)));
+    expect(det.open).toBe(true);
     expect(det.textContent).toContain("No publicado");
     expect(det.textContent).toContain("motor.potencia");
-    await act(async () => {
-      det.open = true;
-    });
-    expect(det.open).toBe(true);
+    expect(porId("moto-lab").getAttribute("data-resaltadas")).toContain("ciguenal");
+    await clic(resumen);
+    await act(async () => new Promise((r) => setTimeout(r, 10)));
+    expect(det.open).toBe(false);
+    expect(porId("moto-lab").getAttribute("data-resaltadas")).toBe("");
     act(() => raiz.unmount());
   });
 

@@ -22,7 +22,9 @@ import math
 from pydantic import BaseModel, field_validator
 
 from fabrica_autopartes.simulador.fisica_moto import (
+    MEDIDA_DELANTERA_DEMO,
     MEDIDA_TRASERA_CB160F,
+    RADIO_PINON_M,
     SUPUESTOS_REFERENCIA,
     parsear_medida_llanta,
     radio_llanta_m,
@@ -46,7 +48,6 @@ ADVERTENCIA = (
     "no incluye logotipos ni emblemas y la animación no valida propiedades mecánicas."
 )
 REF_DEMO = "Modelo de demostración del proyecto (sin documentación de fabricante)"
-MEDIDA_DELANTERA_DEMO = "90/80-17"
 
 
 class ParametrosMoto(BaseModel):
@@ -181,7 +182,7 @@ def construir_moto(p: ParametrosMoto | None = None) -> Ensamblaje:
     # Motor
     pin_pms = cigue[1] + r_man + biela_l  # altura del bulón en el PMS
     x_pinon = -0.20
-    r_pinon = 0.03
+    r_pinon = RADIO_PINON_M
     r_corona = r_pinon * rel_final
     z_cadena = 0.065
 

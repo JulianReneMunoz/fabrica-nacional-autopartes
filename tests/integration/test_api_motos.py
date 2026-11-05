@@ -63,3 +63,31 @@ def test_calculo_422(cliente: TestClient, cuerpo: dict) -> None:
 
 def test_calculo_ficha_inexistente(cliente: TestClient) -> None:
     assert cliente.post("/api/v1/motos/otra/calculo", json={}).status_code == 404
+
+
+def test_la_cifra_de_potencia_sin_unidad_no_aparece(cliente: TestClient) -> None:
+    for ruta in ("/api/v1/motos", "/api/v1/motos/cb160f", "/api/v1/motos/cb160f/faq"):
+        texto = cliente.get(ruta).text
+        assert "15,04" not in texto and "15.04" not in texto
+    potencia = cliente.get("/api/v1/motos/cb160f").json()["grupos"]["motor"]["potencia"]
+    assert potencia["valor"] is None
+    assert "pendiente de confirmar con fuente oficial" in potencia["observacion"]
+
+
+@pytest.mark.parametrize("cuerpo", ['{"rpm": NaN}', '{"rpm": Infinity}', '{"fuerza_palanca_n": -Infinity}'])
+def test_calculo_nan_o_infinito_da_422_limpio(cliente: TestClient, cuerpo: str) -> None:
+    r = cliente.post(
+        "/api/v1/motos/cb160f/calculo", content=cuerpo, headers={"content-type": "application/json"}
+    )
+    assert r.status_code == 422
+    assert "not JSON compliant" not in r.text and "detail" in r.json()
+
+
+def test_calculo_rechaza_campos_extra(cliente: TestClient) -> None:
+    assert cliente.post("/api/v1/motos/cb160f/calculo", json={"rpm": 3000, "otro": 1}).status_code == 422
+
+
+def test_calculo_sin_bloqueo_con_la_moto_detenida(cliente: TestClient) -> None:
+    r = cliente.post("/api/v1/motos/cb160f/calculo", json={"rpm": 1400, "marcha": 0, "fuerza_palanca_n": 600})
+    resultado = r.json()["resultado"]
+    assert resultado["velocidad_kmh"] == 0 and resultado["rueda_delantera_bloqueada"] is False

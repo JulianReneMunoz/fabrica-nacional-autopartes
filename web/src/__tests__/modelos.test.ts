@@ -225,8 +225,8 @@ describe("moto: réplica TypeScript de fisica_moto (Python)", () => {
       cerca(Math.hypot(q.x - p.x, q.y - p.y), paso, 1e-6);
     }
     const ys = Array.from({ length: 400 }, (_, i) => t.punto((i * t.longitud) / 400).y);
-    expect(Math.max(...ys)).toBeGreaterThan(moto.EJE_CORONA[1] + 0.09);
-    expect(Math.min(...ys)).toBeLessThan(moto.EJE_CORONA[1] - 0.09);
+    expect(Math.max(...ys)).toBeGreaterThan(moto.EJE_CORONA[1] + moto.RADIO_CORONA_M - 0.003);
+    expect(Math.min(...ys)).toBeLessThan(moto.EJE_CORONA[1] - moto.RADIO_CORONA_M + 0.003);
   });
 
   it("reparto CBS: coincide con Python y conserva la suma de presiones y de fuerzas", () => {
@@ -331,5 +331,109 @@ describe("moto: réplica TypeScript de fisica_moto (Python)", () => {
   it("textoMarcha explica el cambio", () => {
     expect(moto.textoMarcha(3, 4.6)).toContain("1/4,60");
     expect(moto.textoMarcha(0, null)).toContain("Neutro");
+  });
+
+  it("A7: el disco delantero usa el radio de la llanta delantera y el trasero el de la trasera", () => {
+    const e = { ...moto.ENTRADA_MOTO_DEFECTO, palanca: "trasera" as const, cbs: true, fuerza_palanca_n: 100, velocidad_inicial_kmh: 60 };
+    const fs = moto.frenosMoto(e, null, 60);
+    cerca(fs.delantero!.entrada.radio_neumatico_m, moto.radioLlantaM(moto.MEDIDA_DELANTERA_DEMO));
+    cerca(fs.trasero!.entrada.radio_neumatico_m, moto.radioLlantaM("130/70-17"));
+    expect(fs.delantero!.entrada.radio_neumatico_m).not.toBeCloseTo(fs.trasero!.entrada.radio_neumatico_m, 3);
+  });
+  it("A5: sin movimiento no se informa bloqueo", () => {
+    const parado = moto.calcularMoto({ ...moto.ENTRADA_MOTO_DEFECTO, marcha: 0, palanca: "delantera", fuerza_palanca_n: 600 });
+    expect(parado.freno_delantero).not.toBeNull();
+    expect(parado.rueda_delantera_bloqueada).toBe(false);
+    expect(moto.calcularMoto({ ...moto.ENTRADA_MOTO_DEFECTO, rpm: 5000, marcha: 3, fuerza_palanca_n: 600 }).rueda_delantera_bloqueada).toBe(true);
+  });
+  it("A18: marcha alta con rpm bajas ahoga; en marchas bajas el embrague patina", () => {
+    expect(moto.calcularMoto({ ...moto.ENTRADA_MOTO_DEFECTO, rpm: 600, marcha: 5 }).estado_motor).toBe("ahogado");
+    expect(moto.calcularMoto({ ...moto.ENTRADA_MOTO_DEFECTO, rpm: 600, marcha: 1 }).estado_motor).toBe("patinaje");
+  });
+  it("A6: con la STD el freno trasero no publicado se conserva como supuesto", () => {
+    const campo = (valor: unknown, estado: "publicado" | "no_publicado"): moto.CampoFichaApi => ({ valor: valor as never, unidad: null, fuente: "f", fecha_consulta: "2026-11-04", estado });
+    const pv = { STD: { trasero: campo(null, "no_publicado"), cbs: campo(false, "publicado") }, DLX: { trasero: campo("Disco", "publicado"), cbs: campo(true, "publicado") } };
+    expect(moto.ajusteDesdeFicha({}, pv, "STD").conservados).toContain("frenos.STD.trasero");
+    expect(moto.ajusteDesdeFicha({}, pv, "STD").traseroPublicado).toBeNull();
+    expect(moto.ajusteDesdeFicha({}, pv, "DLX").conservados).not.toContain("frenos.DLX.trasero");
+    expect(moto.ajusteDesdeFicha({}, pv, "DLX").traseroPublicado).toBe(true);
+  });
+  it("A8: con el limitador la chispa se suprime en ciclos alternos", () => {
+    expect(moto.intensidadChispaMotor(361, 0, "normal")).toBeGreaterThan(0.9);
+    expect(moto.intensidadChispaMotor(361, 1, "normal")).toBeGreaterThan(0.9);
+    expect(moto.intensidadChispaMotor(361, 0, "limitador")).toBeGreaterThan(0.9);
+    expect(moto.intensidadChispaMotor(361, 1, "limitador")).toBe(0);
+    expect(moto.intensidadChispaMotor(361, 0, "ahogado")).toBe(0);
+  });
+});
+
+describe("moto: dinámica con la velocidad como variable de estado continua", () => {
+  const SUP = moto.SUPUESTOS;
+  const num = (c: string) => SUP[c].valor as number;
+  const marchas = SUP.relaciones_marcha.valor as number[];
+  const prim = num("relacion_primaria");
+  const fin = num("relacion_final");
+  const corte = num("corte_encendido_rpm");
+  const cotaA = (v: number) => Math.max(num("aceleracion_max_m_s2"), 9.80665 * num("adherencia_neumatico")) + num("rozamiento_m_s2") + num("arrastre_aero_1_m") * v * v;
+
+  it.each(refMoto.dinamica.map((d, i) => [d.medida ?? "genérica", i] as const))("el escenario exportado por Python coincide paso a paso (%s) con tolerancia 1e-6", (_, i) => {
+    const din = refMoto.dinamica[i];
+    const radio = moto.radioLlantaM(din.medida ?? String(SUP.medida_llanta_trasera.valor));
+    let est = din.estado_inicial as moto.EstadoDinamico;
+    let previo = est;
+    const modos = new Set<string>();
+    expect(din.pasos.length).toBeGreaterThan(500);
+    for (const p of din.pasos) {
+      est = moto.pasoMoto(est, p.mando as moto.MandoMoto, p.dt, din.medida);
+      const esp = p.estado;
+      expect(Math.abs(est.v_ms - esp.v_ms)).toBeLessThan(1e-6);
+      expect(Math.abs(est.rpm_motor - esp.rpm_motor)).toBeLessThan(1e-6);
+      expect(est.modo).toBe(esp.modo);
+      expect(est.v_ms).toBeGreaterThanOrEqual(0);
+      expect(Number.isNaN(est.rpm_motor)).toBe(false);
+      modos.add(est.modo);
+      if (p.dt === 0) expect(est.v_ms).toBe(previo.v_ms); // Δv = 0 exacto en el cambio de mandos
+      else expect(Math.abs(est.v_ms - previo.v_ms)).toBeLessThanOrEqual(cotaA(previo.v_ms) * p.dt + 1e-12);
+      if (p.mando.marcha >= 1 && !p.mando.freno && (est.modo === "normal" || est.modo === "limitador")) {
+        const deriv = moto.rpmDerivadas(est.v_ms, radio, prim, marchas[p.mando.marcha - 1], fin);
+        expect(Math.abs(est.rpm_motor - Math.min(deriv, corte))).toBeLessThan(1e-6);
+      }
+      previo = est;
+    }
+    for (const m of ["neutro", "normal", "patinaje", "limitador", "embrague", "ahogado"]) expect(modos.has(m)).toBe(true);
+  });
+
+  it("el cambio de marcha salta las rpm y no la velocidad; el neutro decae sin detenerse en seco", () => {
+    let est: moto.EstadoDinamico = { v_ms: 12, rpm_motor: 5000, modo: "normal", t_freno_s: 0, a_ms2: 0 };
+    const m1 = { ...moto.MANDO_DEFECTO, marcha: 2, acelerador: 0.5 };
+    const cambio = moto.pasoMoto(est, { ...m1, marcha: 4 }, 0);
+    expect(cambio.v_ms).toBe(est.v_ms);
+    expect(cambio.rpm_motor).not.toBeCloseTo(moto.pasoMoto(est, m1, 0).rpm_motor, 0);
+    for (let i = 0; i < 60; i++) est = moto.pasoMoto(est, { ...moto.MANDO_DEFECTO, marcha: 0 }, 0.05);
+    expect(est.v_ms).toBeGreaterThan(8);
+    expect(est.v_ms).toBeLessThan(12);
+  });
+  it("frenar hasta detenerse: v monótona decreciente, sin v negativa; soltar continúa desde la v actual", () => {
+    let est: moto.EstadoDinamico = { v_ms: 15, rpm_motor: 1400, modo: "embrague", t_freno_s: 0, a_ms2: 0 };
+    const frena = { ...moto.MANDO_DEFECTO, marcha: 2, palanca: "trasera" as const, cbs: true, fuerza_palanca_n: 180, freno: true };
+    let prev = est.v_ms;
+    for (let i = 0; i < 200; i++) {
+      est = moto.pasoMoto(est, frena, 0.05);
+      expect(est.v_ms).toBeLessThanOrEqual(prev);
+      expect(est.v_ms).toBeGreaterThanOrEqual(0);
+      prev = est.v_ms;
+    }
+    expect(est.v_ms).toBe(0);
+    expect(moto.pasoMoto(est, { ...frena, freno: false }, 0.05).v_ms).toBe(0);
+    for (let i = 0; i < 60; i++) est = moto.pasoMoto(est, { ...moto.MANDO_DEFECTO, marcha: 1, acelerador: 1 }, 0.05);
+    expect(est.v_ms).toBeGreaterThan(3);
+  });
+  it("calcularMotoDesdeEstado toma v y rpm del estado, y marca el bloqueo solo con movimiento", () => {
+    const mando = { ...moto.MANDO_DEFECTO, marcha: 3, fuerza_palanca_n: 600, freno: true };
+    const enMarcha = moto.calcularMotoDesdeEstado({ v_ms: 10, rpm_motor: 3000, modo: "embrague", t_freno_s: 0, a_ms2: 0 }, mando);
+    expect(enMarcha.velocidad_kmh).toBeCloseTo(36, 6);
+    expect(enMarcha.rueda_delantera_bloqueada).toBe(true);
+    const parada = moto.calcularMotoDesdeEstado({ v_ms: 0, rpm_motor: 1400, modo: "embrague", t_freno_s: 0, a_ms2: 0 }, mando);
+    expect(parada.rueda_delantera_bloqueada).toBe(false);
   });
 });

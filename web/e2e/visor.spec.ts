@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const CAPTURAS = "../docs/capturas/v2";
+// Las capturas versionadas (docs/capturas/v2) solo se reescriben con FNA_CAPTURAS=1; por omisión van a test-results/.
+const CAPTURAS = process.env.FNA_CAPTURAS === "1" ? "../docs/capturas/v2" : "test-results/capturas-visor";
 
 function vigilarConsola(page: Page) {
   const errores: string[] = [];

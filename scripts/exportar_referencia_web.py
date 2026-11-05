@@ -57,6 +57,53 @@ def _supuesto(clave: str) -> float | list[float] | str:
     return fm.SUPUESTOS_REFERENCIA[clave].valor
 
 
+DT_DINAMICA = 0.05
+# Segmentos del escenario determinista: (nombre, pasos, mando). Cada segmento empieza con un paso de dt = 0
+# (el instante del cambio de mandos) para verificar que la velocidad no salta.
+ESCENARIO = [
+    ("neutro_ralenti", 40, {"marcha": 0, "acelerador": 0.0}),
+    ("arranque_1", 60, {"marcha": 1, "acelerador": 1.0}),
+    ("cambio_3", 80, {"marcha": 3, "acelerador": 0.8}),
+    ("cambio_2", 40, {"marcha": 2, "acelerador": 0.3}),
+    ("neutro_decae", 80, {"marcha": 0, "acelerador": 0.5}),
+    ("arranque_2", 80, {"marcha": 2, "acelerador": 1.0}),
+    ("limitador_neutro", 40, {"marcha": 0, "acelerador": 1.0}),
+    (
+        "freno_cbs",
+        160,
+        {
+            "marcha": 2,
+            "acelerador": 0.0,
+            "palanca": "trasera",
+            "fuerza_palanca_n": 180,
+            "cbs": True,
+            "freno": True,
+        },
+    ),
+    ("soltar_y_acelerar", 120, {"marcha": 1, "acelerador": 1.0}),
+    ("marcha_alta_sin_gas", 240, {"marcha": 5, "acelerador": 0.0}),
+]
+
+
+def _dinamica(medida: str | None) -> dict[str, object]:
+    est = fm.EstadoMoto()
+    pasos = []
+    for nombre, n, c in ESCENARIO:
+        mando = fm.MandoMoto.model_validate(c)
+        for i in range(n + 1):
+            dt = 0.0 if i == 0 else DT_DINAMICA
+            est = fm.paso_moto(est, mando, dt, medida)
+            pasos.append(
+                {"segmento": nombre, "dt": dt, "mando": mando.model_dump(), "estado": est.model_dump()}
+            )
+    return {
+        "medida": medida,
+        "dt": DT_DINAMICA,
+        "estado_inicial": fm.EstadoMoto().model_dump(),
+        "pasos": pasos,
+    }
+
+
 def _referencia_moto() -> dict[str, object]:
     carrera_m = float(_supuesto("carrera_mm")) / 1000  # type: ignore[arg-type]
     biela_m = float(_supuesto("longitud_biela_mm")) / 1000  # type: ignore[arg-type]
@@ -154,6 +201,7 @@ def _referencia_moto() -> dict[str, object]:
         "cadena": cadena,
         "reparto_cbs": reparto,
         "calculos": calculos,
+        "dinamica": [_dinamica(None), _dinamica("140/70-17")],
     }
 
 

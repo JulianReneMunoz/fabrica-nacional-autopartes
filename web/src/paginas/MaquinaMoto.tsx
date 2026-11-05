@@ -4,33 +4,26 @@
  * y la palanca en fuerza de frenado?
  * Relaciones: v = rpm·2π·R·60 / (1000·i_prim·i_marcha·i_final);  x(θ) = r·cos θ + √(L² − r²·sin² θ);  T = 2·μ·p·A·r.
  *
- * Los parámetros de cálculo son «valores típicos de la categoría — supuesto didáctico» (modelos/moto.ts);
- * «Ver con ficha de…» aplica solo los campos `publicado` de la ficha curada. El modelo de freno
- * (`calcularFreno`, `estadoRueda`) se reutiliza de `modelos/freno.ts`. Todo giro se anima con un
- * factor de cámara lenta visible: el cigüeñal da cientos de vueltas por segundo en la realidad.
+ * La velocidad es una VARIABLE DE ESTADO continua (`pasoMoto`, modelos/moto.ts): con marcha engranada las rpm se
+ * derivan de ella; el acelerador da una aceleración, el freno una deceleración (`calcularFreno`) y en neutro la
+ * moto rueda libre. Los parámetros son «valores típicos de la categoría — supuesto didáctico»; «Ver con ficha
+ * de…» aplica solo los campos `publicado`. Todo giro se anima con un factor de cámara lenta visible.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { apiMoto, type Animacion, type FaqVisor, type FichaMotoApi, type NodoJerarquia, type Pieza, type RespuestaModeloApi, type RespuestaQa } from "../api";
 import { BandaTour, Chip, Deslizador, Insignia, ModoExperimento, PanelEmpresa, Reproduccion, RevisionCritica, useMaquina, useTour, type Experimento, type PasoTour } from "../componentes/anatomia";
-import {
-  DiagramaCiclo,
-  FaqFanalca,
-  FaqModelos,
-  FichaTecnica,
-  fmt,
-  InsigniaSupuesto,
-  NO_PUBLICADO,
-  Pestanas,
-  piezasDeCampo,
-} from "../componentes/panelesMoto";
+import { DiagramaCiclo, FaqFanalca, FaqModelos, FichaTecnica, fmt, InsigniaSupuesto, NO_PUBLICADO, Pestanas, piezasDeCampo } from "../componentes/panelesMoto";
 import { estadoRueda } from "../modelos/freno";
 import {
   ajusteDesdeFicha,
   anguloBielaRad,
   calcularMoto,
+  calcularMotoDesdeEstado,
+  chispaPermitida,
   ENTRADA_MOTO_DEFECTO,
+  ESTADO_DINAMICO_INICIAL,
   ETIQUETA_SUPUESTO,
   FACTOR_LENTO_DEFECTO,
   FACTORES_LENTO,
@@ -40,16 +33,17 @@ import {
   GEOMETRIA_MOTOR,
   LIMITES,
   MEDIDA_DELANTERA_DEMO,
+  pasoMoto,
   posicionPistonM,
   RADIO_CORONA_M,
   RADIO_PINON_M,
   radioLlantaM,
-  sanearEntrada,
   SUPUESTOS,
   textoMarcha,
   velocidadAngularRadS,
-  type EntradaMoto,
-  type FrenoRueda,
+  velocidadMsEnCorte,
+  type EstadoDinamico,
+  type MandoMoto,
   type PalancaMoto,
   type VersionMoto,
 } from "../modelos/moto";
@@ -57,8 +51,8 @@ import EscenaMoto, { type EstadoMoto, type GeometriaDespieceMoto, type PeticionC
 
 const ID_FICHA = "cb160f";
 const G = 9.80665;
-const RADIO_BASE_TRASERO = radioLlantaM(String(SUPUESTOS.medida_llanta_trasera.valor));
 const RADIO_DELANTERA_M = radioLlantaM(MEDIDA_DELANTERA_DEMO);
+const RADIO_BASE_TRASERO = radioLlantaM(String(SUPUESTOS.medida_llanta_trasera.valor));
 const num = (clave: string) => SUPUESTOS[clave].valor as number;
 const RALENTI = num("ralenti_rpm");
 const CORTE = num("corte_encendido_rpm");
@@ -78,13 +72,14 @@ const MODELOS: Record<ModeloSel, { nombre: string; version: VersionMoto; etiquet
 };
 
 interface Ctl {
-  rpm: number;
+  acelerador: number; // 0..1
   marcha: number;
   palanca: PalancaMoto;
   fuerza: number;
   cbs: boolean;
+  freno: boolean;
 }
-const CTL0: Ctl = { rpm: RALENTI, marcha: 0, palanca: "delantera", fuerza: 0, cbs: false };
+const CTL0: Ctl = { acelerador: 0, marcha: 0, palanca: "delantera", fuerza: 0, cbs: false, freno: false };
 
 const CAMARAS: Record<string, { pos: Vec3; objetivo: Vec3; nombre: string }> = {
   general: { nombre: "General", pos: [0.75, 0.75, 2.3], objetivo: [0.05, 0.42, 0] },
@@ -96,21 +91,26 @@ const CAMARAS: Record<string, { pos: Vec3; objetivo: Vec3; nombre: string }> = {
 
 const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1);
 const suave = (x: number) => x * x * (3 - 2 * x);
-const lerp = (a: number, b: number, u: number) => a + (b - a) * u;
 
 interface Instantanea {
   theta720: number;
-  vKmh: number;
+  est: EstadoDinamico;
   wTras: number;
   wPinon: number;
   vCadena: number;
-  aVeh: number;
-  tFreno: number;
-  rpmMotor: number;
   despiece: number;
-  detenida: boolean;
+  chispas: number;
+  ciclos: number;
 }
-const INST0: Instantanea = { theta720: 0, vKmh: 0, wTras: 0, wPinon: 0, vCadena: 0, aVeh: 0, tFreno: 0, rpmMotor: RALENTI, despiece: 0, detenida: false };
+const INST0: Instantanea = { theta720: 0, est: ESTADO_DINAMICO_INICIAL, wTras: 0, wPinon: 0, vCadena: 0, despiece: 0, chispas: 0, ciclos: 0 };
+const TEXTO_MODO: Record<string, string> = {
+  neutro: "neutro: rpm libres",
+  normal: "marcha engranada: rpm = v·i_total",
+  limitador: "limitador: corta la chispa",
+  ahogado: "motor ahogado",
+  patinaje: "embrague patinando (arranque)",
+  embrague: "embrague accionado (frenando)",
+};
 
 export default function MaquinaMoto({ tour }: { tour: boolean }) {
   const { maquina, error } = useMaquina("moto_honda");
@@ -159,20 +159,19 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
   const version = MODELOS[modeloSel].version;
   const ajuste = useMemo(() => (conFicha ? ajusteDesdeFicha(ficha?.grupos, ficha?.por_version, version) : null), [conFicha, ficha, version]);
   const medida = ajuste?.medidaLlanta ?? null;
-  const cbsDisponible = conFicha ? ajuste?.cbsDisponible !== false : true;
-  const entradaDe = useCallback(
-    (c: Ctl): EntradaMoto =>
-      sanearEntrada({ ...ENTRADA_MOTO_DEFECTO, version, rpm: c.rpm, marcha: c.marcha, palanca: c.palanca, fuerza_palanca_n: c.fuerza, cbs: c.cbs && cbsDisponible }),
+  // El CBS solo se habilita si la ficha publicada lo incluye (con la ficha sin cargar o no publicado: no).
+  const cbsDisponible = conFicha ? ajuste?.cbsDisponible === true : true;
+  const traseroGenerico = !conFicha || ajuste?.traseroPublicado !== true;
+  const mandoDe = useCallback(
+    (c: Ctl): MandoMoto => ({ version, acelerador: c.acelerador, marcha: c.marcha, palanca: c.palanca, fuerza_palanca_n: c.fuerza, cbs: c.cbs && cbsDisponible, freno: c.freno }),
     [version, cbsDisponible],
   );
-  const entrada = useMemo(() => entradaDe(ctl), [entradaDe, ctl]);
-  const resultado = useMemo(() => calcularMoto(entrada, medida), [entrada, medida]);
+  const mando = useMemo(() => mandoDe(ctl), [mandoDe, ctl]);
 
   /* ---------- vista ---------- */
   const [corriendo, setCorriendo] = useState(true);
   const [escala, setEscala] = useState(1);
   const [factorLento, setFactorLento] = useState<number>(FACTOR_LENTO_DEFECTO);
-  const [frenando, setFrenando] = useState(false);
   const [despieceOn, setDespieceOn] = useState(false);
   const [corte, setCorte] = useState(false);
   const [etiquetas, setEtiquetas] = useState(true);
@@ -189,6 +188,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
   const [pasoSec, setPasoSec] = useState(-1);
   const [secActiva, setSecActiva] = useState(false);
   const [verificacion, setVerificacion] = useState<string | null>(null);
+  const [avisoFreno, setAvisoFreno] = useState<string | null>(null);
   const controles = useRef<OrbitControlsImpl | null>(null);
   const divsEtiqueta = useRef<Record<string, HTMLDivElement | null>>({});
   const etiquetasVisibles = useRef(true);
@@ -197,6 +197,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
   const escena = useRef<EstadoMoto>({
     despiece: {},
     theta720: 0,
+    ciclo: 0,
     angRuedaTras: 0,
     angRuedaDel: 0,
     angPinon: 0,
@@ -235,24 +236,27 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
   /* ---------- reloj de simulación y bucle (refs mutables; React se actualiza cada ~100 ms) ---------- */
   const reloj = useRef({
     t: 0,
+    est: ESTADO_DINAMICO_INICIAL as EstadoDinamico,
     theta720: 0,
+    ciclo: 0,
+    chispas: 0,
     angTras: 0,
     angDel: 0,
     angPin: 0,
     cadenaS: 0,
     comp: 0,
     despT: 0,
-    vms: 0,
-    freno: { activo: false, t: 0, v0: 0 },
-    rampa: null as null | { desde: number; hasta: number; dur: number; t: number },
-    sucio: false,
+    v0Freno: 0,
     sec: { activa: false, t: 0, paso: -1 },
+    wTras: 0,
+    wPinon: 0,
+    vCadena: 0,
   });
-  const vivo = useRef({ corriendo, escala, factorLento, entradaDe, medida, despieceOn, grupoDe: {} as Record<string, number>, nGrupos: 0, acciones: [] as (() => void)[], tiempos: [] as number[] });
+  const vivo = useRef({ corriendo, escala, factorLento, mandoDe, medida, despieceOn, grupoDe: {} as Record<string, number>, nGrupos: 0, acciones: [] as (() => void)[], tiempos: [] as number[] });
   vivo.current.corriendo = corriendo;
   vivo.current.escala = escala;
   vivo.current.factorLento = factorLento;
-  vivo.current.entradaDe = entradaDe;
+  vivo.current.mandoDe = mandoDe;
   vivo.current.medida = medida;
   vivo.current.despieceOn = despieceOn;
 
@@ -270,85 +274,110 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
     vivo.current.nGrupos = orden.length;
   }, [animacion, piezas, subconjuntoDe]);
 
-  const fijarCtl = useCallback((p: Partial<Ctl>) => {
-    const antes = ctlRef.current;
-    ctlRef.current = { ...antes, ...p };
-    const fr = reloj.current.freno;
-    if (fr.activo && (p.fuerza !== undefined || p.palanca !== undefined || p.cbs !== undefined)) {
-      fr.v0 = reloj.current.vms * 3.6; // la nueva fuerza parte de la velocidad actual (sin saltos)
-      fr.t = 0;
-    }
-    setCtl(ctlRef.current);
+  const instantanea = useCallback((): Instantanea => {
+    const rl = reloj.current;
+    return { theta720: rl.theta720, est: rl.est, wTras: rl.wTras, wPinon: rl.wPinon, vCadena: rl.vCadena, despiece: snapDespiece.current, chispas: rl.chispas, ciclos: rl.ciclo };
   }, []);
-  const iniciarFreno = useCallback(() => {
+  const snapDespiece = useRef(0);
+
+  /** Aplica un cambio de mandos o de estado al instante (dt = 0): cambian las rpm, nunca la velocidad. */
+  const refrescar = useCallback(() => {
     const v = vivo.current;
-    const r = calcularMoto(v.entradaDe(ctlRef.current), v.medida);
-    if (ctlRef.current.fuerza <= 0) fijarCtl({ fuerza: 160 });
-    reloj.current.freno = { activo: true, t: 0, v0: r.velocidad_kmh };
-    reloj.current.vms = r.velocidad_kmh / 3.6;
-    setFrenando(true);
-    apiMoto.evento("frenado", null, { palanca: ctlRef.current.palanca, v0_kmh: r.velocidad_kmh });
-  }, [fijarCtl]);
+    const rl = reloj.current;
+    rl.est = pasoMoto(rl.est, v.mandoDe(ctlRef.current), 0, v.medida);
+    const r = rl.est.v_ms / radioLlantaM(v.medida ?? String(SUPUESTOS.medida_llanta_trasera.valor));
+    rl.wTras = r;
+    rl.wPinon = r * FINAL;
+    rl.vCadena = r * FINAL * RADIO_PINON_M;
+    setSnap(instantanea());
+  }, [instantanea]);
+
+  const fijarCtl = useCallback(
+    (p: Partial<Ctl>) => {
+      ctlRef.current = { ...ctlRef.current, ...p };
+      const rl = reloj.current;
+      if (ctlRef.current.freno && (p.fuerza !== undefined || p.palanca !== undefined || p.cbs !== undefined)) {
+        rl.v0Freno = rl.est.v_ms; // la nueva fuerza parte de la velocidad actual (sin saltos)
+        rl.est = { ...rl.est, t_freno_s: 0 };
+      }
+      setCtl(ctlRef.current);
+      refrescar();
+    },
+    [refrescar],
+  );
+  const fijarEstado = useCallback(
+    (p: Partial<EstadoDinamico>) => {
+      reloj.current.est = { ...reloj.current.est, ...p };
+      refrescar();
+    },
+    [refrescar],
+  );
+  const iniciarFreno = useCallback(() => {
+    const rl = reloj.current;
+    if (ctlRef.current.fuerza <= 0) {
+      setAvisoFreno("La palanca estaba en 0 N: se aplicaron 160 N (fuerza mínima visible).");
+      ctlRef.current = { ...ctlRef.current, fuerza: 160 };
+    } else setAvisoFreno(null);
+    rl.v0Freno = rl.est.v_ms;
+    rl.est = { ...rl.est, t_freno_s: 0 };
+    ctlRef.current = { ...ctlRef.current, freno: true };
+    setCtl(ctlRef.current);
+    refrescar();
+    apiMoto.evento("frenado", null, { palanca: ctlRef.current.palanca, v0_kmh: rl.est.v_ms * 3.6 });
+  }, [refrescar]);
   const soltarFreno = useCallback(() => {
-    reloj.current.freno = { activo: false, t: 0, v0: 0 };
-    setFrenando(false);
-  }, []);
+    // Se suelta el embrague con la velocidad actual: las rpm se derivan de ella (patina o se ahoga según la marcha).
+    ctlRef.current = { ...ctlRef.current, freno: false };
+    setCtl(ctlRef.current);
+    refrescar();
+  }, [refrescar]);
   const irACamara = useCallback((clave: string) => {
     const c = CAMARAS[clave];
     const peticion: PeticionCamara = { id: Date.now() + Math.random(), pos: c.pos, objetivo: c.objetivo };
     escena.current.camara = peticion;
   }, []);
-  const reiniciar = useCallback(() => {
+  const reiniciar = useCallback((conservarSecuencia = false) => {
     const r = reloj.current;
-    Object.assign(r, { t: 0, theta720: 0, angTras: 0, angDel: 0, angPin: 0, cadenaS: 0, comp: 0, despT: 0, vms: 0, rampa: null, sucio: false, sec: { activa: false, t: 0, paso: -1 } });
-    r.freno = { activo: false, t: 0, v0: 0 };
+    const sec = conservarSecuencia ? r.sec : { activa: false, t: 0, paso: -1 };
+    Object.assign(r, { t: 0, est: ESTADO_DINAMICO_INICIAL, theta720: 0, ciclo: 0, chispas: 0, angTras: 0, angDel: 0, angPin: 0, cadenaS: 0, comp: 0, despT: 0, v0Freno: 0, sec, wTras: 0, wPinon: 0, vCadena: 0 });
     ctlRef.current = CTL0;
     setCtl(CTL0);
-    setFrenando(false);
     setDespieceOn(false);
     setCorte(false);
-    setSecActiva(false);
-    setPasoSec(-1);
+    if (!conservarSecuencia) {
+      setSecActiva(false);
+      setPasoSec(-1);
+    }
+    setAvisoFreno(null);
     setSnap(INST0);
   }, []);
 
-  // Secuencia: arranque → acelerar → cambiar marcha → frenar con CBS → despiece.
+  // Secuencia: arranque → acelerar → cambiar marcha → frenar con CBS → despiece (sin saltos de velocidad).
   const acciones = useMemo(
     () => [
       () => {
-        soltarFreno();
-        setDespieceOn(false);
-        setCorte(false);
-        reloj.current.rampa = null;
-        fijarCtl({ rpm: RALENTI, marcha: 0, fuerza: 0, palanca: "delantera", cbs: false });
+        reiniciar(true);
         irACamara("general");
       },
-      () => {
-        fijarCtl({ marcha: 1 });
-        reloj.current.rampa = { desde: ctlRef.current.rpm, hasta: 5500, dur: 3.5, t: 0 };
-      },
-      () => {
-        fijarCtl({ marcha: 3 });
-        reloj.current.rampa = { desde: ctlRef.current.rpm, hasta: 6500, dur: 1.5, t: 0 };
-      },
+      () => fijarCtl({ marcha: 1, acelerador: 1 }),
+      () => fijarCtl({ marcha: 3, acelerador: 0.8 }),
       () => {
         setModeloSel("dlx");
-        reloj.current.rampa = null;
-        fijarCtl({ palanca: "trasera", cbs: true, fuerza: 180 });
+        fijarCtl({ palanca: "trasera", cbs: true, fuerza: 180, acelerador: 0 });
         irACamara("frenos");
         window.setTimeout(iniciarFreno, 0);
       },
       () => {
         soltarFreno();
-        fijarCtl({ rpm: RALENTI, marcha: 0, fuerza: 0 });
+        fijarCtl({ marcha: 0, acelerador: 0, fuerza: 0 });
         setDespieceOn(true);
         irACamara("despiece");
       },
     ],
-    [fijarCtl, iniciarFreno, soltarFreno, irACamara],
+    [fijarCtl, iniciarFreno, soltarFreno, irACamara, reiniciar],
   );
   vivo.current.acciones = acciones;
-  vivo.current.tiempos = [0, 5, 9.5, 14, 21];
+  vivo.current.tiempos = [0, 4, 9, 14, 22];
   const TOTAL_SEC = 29;
 
   useEffect(() => {
@@ -356,7 +385,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
     let previo = performance.now();
     let aviso = 0;
     const ciclo = (ahora: number) => {
-      const dtReal = Math.min((ahora - previo) / 1000, 0.1);
+      const dtReal = Math.min(Math.max((ahora - previo) / 1000, 0), 0.1);
       previo = ahora;
       const v = vivo.current;
       const e = escena.current;
@@ -381,50 +410,43 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
           setSecActiva(false);
         }
       }
-      // rampa del acelerador
-      if (rl.rampa && dt > 0) {
-        rl.rampa.t += dt;
-        const u = clamp01(rl.rampa.t / rl.rampa.dur);
-        ctlRef.current = { ...ctlRef.current, rpm: Math.round(lerp(rl.rampa.desde, rl.rampa.hasta, suave(u))) };
-        rl.sucio = true;
-        if (u >= 1) rl.rampa = null;
-      }
 
       const c = ctlRef.current;
-      const ent = v.entradaDe(c);
-      const r = calcularMoto(ent, v.medida);
+      const m = v.mandoDe(c);
+      rl.est = pasoMoto(rl.est, m, dt, v.medida);
+      const est = rl.est;
       const K = v.factorLento;
-      const fr = rl.freno;
-      let vms: number;
-      let wTras: number;
-      let wDel: number;
-      let aVeh = 0;
-      if (fr.activo) {
-        fr.t += dt;
-        const fs = frenosMoto(ent, v.medida, fr.v0);
-        aVeh = ((fs.delantero?.resultado.deceleracion_m_s2 ?? 0) + (fs.trasero?.resultado.deceleracion_m_s2 ?? 0)) / 2;
-        vms = Math.max(fr.v0 / 3.6 - aVeh * fr.t, 0);
-        // Rueda bloqueada (modelo sin ABS): gira según `estadoRueda`; si no, rueda con la moto.
-        const rueda = (f: FrenoRueda | null, radio: number) =>
-          f && f.resultado.rueda_bloqueada ? (estadoRueda(f.entrada, f.resultado, fr.t).w * fs.radio) / radio : vms / radio;
-        wTras = rueda(fs.trasero, fs.radio);
-        wDel = rueda(fs.delantero, RADIO_DELANTERA_M);
-      } else {
-        vms = r.velocidad_kmh / 3.6;
-        wTras = vms / r.radio_llanta_m;
-        wDel = vms / RADIO_DELANTERA_M;
+      const radioT = radioLlantaM(v.medida ?? String(SUPUESTOS.medida_llanta_trasera.valor));
+      const frenando = m.freno && m.fuerza_palanca_n > 0;
+      let wTras = est.v_ms / radioT;
+      let wDel = est.v_ms / RADIO_DELANTERA_M;
+      if (frenando) {
+        // Rueda bloqueada (modelo sin ABS): gira según `estadoRueda` y se detiene antes que la moto.
+        const fs = frenosMoto(m, v.medida, rl.v0Freno * 3.6);
+        const bloqueada = (f: typeof fs.delantero, w: number) => (f && f.resultado.rueda_bloqueada ? Math.min(estadoRueda(f.entrada, f.resultado, est.t_freno_s).w, w) : w);
+        wTras = bloqueada(fs.trasero, wTras);
+        wDel = bloqueada(fs.delantero, wDel);
       }
-      rl.vms = vms;
-      // El embrague se acciona al frenar: el motor vuelve al ralentí y la transmisión sigue a la rueda.
-      const rpmMotor = r.estado_motor === "ahogado" ? 0 : fr.activo ? Math.min(RALENTI, c.rpm) : r.rpm_efectivas;
-      const wPinon = wTras * FINAL; // ω_piñón = ω_corona · i_final
+      const wPinon = (est.v_ms / radioT) * FINAL; // ω_piñón = ω_corona · i_final (corona = rueda trasera)
       const vCadena = wPinon * RADIO_PINON_M; // v = ω_piñón · r_piñón (= ω_corona · r_corona)
-      rl.theta720 = (rl.theta720 + (((velocidadAngularRadS(rpmMotor) / K) * dt * 180) / Math.PI)) % 720;
+      rl.wTras = wTras;
+      rl.wPinon = wPinon;
+      rl.vCadena = vCadena;
+
+      // cigüeñal: θ de 0 a 720° (el ciclo completo); la chispa salta al cruzar los 360° (PMS de la compresión)
+      const previoTheta = rl.theta720;
+      let theta = previoTheta + (((velocidadAngularRadS(est.rpm_motor) / K) * dt * 180) / Math.PI);
+      if (previoTheta < 360 && theta >= 360 && chispaPermitida(est.modo, rl.ciclo)) rl.chispas += 1;
+      if (theta >= 720) {
+        theta %= 720;
+        rl.ciclo += 1;
+      }
+      rl.theta720 = theta;
       rl.angTras -= (wTras / K) * dt;
       rl.angDel -= (wDel / K) * dt;
       rl.angPin -= (wPinon / K) * dt;
       rl.cadenaS += (vCadena / K) * dt;
-      const objetivoComp = fr.activo && vms > 0 ? 0.07 * clamp01(aVeh / (0.9 * G)) : 0;
+      const objetivoComp = frenando && est.v_ms > 0 ? 0.07 * clamp01(-est.a_ms2 / (0.9 * G)) : 0;
       rl.comp += (objetivoComp - rl.comp) * (1 - Math.exp(-dt * 6));
 
       // despiece animado por ensamblaje
@@ -433,41 +455,31 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
       const total = paso * Math.max(v.nGrupos - 1, 0) + dGrupo;
       rl.despT = Math.min(Math.max(rl.despT + (v.despieceOn ? dt : -dt), 0), total);
       for (const [pid, gi] of Object.entries(v.grupoDe)) e.despiece[pid] = suave(clamp01((rl.despT - gi * paso) / dGrupo));
+      snapDespiece.current = total > 0 ? rl.despT / total : 0;
 
       Object.assign(e, {
         theta720: rl.theta720,
+        ciclo: rl.ciclo,
         angRuedaTras: rl.angTras,
         angRuedaDel: rl.angDel,
         angPinon: rl.angPin,
         cadenaS: rl.cadenaS,
         compresionHorquilla: rl.comp,
-        motorEnMarcha: rpmMotor > 0,
-        estadoMotor: r.estado_motor,
+        motorEnMarcha: est.rpm_motor > 0,
+        estadoMotor: est.modo,
       });
       e.alerta.clear();
-      if (r.rueda_delantera_bloqueada && fr.activo) ["disco_delantero", "llanta_delantera", "caliper_delantero"].forEach((p) => e.alerta.add(p));
-      if (r.rueda_trasera_bloqueada && fr.activo) ["disco_trasero", "llanta_trasera", "caliper_trasero"].forEach((p) => e.alerta.add(p));
-      if (r.estado_motor === "limitador") e.alerta.add("bujia");
-      if (r.estado_motor === "ahogado") e.alerta.add("ciguenal");
+      if (frenando && est.v_ms > 0) {
+        const fs = frenosMoto(m, v.medida, rl.v0Freno * 3.6);
+        if (fs.delantero?.resultado.rueda_bloqueada) ["disco_delantero", "llanta_delantera", "caliper_delantero"].forEach((p) => e.alerta.add(p));
+        if (fs.trasero?.resultado.rueda_bloqueada) ["disco_trasero", "llanta_trasera", "caliper_trasero"].forEach((p) => e.alerta.add(p));
+      }
+      if (est.modo === "limitador") e.alerta.add("bujia");
+      if (est.modo === "ahogado") e.alerta.add("ciguenal");
 
       if (ahora - aviso > 100) {
         aviso = ahora;
-        if (rl.sucio) {
-          rl.sucio = false;
-          setCtl(ctlRef.current);
-        }
-        setSnap({
-          theta720: rl.theta720,
-          vKmh: vms * 3.6,
-          wTras,
-          wPinon,
-          vCadena,
-          aVeh,
-          tFreno: fr.t,
-          rpmMotor,
-          despiece: total > 0 ? rl.despT / total : 0,
-          detenida: fr.activo && vms <= 0,
-        });
+        setSnap({ theta720: rl.theta720, est, wTras, wPinon, vCadena, despiece: snapDespiece.current, chispas: rl.chispas, ciclos: rl.ciclo });
       }
       id = requestAnimationFrame(ciclo);
     };
@@ -475,45 +487,44 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const reproducirSecuencia = useCallback(
-    (desde = 0) => {
-      const sec = reloj.current.sec;
-      sec.activa = true;
-      sec.t = vivo.current.tiempos[desde] ?? 0;
-      sec.paso = desde - 1;
-      setSecActiva(true);
-      setCorriendo(true);
-    },
-    [],
-  );
+  const reproducirSecuencia = useCallback((desde = 0) => {
+    const sec = reloj.current.sec;
+    sec.activa = true;
+    sec.t = vivo.current.tiempos[desde] ?? 0;
+    sec.paso = desde - 1;
+    setSecActiva(true);
+    setCorriendo(true);
+  }, []);
   const pausarSecuencia = () => {
     reloj.current.sec.activa = false;
     setSecActiva(false);
   };
 
-  /* ---------- lecturas derivadas (a partir del estado de React: responden de inmediato a los controles) ---------- */
+  /* ---------- lecturas derivadas del ESTADO (velocidad y rpm no se recalculan de golpe) ---------- */
+  const est = snap.est;
+  const resultado = useMemo(() => calcularMotoDesdeEstado(est, mando, medida), [est, mando, medida]);
   const g = ctl.marcha >= 1 ? (SUPUESTOS.relaciones_marcha.valor as number[])[ctl.marcha - 1] : null;
-  const estadoMotor = resultado.estado_motor;
-  const rpmMotor = estadoMotor === "ahogado" ? 0 : frenando ? Math.min(RALENTI, ctl.rpm) : resultado.rpm_efectivas;
-  const vMostrada = frenando ? snap.vKmh : resultado.velocidad_kmh;
+  const vKmh = est.v_ms * 3.6;
+  const frenando = ctl.freno && ctl.fuerza > 0;
+  const embrague = frenando ? "accionado" : est.modo === "patinaje" ? "patinando" : ctl.marcha === 0 ? "—" : "acoplado";
   const enDespiece = despieceOn && snap.despiece > 0.02;
   const estadoTexto = enDespiece
     ? "DESPIECE"
     : frenando
-      ? snap.detenida
-        ? "DETENIDA"
-        : "FRENANDO"
+      ? est.v_ms > 0
+        ? "FRENANDO"
+        : "DETENIDA"
       : !corriendo
         ? "PAUSA"
-        : estadoMotor === "ahogado"
+        : est.modo === "ahogado"
           ? "MOTOR AHOGADO"
-          : estadoMotor === "limitador"
+          : est.modo === "limitador"
             ? "LIMITADOR"
-            : rpmMotor <= 0
+            : est.rpm_motor <= 0
               ? "MOTOR APAGADO"
               : "EN MARCHA";
-  const wCorona = frenando ? snap.wTras : vMostrada / 3.6 / resultado.radio_llanta_m;
-  const wPinon = frenando ? snap.wPinon : wCorona * FINAL;
+  const wCorona = snap.wTras;
+  const wPinon = snap.wPinon;
   const vCadenaPinon = wPinon * RADIO_PINON_M;
   const vCadenaCorona = wCorona * RADIO_CORONA_M;
   const carrera = GEOMETRIA_MOTOR.carreraM;
@@ -524,22 +535,41 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
   const phiGrados = (anguloBielaRad(thetaRad, carrera, biela) * 180) / Math.PI;
   const fd = resultado.freno_delantero;
   const ft = resultado.freno_trasero;
-  const textoDisco = (f: typeof fd, bloqueada: boolean, lado: string) =>
-    f ? `${lado}: F ${fmt(f.fuerza_piston_n / 1000, 2)} kN · T ${fmt(f.par_frenado_nm)} N·m${bloqueada ? " · BLOQUEADA" : ""}` : `${lado}: sin accionar`;
+  const bloqueoDel = resultado.rueda_delantera_bloqueada;
+  const bloqueoTras = resultado.rueda_trasera_bloqueada;
+  const hayBloqueo = bloqueoDel || bloqueoTras;
+  const etiquetaTras = traseroGenerico ? "Tras. (disco genérico — supuesto didáctico)" : "Tras.";
+  // Con la palanca cargada y sin frenar, F/T/bloqueo son «previstos»; solo con el freno activo son reales.
+  const textoDisco = (f: typeof fd, bloqueada: boolean, lado: string) => {
+    if (!f) return `${lado}: sin accionar`;
+    const base = `F ${fmt(f.fuerza_piston_n / 1000, 2)} kN · T ${fmt(f.par_frenado_nm)} N·m`;
+    if (!frenando) return `${lado}: previsto ${base}${bloqueada ? " · bloqueo previsto" : ""}`;
+    return `${lado}: ${base}${bloqueada ? " · BLOQUEADA" : ""}`;
+  };
+  const textoLeccion = ctl.marcha === 0 ? "sin tracción (neutro)" : resultado.relacion_total === null ? "—" : fmt(resultado.relacion_total, 2);
 
-  /* ---------- verificación contra la API (el backend valida; el visor contrasta) ---------- */
+  /* ---------- verificación contra la API (el backend valida; el visor contrasta la fórmula de la lección) ---------- */
+  const rpmRedondeada = Math.round(est.rpm_motor / 100) * 100;
+  const claveVerificacion = `${modeloSel}|${ctl.marcha}|${ctl.palanca}|${ctl.fuerza}|${ctl.cbs && cbsDisponible}|${rpmRedondeada}`;
   useEffect(() => {
+    const entrada = { ...ENTRADA_MOTO_DEFECTO, version, rpm: rpmRedondeada, marcha: ctl.marcha, palanca: ctl.palanca, fuerza_palanca_n: ctl.fuerza, cbs: ctl.cbs && cbsDisponible };
+    const local = calcularMoto(entrada, medida);
     const temporizador = window.setTimeout(() => {
       apiMoto.calculoMoto(ID_FICHA, entrada, conFicha).then(
         (r) => {
-          const dif = Math.abs(r.resultado.velocidad_kmh - resultado.velocidad_kmh);
-          setVerificacion(dif < 1e-3 ? `API verificada: v = ${fmt(r.resultado.velocidad_kmh, 1)} km/h, igual al cálculo local` : `La API difiere del cálculo local (Δ ${fmt(dif, 3)} km/h)`);
+          const dif = Math.abs(r.resultado.velocidad_kmh - local.velocidad_kmh);
+          setVerificacion(
+            dif < 1e-3
+              ? `API verificada: a ${fmt(rpmRedondeada)} rpm la fórmula v = rpm·2πR/i da ${fmt(r.resultado.velocidad_kmh, 1)} km/h, igual al cálculo local`
+              : `La API difiere del cálculo local (Δ ${fmt(dif, 3)} km/h)`,
+          );
         },
         (e: Error) => setVerificacion(`API sin verificar: ${e.message}`),
       );
     }, 400);
     return () => window.clearTimeout(temporizador);
-  }, [entrada, conFicha, resultado.velocidad_kmh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claveVerificacion, conFicha, medida]);
 
   /* ---------- selección y resaltado ---------- */
   const seleccionar = useCallback((id: string | null) => {
@@ -577,35 +607,36 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
   };
 
   /* ---------- modo experimento: romper la regla ---------- */
-  const rLim = calcularMoto({ ...ENTRADA_MOTO_DEFECTO, rpm: 11000, marcha: 3 }, medida);
-  const rTope = calcularMoto({ ...ENTRADA_MOTO_DEFECTO, rpm: CORTE, marcha: 3 }, medida);
-  const rBloq = calcularMoto({ ...ENTRADA_MOTO_DEFECTO, rpm: 5000, marcha: 3, palanca: "delantera", fuerza_palanca_n: 400 }, medida);
-  const rSuave = calcularMoto({ ...ENTRADA_MOTO_DEFECTO, rpm: 5000, marcha: 3, palanca: "delantera", fuerza_palanca_n: 100 }, medida);
+  const vCorte3 = velocidadMsEnCorte(radioTrasero, PRIMARIA, (SUPUESTOS.relaciones_marcha.valor as number[])[2], FINAL) * 3.6;
+  const rBloq = calcularMoto({ ...ENTRADA_MOTO_DEFECTO, rpm: 5000, marcha: 3, palanca: "delantera", fuerza_palanca_n: 400, velocidad_inicial_kmh: 41 }, medida);
+  const rSuave = calcularMoto({ ...ENTRADA_MOTO_DEFECTO, rpm: 5000, marcha: 3, palanca: "delantera", fuerza_palanca_n: 100, velocidad_inicial_kmh: 41 }, medida);
   const experimentos: Experimento[] = [
     {
-      pregunta: `En 3.ª, si el acelerador pasa de ${fmt(CORTE)} a 11.000 rpm, ¿qué ocurre con la velocidad?`,
+      pregunta: `En 3.ª, con el acelerador a fondo desde 72 km/h, ¿qué ocurre al llegar al corte de ${fmt(CORTE)} rpm?`,
       opciones: [
-        { texto: "Aumenta alrededor de un 16 %", correcta: false },
-        { texto: "No aumenta: el limitador corta la chispa", correcta: true },
-        { texto: "Disminuye porque el motor se ahoga", correcta: false },
+        { texto: "La velocidad sigue aumentando sin límite", correcta: false },
+        { texto: "La velocidad se estabiliza: el limitador corta la chispa", correcta: true },
+        { texto: "El motor se ahoga", correcta: false },
       ],
-      explicacion: `Por encima del corte (${fmt(CORTE)} rpm, ${ETIQUETA_SUPUESTO}) el limitador corta la chispa: las rpm efectivas quedan en ${fmt(rLim.rpm_efectivas)} y la velocidad en ${fmt(rLim.velocidad_kmh, 1)} km/h, igual que a ${fmt(CORTE)} rpm (${fmt(rTope.velocidad_kmh, 1)} km/h).`,
+      explicacion: `Con marcha engranada las rpm se derivan de la velocidad (rpm = v·i_total). Al acercarse al corte (${fmt(CORTE)} rpm, ${ETIQUETA_SUPUESTO}) el limitador corta la chispa en ciclos alternos y la aceleración se anula: en 3.ª la velocidad se estabiliza en ${fmt(vCorte3, 1)} km/h.`,
       aplicar: () => {
-        soltarFreno();
-        fijarCtl({ marcha: 3, rpm: 11000, fuerza: 0 });
+        ctlRef.current = { ...ctlRef.current, freno: false };
+        fijarCtl({ marcha: 3, acelerador: 1, fuerza: 0 });
+        fijarEstado({ v_ms: 20 });
       },
     },
     {
-      pregunta: `Con 5.ª engranada y el acelerador en 900 rpm (ralentí ${fmt(RALENTI)}), ¿qué ocurre?`,
+      pregunta: "Con 5.ª engranada a unos 11 km/h y sin acelerar, ¿qué ocurre?",
       opciones: [
-        { texto: "La moto avanza muy despacio", correcta: false },
-        { texto: "El motor se ahoga: la rueda se detiene", correcta: true },
+        { texto: "El motor se ahoga: las rpm derivadas caen bajo el ralentí", correcta: true },
+        { texto: "El embrague patina y la moto sigue acelerando", correcta: false },
         { texto: "El limitador sube las rpm", correcta: false },
       ],
-      explicacion: `Con marcha engranada, bajo el ralentí (${fmt(RALENTI)} rpm, ${ETIQUETA_SUPUESTO}) el motor no sostiene el giro: se ahoga, la relación total deja de aplicarse y la velocidad es 0 km/h.`,
+      explicacion: `A 11 km/h en 5.ª las rpm derivadas (v·i_total) quedan por debajo del ralentí (${fmt(RALENTI)} rpm, ${ETIQUETA_SUPUESTO}); con marcha alta y poco acelerador el motor se ahoga y la moto solo rueda por inercia. En marchas bajas el embrague patina (arranque).`,
       aplicar: () => {
-        soltarFreno();
-        fijarCtl({ marcha: 5, rpm: 900, fuerza: 0 });
+        ctlRef.current = { ...ctlRef.current, freno: false };
+        fijarCtl({ marcha: 5, acelerador: 0, fuerza: 0 });
+        fijarEstado({ v_ms: 3 });
       },
     },
     {
@@ -615,9 +646,10 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
         { texto: "Frena sin bloquearse", correcta: false },
         { texto: "Se detiene tras exactamente 1 s", correcta: false },
       ],
-      explicacion: `Con 400 N el disco entrega T = ${fmt(rBloq.freno_delantero?.par_frenado_nm ?? 0)} N·m y la deceleración pedida (${fmt(rBloq.freno_delantero?.deceleracion_g ?? 0, 2)} g) supera la adherencia (${num("adherencia_neumatico")} g, ${ETIQUETA_SUPUESTO}): la rueda se bloquea. Con 100 N entrega ${fmt(rSuave.freno_delantero?.par_frenado_nm ?? 0)} N·m y no se bloquea.`,
+      explicacion: `Con 400 N el disco entrega T = ${fmt(rBloq.freno_delantero?.par_frenado_nm ?? 0)} N·m y la deceleración pedida (${fmt(rBloq.freno_delantero?.deceleracion_g ?? 0, 2)} g) supera la adherencia (${num("adherencia_neumatico")} g, ${ETIQUETA_SUPUESTO}): la rueda se bloquea y manda la adherencia. Con 100 N entrega ${fmt(rSuave.freno_delantero?.par_frenado_nm ?? 0)} N·m y no se bloquea.`,
       aplicar: () => {
-        fijarCtl({ marcha: 3, rpm: 5000, palanca: "delantera", fuerza: 400, cbs: false });
+        fijarCtl({ marcha: 3, acelerador: 0, palanca: "delantera", fuerza: 400, cbs: false });
+        fijarEstado({ v_ms: 41 / 3.6 });
         window.setTimeout(iniciarFreno, 0);
       },
     },
@@ -638,40 +670,23 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
         irACamara("general");
       },
     },
-    {
-      en: 4,
-      texto: "Acelerar: 1.ª marcha y subida de rpm; piñón, cadena y rueda giran con la relación real",
-      accion: () => {
-        fijarCtl({ marcha: 1 });
-        reloj.current.rampa = { desde: ctlRef.current.rpm, hasta: 5500, dur: 3.5, t: 0 };
-        irACamara("transmision");
-      },
-    },
-    {
-      en: 9,
-      texto: "Cambiar a 3.ª: la rueda gira una fracción menor de las vueltas del motor",
-      accion: () => {
-        fijarCtl({ marcha: 3 });
-        reloj.current.rampa = { desde: ctlRef.current.rpm, hasta: 6500, dur: 1.5, t: 0 };
-        irACamara("general");
-      },
-    },
+    { en: 4, texto: "Acelerar en 1.ª: la aceleración sube la velocidad y las rpm se derivan de ella; piñón, cadena y rueda giran con la relación real", accion: () => { fijarCtl({ marcha: 1, acelerador: 1 }); irACamara("transmision"); } },
+    { en: 9, texto: "Cambiar a 3.ª: la velocidad no salta, solo cambian las rpm (rueda = menor fracción de las vueltas del motor)", accion: () => { fijarCtl({ marcha: 3, acelerador: 0.8 }); irACamara("general"); } },
     {
       en: 13,
-      texto: "Frenar con CBS: la palanca trasera reparte la presión entre ambos discos",
+      texto: "Frenar con CBS: la palanca trasera reparte la presión entre ambos discos y el embrague se acciona",
       accion: () => {
-        reloj.current.rampa = null;
-        fijarCtl({ palanca: "trasera", cbs: true, fuerza: 180 });
+        fijarCtl({ palanca: "trasera", cbs: true, fuerza: 180, acelerador: 0 });
         irACamara("frenos");
         window.setTimeout(iniciarFreno, 0);
       },
     },
     {
-      en: 18,
+      en: 19,
       texto: "Despiece por ensamblaje: cada conjunto se separa en el orden calculado por el backend",
       accion: () => {
         soltarFreno();
-        fijarCtl({ rpm: RALENTI, marcha: 0, fuerza: 0 });
+        fijarCtl({ marcha: 0, acelerador: 0, fuerza: 0 });
         setDespieceOn(true);
         irACamara("despiece");
       },
@@ -698,7 +713,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
   const clasePestana = (lado: "izq" | "der") => `moto-columna ${lado}${cajon === lado ? " cajon-abierto" : ""}`;
 
   return (
-    <div className="moto-lab" data-testid="moto-lab" data-modelo={modeloSel}>
+    <div className="moto-lab" data-testid="moto-lab" data-modelo={modeloSel} data-resaltadas={[...resaltadas].sort().join(",")} data-chispas={snap.chispas} data-ciclos={snap.ciclos} data-modo-motor={est.modo}>
       <div className="moto-titulo">
         <a href="#/" className="volver">← Biblioteca</a>
         <p className="moto-pregunta">{PREGUNTA}</p>
@@ -720,9 +735,13 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
           <span className="rotulo">Estado</span>
           <b data-testid="estado" className={estadoTexto === "FRENANDO" || estadoTexto === "MOTOR AHOGADO" || estadoTexto === "LIMITADOR" ? "alerta" : ""}>{estadoTexto}</b>
         </div>
+        <div className="dato">
+          <span className="rotulo">Embrague</span>
+          <b data-testid="cab-embrague" className={frenando ? "alerta" : ""}>{embrague === "accionado" ? "EMBRAGUE accionado" : embrague}</b>
+        </div>
         <div className="dato grande">
           <span className="rotulo">rpm</span>
-          <b className="num" data-testid="cab-rpm">{fmt(rpmMotor)}</b>
+          <b className="num" data-testid="cab-rpm">{fmt(est.rpm_motor)}</b>
         </div>
         <div className="dato grande">
           <span className="rotulo">Marcha</span>
@@ -730,7 +749,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
         </div>
         <div className="dato grande">
           <span className="rotulo">Velocidad</span>
-          <b className="num" data-testid="cab-velocidad">{fmt(vMostrada, 1)} <small>km/h</small></b>
+          <b className="num" data-testid="cab-velocidad">{fmt(vKmh, 1)} <small>km/h</small></b>
         </div>
         <div className="botones-cajon">
           <button className="boton secundario" onClick={() => setCajon(cajon === "izq" ? null : "izq")} aria-expanded={cajon === "izq"}>☰ Datos</button>
@@ -759,7 +778,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
                     <DiagramaCiclo theta720={snap.theta720} />
                     <dl className="lecturas-lista">
                       <dt>n del motor</dt>
-                      <dd className="num">{fmt(rpmMotor)} rpm {frenando && <small>(embrague accionado)</small>}</dd>
+                      <dd className="num">{fmt(est.rpm_motor)} rpm · {TEXTO_MODO[est.modo]}</dd>
                       <dt>θ cigüeñal</dt>
                       <dd className="num" data-testid="theta">{fmt(snap.theta720 % 360)}° (ciclo {fmt(snap.theta720)}° de 720°)</dd>
                       <dt>Fase 4T</dt>
@@ -769,9 +788,11 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
                       <dt>Biela φ = asin(r·sin θ / L)</dt>
                       <dd className="num">{fmt(phiGrados, 1)}°</dd>
                       <dt>Cilindrada V = π/4·D²·carrera</dt>
-                      <dd className="num">{fmt(resultado.cilindrada_calculada_cm3, 1)} cm³ frente a {fmt(resultado.cilindrada_referencia_cm3)} cm³ ({fmt(resultado.diferencia_cilindrada_pct, 2)} %) <InsigniaSupuesto /></dd>
+                      <dd className="num">calculada {fmt(resultado.cilindrada_calculada_cm3, 1)} cm³; 150 cm³ nominal — {ETIQUETA_SUPUESTO} ({fmt(resultado.diferencia_cilindrada_pct, 2)} %)</dd>
+                      <dt>Chispa</dt>
+                      <dd className="num">salta en el PMS de la compresión, sin avance de encendido (simplificación) · chispas {snap.chispas} de {snap.ciclos} ciclos</dd>
                       <dt>Cámara lenta</dt>
-                      <dd className="num">animación a 1/{factorLento} de la velocidad real</dd>
+                      <dd className="num">giros a 1/{factorLento} de la velocidad real; dinámica del frenado en tiempo real ({escala}×)</dd>
                     </dl>
                   </section>
                   <section aria-label="Transmisión">
@@ -780,7 +801,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
                       <dt>Relaciones</dt>
                       <dd className="num">primaria {fmt(PRIMARIA, 2)} · marcha {g === null ? "N" : fmt(g, 2)} · final {fmt(FINAL, 2)}</dd>
                       <dt>Relación total</dt>
-                      <dd className="num">{resultado.relacion_total === null ? "—" : fmt(resultado.relacion_total, 2)}</dd>
+                      <dd className="num">{textoLeccion}</dd>
                       <dt>ω piñón / ω corona</dt>
                       <dd className="num">{fmt(wPinon, 1)} / {fmt(wCorona, 1)} rad/s</dd>
                       <dt>Cadena v = ω·r (piñón)</dt>
@@ -789,8 +810,10 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
                       <dd className="num" data-testid="v-cadena-corona">{fmt(vCadenaCorona, 2)} m/s</dd>
                       <dt>Llanta trasera</dt>
                       <dd className="num">{textoLlanta}; R = {fmt(resultado.radio_llanta_m, 4)} m</dd>
-                      <dt>Velocidad de la moto</dt>
-                      <dd className="num">{fmt(vMostrada, 1)} km/h</dd>
+                      <dt>Velocidad de la moto (estado)</dt>
+                      <dd className="num">{fmt(vKmh, 1)} km/h{ctl.marcha === 0 && vKmh > 0 ? " · rueda libre: decae por rozamiento (supuesto didáctico)" : ""}</dd>
+                      <dt>v según rpm y relación</dt>
+                      <dd className="num">{ctl.marcha === 0 ? "— (sin tracción: neutro)" : est.modo === "patinaje" ? "no rige: el embrague patina" : est.modo === "embrague" ? "no rige: embrague accionado" : `${fmt(vKmh, 1)} km/h`}</dd>
                     </dl>
                     <p className="aviso">{cambioMarcha}</p>
                     {verificacion && <p className="aviso" data-testid="verificacion-api">{verificacion}</p>}
@@ -798,15 +821,16 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
                   <section aria-label="Frenos">
                     <h4>Frenos <InsigniaSupuesto /></h4>
                     <dl className="lecturas-lista">
-                      <dt>Disco delantero</dt>
-                      <dd className="num">{fd ? `F ${fmt(fd.fuerza_piston_n / 1000, 2)} kN · T ${fmt(fd.par_frenado_nm)} N·m · ${fd.rueda_bloqueada ? "bloqueada" : "sin bloqueo"}` : "sin accionar"}</dd>
-                      <dt>Disco trasero</dt>
-                      <dd className="num">{ft ? `F ${fmt(ft.fuerza_piston_n / 1000, 2)} kN · T ${fmt(ft.par_frenado_nm)} N·m · ${ft.rueda_bloqueada ? "bloqueada" : "sin bloqueo"}` : "sin accionar"}</dd>
+                      <dt>Disco delantero {frenando ? "" : "(previsto)"}</dt>
+                      <dd className="num">{fd ? `F ${fmt(fd.fuerza_piston_n / 1000, 2)} kN · T ${fmt(fd.par_frenado_nm)} N·m · ${frenando ? (bloqueoDel ? "bloqueada" : "sin bloqueo") : bloqueoDel ? "bloqueo previsto" : "sin bloqueo previsto"}` : "sin accionar"}</dd>
+                      <dt>Disco trasero {frenando ? "" : "(previsto)"}{traseroGenerico ? " — disco genérico, supuesto didáctico" : ""}</dt>
+                      <dd className="num">{ft ? `F ${fmt(ft.fuerza_piston_n / 1000, 2)} kN · T ${fmt(ft.par_frenado_nm)} N·m · ${frenando ? (bloqueoTras ? "bloqueada" : "sin bloqueo") : bloqueoTras ? "bloqueo previsto" : "sin bloqueo previsto"}` : "sin accionar"}</dd>
                       <dt>Fuerza total de pistones</dt>
-                      <dd className="num">{fmt(resultado.fuerza_pistones_total_n / 1000, 2)} kN {entrada.cbs && "(suma conservada con CBS)"}</dd>
+                      <dd className="num">{fmt(resultado.fuerza_pistones_total_n / 1000, 2)} kN {mando.cbs && "(suma conservada con CBS)"}</dd>
                       <dt>Deceleración de la moto</dt>
-                      <dd className="num">{frenando ? `${fmt(snap.aVeh, 2)} m/s² (${fmt(snap.aVeh / G, 2)} g)` : "—"}</dd>
+                      <dd className="num">{frenando ? `${fmt(-est.a_ms2, 2)} m/s² (${fmt(-est.a_ms2 / G, 2)} g)` : "—"}</dd>
                     </dl>
+                    <p className="aviso">Los discos usan un radio efectivo supuesto de {fmt(num("radio_efectivo_m"), 2)} m ({ETIQUETA_SUPUESTO}); la rueda delantera usa su propio radio ({MEDIDA_DELANTERA_DEMO}, supuesto).</p>
                   </section>
                   <details>
                     <summary>Parámetros de cálculo ({ETIQUETA_SUPUESTO})</summary>
@@ -834,14 +858,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
         <section className="moto-centro" aria-label="Motocicleta en 3D">
           <div className="escenario moto-escenario" data-testid="escenario-moto" data-modo={estadoTexto}>
             <div className="superpuesto" role="toolbar" aria-label="Reproducción y vista">
-              <Reproduccion
-                corriendo={corriendo}
-                alCorrer={() => setCorriendo(true)}
-                alPausar={() => setCorriendo(false)}
-                alReiniciar={reiniciar}
-                escala={escala}
-                alEscala={setEscala}
-              />
+              <Reproduccion corriendo={corriendo} alCorrer={() => setCorriendo(true)} alPausar={() => setCorriendo(false)} alReiniciar={() => reiniciar()} escala={escala} alEscala={setEscala} />
             </div>
             <div className="lento" role="status">
               <label>
@@ -853,16 +870,17 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
                 </select>
               </label>
               <b data-testid="escala-lenta">animación a 1/{factorLento} de la velocidad real</b>
+              <small>giros a 1/{factorLento}; dinámica del frenado en tiempo real ({escala}×)</small>
             </div>
             <EscenaMoto estado={escena} geometria={geometria} alSeleccionar={seleccionar} etiquetas={divsEtiqueta} etiquetasVisibles={etiquetasVisibles} controles={controles} />
             {(
               [
-                ["motor", "etiqueta-3d", <>{fmt(rpmMotor)} rpm · θ {fmt(snap.theta720 % 360)}°<br />{FASES_INFO[faseActual].nombre} · 1/{factorLento} real</>],
-                ["cilindrada", "etiqueta-3d fuerza", <>V = {fmt(resultado.cilindrada_calculada_cm3, 1)} cm³ · ficha {fmt(resultado.cilindrada_referencia_cm3)}<br />{ETIQUETA_SUPUESTO}</>],
+                ["motor", "etiqueta-3d", <>{fmt(est.rpm_motor)} rpm · θ {fmt(snap.theta720 % 360)}°<br />{FASES_INFO[faseActual].nombre} · 1/{factorLento} real</>],
+                ["cilindrada", "etiqueta-3d fuerza", <>150 cm³ nominal — {ETIQUETA_SUPUESTO}<br />calculada {fmt(resultado.cilindrada_calculada_cm3, 1)} cm³</>],
                 ["transmision", "etiqueta-3d movimiento", <>cadena {fmt(vCadenaPinon, 2)} m/s = ω·r<br />piñón {fmt(wPinon, 1)} rad/s</>],
-                ["rueda", "etiqueta-3d movimiento", <>{resultado.relacion_total === null ? "relación —" : `i total ${fmt(resultado.relacion_total, 2)}`} · {fmt(vMostrada, 1)} km/h<br />ω rueda {fmt(wCorona, 1)} rad/s</>],
-                ["disco_del", `etiqueta-3d fuerza${resultado.rueda_delantera_bloqueada ? " alerta" : ""}`, <>{textoDisco(fd, resultado.rueda_delantera_bloqueada, "Del.")}</>],
-                ["disco_tras", `etiqueta-3d fuerza${resultado.rueda_trasera_bloqueada ? " alerta" : ""}`, <>{textoDisco(ft, resultado.rueda_trasera_bloqueada, "Tras.")}</>],
+                ["rueda", "etiqueta-3d movimiento", <>{ctl.marcha === 0 ? "neutro: sin tracción" : `i total ${fmt(resultado.relacion_total ?? 0, 2)}`} · {fmt(vKmh, 1)} km/h<br />ω rueda {fmt(wCorona, 1)} rad/s</>],
+                ["disco_del", `etiqueta-3d fuerza${frenando && bloqueoDel ? " alerta" : ""}`, <>{textoDisco(fd, bloqueoDel, "Del.")}</>],
+                ["disco_tras", `etiqueta-3d fuerza${frenando && bloqueoTras ? " alerta" : ""}`, <>{textoDisco(ft, bloqueoTras, etiquetaTras)}</>],
               ] as const
             ).map(([k, clase, contenido]) => (
               <div
@@ -886,7 +904,17 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
               <h3>Modelo</h3>
               <label className="selector">
                 Ver con ficha de…
-                <select aria-label="Ver con ficha de…" value={modeloSel} onChange={(e) => { setModeloSel(e.target.value as ModeloSel); apiMoto.evento("camara", null, { modelo: e.target.value }); }}>
+                <select
+                  aria-label="Ver con ficha de…"
+                  value={modeloSel}
+                  onChange={(e) => {
+                    const nuevo = e.target.value as ModeloSel;
+                    setModeloSel(nuevo);
+                    // El CBS no se reactiva solo al volver a la DLX: se apaga al pasar a un modelo sin CBS.
+                    if (nuevo !== "dlx" && nuevo !== "generica") fijarCtl({ cbs: false });
+                    apiMoto.evento("camara", null, { modelo: nuevo });
+                  }}
+                >
                   {(Object.keys(MODELOS) as ModeloSel[]).map((k) => (
                     <option key={k} value={k}>{MODELOS[k].etiqueta}</option>
                   ))}
@@ -905,18 +933,17 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
               <h3>Motor y transmisión</h3>
               <Deslizador
                 etiqueta="Acelerador"
-                valor={ctl.rpm}
+                valor={Math.round(ctl.acelerador * 100)}
                 min={0}
-                max={11000}
-                paso={100}
-                unidad="rpm"
-                alCambiar={(v) => {
-                  reloj.current.rampa = null;
-                  fijarCtl({ rpm: v });
-                }}
+                max={100}
+                paso={5}
+                unidad="%"
+                alCambiar={(v) => fijarCtl({ acelerador: v / 100 })}
                 formato={(v) => fmt(v)}
               />
-              <p className="marcas-rpm">ralentí {fmt(RALENTI)} · corte {fmt(CORTE)} rpm <InsigniaSupuesto /></p>
+              <p className="marcas-rpm">
+                neutro: rpm libres ralentí {fmt(RALENTI)} → corte {fmt(CORTE)} · con marcha: a = k·acelerador ({fmt(num("aceleracion_max_m_s2"), 1)} m/s² a fondo) <InsigniaSupuesto />
+              </p>
               <div className="marchas" role="radiogroup" aria-label="Marcha">
                 {MARCHAS.map((m) => (
                   <button key={m} role="radio" aria-checked={ctl.marcha === m} data-marcha={m} className={`boton ${ctl.marcha === m ? "activo" : "secundario"}`} onClick={() => fijarCtl({ marcha: m })}>
@@ -940,31 +967,38 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
               <label className="cbs">
                 <input type="checkbox" checked={ctl.cbs && cbsDisponible} disabled={!cbsDisponible} onChange={(e) => fijarCtl({ cbs: e.target.checked })} /> CBS (freno combinado)
               </label>
-              <p className="marcas-rpm">{cbsDisponible ? `Reparto del CBS: ${fmt(num("reparto_cbs_delantero") * 100)} % delantero (${ETIQUETA_SUPUESTO})` : "CBS solo en la versión DLX según la lámina"}</p>
+              <p className="marcas-rpm">
+                {cbsDisponible ? `Reparto del CBS: ${fmt(num("reparto_cbs_delantero") * 100)} % delantero (${ETIQUETA_SUPUESTO})` : "CBS solo en la versión DLX según la lámina"}
+                {traseroGenerico ? " · freno trasero: disco genérico — supuesto didáctico" : ""}
+              </p>
               <div className="barra">
                 {frenando ? (
                   <button className="boton activo" onClick={soltarFreno}>Soltar freno</button>
                 ) : (
-                  <button className="boton" onClick={iniciarFreno} disabled={resultado.velocidad_kmh <= 0} title={resultado.velocidad_kmh <= 0 ? "Engranar una marcha y acelerar para tener velocidad" : "Aplicar el freno"}>Frenar</button>
+                  <button className="boton" onClick={iniciarFreno} disabled={est.v_ms <= 0} title={est.v_ms <= 0 ? "Engranar una marcha y acelerar para tener velocidad" : "Aplicar el freno"}>Frenar</button>
                 )}
-                <span className="aviso">{resultado.velocidad_kmh <= 0 && !frenando ? "Moto detenida: engranar y acelerar" : frenando ? `t = ${fmt(snap.tFreno, 1)} s` : "Listo para frenar"}</span>
+                <span className="aviso">{est.v_ms <= 0 && !frenando ? "Moto detenida: engranar y acelerar" : frenando ? `t = ${fmt(est.t_freno_s, 1)} s` : "Listo para frenar"}</span>
               </div>
+              {avisoFreno && <p className="aviso" role="status" data-testid="aviso-freno">{avisoFreno}</p>}
             </section>
           </div>
 
           <ModoExperimento experimentos={experimentos} />
           <div className="lecturas" aria-label="Lecturas">
             <Chip etiqueta="R llanta" valor={`${fmt(resultado.radio_llanta_m, 4)} m`} />
-            <Chip etiqueta="i total" valor={resultado.relacion_total === null ? "—" : fmt(resultado.relacion_total, 2)} />
-            <Chip etiqueta="v" valor={`${fmt(vMostrada, 1)} km/h`} tono="movimiento" />
-            <Chip etiqueta="F pistones" valor={`${fmt(resultado.fuerza_pistones_total_n / 1000, 2)} kN`} tono="fuerza" />
-            {resultado.rueda_delantera_bloqueada || resultado.rueda_trasera_bloqueada ? (
+            <Chip etiqueta="i total" valor={textoLeccion} />
+            <Chip etiqueta="v" valor={`${fmt(vKmh, 1)} km/h`} tono="movimiento" />
+            <Chip etiqueta={frenando ? "F pistones" : "F pistones (prevista)"} valor={`${fmt(resultado.fuerza_pistones_total_n / 1000, 2)} kN`} tono="fuerza" />
+            {hayBloqueo && frenando ? (
               <Chip etiqueta="Estado" valor="rueda bloqueada (a > g·μ neumático)" tono="alerta" />
+            ) : hayBloqueo ? (
+              <Chip etiqueta="Estado" valor="bloqueo previsto (aún sin frenar)" tono="alerta" />
             ) : (
               <Chip etiqueta="Estado" valor="sin bloqueo" tono="correcto" />
             )}
-            {estadoMotor === "limitador" && <Chip etiqueta="Motor" valor={`limitador: corta la chispa a ${fmt(CORTE)} rpm`} tono="alerta" />}
-            {estadoMotor === "ahogado" && <Chip etiqueta="Motor" valor={`ahogado: rpm < ralentí ${fmt(RALENTI)} con marcha engranada`} tono="alerta" />}
+            {est.modo === "limitador" && <Chip etiqueta="Motor" valor={`limitador: corta la chispa a ${fmt(CORTE)} rpm`} tono="alerta" />}
+            {est.modo === "ahogado" && <Chip etiqueta="Motor" valor={`ahogado: rpm derivadas < ralentí ${fmt(RALENTI)} con marcha alta`} tono="alerta" />}
+            {est.modo === "patinaje" && <Chip etiqueta="Embrague" valor="patinando (arranque): v ≠ fórmula" tono="alerta" />}
           </div>
         </section>
 
@@ -1045,7 +1079,8 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
           <RevisionCritica
             extra={[
               "Cada cifra indica su procedencia: ficha publicada, «No publicado» o supuesto didáctico",
-              "Cámara lenta del motor siempre visible (1/200 de la velocidad real por omisión)",
+              "Cámara lenta de los giros siempre visible (1/200 de la velocidad real por omisión)",
+              "La velocidad es una variable de estado continua: al cambiar de marcha saltan las rpm, nunca la velocidad",
               "El piñón, la corona, la cadena y la rueda comparten la misma ω_corona·r_corona = ω_piñón·r_piñón",
               "Sin logotipos ni réplica de un modelo comercial; la lámina no se muestra",
             ]}
@@ -1077,7 +1112,7 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
 
       <p className="idea" data-testid="idea-principal">{FRASE_FINAL}</p>
       <p className="aviso" style={{ marginBottom: 8 }}>
-        Modelo demostrativo: el embrague no se modela (la rueda sigue al motor con marcha engranada; al frenar se acciona) y la animación no valida propiedades mecánicas. {NO_PUBLICADO}: dato sin fuente verificable.
+        Modelo demostrativo: el embrague solo patina en el arranque (marchas bajas) y se acciona al frenar; la chispa salta en el PMS sin avance; los discos usan un radio efectivo supuesto; la animación no valida propiedades mecánicas. {NO_PUBLICADO}: dato sin fuente verificable.
       </p>
     </div>
   );

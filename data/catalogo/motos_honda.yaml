@@ -34,7 +34,7 @@ modelos:
     discrepancias: []
     pendiente_de_confirmar:
       - campo: motor.potencia
-        detalle: "La lámina indica «Pot: 15,04 / 8.000 RPM» sin unidad. No se muestra la cifra hasta confirmarla con fuente oficial."
+        detalle: "Potencia con unidad sin confirmar: pendiente de confirmar con fuente oficial."
       - campo: suspension.trasera
         detalle: "La lámina dice «Pro Arm». Verificar la denominación oficial antes de usarla."
 
@@ -59,13 +59,14 @@ modelos:
         fuente: null
         fecha_consulta: null
         estado: no_publicado
+      # Transcripción interna de la lámina (solo comentario, no se muestra): «Pot: 15,04 / 8.000 RPM»; falta la unidad.
       potencia:
         valor: null
         unidad: null
         fuente: "lamina-cb160-std-dlx (aportada por el usuario)"
         fecha_consulta: "2026-11-04"
         estado: no_publicado
-        observacion: "Transcripción de la lámina: «Pot: 15,04 / 8.000 RPM». Unidad ausente; se mantiene oculta hasta confirmar con fuente oficial."
+        observacion: "Potencia con unidad sin confirmar: pendiente de confirmar con fuente oficial."
       regimen_potencia:
         valor: 8000
         unidad: "rpm"

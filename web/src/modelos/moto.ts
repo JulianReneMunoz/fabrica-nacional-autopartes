@@ -12,6 +12,9 @@
  *   x(θ)          = r·cos θ + √(L² − r²·sin² θ),  r = carrera/2      (θ = 0 en el PMS)
  *   φ(θ)          = asin(r·sin θ / L)                                 (inclinación de la biela)
  *   v_cadena      = ω_piñón·r_piñón = ω_corona·r_corona
+ *   dinámica      = `pasoMoto`: la velocidad es una variable de estado continua; con marcha engranada las rpm se
+ *                   DERIVAN de ella (rpm = v·i_total·60/(2π·R)); el acelerador da a = k·acelerador, el freno una
+ *                   deceleración de `calcularFreno`, y en neutro la velocidad decae por rozamiento.
  *
  * SUPUESTOS: cada valor no publicado en la ficha es un «supuesto didáctico» (valor típico de la
  * categoría). La geometría y la animación no validan propiedades mecánicas.
@@ -42,7 +45,7 @@ const s = (clave: string, valor: number | number[] | string, unidad: string, des
 /** Espejo exacto de `SUPUESTOS_REFERENCIA` (Python): mismas claves y mismos valores. */
 export const SUPUESTOS: Record<string, Supuesto> = Object.fromEntries(
   [
-    s("cilindrada_nominal_cm3", 150, "cm3", "Cilindrada de referencia (nombre comercial); no consta en la lámina."),
+    s("cilindrada_nominal_cm3", 150, "cm3", "Cilindrada nominal de referencia, típica de la categoría; no tomada de un nombre comercial."),
     s("diametro_mm", 57, "mm", "Diámetro del cilindro, valor típico de la categoría."),
     s("carrera_mm", 58.7, "mm", "Carrera, valor típico de la categoría."),
     s("longitud_biela_mm", 105, "mm", "Distancia entre centros de la biela, valor típico de la categoría."),
@@ -61,6 +64,15 @@ export const SUPUESTOS: Record<string, Supuesto> = Object.fromEntries(
     s("radio_efectivo_m", 0.1, "m", "Radio efectivo del disco típico de la categoría."),
     s("masa_por_rueda_kg", 120, "kg", "Masa equivalente por rueda (moto y conductor) típica de la categoría."),
     s("inercia_rueda_kg_m2", 0.9, "kg·m2", "Inercia de la rueda típica de la categoría."),
+    s("medida_llanta_delantera", "90/80-17", "ancho/perfil-rin", "Medida de llanta delantera típica de la categoría (la lámina no la publica)."),
+    s("aceleracion_max_m_s2", 3, "m/s2", "Aceleración con el acelerador a fondo: a = k·acelerador (dinámica simplificada)."),
+    s("rozamiento_m_s2", 0.5, "m/s2", "Deceleración constante por rodadura (neutro y marcha sin acelerar)."),
+    s("arrastre_aero_1_m", 0.0023, "1/m", "Coeficiente del arrastre aerodinámico: a = c·v²."),
+    s("tau_rpm_libre_s", 0.25, "s", "Constante de tiempo con que las rpm libres (neutro) siguen al acelerador."),
+    s("rpm_tope_libre", 11000, "rpm", "rpm que pediría el acelerador a fondo en neutro (sin limitador)."),
+    s("banda_limitador_rpm", 100, "rpm", "Banda bajo el corte donde la aceleración se anula progresivamente (limitador suave)."),
+    s("acelerador_minimo_sin_ahogo", 0.2, "-", "Acelerador mínimo (0-1) para que el embrague patine sin ahogar en marchas altas."),
+    s("marcha_minima_ahogo", 3, "-", "Desde esta marcha, rpm derivadas bajo el ralentí y poco acelerador ahogan el motor; en las marchas bajas el embrague patina (arranque)."),
   ].map((x) => [x.clave, x] as const),
 );
 
@@ -68,15 +80,15 @@ const num = (clave: string): number => SUPUESTOS[clave].valor as number;
 const lista = (clave: string): number[] => SUPUESTOS[clave].valor as number[];
 
 export const MEDIDA_TRASERA_CB160F = "140/70-17";
-/** Radios de paso de la cadena (demostrativos): su cociente es la relación final. */
-export const RADIO_PINON_M = 0.032;
-export const RADIO_CORONA_M = 0.096;
-/** Llanta delantera del modelo 3D (demostrativa; la lámina no la publica). */
-export const MEDIDA_DELANTERA_DEMO = "90/80-17";
+/** Radios de paso del piñón y la corona (m) del modelo 3D; su cociente es la relación final (42/14 = 3). */
+export const RADIO_PINON_M = 0.03;
+export const RADIO_CORONA_M = 0.09;
 /** Posiciones del modelo 3D base (llanta trasera genérica 130/70-17): ejes del piñón y de la corona (= eje de la rueda trasera). */
 export const EJE_PINON: readonly [number, number] = [-0.2, 0.3069];
 export const EJE_CORONA: readonly [number, number] = [-0.63, 0.3069];
 
+/** Llanta delantera del modelo 3D (supuesto didáctico; la lámina no la publica). */
+export const MEDIDA_DELANTERA_DEMO = String(SUPUESTOS.medida_llanta_delantera.valor);
 export const LIMITES = { rpm: [0, 20000], marcha: [0, 6], fuerza: [0, 600] } as const;
 export const FACTORES_LENTO = [50, 100, 200, 500] as const;
 export const FACTOR_LENTO_DEFECTO = 200;
@@ -226,7 +238,7 @@ export function trazadoCadena(
 /* ---------- entrada, saneamiento y resultado ---------- */
 export type VersionMoto = "STD" | "DLX";
 export type PalancaMoto = "delantera" | "trasera";
-export type EstadoMotor = "normal" | "limitador" | "ahogado" | "neutro";
+export type EstadoMotor = "normal" | "limitador" | "ahogado" | "neutro" | "patinaje" | "embrague";
 
 export interface EntradaMoto {
   version: VersionMoto;
@@ -304,9 +316,71 @@ export function repartirPresion(e: Pick<EntradaMoto, "palanca" | "cbs">, presion
   return [0, presionTotalBar];
 }
 
+export interface FrenoRueda {
+  entrada: EntradaFreno;
+  resultado: ResultadoFreno;
+}
+
+/** Discos accionados (delantero, trasero); cada uno con el radio de su propia llanta (la delantera es 90/80-17). */
+export function frenosMoto(
+  entrada: Pick<EntradaMoto, "palanca" | "cbs" | "fuerza_palanca_n" | "version">,
+  medidaLlanta: string | null | undefined,
+  velocidadKmh_: number,
+): { delantero: FrenoRueda | null; trasero: FrenoRueda | null; radio: number; radioDelantero: number } {
+  const e = sanearEntrada({ ...ENTRADA_MOTO_DEFECTO, ...entrada });
+  const radio = radioLlantaM(medidaLlanta ?? String(SUPUESTOS.medida_llanta_trasera.valor));
+  const radioDelantero = radioLlantaM(MEDIDA_DELANTERA_DEMO);
+  const [pDel, pTras] = repartirPresion(e, e.fuerza_palanca_n * num("presion_bar_por_newton"));
+  const construir = (p: number, r: number): FrenoRueda | null => {
+    if (p <= 0) return null;
+    const en = entradaFrenoMoto(p, velocidadKmh_, r);
+    return { entrada: en, resultado: calcularFreno(en) };
+  };
+  return { delantero: construir(pDel, radioDelantero), trasero: construir(pTras, radio), radio, radioDelantero };
+}
+
+const medidaTrasera = (m?: string | null) => m ?? String(SUPUESTOS.medida_llanta_trasera.valor);
+
+function componer(
+  e: Pick<EntradaMoto, "palanca" | "cbs" | "fuerza_palanca_n" | "version">,
+  medida: string,
+  rpm: number,
+  estado: EstadoMotor,
+  vKmh: number,
+  ratio: number | null,
+  vFrenado: number,
+): ResultadoMoto {
+  const fs = frenosMoto(e, medida, vFrenado);
+  const fDel = fs.delantero?.resultado ?? null;
+  const fTras = fs.trasero?.resultado ?? null;
+  const total = [fDel, fTras].reduce((a, f) => a + (f?.fuerza_piston_n ?? 0), 0);
+  const nominal = num("cilindrada_nominal_cm3");
+  const calculada = cilindradaCm3(num("diametro_mm"), num("carrera_mm"));
+  return {
+    radio_llanta_m: redondear(fs.radio, 5),
+    medida_llanta: medida,
+    relacion_total: ratio === null ? null : redondear(ratio, 4),
+    rpm_efectivas: redondear(rpm, 3),
+    estado_motor: estado,
+    velocidad_kmh: redondear(vKmh, 3),
+    cilindrada_calculada_cm3: redondear(calculada, 3),
+    cilindrada_referencia_cm3: nominal,
+    diferencia_cilindrada_pct: redondear(((calculada - nominal) / nominal) * 100, 3),
+    freno_delantero: fDel,
+    freno_trasero: fTras,
+    fuerza_pistones_total_n: redondear(total, 3),
+    // Sin movimiento no hay bloqueo que informar.
+    rueda_delantera_bloqueada: Boolean(fDel?.rueda_bloqueada) && vFrenado > 0,
+    rueda_trasera_bloqueada: Boolean(fTras?.rueda_bloqueada) && vFrenado > 0,
+  };
+}
+
+const relacionMarcha = (marcha: number) => lista("relaciones_marcha")[marcha - 1];
+
+/** Instantánea «de lección»: velocidad desde rpm y marcha (v = rpm·2πR / i_total) con marcha engranada. */
 export function calcularMoto(entrada: EntradaMoto, medidaLlanta?: string | null): ResultadoMoto {
   const e = sanearEntrada(entrada);
-  const medida = medidaLlanta ?? String(SUPUESTOS.medida_llanta_trasera.valor);
+  const medida = medidaTrasera(medidaLlanta);
   const radio = radioLlantaM(medida);
   const ralenti = num("ralenti_rpm");
   const corte = num("corte_encendido_rpm");
@@ -316,61 +390,132 @@ export function calcularMoto(entrada: EntradaMoto, medidaLlanta?: string | null)
     rpm = corte;
     estado = "limitador";
   }
-  if (e.marcha >= 1 && e.rpm < ralenti) estado = "ahogado";
+  if (e.marcha >= 1 && e.rpm < ralenti) estado = e.marcha >= num("marcha_minima_ahogo") ? "ahogado" : "patinaje";
   let ratio: number | null = null;
   let v = 0;
   if (e.marcha === 0) estado = estado === "limitador" ? "limitador" : "neutro";
   else if (estado !== "ahogado") {
-    const g = lista("relaciones_marcha")[e.marcha - 1];
+    const g = relacionMarcha(e.marcha);
     ratio = relacionTotal(num("relacion_primaria"), g, num("relacion_final"));
     v = velocidadKmh(rpm, radio, num("relacion_primaria"), g, num("relacion_final"));
   }
-  const vFrenado = e.velocidad_inicial_kmh ?? v;
-  const pTotal = e.fuerza_palanca_n * num("presion_bar_por_newton");
-  const [pDel, pTras] = repartirPresion(e, pTotal);
-  const fDel = pDel > 0 ? calcularFreno(entradaFrenoMoto(pDel, vFrenado, radio)) : null;
-  const fTras = pTras > 0 ? calcularFreno(entradaFrenoMoto(pTras, vFrenado, radio)) : null;
-  const total = [fDel, fTras].reduce((a, f) => a + (f?.fuerza_piston_n ?? 0), 0);
-  const nominal = num("cilindrada_nominal_cm3");
-  const calculada = cilindradaCm3(num("diametro_mm"), num("carrera_mm"));
-  return {
-    radio_llanta_m: redondear(radio, 5),
-    medida_llanta: medida,
-    relacion_total: ratio === null ? null : redondear(ratio, 4),
-    rpm_efectivas: redondear(rpm, 3),
-    estado_motor: estado,
-    velocidad_kmh: redondear(v, 3),
-    cilindrada_calculada_cm3: redondear(calculada, 3),
-    cilindrada_referencia_cm3: nominal,
-    diferencia_cilindrada_pct: redondear(((calculada - nominal) / nominal) * 100, 3),
-    freno_delantero: fDel,
-    freno_trasero: fTras,
-    fuerza_pistones_total_n: redondear(total, 3),
-    rueda_delantera_bloqueada: Boolean(fDel?.rueda_bloqueada),
-    rueda_trasera_bloqueada: Boolean(fTras?.rueda_bloqueada),
-  };
+  return componer(e, medida, rpm, estado, v, ratio, e.velocidad_inicial_kmh ?? v);
 }
 
-export interface FrenoRueda {
-  entrada: EntradaFreno;
-  resultado: ResultadoFreno;
+/* ---------- dinámica: la velocidad es una variable de estado continua ---------- */
+export interface MandoMoto {
+  version: VersionMoto;
+  acelerador: number; // 0..1
+  marcha: number;
+  palanca: PalancaMoto;
+  fuerza_palanca_n: number;
+  cbs: boolean;
+  freno: boolean;
 }
-/** Discos accionados con la entrada dada y la velocidad `velocidadKmh_` (para `estadoRueda` y la animación). */
-export function frenosMoto(
-  entrada: EntradaMoto,
-  medidaLlanta: string | null | undefined,
-  velocidadKmh_: number,
-): { delantero: FrenoRueda | null; trasero: FrenoRueda | null; radio: number } {
-  const e = sanearEntrada(entrada);
-  const radio = radioLlantaM(medidaLlanta ?? String(SUPUESTOS.medida_llanta_trasera.valor));
-  const [pDel, pTras] = repartirPresion(e, e.fuerza_palanca_n * num("presion_bar_por_newton"));
-  const construir = (p: number): FrenoRueda | null => {
-    if (p <= 0) return null;
-    const en = entradaFrenoMoto(p, velocidadKmh_, radio);
-    return { entrada: en, resultado: calcularFreno(en) };
-  };
-  return { delantero: construir(pDel), trasero: construir(pTras), radio };
+export const MANDO_DEFECTO: MandoMoto = { version: "DLX", acelerador: 0, marcha: 0, palanca: "delantera", fuerza_palanca_n: 0, cbs: false, freno: false };
+
+export interface EstadoDinamico {
+  v_ms: number;
+  rpm_motor: number;
+  modo: EstadoMotor;
+  t_freno_s: number;
+  a_ms2: number;
 }
+export const ESTADO_DINAMICO_INICIAL: EstadoDinamico = { v_ms: 0, rpm_motor: 1400, modo: "neutro", t_freno_s: 0, a_ms2: 0 };
+
+export function sanearMando(m: MandoMoto): MandoMoto {
+  const e = sanearEntrada({ ...ENTRADA_MOTO_DEFECTO, version: m.version, marcha: m.marcha, palanca: m.palanca, fuerza_palanca_n: m.fuerza_palanca_n, cbs: m.cbs });
+  return { version: e.version, acelerador: acotar(m.acelerador, 0, 1, 0), marcha: e.marcha, palanca: e.palanca, fuerza_palanca_n: e.fuerza_palanca_n, cbs: e.cbs, freno: m.freno === true };
+}
+
+/** rpm del motor con marcha engranada: rpm = v / R · i_total · 60 / 2π. */
+export const rpmDerivadas = (vMs: number, radioM: number, primaria: number, marcha: number, final: number) =>
+  ((vMs / radioM) * relacionTotal(primaria, marcha, final) * 60) / (2 * Math.PI);
+export const velocidadMsEnCorte = (radioM: number, primaria: number, marcha: number, final: number) =>
+  (((num("corte_encendido_rpm") * 2 * Math.PI) / 60) * radioM) / relacionTotal(primaria, marcha, final);
+export const resistenciaMS2 = (vMs: number) => (vMs > 0 ? num("rozamiento_m_s2") + num("arrastre_aero_1_m") * vMs * vMs : 0);
+
+/** Avanza `dt` s. Función pura; misma lógica que `fisica_moto.paso_moto` (Python). */
+export function pasoMoto(est: EstadoDinamico, mandoEntrada: MandoMoto, dt: number, medidaLlanta?: string | null): EstadoDinamico {
+  if (!Number.isFinite(dt) || dt < 0) throw new Error("dt debe ser finito y no negativo");
+  const mando = sanearMando(mandoEntrada);
+  const medida = medidaTrasera(medidaLlanta);
+  const radio = radioLlantaM(medida);
+  const ralenti = num("ralenti_rpm");
+  const corte = num("corte_encendido_rpm");
+  const prim = num("relacion_primaria");
+  const final = num("relacion_final");
+  const banda = num("banda_limitador_rpm");
+  const tau = num("tau_rpm_libre_s");
+  const v = Math.max(est.v_ms, 0);
+  const resist = resistenciaMS2(v);
+  const frenando = mando.freno && mando.fuerza_palanca_n > 0;
+  const k = num("aceleracion_max_m_s2") * mando.acelerador;
+  const g = mando.marcha >= 1 ? relacionMarcha(mando.marcha) : null;
+  let ahogo = false;
+  let a: number;
+  if (frenando) {
+    const fs = frenosMoto(mando, medida, v * 3.6);
+    const aFr = ((fs.delantero?.resultado.deceleracion_m_s2 ?? 0) + (fs.trasero?.resultado.deceleracion_m_s2 ?? 0)) / 2;
+    a = -(aFr + resist);
+  } else if (g === null) {
+    a = -resist;
+  } else {
+    const rpmDer = rpmDerivadas(v, radio, prim, g, final);
+    ahogo = rpmDer < ralenti && mando.marcha >= num("marcha_minima_ahogo") && mando.acelerador < num("acelerador_minimo_sin_ahogo");
+    // Limitador suave: la aceleración se anula al acercarse al corte.
+    const aMotor = ahogo ? 0 : k * Math.min(Math.max((corte - rpmDer) / banda, 0), 1);
+    a = aMotor - resist;
+  }
+  let vNueva = v + a * dt;
+  if (vNueva < 0 || (v === 0 && a < 0)) vNueva = 0;
+  if (g !== null && !frenando && !ahogo) vNueva = Math.min(vNueva, velocidadMsEnCorte(radio, prim, g, final));
+  let rpm: number;
+  let modo: EstadoMotor;
+  if (frenando) {
+    modo = "embrague"; // el embrague se acciona al frenar: el motor queda libre
+    rpm = est.rpm_motor + (ralenti - est.rpm_motor) * (1 - Math.exp(-dt / tau));
+  } else if (g === null) {
+    const objetivo = ralenti + mando.acelerador * (num("rpm_tope_libre") - ralenti);
+    rpm = est.rpm_motor + (objetivo - est.rpm_motor) * (1 - Math.exp(-dt / tau));
+    modo = "neutro";
+    if (rpm >= corte - banda && objetivo >= corte - banda) {
+      rpm = Math.min(rpm, corte);
+      modo = "limitador";
+    }
+  } else if (ahogo) {
+    rpm = 0;
+    modo = "ahogado";
+  } else {
+    const rpmNueva = rpmDerivadas(vNueva, radio, prim, g, final);
+    if (rpmNueva >= corte - banda) {
+      rpm = Math.min(rpmNueva, corte);
+      modo = "limitador";
+    } else if (rpmNueva < ralenti) {
+      rpm = ralenti;
+      modo = "patinaje"; // embrague patinando: la relación de la lección no rige
+    } else {
+      rpm = rpmNueva;
+      modo = "normal";
+    }
+  }
+  return { v_ms: vNueva, rpm_motor: rpm, modo, t_freno_s: frenando ? est.t_freno_s + dt : 0, a_ms2: dt > 0 ? (vNueva - v) / dt : 0 };
+}
+
+/** Instantánea derivada del estado dinámico (velocidad y rpm provienen del estado, no de la fórmula). */
+export function calcularMotoDesdeEstado(est: EstadoDinamico, mandoEntrada: MandoMoto, medidaLlanta?: string | null): ResultadoMoto {
+  const mando = sanearMando(mandoEntrada);
+  const ratio = mando.marcha >= 1 ? relacionTotal(num("relacion_primaria"), relacionMarcha(mando.marcha), num("relacion_final")) : null;
+  return componer(mando, medidaTrasera(medidaLlanta), est.rpm_motor, est.modo, est.v_ms * 3.6, ratio, est.v_ms * 3.6);
+}
+
+/** La chispa solo salta en el PMS de la compresión; con el limitador se suprime en ciclos alternos. */
+export function chispaPermitida(modo: EstadoMotor, ciclo: number): boolean {
+  return modo !== "ahogado" && !(modo === "limitador" && ciclo % 2 === 1);
+}
+export const intensidadChispaMotor = (theta720: number, ciclo: number, modo: EstadoMotor) =>
+  chispaPermitida(modo, ciclo) ? intensidadChispa(theta720) : 0;
+
 
 /* ---------- ficha técnica: lo que «Ver con ficha de…» puede aplicar ---------- */
 export interface CampoFichaApi {
@@ -387,6 +532,8 @@ export interface AjusteFicha {
   medidaLlanta: string | null;
   /** La versión puede llevar CBS según la ficha publicada (DLX) o no (STD); `null` si no hay ficha. */
   cbsDisponible: boolean | null;
+  /** El freno trasero de la versión está publicado en la ficha; si no, se conserva el disco genérico (supuesto). */
+  traseroPublicado: boolean | null;
   /** Campos no publicados que conservan el valor genérico. */
   conservados: string[];
 }
@@ -410,6 +557,8 @@ export function ajusteDesdeFicha(
   const cbs = publicado(porVersion?.[version]?.cbs);
   const conservados: string[] = [];
   if (!medida) conservados.push("llantas.trasera");
+  const trasero = publicado(porVersion?.[version]?.trasero);
+  if (!trasero) conservados.push(`frenos.${version}.trasero`);
   if (!cbs) conservados.push(`frenos.${version}.cbs`);
   for (const [g, c] of [
     ["motor", "cilindrada"],
@@ -419,7 +568,7 @@ export function ajusteDesdeFicha(
   ] as const) {
     if (!publicado(grupos?.[g]?.[c])) conservados.push(`${g}.${c}`);
   }
-  return { medidaLlanta: medida, cbsDisponible: cbs ? cbs.valor === true : null, conservados };
+  return { medidaLlanta: medida, cbsDisponible: cbs ? cbs.valor === true : null, traseroPublicado: trasero ? true : null, conservados };
 }
 
 /** Texto breve de lo que cambió al engranar una marcha. */
