@@ -27,6 +27,11 @@ for (const id of ["freno", "prensa", "linea", "moto_honda"]) {
     const duracion = (Date.now() - t0) / 1000;
     await cdp.send("Page.stopScreencast");
     expect(duracion).toBeLessThan(30.5);
+    // Se descartan los fotogramas de carga previos al tour: se conserva solo la ventana final de 29,4 s
+    // medida con las marcas de tiempo del propio screencast (independiente del reloj del proceso).
+    const tFinal = fotogramas[fotogramas.length - 1].t;
+    const util = fotogramas.filter((f) => f.t >= tFinal - 29.4);
+    fotogramas.splice(0, fotogramas.length, ...util);
     expect(fotogramas.length).toBeGreaterThan(20);
 
     // Lista concat de ffmpeg con la duración real de cada fotograma (respeta el ritmo del recorrido).
@@ -44,7 +49,7 @@ for (const id of ["freno", "prensa", "linea", "moto_honda"]) {
     const salida = join(DESTINO, `recorrido_${id}.mp4`);
     execFileSync("ffmpeg", [
       "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", join(tmp, "lista.txt"),
-      "-vf", "fps=30,scale=trunc(iw/2)*2:trunc(ih/2)*2", "-c:v", "libx264", "-preset", "veryfast",
+      "-vf", "fps=30,scale=trunc(iw/2)*2:trunc(ih/2)*2", "-t", "29.95", "-c:v", "libx264", "-preset", "veryfast",
       "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", salida,
     ]);
     rmSync(tmp, { recursive: true, force: true });
