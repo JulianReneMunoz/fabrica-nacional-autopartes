@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run ruff format --quiet src tests frontend scripts"
+            "command": "uv run --no-sync ruff format --quiet src tests frontend scripts"
           }
         ]
       }
