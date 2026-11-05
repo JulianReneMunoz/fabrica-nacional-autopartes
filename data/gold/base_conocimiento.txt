@@ -1,5 +1,5 @@
 BASE DE CONOCIMIENTO — Fábrica Nacional de Autopartes (Fanalca)
-Generada: 2026-11-04T23:58:41+00:00
+Generada: 2026-11-05T00:03:12+00:00
 Fragmentos: 166
 
 [inicio#000] (inicio | https://fanalca.com/)
