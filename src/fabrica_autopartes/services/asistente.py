@@ -17,6 +17,9 @@ from fabrica_autopartes.core.excepciones import ErrorProveedorLLM
 from fabrica_autopartes.domain.modelos import RespuestaQA, ResultadoFAQ, ResultadoResumen
 from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.llm import cadenas
+
+# Reexportada para las interfaces (Streamlit, API, CLI): estas solo importan de ``services``.
+from fabrica_autopartes.llm.salvaguardas import es_rechazo as es_rechazo
 from fabrica_autopartes.pipelines.bronze import AlmacenBronze
 from fabrica_autopartes.pipelines.orquestador import ResultadoConstruccion, construir_base
 from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria

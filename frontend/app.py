@@ -18,10 +18,9 @@ import streamlit.components.v1 as componentes
 from fabrica_autopartes.core.config import RAIZ_PROYECTO, Configuracion
 from fabrica_autopartes.core.excepciones import ErrorFNA
 from fabrica_autopartes.llm.catalogo_prompts import catalogo
-from fabrica_autopartes.llm.salvaguardas import es_rechazo
 from fabrica_autopartes.pipelines.calidad import validar_fragmentos
 from fabrica_autopartes.pipelines.graficas import ETAPAS, generar_graficas
-from fabrica_autopartes.services.asistente import ServicioAsistente
+from fabrica_autopartes.services.asistente import ServicioAsistente, es_rechazo
 from fabrica_autopartes.services.maquinas import construir_biblioteca
 
 # El estilo (tokens del visor, CSS, insignias, chips, tarjetas) vive en frontend/estilo.py.
