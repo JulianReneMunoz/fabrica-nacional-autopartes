@@ -63,7 +63,7 @@ Si el visor no carga (`/app/` da 404), compilarlo una vez: `cd web; npm ci; npm 
 | 4:30–5:00 | Pestaña **Simulador 3D** | Streamlit enlaza el visor; botones «Abrir biblioteca», «Abrir freno 3D» y «Abrir motocicleta». |
 | 5:00–8:30 | Visor: biblioteca y **moto** (sección 5) | La pregunta, la relación medible, los controles junto a la pieza y la idea principal. Supuestos marcados como «supuesto didáctico». |
 | 8:30–9:30 | Swagger: `POST /api/v1/motos/cb160f/calculo` | Contrato validado (422 ante entradas inválidas) y la misma física que el visor. |
-| 9:30–10:00 | Calidad | 269 pruebas de Python, 99 de Vitest y 41 de Playwright en verde; integración continua en verde; evaluación v3 con Claude: exactitud 0,737 en preguntas respondibles, rechazo correcto 1,0. |
+| 9:30–10:00 | Calidad | 269 pruebas de Python, 99 de Vitest y 41 de Playwright en verde; integración continua en verde; evaluación v3 con Claude (modo automático): exactitud 0,789 en preguntas respondibles y rechazo correcto 1,0 (0,737 con el contexto completo). |
 
 ## 4. Q&A: preguntas de ejemplo
 

@@ -150,3 +150,13 @@ misma historia.
 
 Los defectos visuales (etiquetas solapadas a 1280×800, insignia partida, captura sin FAQ, despiece, piezas
 flotando) pasaron a las fases 7a y 7b. Verificación posterior: los hashes del freno no cambiaron en ninguna fase.
+
+## S-04 · Auditoría de la skill de terceros Archify para los diagramas del README (2026-11-05)
+
+Procedimiento: `fna-seguridad`, paso 5. Herramienta: SkillSpector v2.12.0 (`skillspector scan <ruta> --no-llm --format markdown`) sobre un clon superficial de `tt-a1i/archify` (carpeta de la skill, 206 archivos y 18 MB). Criterio de rechazo: puntuación ≥ 51.
+
+| Skill | Puntuación | Recomendación | Hallazgos principales | Cobertura | Resultado |
+|---|---|---|---|---|---|
+| archify | 100/100 (CRITICAL) | DO NOT INSTALL | 36 HIGH AE1 (artefactos referenciados sin inspección completa), 16 HIGH YR4 (regla YARA de envenenamiento de metadatos de herramientas, p. ej. `assets/template.html:146`), 1 HIGH AR2 (`references/delivery-contract.md:493`), 1 HIGH AE3 (bytes NUL en `renderers/shared/diagnostics.mjs:37`) y 69 de severidad baja o media | 18,4 % | **rechazada, no se instala** |
+
+El análisis fue parcial (185 excepciones por límite de tiempo de ejecución del analizador), pero la puntuación supera el umbral y la recomendación es no instalar. Decisión: los diagramas del README se elaboran con Mermaid, que GitHub renderiza de forma nativa y no requiere instalar herramientas de terceros. Los diagramas viven en `docs/arquitectura/diagramas/` (Markdown con bloques `mermaid`) y se incrustan en el README. No se generan HTML interactivos ni SVG exportados con variantes clara y oscura, porque dependían de Archify.
