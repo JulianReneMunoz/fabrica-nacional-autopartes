@@ -73,11 +73,13 @@ def crear_modelo(
             from langchain_anthropic import ChatAnthropic
         except ImportError as exc:
             raise ErrorProveedorLLM("Instalar el extra: uv sync --extra anthropic") from exc
-        return ChatAnthropic(
-            model=modelo,
-            api_key=config.anthropic_api_key,
-            temperature=config.temperatura,
-            max_tokens=1024,
-        )
+        # Diccionario de argumentos: los alias de Pydantic (model, max_tokens) no son visibles para mypy.
+        argumentos: dict = {
+            "model": modelo,
+            "api_key": config.anthropic_api_key,
+            "temperature": config.temperatura,
+            "max_tokens": 1024,
+        }
+        return ChatAnthropic(**argumentos)
 
     raise ErrorProveedorLLM(f"Proveedor no soportado: {proveedor}")
