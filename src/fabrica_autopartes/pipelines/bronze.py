@@ -99,3 +99,7 @@ class AlmacenBronze:
 
     def vacio(self) -> bool:
         return not self.manifiesto.exists() or self.manifiesto.stat().st_size == 0
+
+    def html_disponible(self) -> bool:
+        """Algún HTML del manifiesto existe en disco (el HTML crudo no se versiona: bitácora R-02)."""
+        return any((self.directorio / r.archivo_html).exists() for r in self.registros())

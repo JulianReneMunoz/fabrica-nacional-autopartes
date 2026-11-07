@@ -236,3 +236,17 @@ herramienta solo se usa si nada ejecutable toca red, credenciales o persistencia
 La búsqueda web con Claude (ADR-019) no forma parte del banco de 24 preguntas ni de las métricas v1–v3: los resultados
 de esta bitácora siguen midiendo solo la base verificada. P24 (inyección) se bloquea antes de buscar y la búsqueda
 nunca se ejecuta sin una acción explícita. Las pruebas usan un buscador simulado, sin red.
+
+
+## R-02 · El HTML crudo de Bronze deja de versionarse (2026-11-07)
+
+Los 75 HTML de `data/bronze/html/` (5,0 MB) son copias literales de páginas de terceros (sitios oficiales de
+Fanalca) y no hace falta versionarlos: se regeneran con `uv run fabrica pipeline`, que respeta `robots.txt`,
+`Crawl-delay` y los dominios permitidos. Se retiran del índice con `git rm --cached` y se ignoran
+(`data/bronze/html/` en `.gitignore`); siguen en el disco local (75 archivos antes y después). Siguen versionados
+`manifiesto.jsonl`, `errores.jsonl` y `resumen_rastreo.json` (procedencia y métricas del rastreo) y la base Gold.
+
+Como un clon nuevo trae el manifiesto sin el HTML, `construir_base` ahora informa «Bronze sin HTML en disco» con las
+alternativas (`fabrica pipeline` o `--fuente semilla`) en lugar de fallar con `FileNotFoundError` o de reemplazar en
+silencio la base Gold. El historial anterior conserva los HTML; quitarlos de ahí exige una decisión aparte
+(repositorio privado o `git filter-repo` con push forzado).

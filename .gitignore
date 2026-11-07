@@ -49,3 +49,7 @@ docs/evidencias/calidad_20*.txt
 
 # Cola de revisión humana de la búsqueda web complementaria (ADR-019)
 data/revision/
+
+# HTML crudo de Bronze: contenido de terceros, regenerable con `uv run fabrica pipeline` (bitácora R-02).
+# Los manifiestos y metadatos de data/bronze siguen versionados.
+data/bronze/html/

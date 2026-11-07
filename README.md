@@ -29,7 +29,7 @@ citas, API REST, servidor MCP y una biblioteca de máquinas 3D interactivas con 
 |---|---|
 | **Qué hace** | Extrae información pública de Fanalca (Bronze → Silver → Gold), responde preguntas solo con ese contexto y con citas, o con una frase de rechazo fija, y explica máquinas de autopartes en 3D |
 | **Para quién** | Personas que consultan información de la empresa y equipos que evalúan asistentes con LLM fundamentados en fuentes |
-| **Cómo se ejecuta** | `uv sync` → `uv run fabrica build` → API (`uvicorn`) con el visor en `/app` y Streamlit; sin GPU y sin red en las pruebas |
+| **Cómo se ejecuta** | `uv sync` → API (`uvicorn`) con el visor en `/app` y Streamlit, sobre la base Gold versionada; sin GPU y sin red en las pruebas |
 | **Qué lo distingue** | Rechazo anti-alucinación evaluado (24 preguntas, prompts v1–v3), procedencia visible de cada dato y paridad Python–TypeScript del cálculo físico |
 
 ## Arquitectura
@@ -177,13 +177,17 @@ la [bitácora](docs/prompts/bitacora_experimentos.md)).
 Requisitos: Python 3.12, [uv](https://docs.astral.sh/uv/), Node.js LTS, Git y Claude Code (proveedor `claude_code`).
 ```powershell
 uv sync
-uv run fabrica build
 cd web; npm ci; npm run build; cd ..
 uv run uvicorn fabrica_autopartes.api.main:app --host 127.0.0.1 --port 8000
 uv run streamlit run frontend/app.py
 ```
 Visor y biblioteca: http://127.0.0.1:8000/app/ · Explorador: http://127.0.0.1:8000/app/#/explorador ·
 Streamlit: http://localhost:8501 · Swagger: http://127.0.0.1:8000/docs. Guion de demostración: [`docs/demo.md`](docs/demo.md).
+
+La base Gold (`data/gold`) está versionada y lista para usarse. El HTML crudo de Bronze (`data/bronze/html/`) no se
+versiona por ser contenido de terceros; se regenera con `uv run fabrica pipeline` (accede a la red y respeta
+`robots.txt`), y después `uv run fabrica build` reconstruye Silver y Gold. Sin red, `uv run fabrica build --fuente
+semilla` construye la base de demostración.
 
 ## Referencia
 <details>
@@ -285,7 +289,8 @@ scripts/                 PowerShell y utilidades Python
 | `/app` responde 404 | `cd web; npm ci; npm run build` y reiniciar la API |
 | La FAQ de Fanalca del visor dice «Aún no hay respuestas» | `uv run fabrica faq-visor` (usa `claude_code`) |
 | `proveedor_llm_no_disponible` | Iniciar sesión en Claude Code (`claude`) o usar el proveedor `extractivo` |
-| `base_conocimiento_vacia` | `uv run fabrica build` |
+| `base_conocimiento_vacia` | `uv run fabrica build --fuente semilla` (demostración) o `uv run fabrica pipeline` (base real) |
+| `configuracion_invalida: Bronze sin HTML en disco` | El HTML de Bronze no se versiona: `uv run fabrica pipeline` para regenerarlo, o usar la base Gold versionada sin reconstruir |
 </details>
 
 ## Calidad
@@ -294,7 +299,7 @@ scripts/                 PowerShell y utilidades Python
 ```
 | Verificación | Resultado (última corrida completa) |
 |---|---|
-| pytest | 292 pruebas (unitarias, integración y e2e de Streamlit), sin red |
+| pytest | 295 pruebas (unitarias, integración y e2e de Streamlit), sin red |
 | Vitest | 113 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz, explorador y búsqueda web) |
 | Playwright | 46 pruebas E2E (de extremo a extremo) del visor con SwiftShader (≥ 50 fps exigidos) |
 | Ruff, mypy y capas | Sin hallazgos |

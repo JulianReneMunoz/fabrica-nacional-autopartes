@@ -13,6 +13,7 @@ from typing import Literal
 from urllib.parse import urlparse
 
 from fabrica_autopartes.core.config import Configuracion
+from fabrica_autopartes.core.excepciones import ErrorConfiguracion
 from fabrica_autopartes.core.registro import obtener_registro
 from fabrica_autopartes.domain.modelos import EstadisticasBase, Fragmento, ahora_utc
 from fabrica_autopartes.pipelines import silver
@@ -78,6 +79,16 @@ def construir_base(config: Configuracion, fuente: Fuente = "auto") -> ResultadoC
                 "Bronze vacío: se usa el corpus semilla de demostración. Ejecutar "
                 "'uv run fabrica pipeline' para construir la base desde los sitios oficiales."
             )
+
+    if fuente in ("scraping", "ambas", "mixta") and not almacen.vacio() and not almacen.html_disponible():
+        # Un clon nuevo trae el manifiesto pero no el HTML crudo (no se versiona): no se reconstruye en
+        # silencio desde la semilla, para no reemplazar la base Gold versionada.
+        raise ErrorConfiguracion(
+            "Bronze sin HTML en disco: el HTML crudo no se versiona (contenido de terceros). Ejecutar "
+            "'uv run fabrica pipeline' para regenerarlo desde los sitios oficiales, o "
+            "'uv run fabrica build --fuente semilla' para la base de demostración. La base Gold "
+            "versionada ya está lista para usarse sin reconstruir."
+        )
 
     paginas: list[dict] = []
     documentos = []
