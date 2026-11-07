@@ -57,3 +57,29 @@ Trabajos de `.github/workflows/ci.yml` que deben pasar antes del merge:
 - `calidad-y-pruebas (ubuntu-latest)`
 - `calidad-y-pruebas (windows-latest)`
 - `visor-web`
+
+## Makefile
+Atajos para los comandos frecuentes; funcionan con GNU make en Windows (PowerShell o cmd) y en Linux. Instalación en
+Windows 11 (abrir una terminal nueva después):
+
+```powershell
+winget install ezwinports.make
+make help
+```
+
+| Objetivo | Qué ejecuta | Equivale a |
+|---|---|---|
+| `make help` (por defecto) | Lista de objetivos | — |
+| `make instalar` | `uv sync --locked` y `npm ci` en `web/` | `scripts/preparar_proyecto.ps1` (sin construir la base) |
+| `make calidad` | `ruff check`, `ruff format --check`, `mypy`, `verificar_capas.py` y `pytest -q` | `scripts/verificar_calidad.ps1` (parte Python) |
+| `make pruebas-web` | Vitest (`npm test` en `web/`) | `scripts/verificar_calidad.ps1` (parte web) |
+| `make api [PUERTO=8000]` | API FastAPI en `127.0.0.1` con recarga | `scripts/ejecutar_api.ps1` |
+| `make app` | Interfaz Streamlit | `scripts/ejecutar_app.ps1` |
+| `make pipeline [MAX_PAGINAS=80]` | Scraping real, Bronze/Silver/Gold, validación y gráficas; **requiere red y aprobación** | `scripts/ejecutar_pipeline.ps1` |
+| `make validar-moto` | `fabrica simulador validar --ensamblaje moto_honda` | — |
+| `make enlaces` | `scripts/verificar_enlaces.py` (sin red) | — |
+| `make graphify` | `scripts/graphify_codigo.py`: `--code-only` con `GRAPHIFY_BACKEND=none`, salida temporal fuera del repositorio | Procedimiento de la [ADR-020](docs/arquitectura/adr/ADR-020-graphify-mapa-del-codigo.md) |
+
+Todos los objetivos usan `uv run --no-sync` (salvo `instalar`). Los modelos locales quedan pospuestos y no tienen
+objetivo ([ADR-022](docs/arquitectura/adr/ADR-022-ollama-pospuesto.md)). `make -n <objetivo>` muestra los comandos sin
+ejecutarlos.
