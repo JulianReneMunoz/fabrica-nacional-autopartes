@@ -296,7 +296,7 @@ scripts/                 PowerShell y utilidades Python
 |---|---|
 | pytest | 292 pruebas (unitarias, integración y e2e de Streamlit), sin red |
 | Vitest | 113 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz, explorador y búsqueda web) |
-| Playwright | 46 pruebas e2e del visor con SwiftShader (≥ 50 fps exigidos) |
+| Playwright | 46 pruebas E2E (de extremo a extremo) del visor con SwiftShader (≥ 50 fps exigidos) |
 | Ruff, mypy y capas | Sin hallazgos |
 | Integración continua | GitHub Actions en Ubuntu y Windows, más el visor |
 
@@ -319,92 +319,34 @@ preguntas sin respuesta. Una repetición de v3 automático del 2026-11-07
 reprodujo las mismas cifras (0,789 · 1,0 · 0,842 · 0,833), con latencia media de 5,3 s.
 
 ## Metodologías
-Estado según la evidencia del repositorio. **Modelo** indica el agente de Claude Code y su modelo (campo `model` de
-`.claude/agents/*.md`, configuración local no versionada), la asignación por fase de
-[`fases_agentes.yaml`](docs/manuales/fases_agentes.yaml) y los commits con `Co-Authored-By: Claude Sonnet 5.5`; en
-ejecución, la aplicación usa `claude_code` con `sonnet` y el respaldo `extractivo`.
+Estado según la evidencia del repositorio y de su historial. **Modelo:** agente de Claude Code asignado en
+[`fases_agentes.yaml`](docs/manuales/fases_agentes.yaml) (desarrollo) o proveedor en ejecución (aplicación).
+[Ver detalle de cada metodología, evidencias y glosario completo](docs/metodologias.md).
 
-| Metodología | Estado | Dónde | Por qué aquí | Modelo |
-|---|---|---|---|---|
-| Medallion (Bronze/Silver/Gold) | Aplicada | [ADR-002](docs/arquitectura/adr/ADR-002-medallion-archivos.md), `pipelines/` | Separar dato crudo, limpio y listo para el LLM con trazabilidad | F09–F11: `ingeniero-datos` (sonnet) |
-| SDD — Spec-Driven Development | Aplicada | [`openspec/specs/`](openspec/specs/) (6 especificaciones) | Cada funcionalidad parte de una especificación verificable | F07: `analista-requisitos` (opus) |
-| ADR — Architecture Decision Records | Aplicada | [`docs/arquitectura/adr/`](docs/arquitectura/adr/) (19) | Dejar el porqué de cada decisión estructural | F08: `revisor-calidad` (opus); ADR de las fases técnicas |
-| MCP — Model Context Protocol | Aplicada | [`.mcp.json`](.mcp.json), `src/fabrica_autopartes/mcp_server/` | Dar a los agentes acceso de solo lectura a la base | F06: `revisor-calidad` (opus); F24: `ingeniero-3d-frontend` (sonnet) |
-| GGA — Gentleman Guardian Angel | Aplicada | [`.gga`](.gga), [ADR-018](docs/arquitectura/adr/ADR-018-engram-y-gga.md) | Revisar cada commit contra `AGENTS.md` | Sesión principal de Claude Code; GGA revisa con `claude --print` |
-| CI — Continuous Integration | Aplicada | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Pruebas en Ubuntu y Windows en cada push a `main` | — |
-| CD — Continuous Delivery/Deployment | No aplicada | — | No hay despliegue automático; se ejecuta en local | — |
-| Método Anatomy | Aplicada | [`skills/fna-maquinas-anatomia/`](skills/fna-maquinas-anatomia/) | Una pregunta y una relación medible por máquina | F21: `ingeniero-3d-frontend` (sonnet) |
-| TDD — Test-Driven Development | Parcial | `tests/`, `web/src/__tests__/`, `web/e2e/` | Cada cambio llega con pruebas; no hay evidencia de escribir la prueba antes del código | F14, F15 y F22: `revisor-calidad` (opus) |
+| Metodología | Estado | Por qué aquí | Modelo |
+|---|---|---|---|
+| SDD, Spec-Driven Development (desarrollo guiado por especificaciones), con OpenSpec | Aplicada | Requisitos y escenarios verificables antes de implementar | `analista-requisitos` (opus) |
+| Modos plan/build (planificar/construir) con aprobación humana | Aplicada (evidencia local) | Aprobar el plan antes de cada fase | Opus planifica, Sonnet construye |
+| Matriz de permisos allow/ask/deny (permitir/preguntar/denegar) | Aplicada (evidencia local) | Pruebas libres; commits con confirmación; `git push` denegado | Sin modelo |
+| Memoria persistente con Engram | Parcial | Decisiones entre sesiones; aún sin memorias del proyecto | No determinable |
+| ReAct, Reasoning and Acting (razonar y actuar), con pruebas automáticas | Parcial | Ciclo cambio → pruebas → corrección | Sesión principal; `claude_code`/`sonnet` en la búsqueda web |
+| GGA, Gentleman Guardian Angel (revisión de código con IA antes de cada commit), y ruff | Aplicada | Cada commit se revisa contra `AGENTS.md` | `claude --print` (modelo no fijado) |
+| Arquitectura por capas (en lugar de MVC, Model-View-Controller, modelo-vista-controlador) | Aplicada (capas) | Interfaces solo llaman a servicios | `revisor-calidad` (opus) |
+| TDD, Test-Driven Development (desarrollo guiado por pruebas), con AAA, Arrange-Act-Assert (preparar, actuar, afirmar) | Parcial | Pruebas en cada cambio; sin prueba previa ni AAA explícito | `revisor-calidad` (opus); `extractivo` en pruebas |
+| uv (gestor de paquetes de Python) y Docker (contenedores) | Parcial | Entorno reproducible; Docker definido, no verificado | Sin modelo |
+| Gitflow (flujo de ramas) con PR, Pull Request (solicitud de integración), y Conventional Commits | Parcial | Ramas por funcionalidad y commits `tipo: descripción`; sin PR | Sin modelo |
+| CI/CD, Continuous Integration / Continuous Delivery (integración y entrega continuas), con GitHub Actions | Parcial (CI sí; CD no) | Pruebas en Ubuntu y Windows en cada push a `main` | Sin modelo |
+| MCP, Model Context Protocol (protocolo de contexto de modelos) | Aplicada | Acceso de solo lectura de los agentes a la base | `revisor-calidad` (opus), `ingeniero-3d-frontend` (sonnet) |
+| Medallion Architecture (arquitectura medallón: Bronze/Silver/Gold) | Aplicada | Dato crudo, limpio y listo, con trazabilidad | `ingeniero-datos` (sonnet) |
+| Responsible Web Scraping (extracción web responsable) | Aplicada | Solo lo permitido, sin eludir protecciones | `ingeniero-datos` (sonnet) |
+| Prompt Engineering (ingeniería de instrucciones) versionado, con evaluación v1–v3 | Aplicada | Comparar técnicas con el mismo banco de preguntas | `ingeniero-llm` (sonnet); `claude_code`/`sonnet` y `extractivo` en ejecución |
+| Método Anatomy (máquinas interactivas para explicar mecanismos) | Aplicada | Una pregunta y una relación medible por máquina | `ingeniero-3d-frontend` (sonnet) |
+| ADR, Architecture Decision Record (registro de decisión de arquitectura) | Aplicada | El porqué de cada decisión estructural | `revisor-calidad` (opus) y fases técnicas |
+| Revisión de skills con SkillSpector (escáner de seguridad para skills de agentes) | Aplicada | Nada de terceros sin escaneo y análisis manual | Escáner sin LLM |
+| Independent Critical Review (revisión crítica independiente) | Aplicada | Un revisor que no edita contrasta cada entrega | `revisor-calidad` (opus) |
 
-<details>
-<summary><b>Medallion</b></summary>
-
-Bronze guarda el HTML y un manifiesto por página; Silver limpia, segmenta, extrae el contacto del pie, deduplica y
-anonimiza; Gold produce documentos, `fragmentos.jsonl` y `base_conocimiento.txt`. Cada etapa tiene una gráfica
-(`fabrica graficas`) y el corpus se valida con `fabrica validate`.
-</details>
-
-<details>
-<summary><b>SDD — Spec-Driven Development (desarrollo guiado por especificaciones)</b></summary>
-
-Las especificaciones de OpenSpec en `openspec/specs/` (extracción de datos, base de conocimiento, tareas LLM, interfaz
-de prueba, simulador 3D y biblioteca de máquinas) definen requisitos y escenarios; la matriz de trazabilidad enlaza
-cada requisito con su prueba.
-</details>
-
-<details>
-<summary><b>ADR — Architecture Decision Records (registros de decisiones de arquitectura)</b></summary>
-
-Diecinueve registros con contexto, decisión, alternativas y consecuencias, desde el uso de archivos para Medallion
-hasta el proveedor `claude_code`, la motocicleta de referencia, las herramientas Engram y GGA y la búsqueda web
-complementaria.
-</details>
-
-<details>
-<summary><b>MCP — Model Context Protocol (protocolo de contexto para modelos)</b></summary>
-
-El servidor `fna-conocimiento` expone búsqueda, fragmentos, estadísticas, validación y consulta de piezas, todas de
-solo lectura; Claude Code lo usa durante el desarrollo.
-</details>
-
-<details>
-<summary><b>GGA — Gentleman Guardian Angel (revisión automática previa al commit)</b></summary>
-
-El hook `pre-commit` envía el diff de `*.py`, `*.ts` y `*.tsx` a Claude y bloquea el commit si incumple `AGENTS.md`;
-la versión está fijada (v2.10.1) y su auditoría es la entrada S-06 de la bitácora.
-</details>
-
-<details>
-<summary><b>CI — Continuous Integration (integración continua)</b></summary>
-
-GitHub Actions ejecuta Ruff, mypy, verificación de capas, pytest, Vitest y la compilación del visor en Ubuntu y
-Windows; localmente, `scripts/verificar_calidad.ps1 -ConE2E` añade Playwright.
-</details>
-
-<details>
-<summary><b>Método Anatomy</b></summary>
-
-Cada máquina responde una pregunta con una relación medible, 2 a 4 controles, cifras junto a las piezas, recorrido de
-menos de 30 s y modo experimento; la plantilla común está en `web/src/componentes/plantilla/`.
-</details>
-
-<details>
-<summary><b>TDD — Test-Driven Development (desarrollo guiado por pruebas), parcial</b></summary>
-
-Cada fase añade pruebas unitarias, de integración y e2e, y la paridad Python–TypeScript se fija con casos de
-referencia exportados. El historial no permite afirmar que la prueba se escribió antes que el código, por eso el
-estado es parcial.
-</details>
-
-**No aplicadas** (sin evidencia en el repositorio): AAA — Arrange, Act, Assert (preparar, actuar, comprobar) como
-convención explícita; ReAct — Reasoning and Acting (razonar y actuar) en la aplicación, cuyo proveedor responde en un
-solo turno y sin herramientas; MVC — Model-View-Controller (modelo-vista-controlador), sustituido por la arquitectura
-por capas; PR — Pull Request (solicitud de integración), pues la integración se hace por avance rápido a `main`;
-WIP — Work In Progress (límite de trabajo en curso); CRISP-DM — Cross-Industry Standard Process for Data Mining
-(proceso estándar intersectorial para minería de datos); BMC — Business Model Canvas (lienzo del modelo de negocio);
-OKR — Objectives and Key Results (objetivos y resultados clave); KPI — Key Performance Indicator (indicador clave de
-desempeño) de negocio; CPM — Critical Path Method (método de la ruta crítica); diagrama de Gantt; Model Card (ficha
-del modelo); y Data Thinking (pensamiento de datos).
+No aplicadas: Kanban con Fibonacci y WIP, CRISP-DM, Model Card, Data Thinking, BMC, OKR, KPI, CPM, diagrama de Gantt,
+Archify (evaluada y descartada) y Graphify; motivos en [el detalle](docs/metodologias.md#no-aplicadas).
 
 ## Datos y ética
 - Scraping responsable: `robots.txt` y `Crawl-delay`, User-Agent identificable (`FNA-KB/1.0 (+URL del repositorio)`),
@@ -429,31 +371,43 @@ del modelo); y Data Thinking (pensamiento de datos).
 - Más fichas de motocicletas cuando existan fuentes oficiales legibles.
 
 ## Glosario de siglas
-| Sigla | Nombre en inglés | Traducción |
+Siglas que aparecen en este README; el [glosario completo](docs/metodologias.md#glosario-de-siglas) incluye todas
+las de las metodologías.
+
+| Sigla | Nombre completo en inglés | Traducción al español |
 |---|---|---|
-| AAA | Arrange, Act, Assert | Preparar, actuar, comprobar |
+| AAA | Arrange, Act, Assert | Preparar, actuar, afirmar |
 | ADR | Architecture Decision Record | Registro de decisión de arquitectura |
 | API | Application Programming Interface | Interfaz de programación de aplicaciones |
 | BM25 | Best Matching 25 | Función de ranking léxico «mejor coincidencia 25» |
 | BMC | Business Model Canvas | Lienzo del modelo de negocio |
-| CBS | Combined Braking System | Sistema de frenado combinado |
-| CI/CD | Continuous Integration / Continuous Delivery | Integración continua / entrega continua |
+| CI/CD | Continuous Integration / Continuous Delivery | Integración y entrega continuas |
 | CLI | Command-Line Interface | Interfaz de línea de comandos |
 | CPM | Critical Path Method | Método de la ruta crítica |
 | CRISP-DM | Cross-Industry Standard Process for Data Mining | Proceso estándar intersectorial para minería de datos |
-| GGA | Gentleman Guardian Angel | Revisión automática previa al commit |
+| E2E | End-to-End | De extremo a extremo |
+| FAQ | Frequently Asked Questions | Preguntas frecuentes |
+| GGA | Gentleman Guardian Angel | Ángel guardián: revisión de código con IA antes de cada commit |
 | GLB | GL Transmission Format Binary | Formato binario de transmisión de modelos 3D |
+| GPU | Graphics Processing Unit | Unidad de procesamiento gráfico |
+| HTTP | HyperText Transfer Protocol | Protocolo de transferencia de hipertexto |
+| IA | Artificial Intelligence (AI) | Inteligencia artificial |
 | KPI | Key Performance Indicator | Indicador clave de desempeño |
 | LCEL | LangChain Expression Language | Lenguaje de expresiones de LangChain |
 | LLM | Large Language Model | Modelo de lenguaje de gran tamaño |
-| MCP | Model Context Protocol | Protocolo de contexto para modelos |
+| LTS | Long-Term Support | Soporte a largo plazo |
+| MCP | Model Context Protocol | Protocolo de contexto de modelos |
+| MIT | Massachusetts Institute of Technology (licencia MIT) | Instituto Tecnológico de Massachusetts |
 | MVC | Model-View-Controller | Modelo-vista-controlador |
 | OKR | Objectives and Key Results | Objetivos y resultados clave |
-| PR | Pull Request | Solicitud de integración |
-| Q&A | Questions and Answers | Preguntas y respuestas |
+| PR | Pull Request | Solicitud de integración de cambios |
+| Q&A | Question and Answer | Preguntas y respuestas |
 | ReAct | Reasoning and Acting | Razonar y actuar |
+| REST | Representational State Transfer | Transferencia de estado representacional |
 | SDD | Spec-Driven Development | Desarrollo guiado por especificaciones |
+| SQL | Structured Query Language | Lenguaje de consulta estructurado |
 | TDD | Test-Driven Development | Desarrollo guiado por pruebas |
+| URL | Uniform Resource Locator | Localizador uniforme de recursos |
 | WIP | Work In Progress | Trabajo en curso |
 
 ## Licencia
