@@ -34,6 +34,7 @@ class Opciones:
     modelo: str
     version_prompt: str
     modo_contexto: str
+    recuperador: str = "bm25"
 
 
 def _opciones(config: Configuracion, **sobrescritos: str | None) -> Opciones:
@@ -48,6 +49,7 @@ def _opciones(config: Configuracion, **sobrescritos: str | None) -> Opciones:
         modelo=modelo,
         version_prompt=sobrescritos.get("version_prompt") or config.version_prompt,
         modo_contexto=sobrescritos.get("modo_contexto") or config.modo_contexto,
+        recuperador=sobrescritos.get("recuperador") or config.recuperador,
     )
 
 
@@ -84,7 +86,11 @@ def ejecutar_qa(
         )
 
     ctx = base.armar_contexto(
-        pregunta, op.modo_contexto, config.presupuesto_tokens_contexto, config.fragmentos_seleccion
+        pregunta,
+        op.modo_contexto,
+        config.presupuesto_tokens_contexto,
+        config.fragmentos_seleccion,
+        op.recuperador,
     )
     llm = modelo_llm or crear_modelo(config, op.proveedor, op.modelo, salida_json=vp.formato_salida == "json")
     cadena = vp.plantilla() | llm | StrOutputParser()

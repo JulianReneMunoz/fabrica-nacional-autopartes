@@ -373,7 +373,7 @@ y Archify (evaluada y descartada); motivos en [el detalle](docs/metodologias.md#
 
 ## Limitaciones y hoja de ruta
 **Limitaciones**
-- Búsqueda léxica (BM25 con expansión de consultas), sin recuperación semántica.
+- Búsqueda léxica (BM25 con expansión de consultas) por defecto; la base semántica opcional (nomic + Chroma, `--recuperador semantico`) se compara en la [ADR-023](docs/arquitectura/adr/ADR-023-base-semantica-nomic-chroma.md).
 - La búsqueda web complementaria depende de la sesión de Claude Code y de la red; sus hallazgos no se verifican
   de forma automática.
 - Fichas de motocicletas: solo la CB 160F; los campos no publicados usan supuestos marcados.

@@ -12,6 +12,7 @@ import re
 import unicodedata
 from collections import Counter
 from dataclasses import dataclass
+from typing import Protocol
 
 from fabrica_autopartes.domain.modelos import Fragmento
 
@@ -175,6 +176,12 @@ def expandir_consulta(terminos: list[str]) -> dict[str, float]:
 class Resultado:
     fragmento: Fragmento
     puntaje: float
+
+
+class Recuperador(Protocol):
+    """Interfaz común de recuperación: BM25 (léxico) e índices semánticos (ADR-023)."""
+
+    def buscar(self, consulta: str, k: int = 5) -> list[Resultado]: ...
 
 
 class IndiceBM25:

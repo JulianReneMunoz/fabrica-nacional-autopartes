@@ -6,9 +6,13 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from fabrica_autopartes.core.excepciones import ErrorBaseConocimientoVacia, ErrorRecursoNoEncontrado
+from fabrica_autopartes.core.excepciones import (
+    ErrorBaseConocimientoVacia,
+    ErrorConfiguracion,
+    ErrorRecursoNoEncontrado,
+)
 from fabrica_autopartes.domain.modelos import EstadisticasBase, Fragmento
-from fabrica_autopartes.knowledge.recuperacion import IndiceBM25, Resultado
+from fabrica_autopartes.knowledge.recuperacion import IndiceBM25, Recuperador, Resultado
 from fabrica_autopartes.pipelines.texto import tokens_aprox
 
 
@@ -25,10 +29,20 @@ def formatear_fragmento(f: Fragmento) -> str:
 
 
 class BaseConocimiento:
-    def __init__(self, dir_gold: Path) -> None:
+    def __init__(
+        self,
+        dir_gold: Path,
+        dir_vectores: Path | None = None,
+        recuperador: str = "bm25",
+        dispositivo_embeddings: str = "auto",
+    ) -> None:
         self.dir_gold = dir_gold
+        self.dir_vectores = dir_vectores or dir_gold.parent / "vectores"
+        self.recuperador_por_defecto = recuperador
+        self.dispositivo_embeddings = dispositivo_embeddings
         self._fragmentos: list[Fragmento] | None = None
         self._indice: IndiceBM25 | None = None
+        self._semantico: Recuperador | None = None
 
     # ------------------------------------------------------------ carga
     @property
@@ -51,9 +65,33 @@ class BaseConocimiento:
             self._indice = IndiceBM25(self.fragmentos)
         return self._indice
 
+    def recuperador(self, nombre: str | None = None) -> Recuperador:
+        """Recuperador ``bm25`` (por defecto) o ``semantico`` (Chroma + nomic, ADR-023)."""
+        nombre = nombre or self.recuperador_por_defecto
+        if nombre == "bm25":
+            return self.indice
+        if nombre != "semantico":
+            raise ErrorConfiguracion(f"Recuperador desconocido: '{nombre}' (bm25 o semantico)")
+        if self._semantico is None:
+            from fabrica_autopartes.knowledge.semantica import EmbeddingsNomic, IndiceChroma, extra_instalado
+
+            if not extra_instalado():
+                raise ErrorConfiguracion(
+                    "El recuperador semántico requiere el extra semantica-cpu o semantica-gpu "
+                    "(make instalar-semantica)"
+                )
+            funcion = EmbeddingsNomic(self.dispositivo_embeddings)
+            self._semantico = IndiceChroma(self.dir_vectores, funcion, self.fragmentos)
+        return self._semantico
+
+    def usar_recuperador_semantico(self, recuperador: Recuperador) -> None:
+        """Inyecta un recuperador semántico (pruebas o índice ya construido)."""
+        self._semantico = recuperador
+
     def recargar(self) -> None:
         self._fragmentos = None
         self._indice = None
+        self._semantico = None
 
     def exigir_contenido(self) -> None:
         if not self.fragmentos:
@@ -76,8 +114,8 @@ class BaseConocimiento:
                 return f
         raise ErrorRecursoNoEncontrado(f"No existe el fragmento '{fragmento_id}'")
 
-    def buscar(self, consulta: str, k: int = 5) -> list[Resultado]:
-        return self.indice.buscar(consulta, k)
+    def buscar(self, consulta: str, k: int = 5, recuperador: str | None = None) -> list[Resultado]:
+        return self.recuperador(recuperador).buscar(consulta, k)
 
     def filtrar(self, seccion: str | None = None, texto: str | None = None) -> list[Fragmento]:
         resultado = self.fragmentos
@@ -99,11 +137,12 @@ class BaseConocimiento:
         modo: str = "auto",
         presupuesto_tokens: int = 9000,
         k: int = 8,
+        recuperador: str | None = None,
     ) -> ContextoArmado:
         """Devuelve el contexto delimitado por etiquetas XML.
 
         - ``completo``: toda la base (exigencia literal del Módulo 1).
-        - ``seleccion``: los ``k`` fragmentos BM25 más pertinentes (extensión).
+        - ``seleccion``: los ``k`` fragmentos más pertinentes según el recuperador (BM25 por defecto).
         - ``auto``: completo si cabe en el presupuesto; si no, selección.
         """
         self.exigir_contenido()
@@ -121,6 +160,6 @@ class BaseConocimiento:
                     elegidos.append(f)
                     acumulado += f.tokens_aprox
         else:
-            elegidos = [r.fragmento for r in self.buscar(consulta or "", k)]
+            elegidos = [r.fragmento for r in self.buscar(consulta or "", k, recuperador)]
         texto = "\n\n".join(formatear_fragmento(f) for f in elegidos)
         return ContextoArmado(texto=texto, fragmentos=elegidos, modo=modo, tokens_aprox=tokens_aprox(texto))
