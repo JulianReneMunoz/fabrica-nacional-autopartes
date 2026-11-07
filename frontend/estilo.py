@@ -49,6 +49,8 @@ SELECTORES_STREAMLIT: tuple[str, ...] = (
     "stChatInput",
     "stWidgetLabel",
     "stIconMaterial",
+    "stHorizontalBlock",  # columnas de las gráficas de etapas (una por fila por debajo de 1200 px)
+    "stColumn",
 )
 
 TOKENS_REQUERIDOS: tuple[str, ...] = (

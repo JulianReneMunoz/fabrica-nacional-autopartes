@@ -176,3 +176,62 @@ def test_busqueda_web_solo_tras_rechazo_y_etiquetada(app, monkeypatch) -> None: 
     assert llamadas == ["¿Cuál es la receta del sancocho valluno?"]
     assert any("no proviene de la base verificada" in str(w.value) for w in app.warning)
     assert any("https://fanalca.com/x" in str(t.value) for t in app.text)  # texto plano, no Markdown
+
+
+def _graficas_altair(app) -> list[str]:  # type: ignore[no-untyped-def]
+    """Especificaciones Vega-Lite de las gráficas de etapa (marcadas con usermeta.fna_etapa)."""
+    specs = [str(getattr(g.proto, "spec", "")) for g in app.get("vega_lite_chart")]
+    return [s for s in specs if "fna_etapa" in s]
+
+
+def test_proceso_datos_graficas_altair_y_aviso_semilla(app) -> None:  # type: ignore[no-untyped-def]
+    """Con la semilla: aviso de demostración y gráficas Altair de las etapas con datos (sin rastreo)."""
+    textos = [str(i.value) for i in app.info]
+    assert any("base de demostración" in t for t in textos)
+    assert not any("Métricas del rastreo real" in t for t in textos)
+    graficas = _graficas_altair(app)
+    assert (
+        len(graficas) >= 3
+    )  # reducción, limpieza, fragmentos y tokens (sin rastreo ni Bronze en la semilla)
+    assert any(b.label == "Regenerar gráficas desde las métricas actuales" for b in app.button)
+
+
+def test_proceso_datos_aviso_rastreo_real_y_seis_graficas(app, config_con_base) -> None:  # type: ignore[no-untyped-def]
+    """Con fuente mixta: aviso del rastreo real con su fecha y una gráfica por etapa."""
+    import json
+
+    import streamlit as st
+
+    st.cache_resource.clear()  # el servicio en caché de otra prueba apunta a otro directorio de datos
+
+    ruta = config_con_base.dir_datos / "gold" / "metricas_etapas.json"
+    m = json.loads(ruta.read_text(encoding="utf-8"))
+    m["fuente"] = "mixta"
+    m["bronze"] = {
+        "capturas": 2,
+        "rastreo": {
+            "fecha": "2026-11-04T23:50:26+00:00",
+            "capturadas": 2,
+            "omitidas_robots": 0,
+            "errores": 1,
+            "duplicadas": 0,
+            "descubiertas_sitemap": 3,
+            "visitadas": 3,
+            "duracion_s": 12.5,
+            "omitidas_proteccion": 1,
+        },
+    }
+    for i, p in enumerate(m["paginas"][:2]):
+        p["bytes_html"] = 1000 * (i + 1)
+    ruta.write_text(json.dumps(m, ensure_ascii=False), encoding="utf-8")
+    app.run()
+    assert not app.exception
+    textos = [str(i.value) for i in app.info]
+    assert "Métricas del rastreo real del 2026-11-04 (fuente: mixta)" in textos
+    assert not any("base de demostración" in t for t in textos)
+    graficas = _graficas_altair(app)
+    assert len(graficas) == 6
+    assert any(
+        "incidencia" in g for g in graficas
+    )  # las incidencias del rastreo se rotulan, no solo se colorean
+    assert any(b.label == "Regenerar gráficas desde las métricas actuales" for b in app.button)

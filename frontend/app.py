@@ -19,13 +19,14 @@ from fabrica_autopartes.core.config import RAIZ_PROYECTO, Configuracion
 from fabrica_autopartes.core.excepciones import ErrorFNA
 from fabrica_autopartes.llm.catalogo_prompts import catalogo
 from fabrica_autopartes.pipelines.calidad import validar_fragmentos
-from fabrica_autopartes.pipelines.graficas import ETAPAS, generar_graficas
+from fabrica_autopartes.pipelines.graficas import ETAPAS, generar_graficas, series_etapas
 from fabrica_autopartes.services.asistente import ServicioAsistente, es_rechazo
 from fabrica_autopartes.services.maquinas import construir_biblioteca
 
 # El estilo (tokens del visor, CSS, insignias, chips, tarjetas) vive en frontend/estilo.py.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import estilo as est
+import graficas_etapas as ge
 
 st.set_page_config(page_title="Fanalca · Base de conocimiento y Q&A", page_icon="⚙️", layout="wide")
 URL_VISOR = os.environ.get("FNA_URL_VISOR", "http://127.0.0.1:8000/app/")
@@ -450,22 +451,31 @@ with t_proc:
             unsafe_allow_html=True,
         )
         st.caption(f"Métricas generadas en {metricas['generado_en'][:19]} UTC · {ruta_metricas.name}")
-        if metricas["fuente"] != "scraping":
-            st.info(
-                "Las gráficas muestran la base de demostración. Ejecutar `uv run fabrica pipeline` en "
-                "Windows 11 (PowerShell o Claude Code) para regenerarlas con el scraping real."
-            )
+        # Aviso según la procedencia: demostración solo con la semilla; si no, el rastreo real con su fecha.
+        st.info(ge.aviso_fuente(metricas)[1])
         if st.button("Regenerar gráficas desde las métricas actuales"):
             generar_graficas(ruta_metricas, dir_graficas)
             st.success("Gráficas regeneradas en docs/graficas")
     else:
         st.warning("No existen métricas: ejecutar `uv run fabrica build` o `uv run fabrica pipeline`.")
-    for clave, titulo in ETAPAS:
-        ruta_png = dir_graficas / f"{clave}.png"
-        with st.expander(titulo, expanded=clave in ("01_rastreo", "03_reduccion")):
-            st.markdown(EXPLICACION_ETAPAS[clave])
-            if ruta_png.exists():
-                st.image(str(ruta_png), width="stretch")
+    if ruta_metricas.exists():
+        # Gráficas Altair con los cálculos de las PNG (estas se conservan para el README y los documentos).
+        series = series_etapas(metricas)
+        nota = f"fuente {metricas['fuente']} · {ruta_metricas.name}"
+        with st.container(key="graficas-etapas"):
+            for i in range(0, len(ETAPAS), 2):
+                for col, (clave, titulo) in zip(st.columns(2), ETAPAS[i : i + 2], strict=False):
+                    with col, st.expander(titulo, expanded=i < 4):
+                        st.markdown(EXPLICACION_ETAPAS[clave])
+                        if clave in series:
+                            st.caption(ge.subtitulo(series[clave], nota))
+                            st.altair_chart(
+                                ge.grafica_etapa(clave, series[clave], TOKENS),
+                                width="stretch",
+                                key=f"g-{clave}",
+                            )
+                        else:
+                            st.caption("Sin datos para esta etapa en las métricas actuales.")
 
 # ------------------------------------------------------------------ simulador 3D
 with t_sim:

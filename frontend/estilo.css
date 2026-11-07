@@ -135,3 +135,11 @@
 .fna-ficha { border-left: 3px solid var(--dato); padding-left: var(--e2); font-size: var(--t-sm); color: var(--tinta-2); margin: var(--e1) 0; }
 .fna-ficha a { word-break: break-all; }
 @media (max-width: 899px) { .fna-cabecera { padding-right: var(--e4); } }
+
+/* Proceso de datos: dos gráficas por fila desde 1200 px; una por fila en pantallas más estrechas.
+   Selector con la clave del contenedor (st.container(key="graficas-etapas")); verificado con Playwright
+   a 1000 px (una columna) y 1400 px (dos columnas) al introducirlo. */
+@media (max-width: 1199px) {
+  .st-key-graficas-etapas [data-testid="stHorizontalBlock"] { flex-direction: column; }
+  .st-key-graficas-etapas [data-testid="stColumn"] { width: 100% !important; flex: 1 1 100% !important; }
+}

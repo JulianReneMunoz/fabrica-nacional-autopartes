@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import matplotlib
 
@@ -286,3 +286,86 @@ def generar_graficas(ruta_metricas: Path, destino: Path) -> list[Path]:
     plt.close(fig)
     rutas.append(ruta)
     return rutas
+
+
+def series_etapas(metricas: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Series de cada etapa para gráficas interactivas (Streamlit), con los mismos cálculos que las PNG.
+
+    Cada etapa devuelve ``subtitulo`` y ``filas`` (``etiqueta``, ``valor``, ``unidad``, ``serie`` e
+    ``incidencia``); la etapa 6 devuelve ``tokens`` y el límite de validación. ``total`` indica cuántas
+    filas hay antes de limitar las series por página a las de mayor tamaño.
+    """
+    paginas = [p for p in metricas["paginas"] if not p.get("descartada")]
+    con_html = sorted(
+        (p for p in metricas["paginas"] if p.get("bytes_html")), key=lambda p: p["bytes_html"], reverse=True
+    )
+    salida: dict[str, dict[str, Any]] = {}
+
+    rastreo = (metricas.get("bronze") or {}).get("rastreo")
+    if rastreo:
+        protegidos = rastreo.get("hosts_protegidos") or {}
+        filas = [
+            ("Descubiertas en sitemaps", rastreo["descubiertas_sitemap"], False),
+            ("URL visitadas", rastreo["visitadas"], False),
+            ("Capturadas (Bronze)", rastreo["capturadas"], False),
+            ("Omitidas por robots.txt", rastreo["omitidas_robots"], True),
+            ("Errores HTTP / red", rastreo["errores"], True),
+            ("Duplicadas por hash", rastreo["duplicadas"], False),
+            ("Omitidas por protección antibots", rastreo.get("omitidas_proteccion", 0), True),
+        ]
+        salida["01_rastreo"] = {
+            "subtitulo": f"Resultado del rastreo en {rastreo['duracion_s']} s"
+            + (f" · protegido (no se elude): {', '.join(protegidos)}" if protegidos else ""),
+            "filas": [
+                {"etiqueta": e, "valor": v, "unidad": "URL", "serie": "", "incidencia": bool(i and v)}
+                for e, v, i in filas
+            ],
+        }
+    if con_html:
+        salida["02_bronze_paginas"] = {
+            "subtitulo": "Bytes de HTML original guardado por página",
+            "total": len(con_html),
+            "filas": [
+                {"etiqueta": _corto(p["url"]), "valor": p["bytes_html"] / 1024, "unidad": "KB", "serie": ""}
+                for p in con_html
+            ],
+        }
+    etapas: list[tuple[str, float]] = []
+    if con_html:
+        etapas.append(("HTML capturado (Bronze)", sum(p["bytes_html"] for p in con_html) / 1024))
+    etapas += [
+        ("Texto extraído", sum(p["caracteres_extraidos"] for p in paginas) / 1024),
+        ("Sin plantilla del sitio", sum(p["caracteres_sin_plantilla"] for p in paginas) / 1024),
+        ("Texto limpio (Silver)", metricas["silver"]["caracteres"] / 1024),
+        ("Fragmentos (Gold)", metricas["gold"]["caracteres"] / 1024),
+    ]
+    salida["03_reduccion"] = {
+        "subtitulo": "Kilobytes de contenido que sobreviven a cada etapa",
+        "filas": [{"etiqueta": e, "valor": v, "unidad": "KB", "serie": ""} for e, v in etapas],
+    }
+    paginas_ord = sorted(paginas, key=lambda p: p["caracteres_extraidos"], reverse=True)
+    salida["04_limpieza_paginas"] = {
+        "subtitulo": "Caracteres por página antes y después de limpiar",
+        "total": len(paginas_ord),
+        "filas": [
+            {"etiqueta": _corto(p["url"]), "valor": p[campo], "unidad": "caracteres", "serie": serie}
+            for p in paginas_ord
+            for campo, serie in (
+                ("caracteres_extraidos", "Texto extraído"),
+                ("caracteres_limpios", "Texto limpio"),
+            )
+        ],
+    }
+    por_seccion = sorted(metricas["gold"]["fragmentos_por_seccion"].items(), key=lambda kv: -kv[1])
+    salida["05_fragmentos_seccion"] = {
+        "subtitulo": "Fragmentos citables por sección del sitio",
+        "filas": [{"etiqueta": k, "valor": v, "unidad": "frag.", "serie": ""} for k, v in por_seccion],
+    }
+    tokens = metricas["gold"]["tokens_por_fragmento"]
+    salida["06_tokens_fragmento"] = {
+        "subtitulo": f"{len(tokens)} fragmentos · {metricas['gold']['tokens_aprox']} tokens en total",
+        "tokens": tokens,
+        "contenedores": min(20, max(5, len(tokens) // 2)),
+        "limite": 600,
+    }
+    return salida
