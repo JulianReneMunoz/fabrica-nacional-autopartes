@@ -47,9 +47,12 @@ Si el visor no carga (`/app/` da 404), compilarlo una vez: `cd web; npm ci; npm 
 | Línea de ensamble | http://127.0.0.1:8000/app/#/maquina/linea |
 | Motocicleta (referencia genérica) | http://127.0.0.1:8000/app/#/maquina/moto_honda (alias `#/moto`) |
 | Recorrido automático de la moto (30 s) | http://127.0.0.1:8000/app/#/maquina/moto_honda?tour=1 |
+| Explorador de la motocicleta | http://127.0.0.1:8000/app/#/explorador (ruta completa `#/maquina/moto_honda/explorador`) |
+| Lección enlazada: corte del motor | http://127.0.0.1:8000/app/#/maquina/moto_honda?vista=corte |
 | Swagger de la API | http://127.0.0.1:8000/docs |
 | Ficha de la CB 160F (JSON) | http://127.0.0.1:8000/api/v1/motos/cb160f |
 | Preguntas del modelo (JSON) | http://127.0.0.1:8000/api/v1/motos/cb160f/faq |
+| Sistemas de la moto (JSON) | http://127.0.0.1:8000/api/v1/simulador/ensamblajes/moto_honda/sistemas |
 | FAQ de Fanalca precalculadas (JSON) | http://127.0.0.1:8000/api/v1/faq-visor |
 | Videos de los recorridos | `docs/videos/recorrido_moto_honda.mp4` (y freno, prensa, línea) |
 
@@ -59,11 +62,12 @@ Si el visor no carga (`/app/` da 404), compilarlo una vez: `cd web; npm ci; npm 
 |---|---|---|
 | 0:00–1:00 | Streamlit, pestaña **Panel** | Base de conocimiento verificada por scraping responsable (robots.txt, User-Agent identificable, sin eludir protecciones): 64 documentos, 167 fragmentos, 63 fuentes. Cada dato lleva su procedencia. |
 | 1:00–2:00 | Pestaña **Proceso de datos** | Flujo Medallion: rastreo → Bronze → Silver → Gold → base de conocimiento; seis gráficas por etapa con paleta validada para daltonismo. |
-| 2:00–4:30 | Pestaña **Q&A** (sección 4) | Respuestas ancladas al contexto, con citas como insignias de fuente; rechazo con frase fija cuando el dato no existe; bloqueo de inyección de instrucciones. |
-| 4:30–5:00 | Pestaña **Simulador 3D** | Streamlit enlaza el visor; botones «Abrir biblioteca», «Abrir freno 3D» y «Abrir motocicleta». |
-| 5:00–8:30 | Visor: biblioteca y **moto** (sección 5) | La pregunta, la relación medible, los controles junto a la pieza y la idea principal. Supuestos marcados como «supuesto didáctico». |
-| 8:30–9:30 | Swagger: `POST /api/v1/motos/cb160f/calculo` | Contrato validado (422 ante entradas inválidas) y la misma física que el visor. |
-| 9:30–10:00 | Calidad | 269 pruebas de Python, 99 de Vitest y 41 de Playwright en verde; integración continua en verde; evaluación v3 con Claude (modo automático): exactitud 0,789 en preguntas respondibles y rechazo correcto 1,0 (0,737 con el contexto completo). |
+| 2:00–4:00 | Pestaña **Q&A** (sección 4) | Respuestas ancladas al contexto, con citas como insignias de fuente; rechazo con frase fija cuando el dato no existe; bloqueo de inyección de instrucciones. |
+| 4:00–4:45 | Q&A: **Buscar en la web con Claude** (sección 4.3) | Solo aparece tras la frase de rechazo y solo se ejecuta si se pulsa; respuesta etiquetada «no proviene de la base verificada», con URL y fecha; hallazgos a revisión humana (ADR-019). |
+| 4:45–7:15 | Visor: biblioteca y **moto** (sección 5) | La pregunta, la relación medible, los controles junto a la pieza y la idea principal. Supuestos marcados como «supuesto didáctico». |
+| 7:15–8:45 | **Explorador de la motocicleta** (sección 6) | Diez sistemas y 79 piezas con su función; ficha con fuente y estado; pregunta sobre la pieza con citas o rechazo; lección relacionada. |
+| 8:45–9:30 | Swagger: `POST /api/v1/motos/cb160f/calculo` | Contrato validado (422 ante entradas inválidas) y la misma física que el visor. |
+| 9:30–10:00 | Calidad | 288 pruebas de Python, 113 de Vitest y 46 de Playwright en verde; integración continua; evaluación v3 con Claude (modo automático): exactitud 0,789 en preguntas respondibles y rechazo correcto 1,0 (0,737 con el contexto completo), reproducida el 2026-11-07 (UTC). |
 
 ## 4. Q&A: preguntas de ejemplo
 
@@ -105,10 +109,27 @@ veces recupera un fragmento próximo pero no el exacto (por ejemplo, «sede prin
 frase de rechazo) y no reconoce preguntas sin respuesta cuando hay palabras en común con el corpus (el precio de una
 moto devuelve un fragmento sobre Honda). Con `claude_code` esos casos se resuelven.
 
+### 4.3 Búsqueda web complementaria (tras la frase de rechazo)
+
+Requiere red y la sesión de Claude Code. En Streamlit (pestaña Q&A) o en el visor («Preguntar en vivo», pestaña FAQ):
+
+1. Preguntar algo que la base no contiene, por ejemplo: **¿Quién es el actual presidente de la junta directiva de
+   Fanalca?** → frase de rechazo.
+2. Aparece el botón **«Buscar en la web con Claude»** (no antes ni de forma automática). Al pulsarlo, Claude busca solo
+   con `WebSearch` y `WebFetch` (unos 25–30 s) y muestra una respuesta etiquetada «Respuesta complementaria desde la
+   web — no proviene de la base verificada», con la URL y la fecha de consulta de cada dato. En una prueba local la
+   respuesta aclaró que no encontró una fuente sobre la junta directiva y citó una nota de fanalca.com sobre el
+   presidente de la compañía.
+3. Para mostrar la salvaguarda: la inyección (P24) no dispara búsqueda (`POST /api/v1/tareas/qa-web` responde 422).
+4. CLI equivalente: `uv run fabrica ask "¿Quién es el actual presidente de la junta directiva de Fanalca?" --web`.
+
+Los hallazgos se guardan en `data/revision/hallazgos_web.jsonl` como pendientes de revisión humana y nunca entran a
+la base ni a la evaluación v1–v3.
+
 ## 5. Visor: recorrido de la moto (3 minutos)
 
 1. Abrir la **biblioteca** (`#/`): cuatro tarjetas con la pregunta, la relación y datos de la empresa con su URL y
-   origen (SCRAPING, LECTURA WEB).
+   origen (SCRAPING, LECTURA WEB); la de la moto incluye el botón **Explorar piezas**.
 2. Entrar a la **motocicleta**. Idea: `v = rpm·2π·R / (i_prim · i_marcha · i_final)`; el freno invierte el camino.
 3. Controles junto a la pieza que afectan: **Acelerador**, **Marcha** (N a 5), **Palanca delantera o trasera** y **CBS**.
    Subir el acelerador en 1.ª, cambiar a 3.ª: las rpm saltan y la velocidad no; la cadena y la rueda giran con la relación real.
@@ -124,7 +145,19 @@ moto devuelve un fragmento sobre Honda). Con `claude_code` esos casos se resuelv
 Cada número sale del mismo modelo que la animación; los valores no publicados se rotulan «supuesto didáctico». La
 geometría es genérica y esquemática: no es un diseño industrial certificado ni una réplica de un modelo comercial.
 
-## 6. Contingencias
+## 6. Explorador de la motocicleta (1,5 minutos)
+
+1. Desde la tarjeta de la moto, **Explorar piezas** (o `#/explorador`). Selector de vista: **Interactiva · Explosión ·
+   Partes**.
+2. Pasar el cursor sobre la moto (contorno de la pieza) y pulsar el **motor**: se encuadra el sistema, el resto se
+   atenúa y el panel muestra su función, sus 13 piezas con la función de cada una y los datos de la ficha con su
+   estado («No publicado» cuando no existen).
+3. **Preguntar sobre esta pieza** (p. ej. la bujía con el buscador): respuesta del modelo genérico y citas de la base,
+   o la frase de rechazo.
+4. **Ver la lección**: el motor abre el corte y el ciclo de 4 tiempos; los frenos, el freno de disco.
+5. Franja inferior: los diez sistemas con su icono; también con teclado (Tab y Enter, Esc deselecciona).
+
+## 7. Contingencias
 
 | Problema | Acción |
 |---|---|
@@ -134,4 +167,5 @@ geometría es genérica y esquemática: no es un diseño industrial certificado 
 | El despiece de la moto se ve «plano» (solo en z) | La API en ejecución es anterior a los cambios: reiniciarla. |
 | `/app/` da 404 | `cd web; npm ci; npm run build` y recargar. |
 | La pestaña FAQ Fanalca del visor dice «Aún no hay respuestas» | Falta `data/gold/faq_visor.json`: `uv run fabrica faq-visor` (usa `claude_code`, unos 90 s). |
-| Sin conexión | El respaldo `extractivo` y el visor no necesitan red; las pruebas tampoco. |
+| Sin conexión | El respaldo `extractivo` y el visor no necesitan red; las pruebas tampoco. La búsqueda web sí la necesita: omitir la sección 4.3. |
+| La búsqueda web responde 429 | Límite de 5 búsquedas cada 10 minutos: esperar o reiniciar la API. |
