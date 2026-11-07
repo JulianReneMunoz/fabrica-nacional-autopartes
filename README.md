@@ -22,7 +22,7 @@ citas, API REST, servidor MCP y una biblioteca de máquinas 3D interactivas con 
 **Contenido:** [En 30 segundos](#en-30-segundos) · [Arquitectura](#arquitectura) · [Flujos](#flujos) ·
 [Mapa del código](#mapa-del-código) · [Capacidades](#capacidades) · [Inicio rápido](#inicio-rápido-en-windows-11) · [Referencia](#referencia) ·
 [Calidad](#calidad) · [Metodologías](#metodologías) · [Datos y ética](#datos-y-ética) ·
-[Limitaciones y hoja de ruta](#limitaciones-y-hoja-de-ruta) · [Glosario de siglas](#glosario-de-siglas) · [Licencia](#licencia)
+[Limitaciones y hoja de ruta](#limitaciones-y-hoja-de-ruta) · [Glosario de siglas](#glosario-de-siglas) · [Contribución](#contribución) · [Licencia](#licencia)
 
 ## En 30 segundos
 | | |
@@ -425,6 +425,11 @@ las de las metodologías.
 | TDD | Test-Driven Development | Desarrollo guiado por pruebas |
 | URL | Uniform Resource Locator | Localizador uniforme de recursos |
 | WIP | Work In Progress | Trabajo en curso |
+
+## Contribución
+Todo cambio entra a `main` por pull request desde una rama (`feat/`, `fix/`, `docs/`, `chore/`, `test/`), con el CI
+en verde y squash merge; no se hacen commits directos en `main`. Pasos y comandos en
+[`CONTRIBUTING.md`](CONTRIBUTING.md); decisión en [ADR-021](docs/arquitectura/adr/ADR-021-flujo-pull-requests.md).
 
 ## Licencia
 Código bajo licencia MIT ([`LICENSE`](LICENSE)). El contenido del corpus es propiedad de Fanalca y se cita con su

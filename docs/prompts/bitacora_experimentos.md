@@ -252,6 +252,16 @@ silencio la base Gold. El historial anterior conserva los HTML; quitarlos de ah�
 (repositorio privado o `git filter-repo` con push forzado).
 
 
+## R-03 · Flujo de trabajo con pull requests (2026-11-07)
+
+Los 42 commits anteriores entraron a `main` con push directo y el repositorio no tenía pull requests. Desde la rama
+`chore/flujo-pull-requests`, primer PR del repositorio, todo cambio entra por PR con el CI en verde y squash merge
+(ADR-021). El flujo `CI` ya se disparaba con `pull_request` además de `push` a `main`, así que no cambia. Checks
+obligatorios: `calidad-y-pruebas (ubuntu-latest)`, `calidad-y-pruebas (windows-latest)` y `visor-web`. Se agregan
+`.github/pull_request_template.md`, `CONTRIBUTING.md` y la regla de ramas en `AGENTS.md` (archivo de reglas de GGA).
+No se crean PR retroactivos para los commits anteriores.
+
+
 ## S-08 · Excepción documentada: Graphify (graphifyy 0.9.102) para el mapa del código (2026-11-07)
 
 Procedimiento: `fna-seguridad`, paso 5. Herramienta: SkillSpector v2.12.0 (`--no-llm`) sobre el paquete instalado
