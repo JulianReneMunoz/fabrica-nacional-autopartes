@@ -1,7 +1,8 @@
 # Bitácora de experimentación con prompts
 
-Protocolo: mismo banco de 24 preguntas (`evaluacion/preguntas.yaml`), misma base Gold, temperatura 0,1,
-una variable cambiada por experimento. Métricas definidas en `services/evaluacion.py`.
+Protocolo: mismo banco de 24 preguntas (`evaluacion/preguntas.yaml`), misma base Gold, temperatura configurada
+0,1 hasta E-06 y 0 desde E-07 (`claude_code` no la aplica; ver E-07), una variable cambiada por experimento.
+Métricas definidas en `services/evaluacion.py`.
 Toda cifra de esta bitácora proviene de un archivo en `evaluacion/resultados/`.
 
 ## Catálogo
@@ -409,3 +410,38 @@ Tiempo de indexación de los 167 fragmentos (codificación y carga en Chroma; 1 
 La GPU indexa unas 14 veces más rápido. En CPU, la primera repetición después del calentamiento fue más lenta
 (30,2 s), probablemente por la frecuencia del procesador o por la memoria; la mediana la descarta. Ambas mediciones
 usan el mismo `torch==2.14.1+cu130`.
+
+
+## E-07 · Temperatura 0 por defecto y repetición de v3 con `claude_code` (2026-11-07)
+
+Decisión (C4): `temperatura` pasa de 0,1 a 0 en `core/config.py`, para que la salida sea lo más determinista posible.
+La aplican `ollama`, `anthropic` y `openai` (salvo los modelos de razonamiento que solo aceptan el valor por
+defecto); **`claude_code` no la aplica**, porque la CLI `claude -p` no tiene esa opción, y `extractivo` no es un LLM.
+Cada informe registra ahora `temperatura`, `temperatura_aplicada` (`llm.proveedores.aplica_temperatura`),
+`recuperador` y las fuentes citadas por pregunta. `.env.example` todavía declara `FNA_TEMPERATURA=0.1` y debe
+actualizarse a mano (el archivo no es editable desde la sesión de agentes); la ejecución de esta entrada registró
+0,0, es decir, el entorno local no la sobrescribe.
+
+Repetición con la misma configuración (`claude_code` / `sonnet` / v3 / modo `auto` / BM25), aprobada por el usuario.
+Como la temperatura no llega al modelo, la diferencia mide la **variabilidad entre ejecuciones**, no el efecto de T:
+
+| Métrica | 20261107T013627Z (T configurada 0,1) | 20261107T224737Z (T configurada 0) |
+|---|---|---|
+| Exactitud en respondibles | 0,789 | 0,789 |
+| Cobertura del contexto | 0,842 | 0,842 |
+| Rechazo correcto | 1,0 | 0,8 |
+| Tasa fundamentada | 0,842 | 0,789 |
+| Exactitud global | 0,833 | 0,792 |
+| Latencia media | 5326 ms | 5039 ms |
+
+Cambiaron 2 de 24 preguntas, con las mismas fuentes recuperadas:
+- **P20 (ausente, horario de atención):** antes, la frase de rechazo fija; ahora, «La información publicada no incluye
+  el horario de atención…» más dirección, teléfono y correo. No inventa el horario, pero incumple la frase fija y
+  cuenta como fallo (rechazo correcto 1,0 → 0,8).
+- **P01 (sede):** sigue acertando los 4 hechos, pero añade «El contexto no indica explícitamente cuál es la "sede
+  principal"…», lo que baja el puntaje automático de fundamentación por debajo del umbral (0,842 → 0,789).
+
+Conclusión: con `claude_code`, dos ejecuciones idénticas difieren en 1 de 24 aciertos; la cifra de E-01 a E-03 tiene
+ese margen de variación. Medir el efecto real de T exige un proveedor que la aplique (`anthropic` con clave de API u
+`ollama`, pospuesto en la ADR-022). Las cuatro preguntas representativas están en la
+[tabla Q1–Q4](../evaluacion/tabla_q1_q4.md).

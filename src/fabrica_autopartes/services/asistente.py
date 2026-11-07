@@ -152,6 +152,10 @@ class ServicioAsistente:
         return resultado
 
     # ------------------------------------------------------- base semántica
+    def disponibilidad_semantica(self) -> tuple[bool, str]:
+        """``(True, "")`` si el recuperador semántico puede usarse; si no, ``(False, motivo)`` (sin red)."""
+        return self.base.disponibilidad_semantica()
+
     def indexar_vectores(self, descargar: bool = False) -> dict[str, object]:
         """Reconstruye ``data/vectores/`` (Chroma) con los fragmentos Gold y nomic (ADR-023).
 

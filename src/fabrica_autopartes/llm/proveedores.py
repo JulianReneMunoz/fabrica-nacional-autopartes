@@ -26,6 +26,19 @@ def _modelo_sin_temperatura(modelo: str) -> bool:
     return modelo.startswith(("gpt-5", "o1", "o3", "o4"))
 
 
+def aplica_temperatura(proveedor: str, modelo: str) -> bool:
+    """Indica si ``config.temperatura`` llega realmente al modelo.
+
+    ``claude_code`` usa la CLI ``claude -p``, sin opción de temperatura, y ``extractivo`` no es un LLM;
+    algunos modelos de razonamiento de OpenAI solo aceptan la temperatura por defecto.
+    """
+    if proveedor in ("ollama", "anthropic"):
+        return True
+    if proveedor == "openai":
+        return not _modelo_sin_temperatura(modelo)
+    return False
+
+
 def crear_modelo(
     config: Configuracion,
     proveedor: str | None = None,

@@ -17,7 +17,7 @@ from typing import Any
 
 import numpy as np
 
-from fabrica_autopartes.core.excepciones import ErrorBaseConocimientoVacia, ErrorConfiguracion
+from fabrica_autopartes.core.excepciones import ErrorConfiguracion, ErrorRecuperadorNoDisponible
 from fabrica_autopartes.domain.modelos import Fragmento
 from fabrica_autopartes.knowledge.embeddings import (
     FuncionEmbeddings,
@@ -51,6 +51,28 @@ def modelo_en_cache() -> bool:
 
     ruta = try_to_load_from_cache(MODELO_NOMIC, "config.json", revision=REVISION_MODELO)
     return isinstance(ruta, str)
+
+
+def indice_construido(directorio: Path) -> bool:
+    """Indica si ``directorio`` contiene la colección de Chroma (sin cargar el modelo)."""
+    if not (directorio / "chroma.sqlite3").exists():
+        return False
+    import chromadb
+    from chromadb.config import Settings
+
+    cliente = chromadb.PersistentClient(path=str(directorio), settings=Settings(anonymized_telemetry=False))
+    return any(c.name == COLECCION for c in cliente.list_collections())
+
+
+def disponibilidad(directorio: Path) -> tuple[bool, str]:
+    """``(True, "")`` si el recuperador semántico puede usarse; si no, ``(False, motivo)``. Sin red."""
+    if not extra_instalado():
+        return False, "falta el extra semantica-cpu o semantica-gpu (torch, sentence-transformers, chromadb)"
+    if not modelo_en_cache():
+        return False, f"el modelo {MODELO_NOMIC} no está en la caché de Hugging Face"
+    if not indice_construido(directorio):
+        return False, f"no existe el índice vectorial en {directorio.name}/"
+    return True, ""
 
 
 def info_entorno(dispositivo: str) -> dict[str, Any]:
@@ -159,9 +181,7 @@ class IndiceChroma:
         try:
             coleccion = self._cliente.get_collection(COLECCION)
         except NotFoundError as exc:
-            raise ErrorBaseConocimientoVacia(
-                "No existe el índice vectorial. Ejecutar 'uv run --no-sync fabrica indexar-vectores'."
-            ) from exc
+            raise ErrorRecuperadorNoDisponible("no existe el índice vectorial") from exc
         total = coleccion.count()
         if total == 0 or k <= 0:
             return []

@@ -23,6 +23,7 @@ from pathlib import Path
 import yaml
 
 from fabrica_autopartes.core.config import RAIZ_PROYECTO
+from fabrica_autopartes.llm.proveedores import aplica_temperatura
 from fabrica_autopartes.llm.salvaguardas import es_rechazo
 from fabrica_autopartes.services.asistente import ServicioAsistente
 
@@ -52,6 +53,7 @@ class ResultadoPregunta:
     fundamentada: bool = False
     fuentes: list[str] = field(default_factory=list)
     latencia_ms: int = 0
+    recuperador: str = "no_aplica"  # el realmente usado (no_aplica con contexto completo o bloqueado)
 
 
 def cargar_preguntas(ruta: Path = ARCHIVO_PREGUNTAS) -> list[dict]:
@@ -76,6 +78,9 @@ def evaluar(
                 r.modo_contexto if r.modo_contexto in ("completo", "seleccion") else "auto",
                 servicio.config.presupuesto_tokens_contexto,
                 servicio.config.fragmentos_seleccion,
+                r.recuperador
+                if r.recuperador != "no_aplica"
+                else None,  # el mismo contexto que recibió el modelo
             )
             en_ctx = hechos_presentes(ctx.texto, p["hechos"])
             acierto = len(encontrados) >= p.get("minimo", 1) and not es_rechazo(r.respuesta)
@@ -94,6 +99,7 @@ def evaluar(
                 fundamentada=r.fundamentada,
                 fuentes=[f.fragmento_id for f in r.fuentes],
                 latencia_ms=r.latencia_ms,
+                recuperador=r.recuperador,
             )
         )
 
@@ -127,6 +133,11 @@ def evaluar(
         "modelo": modelo,
         "version_prompt": version,
         "modo_contexto": modo,
+        # Recuperador solicitado; el usado en cada pregunta queda en detalle[].recuperador.
+        "recuperador": op.get("recuperador") or servicio.config.recuperador,
+        "recuperadores_usados": sorted({r.recuperador for r in resultados}),
+        "temperatura": servicio.config.temperatura,
+        "temperatura_aplicada": aplica_temperatura(proveedor, modelo),
         "metricas": metricas,
         "detalle": [asdict(r) for r in resultados],
     }
@@ -150,20 +161,30 @@ def evaluar(
     return informe
 
 
+def _linea_temperatura(informe: dict) -> str:
+    """Temperatura configurada y si el proveedor la aplica (los informes anteriores no la registraban)."""
+    if "temperatura" not in informe:
+        return ""
+    aplicada = "sí" if informe.get("temperatura_aplicada") else "no (el proveedor no la usa)"
+    return f"Temperatura configurada: {informe['temperatura']} · aplicada: {aplicada}"
+
+
 def informe_markdown(informe: dict) -> str:
     m = informe["metricas"]
     lineas = [
         f"# Evaluación Q&A — {informe['proveedor']} / {informe['modelo']} / "
         f"prompt {informe['version_prompt']}",
         "",
-        f"Fecha: {informe['fecha']} · Modo de contexto: {informe['modo_contexto']}",
+        f"Fecha: {informe['fecha']} · Modo de contexto: {informe['modo_contexto']}"
+        + (f" · Recuperador: {informe['recuperador']}" if "recuperador" in informe else ""),
+        _linea_temperatura(informe),
         "",
         "| Métrica | Valor |",
         "|---|---|",
         *[f"| {k} | {v} |" for k, v in m.items()],
         "",
-        "| ID | Tipo | Acierto | Fundamentada | Hechos encontrados | Respuesta |",
-        "|---|---|---|---|---|---|",
+        "| ID | Tipo | Acierto | Fundamentada | Hechos encontrados | Fuentes | Respuesta |",
+        "|---|---|---|---|---|---|---|",
     ]
     for d in informe["detalle"]:
         resp = d["respuesta"].replace("\n", " ").replace("|", "/")
@@ -171,6 +192,7 @@ def informe_markdown(informe: dict) -> str:
             resp = resp[:157] + "..."
         lineas.append(
             f"| {d['id']} | {d['tipo']} | {'sí' if d['acierto'] else 'no'} | "
-            f"{'sí' if d['fundamentada'] else 'no'} | {', '.join(d['hechos_encontrados'])} | {resp} |"
+            f"{'sí' if d['fundamentada'] else 'no'} | {', '.join(d['hechos_encontrados'])} | "
+            f"{', '.join(d.get('fuentes', []))} | {resp} |"
         )
     return "\n".join(lineas) + "\n"

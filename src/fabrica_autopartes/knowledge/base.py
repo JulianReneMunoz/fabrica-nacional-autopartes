@@ -9,6 +9,7 @@ from pathlib import Path
 from fabrica_autopartes.core.excepciones import (
     ErrorBaseConocimientoVacia,
     ErrorConfiguracion,
+    ErrorRecuperadorNoDisponible,
     ErrorRecursoNoEncontrado,
 )
 from fabrica_autopartes.domain.modelos import EstadisticasBase, Fragmento
@@ -73,16 +74,23 @@ class BaseConocimiento:
         if nombre != "semantico":
             raise ErrorConfiguracion(f"Recuperador desconocido: '{nombre}' (bm25 o semantico)")
         if self._semantico is None:
-            from fabrica_autopartes.knowledge.semantica import EmbeddingsNomic, IndiceChroma, extra_instalado
+            from fabrica_autopartes.knowledge import semantica
 
-            if not extra_instalado():
-                raise ErrorConfiguracion(
-                    "El recuperador semántico requiere el extra semantica-cpu o semantica-gpu "
-                    "(make instalar-semantica)"
-                )
-            funcion = EmbeddingsNomic(self.dispositivo_embeddings)
-            self._semantico = IndiceChroma(self.dir_vectores, funcion, self.fragmentos)
+            disponible, motivo = semantica.disponibilidad(self.dir_vectores)
+            if not disponible:
+                raise ErrorRecuperadorNoDisponible(motivo)
+            self._semantico = semantica.IndiceChroma(
+                self.dir_vectores, semantica.EmbeddingsNomic(self.dispositivo_embeddings), self.fragmentos
+            )
         return self._semantico
+
+    def disponibilidad_semantica(self) -> tuple[bool, str]:
+        """Disponibilidad del recuperador semántico sin cargar el modelo (para la API y la interfaz)."""
+        if self._semantico is not None:
+            return True, ""
+        from fabrica_autopartes.knowledge import semantica
+
+        return semantica.disponibilidad(self.dir_vectores)
 
     def usar_recuperador_semantico(self, recuperador: Recuperador) -> None:
         """Inyecta un recuperador semántico (pruebas o índice ya construido)."""

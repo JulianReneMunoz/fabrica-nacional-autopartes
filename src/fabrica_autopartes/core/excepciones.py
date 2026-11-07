@@ -47,3 +47,16 @@ class ErrorLimiteBusquedaWeb(ErrorFNA):
 
     codigo = "limite_busqueda_web"
     estado_http = 429
+
+
+class ErrorRecuperadorNoDisponible(ErrorFNA):
+    """El recuperador semántico no está listo: falta el extra, el modelo o el índice (ADR-023)."""
+
+    codigo = "recuperador_no_disponible"
+    estado_http = 503
+
+    INSTRUCCION = "Ejecutar 'make instalar-semantica-gpu' (o 'make instalar-semantica') y 'make indexar'."
+
+    def __init__(self, motivo: str) -> None:
+        super().__init__(f"Recuperador semántico no disponible: {motivo}. {self.INSTRUCCION}")
+        self.motivo = motivo

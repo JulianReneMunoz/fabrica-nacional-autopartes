@@ -103,7 +103,8 @@ class Configuracion(BaseSettings):
     # --- LLM ---------------------------------------------------------------
     proveedor_llm: Proveedor = "ollama"
     modelo_llm: str = "llama3.2:3b"
-    temperatura: float = 0.1
+    # 0: salida lo más determinista posible (C4); claude_code y extractivo no la usan (aplica_temperatura).
+    temperatura: float = 0.0
     ollama_url: str = "http://localhost:11434"
     ollama_num_ctx: int = 16384
     openai_api_key: SecretStr | None = None
