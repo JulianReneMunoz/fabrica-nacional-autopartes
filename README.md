@@ -309,7 +309,7 @@ scripts/                 PowerShell y utilidades Python
 ```
 | Verificación | Resultado (última corrida completa) |
 |---|---|
-| pytest | 295 pruebas (unitarias, integración y e2e de Streamlit), sin red |
+| pytest | 334 pruebas (unitarias, integración y e2e de Streamlit), sin red; sin el extra semántico se omiten las 3 que usan el modelo nomic |
 | Vitest | 113 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz, explorador y búsqueda web) |
 | Playwright | 46 pruebas E2E (de extremo a extremo) del visor con SwiftShader (≥ 50 fps exigidos) |
 | Ruff, mypy y capas | Sin hallazgos |
@@ -331,7 +331,16 @@ Evidencias en [`docs/evidencias/`](docs/evidencias/); trazabilidad en [`docs/req
 Con Claude, v3 en modo automático iguala la exactitud global de v2 y supera su fundamentación; v1 no rechaza las
 preguntas sin respuesta. Una repetición de v3 automático del 2026-11-07
 ([`20261107T013627Z_claude_code_sonnet_v3_auto.md`](evaluacion/resultados/20261107T013627Z_claude_code_sonnet_v3_auto.md))
-reprodujo las mismas cifras (0,789 · 1,0 · 0,842 · 0,833), con latencia media de 5,3 s.
+reprodujo las mismas cifras (0,789 · 1,0 · 0,842 · 0,833), con latencia media de 5,3 s. Una tercera, ya con
+temperatura configurada en 0 (que `claude_code` no aplica), dio 0,789 · 0,8 · 0,789 · 0,792: la diferencia es
+variabilidad entre ejecuciones (P20 y P01; entrada E-07 de la [bitácora](docs/prompts/bitacora_experimentos.md)).
+Cuatro casos representativos (respondible, ausente, fuera de alcance e inyección) en la
+[tabla Q1–Q4](docs/evaluacion/tabla_q1_q4.md).
+
+**Prompts versionados:** [`src/fabrica_autopartes/llm/prompts/`](src/fabrica_autopartes/llm/prompts/)
+(`qa.yaml`, `faq.yaml` y `resumen.yaml` con v1, v2 y v3, más `busqueda_web.yaml`). Una versión ya evaluada no se
+edita: un cambio se agrega como versión nueva en el mismo YAML, y cada informe de evaluación registra la versión usada
+([ADR-009](docs/arquitectura/adr/ADR-009-prompts-versionados.md)).
 
 ## Metodologías
 Estado según la evidencia del repositorio y de su historial. **Modelo:** agente de Claude Code asignado en

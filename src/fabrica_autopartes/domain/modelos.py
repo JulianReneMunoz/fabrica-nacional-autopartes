@@ -73,6 +73,8 @@ class RespuestaQA(BaseModel):
     proveedor: str
     modelo: str
     modo_contexto: str
+    # Recuperador usado en el modo «seleccion»; «no_aplica» con contexto completo o bloqueado.
+    recuperador: Literal["bm25", "semantico", "no_aplica"] = "no_aplica"
     latencia_ms: int = 0
 
 

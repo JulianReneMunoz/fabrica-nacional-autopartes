@@ -132,6 +132,7 @@ def ejecutar_qa(
         proveedor=op.proveedor,
         modelo=op.modelo,
         modo_contexto=ctx.modo,
+        recuperador=op.recuperador if ctx.modo == "seleccion" else "no_aplica",  # type: ignore[arg-type]
         latencia_ms=_ms(inicio),
     )
 

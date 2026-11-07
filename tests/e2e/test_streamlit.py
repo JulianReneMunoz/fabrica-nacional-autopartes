@@ -149,6 +149,7 @@ def test_qa_no_cambia_la_llamada_al_servicio(app, monkeypatch) -> None:  # type:
     assert kwargs == {
         "canal": "streamlit",
         "modo_contexto": "auto",
+        "recuperador": "bm25",
         "proveedor": "extractivo",
         "modelo": "lexico-bm25",
         "version_prompt": "v3",
@@ -235,3 +236,56 @@ def test_proceso_datos_aviso_rastreo_real_y_seis_graficas(app, config_con_base) 
         "incidencia" in g for g in graficas
     )  # las incidencias del rastreo se rotulan, no solo se colorean
     assert any(b.label == "Regenerar gráficas desde las métricas actuales" for b in app.button)
+
+
+def _radio_recuperador(app):  # type: ignore[no-untyped-def]
+    return next(r for r in app.radio if r.label == "Recuperador")
+
+
+def test_selector_recuperador_desactivado_sin_base_semantica(app) -> None:  # type: ignore[no-untyped-def]
+    """Sin índice (o sin el extra, como en CI) la opción semántica queda desactivada con un aviso."""
+    radio = _radio_recuperador(app)
+    assert radio.disabled and radio.value == "BM25"
+    assert any("make indexar" in str(i.value) for i in app.info)
+
+
+def test_selector_recuperador_semantico_llega_al_servicio(config_con_base, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    import streamlit as st
+
+    llamadas: list[dict] = []
+
+    def falso(self, pregunta, **kwargs):  # type: ignore[no-untyped-def]
+        llamadas.append(kwargs)
+        return RespuestaQA(
+            pregunta=pregunta,
+            respuesta="La sede queda en Yumbo.",
+            fuentes=[
+                Fuente(fragmento_id="contacto#000", titulo="Contacto", url="https://fanalca.com/contacto/")
+            ],
+            fundamentada=True,
+            version_prompt="v3",
+            proveedor="extractivo",
+            modelo="lexico-bm25",
+            modo_contexto="seleccion",
+            recuperador=kwargs["recuperador"],
+        )
+
+    st.cache_data.clear()
+    monkeypatch.setattr(ServicioAsistente, "disponibilidad_semantica", lambda self: (True, ""))
+    monkeypatch.setattr(ServicioAsistente, "responder", falso)
+    monkeypatch.setenv("FNA_DIR_DATOS", str(config_con_base.dir_datos))
+    monkeypatch.setenv("FNA_URL_BASE_DATOS", config_con_base.url_base_datos)
+    monkeypatch.setenv("FNA_PROVEEDOR_LLM", "extractivo")
+    try:
+        at = AppTest.from_file(str(APP), default_timeout=60)
+        at.run()
+        radio = _radio_recuperador(at)
+        assert not radio.disabled
+        radio.set_value("Semántico").run()
+        at.chat_input[0].set_value("¿Dónde queda la sede?").run()
+        assert not at.exception
+        assert llamadas and llamadas[-1]["recuperador"] == "semantico"
+        tarjeta = next(str(m.value) for m in at.markdown if '<article class="fna-tarjeta"' in str(m.value))
+        assert "semántico" in tarjeta and 'href="https://fanalca.com/contacto/"' in tarjeta
+    finally:
+        st.cache_data.clear()

@@ -54,10 +54,10 @@ def test_chroma_persistente_ida_y_vuelta(nomic: semantica.EmbeddingsNomic, tmp_p
 
 
 def test_chroma_vacio_y_sin_coleccion(nomic: semantica.EmbeddingsNomic, tmp_path: Path) -> None:
-    from fabrica_autopartes.core.excepciones import ErrorBaseConocimientoVacia
+    from fabrica_autopartes.core.excepciones import ErrorRecuperadorNoDisponible
 
     indice = semantica.IndiceChroma(tmp_path / "vectores", nomic, [])
-    with pytest.raises(ErrorBaseConocimientoVacia, match="indexar-vectores"):
+    with pytest.raises(ErrorRecuperadorNoDisponible, match="make indexar"):
         indice.buscar("sede")
     assert indice.indexar([]) == 0
     assert indice.buscar("sede") == []

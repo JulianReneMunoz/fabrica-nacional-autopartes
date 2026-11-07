@@ -12,10 +12,22 @@ from fabrica_autopartes.services.asistente import ServicioAsistente
 router = APIRouter(prefix="/api/v1/tareas", tags=["Tareas LLM"])
 
 
-@router.post("/qa", response_model=RespuestaQA, summary="Responder una pregunta con base en el contexto")
+@router.post(
+    "/qa",
+    response_model=RespuestaQA,
+    summary="Responder una pregunta con base en el contexto",
+    responses={
+        422: {"description": "Solicitud inválida (por ejemplo, un recuperador distinto de bm25 o semantico)"},
+        503: {"description": "Recuperador semántico no disponible: falta el extra, el modelo o el índice"},
+    },
+)
 def qa(solicitud: SolicitudQA, servicio: ServicioAsistente = Depends(obtener_servicio)) -> RespuestaQA:
     return servicio.responder(
-        solicitud.pregunta, canal="api", modo_contexto=solicitud.modo_contexto, **solicitud.como_kwargs()
+        solicitud.pregunta,
+        canal="api",
+        modo_contexto=solicitud.modo_contexto,
+        recuperador=solicitud.recuperador,
+        **solicitud.como_kwargs(),
     )
 
 

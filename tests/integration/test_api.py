@@ -104,3 +104,69 @@ def test_proveedor_inaccesible_devuelve_503(config_con_base, monkeypatch) -> Non
     r = TestClient(app).post("/api/v1/tareas/qa", json={"pregunta": "¿Dónde queda la sede principal?"})
     assert r.status_code == 503
     assert r.json()["codigo"] == "proveedor_llm_no_disponible"
+
+
+# ---------------------------------------------------------------- recuperador (ADR-023)
+def test_qa_recuperador_por_defecto_bm25(cliente) -> None:  # type: ignore[no-untyped-def]
+    r = cliente.post(
+        "/api/v1/tareas/qa",
+        json={"pregunta": "¿Dónde queda la sede principal?", "modo_contexto": "seleccion"},
+    ).json()
+    assert r["recuperador"] == "bm25" and r["modo_contexto"] == "seleccion"
+    completo = cliente.post(
+        "/api/v1/tareas/qa", json={"pregunta": "¿Dónde queda la sede principal?", "modo_contexto": "completo"}
+    ).json()
+    assert completo["recuperador"] == "no_aplica"
+
+
+def test_qa_recuperador_semantico_con_embeddings_deterministas(cliente, servicio) -> None:  # type: ignore[no-untyped-def]
+    from fabrica_autopartes.knowledge.embeddings import EmbeddingsDeterministas, IndiceVectorialMemoria
+
+    semantico = IndiceVectorialMemoria(servicio.base.fragmentos, EmbeddingsDeterministas())
+    servicio.base.usar_recuperador_semantico(semantico)
+    pregunta = "¿Cuál es el teléfono de contacto?"
+    r = cliente.post(
+        "/api/v1/tareas/qa",
+        json={"pregunta": pregunta, "modo_contexto": "seleccion", "recuperador": "semantico"},
+    )
+    assert r.status_code == 200
+    datos = r.json()
+    assert datos["recuperador"] == "semantico"
+    elegidos = {x.fragmento.id for x in semantico.buscar(pregunta, servicio.config.fragmentos_seleccion)}
+    assert datos["fuentes"], "el modelo extractivo cita al menos un fragmento del contexto"
+    for fuente in datos["fuentes"]:
+        assert set(fuente) == {"fragmento_id", "titulo", "url"}
+        assert fuente["fragmento_id"] in elegidos and fuente["url"].startswith("http")
+
+
+def test_qa_recuperador_semantico_no_disponible_503(cliente, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from fabrica_autopartes.knowledge import semantica
+
+    monkeypatch.setattr(semantica, "extra_instalado", lambda: False)
+    r = cliente.post(
+        "/api/v1/tareas/qa",
+        json={"pregunta": "¿Dónde queda la sede?", "modo_contexto": "seleccion", "recuperador": "semantico"},
+    )
+    assert r.status_code == 503
+    cuerpo = r.json()
+    assert cuerpo["codigo"] == "recuperador_no_disponible"
+    assert "make instalar-semantica-gpu" in cuerpo["mensaje"] and "make indexar" in cuerpo["mensaje"]
+
+
+def test_qa_recuperador_invalido_422(cliente) -> None:  # type: ignore[no-untyped-def]
+    r = cliente.post(
+        "/api/v1/tareas/qa", json={"pregunta": "¿Dónde queda la sede?", "recuperador": "vectorial"}
+    )
+    assert r.status_code == 422
+
+
+def test_qa_semantico_con_contexto_completo_no_exige_el_indice(cliente, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """Con el contexto completo no se recupera nada: pedir 'semantico' no da 503 y se informa 'no_aplica'."""
+    from fabrica_autopartes.knowledge import semantica
+
+    monkeypatch.setattr(semantica, "extra_instalado", lambda: False)
+    r = cliente.post(
+        "/api/v1/tareas/qa",
+        json={"pregunta": "¿Dónde queda la sede?", "modo_contexto": "completo", "recuperador": "semantico"},
+    )
+    assert r.status_code == 200 and r.json()["recuperador"] == "no_aplica"

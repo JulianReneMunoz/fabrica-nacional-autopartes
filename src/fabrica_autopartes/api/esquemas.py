@@ -23,6 +23,7 @@ T = TypeVar("T")
 ProveedorAPI = Literal["ollama", "openai", "anthropic", "claude_code", "extractivo"]
 VersionAPI = Literal["v1", "v2", "v3"]
 ModoAPI = Literal["auto", "completo", "seleccion"]
+RecuperadorAPI = Literal["bm25", "semantico"]
 
 
 class OpcionesLLM(BaseModel):
@@ -39,6 +40,10 @@ class SolicitudQA(OpcionesLLM):
         ..., min_length=3, max_length=500, examples=["¿Dónde queda la sede principal de Fanalca?"]
     )
     modo_contexto: ModoAPI | None = None
+    recuperador: RecuperadorAPI = Field(
+        "bm25",
+        description="Recuperador del modo seleccion: bm25 (por defecto) o semantico (nomic + Chroma)",
+    )
 
 
 class SolicitudQAWeb(BaseModel):

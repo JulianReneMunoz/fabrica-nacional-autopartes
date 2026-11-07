@@ -287,6 +287,7 @@ def tarjeta_respuesta(
     fuentes: Iterable[Any],
     origenes: Mapping[str, str] | None = None,
     es_rechazo: bool = False,
+    recuperador: str = "no_aplica",
 ) -> str:
     """Tarjeta HTML de una respuesta del Q&A. ``fuentes`` expone ``fragmento_id``, ``titulo`` y ``url``."""
     origenes = origenes or {}
@@ -295,6 +296,7 @@ def tarjeta_respuesta(
         chip("fundamentación", "con respaldo" if fundamentada else "sin respaldo", "estado", ok=fundamentada),
         chip("confianza", confianza),
         chip("contexto", modo_contexto),
+        chip("recuperador", {"bm25": "BM25", "semantico": "semántico"}.get(recuperador, "no aplica")),
         chip("modelo", f"{proveedor} · {modelo} · {version_prompt}"),
         chip("latencia", f"{latencia_ms} ms", "dato"),
     ]

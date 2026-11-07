@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from fabrica_autopartes.core.config import Configuracion
-from fabrica_autopartes.core.excepciones import ErrorConfiguracion
+from fabrica_autopartes.core.excepciones import ErrorConfiguracion, ErrorRecuperadorNoDisponible
 from fabrica_autopartes.domain.modelos import Fragmento
 from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.knowledge.embeddings import (
@@ -132,5 +132,19 @@ def test_semantico_sin_extra_da_un_error_claro(
     from fabrica_autopartes.knowledge import semantica
 
     monkeypatch.setattr(semantica, "extra_instalado", lambda: False)
-    with pytest.raises(ErrorConfiguracion, match="semantica-cpu"):
+    with pytest.raises(ErrorRecuperadorNoDisponible, match="semantica-cpu") as error:
         BaseConocimiento(config_con_base.dir_gold).recuperador("semantico")
+    assert error.value.estado_http == 503 and "make indexar" in str(error.value)
+    disponible, motivo = BaseConocimiento(config_con_base.dir_gold).disponibilidad_semantica()
+    assert not disponible and "semantica-cpu" in motivo
+
+
+def test_disponibilidad_sin_indice(config_con_base: Configuracion, monkeypatch: pytest.MonkeyPatch) -> None:
+    from fabrica_autopartes.knowledge import semantica
+
+    monkeypatch.setattr(semantica, "extra_instalado", lambda: True)
+    monkeypatch.setattr(semantica, "modelo_en_cache", lambda: True)
+    disponible, motivo = semantica.disponibilidad(config_con_base.dir_datos / "vectores")
+    assert not disponible and "índice vectorial" in motivo
+    monkeypatch.setattr(semantica, "modelo_en_cache", lambda: False)
+    assert "caché" in semantica.disponibilidad(config_con_base.dir_datos / "vectores")[1]

@@ -79,6 +79,12 @@ with st.sidebar:
     )
 
 
+@st.cache_data(ttl=30, show_spinner=False)
+def disponibilidad_semantica() -> tuple[bool, str]:
+    """Disponibilidad del recuperador semántico (extra, modelo e índice), sin cargar el modelo."""
+    return servicio.disponibilidad_semantica()
+
+
 def ejecutar(funcion, *args, **kwargs):  # type: ignore[no-untyped-def]
     try:
         with st.spinner("Consultando el modelo…"):
@@ -197,9 +203,34 @@ with t_qa:
     for col, ej in zip(cols, ejemplos, strict=True):
         if col.button(ej, width="stretch"):
             pregunta_ejemplo = ej
+    # Recuperador del modo «seleccion» (ADR-023): BM25 por defecto; el semántico solo si está disponible.
+    semantico_ok, motivo_semantico = disponibilidad_semantica()
+    eleccion = st.radio(
+        "Recuperador",
+        ["BM25", "Semántico"],
+        index=0,
+        horizontal=True,
+        disabled=not semantico_ok,
+        key="recuperador_qa",
+        help="BM25: búsqueda léxica (por defecto). Semántico: nomic-embed-text-v1.5 + Chroma local. "
+        "Se aplica cuando el modo de contexto es «seleccion» (o «auto» con una base grande).",
+    )
+    if not semantico_ok:
+        st.info(
+            f"Búsqueda semántica no disponible: {motivo_semantico}. "
+            "Ejecutar `make instalar-semantica-gpu` (o `make instalar-semantica`) y `make indexar`."
+        )
+    recuperador = "semantico" if semantico_ok and eleccion == "Semántico" else "bm25"
     pregunta = st.chat_input("Escribir una pregunta sobre Fanalca…") or pregunta_ejemplo
     if pregunta:
-        r = ejecutar(servicio.responder, pregunta, canal="streamlit", modo_contexto=modo, **opciones)
+        r = ejecutar(
+            servicio.responder,
+            pregunta,
+            canal="streamlit",
+            modo_contexto=modo,
+            recuperador=recuperador,
+            **opciones,
+        )
         if r is not None:
             st.session_state.historial.append(r)
     if "busquedas_web" not in st.session_state:
@@ -219,6 +250,7 @@ with t_qa:
                 fuentes=r.fuentes,
                 origenes=origenes_de(r.fuentes),
                 es_rechazo=es_rechazo(r.respuesta),
+                recuperador=r.recuperador,
             ),
             unsafe_allow_html=True,
         )
@@ -303,7 +335,14 @@ with t_lab:
             with col:
                 st.markdown(f"#### {v}")
                 op = {**opciones, "version_prompt": v}
-                r = ejecutar(servicio.responder, pregunta_lab, canal="laboratorio", modo_contexto=modo, **op)
+                r = ejecutar(
+                    servicio.responder,
+                    pregunta_lab,
+                    canal="laboratorio",
+                    modo_contexto=modo,
+                    recuperador=recuperador,  # el mismo elegido en la pestaña Q&A
+                    **op,
+                )
                 if r is not None:
                     st.write(r.respuesta)
                     st.caption(
