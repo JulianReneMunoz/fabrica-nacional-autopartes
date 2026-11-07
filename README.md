@@ -20,7 +20,7 @@ citas, API REST, servidor MCP y una biblioteca de máquinas 3D interactivas con 
 > demostrativas; los datos de la empresa provienen de sitios oficiales citados por URL.
 
 **Contenido:** [En 30 segundos](#en-30-segundos) · [Arquitectura](#arquitectura) · [Flujos](#flujos) ·
-[Capacidades](#capacidades) · [Inicio rápido](#inicio-rápido-en-windows-11) · [Referencia](#referencia) ·
+[Mapa del código](#mapa-del-código) · [Capacidades](#capacidades) · [Inicio rápido](#inicio-rápido-en-windows-11) · [Referencia](#referencia) ·
 [Calidad](#calidad) · [Metodologías](#metodologías) · [Datos y ética](#datos-y-ética) ·
 [Limitaciones y hoja de ruta](#limitaciones-y-hoja-de-ruta) · [Glosario de siglas](#glosario-de-siglas) · [Licencia](#licencia)
 
@@ -80,7 +80,7 @@ flowchart LR
 
 **Regla de dependencias:** `scraping → pipelines → knowledge → llm → services → interfaces`; una capa solo importa
 capas de nivel igual o inferior (`scripts/verificar_capas.py`). El acceso a SQL pasa por `repositories/auditoria.py`.
-Decisiones: [`docs/arquitectura/adr/`](docs/arquitectura/adr/) (19 ADR). Diagramas: [`docs/arquitectura/diagramas/`](docs/arquitectura/diagramas/).
+Decisiones: [`docs/arquitectura/adr/`](docs/arquitectura/adr/) (20 ADR). Diagramas: [`docs/arquitectura/diagramas/`](docs/arquitectura/diagramas/).
 
 ## Flujos
 <details open>
@@ -160,6 +160,16 @@ flowchart LR
 
 Los diagramas se mantienen en Mermaid, que GitHub renderiza de forma nativa en tema claro y oscuro (decisión S-07 de
 la [bitácora](docs/prompts/bitacora_experimentos.md)).
+
+## Mapa del código
+![Mapa del código por módulos: paquetes de Python y del visor web con sus dependencias](docs/imagenes/mapa_codigo.svg)
+
+Cada caja es un paquete del código (Python en azul, visor web en verde) con su número de nodos; cada flecha, las
+dependencias entre paquetes, y su grosor, cuántas son. El grafo completo tiene 1252 nodos, 3492 aristas y 52
+comunidades; los nodos más conectados son `ServicioAsistente`, `MaquinaMoto`, `BaseConocimiento`, `Ensamblaje` y
+`construir_moto` ([informe completo](docs/graphify/GRAPH_REPORT.md)).
+
+*Generado con Graphify v0.9.102, 2026-11-07 (solo código, análisis AST local sin LLM; [ADR-020](docs/arquitectura/adr/ADR-020-graphify-mapa-del-codigo.md)).*
 
 ## Capacidades
 | Capacidad | Detalle |
@@ -349,9 +359,10 @@ Estado según la evidencia del repositorio y de su historial. **Modelo:** agente
 | ADR, Architecture Decision Record (registro de decisión de arquitectura) | Aplicada | El porqué de cada decisión estructural | `revisor-calidad` (opus) y fases técnicas |
 | Revisión de skills con SkillSpector (escáner de seguridad para skills de agentes) | Aplicada | Nada de terceros sin escaneo y análisis manual | Escáner sin LLM |
 | Independent Critical Review (revisión crítica independiente) | Aplicada | Un revisor que no edita contrasta cada entrega | `revisor-calidad` (opus) |
+| Graphify — Code Knowledge Graph (grafo de conocimiento del código) | Aplicada (excepción S-08) | Mapa de dependencias y comunidades del código | Sin LLM: AST local con `GRAPHIFY_BACKEND=none` |
 
-No aplicadas: Kanban con Fibonacci y WIP, CRISP-DM, Model Card, Data Thinking, BMC, OKR, KPI, CPM, diagrama de Gantt,
-Archify (evaluada y descartada) y Graphify; motivos en [el detalle](docs/metodologias.md#no-aplicadas).
+No aplicadas: Kanban con Fibonacci y WIP, CRISP-DM, Model Card, Data Thinking, BMC, OKR, KPI, CPM, diagrama de Gantt
+y Archify (evaluada y descartada); motivos en [el detalle](docs/metodologias.md#no-aplicadas).
 
 ## Datos y ética
 - Scraping responsable: `robots.txt` y `Crawl-delay`, User-Agent identificable (`FNA-KB/1.0 (+URL del repositorio)`),

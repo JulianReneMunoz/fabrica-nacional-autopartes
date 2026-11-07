@@ -250,3 +250,42 @@ Como un clon nuevo trae el manifiesto sin el HTML, `construir_base` ahora inform
 alternativas (`fabrica pipeline` o `--fuente semilla`) en lugar de fallar con `FileNotFoundError` o de reemplazar en
 silencio la base Gold. El historial anterior conserva los HTML; quitarlos de ahí exige una decisión aparte
 (repositorio privado o `git filter-repo` con push forzado).
+
+
+## S-08 · Excepción documentada: Graphify (graphifyy 0.9.102) para el mapa del código (2026-11-07)
+
+Procedimiento: `fna-seguridad`, paso 5. Herramienta: SkillSpector v2.12.0 (`--no-llm`) sobre el paquete instalado
+con `uv tool` (`graphifyy==0.9.102`, `%APPDATA%\uv\tools\graphifyy\Lib\site-packages\graphify`). Criterio de rechazo:
+puntuación ≥ 51. Excepción por revisión manual aprobada por el usuario, solo para la versión fijada y el modo de uso
+descrito en la ADR-020.
+
+| Alcance | Puntuación | Hallazgos | Cobertura | Resultado |
+|---|---|---|---|---|
+| Paquete `graphify` (239 componentes) | 100/100 (CRITICAL) | 148 HIGH (59 TM1, 33 AR2, 23 PE3, 6 SC8, 5 SC9, 4 RA1, 4 SSRF1, 3 E2, 3 AS1 y otros 8), 163 MEDIUM, 2 LOW | 87,6 % | **excepción** |
+
+Análisis manual de los hallazgos altos:
+- **TM1 (59) y AR2 (33, en su mayoría):** `skill*.md`, `skills/*/references/*.md` y textos de ayuda; son las skills que
+  `graphify install` copiaría a la configuración de los agentes. No se instalan ni se ejecutan.
+- **PE3 (23):** `detect.py:140` y extractores: patrones que **excluyen** archivos sensibles (`id_rsa`, `.npmrc`,
+  `.git-credentials`) del análisis; no leen credenciales.
+- **SC8/SC9 (11):** `__pycache__/*.pyc` compilados en esta máquina por `uv` al instalar (no figuran en el `RECORD` del
+  paquete).
+- **E2 y AST5 (`__main__.py:782`, `:805`):** el proceso se relanza a sí mismo con `PYTHONHASHSEED=0` para que la salida
+  sea reproducible; `detect.py:1413` ejecuta `git ls-files` con el entorno heredado.
+- **SSRF1 (4), `llm.py:3390` y `security.py:169`:** protecciones contra direcciones de metadatos de la nube y contra
+  DNS rebinding en `safe_fetch`.
+- **AS1 (`install.py:251`), RA1, TM1 (`hooks.py:481`):** instalación en carpetas de agentes, `CLAUDE.md` y hooks de Git;
+  esos comandos (`install`, `claude install`, `hook install`) no se ejecutan, para no tocar `.claude/` ni el hook de GGA.
+- **Red:** solo `llm.py` (APIs de proveedores LLM y CLI de Claude) y `security.py` (`add <url>`); el modo usado no los
+  invoca. Sin telemetría (`querylog.py` desactivado por omisión).
+
+Modo de uso aprobado: `graphify extract <copia del código> --code-only --out <carpeta temporal>` con
+`GRAPHIFY_BACKEND=none` (sin LLM, sin red), sobre una copia de solo `.py`, `.ts` y `.tsx` de `src/` y `web/src/` (sin
+pruebas, datos, documentos, `.env`, `.claude`, `node_modules`, `.venv` ni `dist`). La salida se genera fuera del
+repositorio; solo se versionan el SVG y el informe depurados. Cualquier actualización exige repetir la revisión.
+
+Resultado (2026-11-07): 113 archivos (70 `.py`, 16 `.ts`, 27 `.tsx`), 1252 nodos, 3492 aristas y 52 comunidades,
+detectadas con Louvain de `networkx` (Leiden requiere `graspologic`, que no está instalado). `graphify export svg`
+requiere `matplotlib` y `scipy`, ausentes en el entorno de la herramienta; en lugar de instalarlos, la vista
+`docs/imagenes/mapa_codigo.svg` agrupa `graph.json` por paquete (18 módulos, 51 pares con dependencias) con el
+`matplotlib` del proyecto. La salida no contiene rutas absolutas, nombres de usuario, correos ni secretos.

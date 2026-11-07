@@ -32,9 +32,10 @@ configuración local no versionada. Resumen en el [README](../README.md#metodolo
 | Responsible Web Scraping (extracción web responsable: robots.txt, pausas, User-Agent identificable) | Aplicada | [`scraping/`](../src/fabrica_autopartes/scraping/), [ADR-015](arquitectura/adr/ADR-015-proteccion-antibots.md), [`test_rastreo.py`](../tests/integration/test_rastreo.py) | Extraer solo lo permitido y sin eludir protecciones | Desarrollo: F09, `ingeniero-datos` (sonnet); aplicación: sin LLM |
 | Prompt Engineering (ingeniería de instrucciones) versionado, con evaluación v1–v3 | Aplicada | [`llm/prompts/`](../src/fabrica_autopartes/llm/prompts/), [bitácora](prompts/bitacora_experimentos.md), [`evaluacion/resultados/`](../evaluacion/resultados/) | Comparar técnicas con el mismo banco de 24 preguntas | Desarrollo: F12 y F13, `ingeniero-llm` (sonnet); aplicación: `claude_code`/`sonnet`; `extractivo` como línea base y en pruebas |
 | Método Anatomy (máquinas interactivas para explicar mecanismos) | Aplicada | [`fna-maquinas-anatomia`](../skills/fna-maquinas-anatomia/SKILL.md), [`plantilla/`](../web/src/componentes/plantilla/) | Una pregunta y una relación medible por máquina | Desarrollo: F21, `ingeniero-3d-frontend` (sonnet) |
-| ADR, Architecture Decision Record (registro de decisión de arquitectura) | Aplicada | [`arquitectura/adr/`](arquitectura/adr/) (19) | Dejar el porqué de cada decisión estructural | Desarrollo: F08, `revisor-calidad` (opus), y fases técnicas |
+| ADR, Architecture Decision Record (registro de decisión de arquitectura) | Aplicada | [`arquitectura/adr/`](arquitectura/adr/) (20) | Dejar el porqué de cada decisión estructural | Desarrollo: F08, `revisor-calidad` (opus), y fases técnicas |
 | Revisión de skills con SkillSpector (escáner de seguridad para skills de agentes) | Aplicada | [bitácora](prompts/bitacora_experimentos.md) S-01 a S-07, [`fna-seguridad`](../skills/fna-seguridad/SKILL.md) | Ninguna skill o herramienta de terceros se instala sin escaneo ni análisis manual | Escáner con `--no-llm`; análisis manual en la sesión principal |
 | Independent Critical Review (revisión crítica independiente) | Aplicada | [bitácora](prompts/bitacora_experimentos.md) E-04 (hallazgo H-03); fases F06, F08, F14, F15 y F22 | Un revisor que no edita código contrasta cada entrega con `AGENTS.md` | Desarrollo: `revisor-calidad` (opus) |
+| Graphify — Code Knowledge Graph (grafo de conocimiento del código) | Aplicada (excepción S-08) | [`mapa_codigo.svg`](imagenes/mapa_codigo.svg), [`GRAPH_REPORT.md`](graphify/GRAPH_REPORT.md), [ADR-020](arquitectura/adr/ADR-020-graphify-mapa-del-codigo.md) | Mapa de dependencias y comunidades del código | Sin LLM: AST local con `--code-only` y `GRAPHIFY_BACKEND=none` |
 
 ## Cómo se aplicó cada una
 
@@ -169,8 +170,9 @@ cifras junto a las piezas, recorrido de menos de 30 s y modo experimento. La pla
 <details>
 <summary><b>ADR, Architecture Decision Record</b></summary>
 
-Diecinueve registros con contexto, decisión, alternativas y consecuencias, desde el uso de archivos para Medallion
-hasta el proveedor `claude_code`, la motocicleta de referencia, Engram y GGA, y la búsqueda web complementaria.
+Veinte registros con contexto, decisión, alternativas y consecuencias, desde el uso de archivos para Medallion
+hasta el proveedor `claude_code`, la motocicleta de referencia, Engram y GGA, la búsqueda web complementaria y
+Graphify.
 </details>
 
 <details>
@@ -187,6 +189,15 @@ descartó dos veces (S-04 y S-07).
 El agente `revisor-calidad`, sin permiso de edición, revisa fases completas contra `AGENTS.md` y las restricciones
 del proyecto; la entrada E-04 de la bitácora registra la revisión de la motocicleta y el hallazgo H-03 corregido. GGA
 añade una revisión automática en cada commit.
+</details>
+
+<details>
+<summary><b>Graphify — Code Knowledge Graph (grafo de conocimiento del código)</b></summary>
+
+Graphify (`graphifyy==0.9.102`, excepción S-08 y ADR-020) analizó por AST una copia de los `.py` de
+`src/fabrica_autopartes` y los `.ts`/`.tsx` de `web/src`, sin LLM ni red: 1252 nodos, 3492 aristas y 52 comunidades
+(Louvain). El README muestra una vista por paquetes derivada del grafo y el informe lista los nodos más conectados
+(`ServicioAsistente`, `MaquinaMoto`, `BaseConocimiento`) y confirma que no hay ciclos de importación.
 </details>
 
 ## No aplicadas
@@ -207,7 +218,6 @@ añade una revisión automática en cada commit.
   cronograma ni ruta crítica registrados.
 - **Archify** (diagramas de arquitectura generados por agentes): evaluada y descartada (bitácora S-04 y S-07); los
   diagramas están en Mermaid.
-- **Graphify** (grafo de conocimiento del código): sin evidencia de uso.
 </details>
 
 ## Glosario de siglas
@@ -226,12 +236,15 @@ añade una revisión automática en cada commit.
 | CRISP-DM | Cross-Industry Standard Process for Data Mining | Proceso estándar intersectorial para minería de datos |
 | E2E | End-to-End | De extremo a extremo |
 | FAQ | Frequently Asked Questions | Preguntas frecuentes |
+| — | Community detection (Leiden / Louvain) | Detección de comunidades: agrupa nodos muy conectados entre sí (aquí, Louvain) |
 | GGA | Gentleman Guardian Angel | Ángel guardián: revisión de código con IA antes de cada commit |
 | GLB | GL Transmission Format Binary | Formato binario de transmisión de modelos 3D |
+| — | God node | Nodo central: el más conectado del grafo de código |
 | GPU | Graphics Processing Unit | Unidad de procesamiento gráfico |
 | HTML | HyperText Markup Language | Lenguaje de marcado de hipertexto |
 | HTTP | HyperText Transfer Protocol | Protocolo de transferencia de hipertexto |
 | IA | Artificial Intelligence (AI) | Inteligencia artificial |
+| — | Knowledge Graph | Grafo de conocimiento: entidades y relaciones en forma de grafo |
 | KPI | Key Performance Indicator | Indicador clave de desempeño |
 | LCEL | LangChain Expression Language | Lenguaje de expresiones de LangChain |
 | LLM | Large Language Model | Modelo de lenguaje de gran tamaño |
