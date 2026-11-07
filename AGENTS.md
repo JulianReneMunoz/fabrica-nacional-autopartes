@@ -7,6 +7,10 @@ y fanalca.com. Versión 2.0: simulador 3D de ensamblajes (freno de disco) y bibl
 interactivas (método Anatomy).
 Especificación vigente: `docs/arquitectura/` (ADR y `moto_honda.md`), `docs/requisitos/` y `openspec/specs/`.
 
+## Flujo de ramas
+- Trabajar siempre en una rama; nunca hacer commit en main. Los cambios entran a `main` por pull request con el
+  CI en verde y squash merge (`CONTRIBUTING.md`, ADR-021).
+
 ## Comandos obligatorios (ejecutar antes de declarar terminada una tarea)
 - Dependencias: `uv sync` (nunca `pip install`; nunca editar `uv.lock` a mano).
 - Pruebas: `uv run pytest -q`
