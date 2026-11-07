@@ -12,13 +12,15 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, SecretStr
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 RAIZ_PROYECTO = Path(__file__).resolve().parents[3]
 
 Proveedor = Literal["ollama", "openai", "anthropic", "claude_code", "extractivo"]
 ModoContexto = Literal["auto", "completo", "seleccion"]
+Recuperador = Literal["bm25", "semantico"]
+DispositivoEmbeddings = Literal["auto", "cpu", "cuda"]
 
 
 class Configuracion(BaseSettings):
@@ -29,6 +31,7 @@ class Configuracion(BaseSettings):
         env_file=RAIZ_PROYECTO / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
     # --- Empresa y fuentes -------------------------------------------------
@@ -110,6 +113,14 @@ class Configuracion(BaseSettings):
     presupuesto_tokens_contexto: int = 9000
     fragmentos_seleccion: int = 8
 
+    # --- Base semántica (ADR-023; requiere el extra semantica-cpu o semantica-gpu) ---------
+    recuperador: Recuperador = "bm25"
+    # Se lee de EMBEDDINGS_DEVICE (sin prefijo) o de FNA_EMBEDDINGS_DEVICE.
+    embeddings_dispositivo: DispositivoEmbeddings = Field(
+        default="auto",
+        validation_alias=AliasChoices("EMBEDDINGS_DEVICE", "FNA_EMBEDDINGS_DEVICE", "embeddings_dispositivo"),
+    )
+
     # --- Persistencia y API -----------------------------------------------
     url_base_datos: str = f"sqlite:///{(RAIZ_PROYECTO / 'data' / 'app.db').as_posix()}"
     api_clave_admin: SecretStr | None = None
@@ -138,6 +149,10 @@ class Configuracion(BaseSettings):
     @property
     def archivo_fragmentos(self) -> Path:
         return self.dir_gold / "fragmentos.jsonl"
+
+    @property
+    def dir_vectores(self) -> Path:
+        return self.dir_datos / "vectores"
 
 
 @lru_cache(maxsize=1)

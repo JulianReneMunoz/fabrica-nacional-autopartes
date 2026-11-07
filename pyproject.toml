@@ -41,6 +41,9 @@ dependencies = [
 [project.optional-dependencies]
 anthropic = ["langchain-anthropic>=1.0,<2"]
 dinamico = ["playwright>=1.47"]
+# Base semántica (ADR-023): dos variantes excluyentes de PyTorch; CI e instalación base no instalan ninguna.
+semantica-cpu = ["torch==2.14.1", "sentence-transformers==5.7.0", "transformers==4.57.6", "chromadb==1.5.9", "einops==0.8.2"]
+semantica-gpu = ["torch==2.14.1", "sentence-transformers==5.7.0", "transformers==4.57.6", "chromadb==1.5.9", "einops==0.8.2"]
 
 [project.urls]
 Repository = "https://github.com/JulianReneMunoz/fabrica-nacional-autopartes"
@@ -76,6 +79,23 @@ packages = ["src/fabrica_autopartes"]
 
 [tool.uv]
 default-groups = ["dev"]
+conflicts = [[{ extra = "semantica-cpu" }, { extra = "semantica-gpu" }]]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "semantica-cpu" },
+    { index = "pytorch-cu130", extra = "semantica-gpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -89,7 +109,11 @@ markers = [
 
 [tool.coverage.run]
 source = ["fabrica_autopartes"]
-omit = ["src/fabrica_autopartes/scraping/dinamico.py"]
+omit = [
+    "src/fabrica_autopartes/scraping/dinamico.py",
+    # Requiere el extra semantica-cpu/gpu y el modelo (CI no los instala); pruebas en tests/integration.
+    "src/fabrica_autopartes/knowledge/semantica.py",
+]
 
 [tool.ruff]
 line-length = 110

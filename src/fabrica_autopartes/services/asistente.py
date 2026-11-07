@@ -53,7 +53,12 @@ class ServicioAsistente:
         buscador_web: BuscadorWeb | None = None,
     ) -> None:
         self.config = config or obtener_configuracion()
-        self.base = BaseConocimiento(self.config.dir_gold)
+        self.base = BaseConocimiento(
+            self.config.dir_gold,
+            self.config.dir_vectores,
+            self.config.recuperador,
+            self.config.embeddings_dispositivo,
+        )
         self.repo = repositorio or RepositorioAuditoria(self.config.url_base_datos)
         self._modelo_inyectado = modelo_llm  # usado por pruebas
         self._busqueda_web = ServicioBusquedaWeb(
@@ -145,6 +150,72 @@ class ServicioAsistente:
             },
         )
         return resultado
+
+    # ------------------------------------------------------- base semántica
+    def indexar_vectores(self, descargar: bool = False) -> dict[str, object]:
+        """Reconstruye ``data/vectores/`` (Chroma) con los fragmentos Gold y nomic (ADR-023).
+
+        Con ``descargar=False`` no accede a la red: el modelo debe estar en la caché de Hugging Face.
+        """
+        from fabrica_autopartes.knowledge.semantica import EmbeddingsNomic, IndiceChroma
+
+        self.base.exigir_contenido()
+        fragmentos = self.base.fragmentos
+        funcion = EmbeddingsNomic(self.config.embeddings_dispositivo, solo_local=not descargar)
+        indice = IndiceChroma(self.config.dir_vectores, funcion, fragmentos)
+        total = indice.indexar(fragmentos)
+        self.base.usar_recuperador_semantico(indice)
+        return {"fragmentos": total, "directorio": str(self.config.dir_vectores), **funcion.descripcion()}
+
+    def evaluar_recuperacion(
+        self, dispositivos: list[str], repeticiones: int = 3, calentamiento: int = 1
+    ) -> list[str]:
+        """Experimento de prefijos y comparación BM25 frente a semántico; guarda resultados en evaluacion/."""
+        import tempfile
+        from pathlib import Path
+
+        from fabrica_autopartes.knowledge.embeddings import FuncionEmbeddings, dispositivos_disponibles
+        from fabrica_autopartes.knowledge.semantica import EmbeddingsNomic, IndiceChroma, info_entorno
+        from fabrica_autopartes.services import evaluacion_recuperacion as er
+        from fabrica_autopartes.services.evaluacion import cargar_preguntas
+
+        self.base.exigir_contenido()
+        fragmentos = self.base.fragmentos
+        dispositivos = dispositivos_disponibles(dispositivos)
+        # Chroma mantiene abierto su SQLite en Windows: la carpeta temporal se borra sin exigirlo.
+        with tempfile.TemporaryDirectory(prefix="fna-vectores-", ignore_cleanup_errors=True) as tmp:
+            mediciones = iter(range(1, 10_000))
+
+            def crear_indice(funcion: FuncionEmbeddings, principal: bool) -> IndiceChroma:
+                # El índice principal es data/vectores; los de medición de tiempos van a la carpeta temporal.
+                if principal:
+                    return IndiceChroma(self.config.dir_vectores, funcion, fragmentos)
+                directorio = Path(tmp) / f"medicion_{next(mediciones)}"
+                return IndiceChroma(directorio, funcion, fragmentos)
+
+            prefijos, recuperadores = er.evaluar_base_semantica(
+                fragmentos,
+                cargar_preguntas(),
+                self.base.indice,
+                lambda d: EmbeddingsNomic(d),
+                crear_indice,
+                self.config.embeddings_dispositivo,
+                dispositivos,
+                repeticiones,
+                calentamiento,
+            )
+        dispositivo = prefijos["entorno"]["dispositivo"]
+        prefijos["entorno"] |= info_entorno(dispositivo)
+        recuperadores["entorno"] |= info_entorno(dispositivo)
+        for disp, t in recuperadores["tiempos_indexacion"].items():
+            t |= info_entorno(disp)
+        self.base.recargar()
+        return [
+            str(er.guardar_resultado("prefijos_c6", prefijos, er.markdown_prefijos(prefijos))),
+            str(
+                er.guardar_resultado("recuperadores", recuperadores, er.markdown_recuperadores(recuperadores))
+            ),
+        ]
 
     def rastrear(self, semillas: list[str] | None = None, usar_sitemap: bool = True) -> ResultadoRastreo:
         id_ = self.repo.iniciar_ejecucion("scraping")

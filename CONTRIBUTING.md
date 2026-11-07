@@ -79,7 +79,27 @@ make help
 | `make validar-moto` | `fabrica simulador validar --ensamblaje moto_honda` | — |
 | `make enlaces` | `scripts/verificar_enlaces.py` (sin red) | — |
 | `make graphify` | `scripts/graphify_codigo.py`: `--code-only` con `GRAPHIFY_BACKEND=none`, salida temporal fuera del repositorio | Procedimiento de la [ADR-020](docs/arquitectura/adr/ADR-020-graphify-mapa-del-codigo.md) |
+| `make instalar-semantica` | `uv sync --locked --extra semantica-cpu` (PyTorch CPU) | — |
+| `make instalar-semantica-gpu` | `uv sync --locked --extra semantica-gpu` (PyTorch cu130) | — |
+| `make indexar [DESCARGAR=--descargar]` | `fabrica indexar-vectores`: índice Chroma en `data/vectores/` con nomic | — |
+| `make comparar-recuperadores [DISPOSITIVOS=cpu,cuda]` | Experimento de prefijos y BM25 frente a semántico en `evaluacion/resultados/` | — |
 
-Todos los objetivos usan `uv run --no-sync` (salvo `instalar`). Los modelos locales quedan pospuestos y no tienen
-objetivo ([ADR-022](docs/arquitectura/adr/ADR-022-ollama-pospuesto.md)). `make -n <objetivo>` muestra los comandos sin
-ejecutarlos.
+Todos los objetivos usan `uv run --no-sync` (salvo los de instalación). Los modelos locales quedan pospuestos y no
+tienen objetivo ([ADR-022](docs/arquitectura/adr/ADR-022-ollama-pospuesto.md)). `make -n <objetivo>` muestra los
+comandos sin ejecutarlos.
+
+### Base semántica: CPU o GPU
+La base semántica ([ADR-023](docs/arquitectura/adr/ADR-023-base-semantica-nomic-chroma.md)) es opcional: CI y
+`make instalar` no instalan PyTorch, y BM25 sigue siendo el recuperador por defecto. Las dos variantes son excluyentes;
+cambiar de una a otra reemplaza `torch`.
+
+| Variante | Cuándo usarla | Descarga aproximada |
+|---|---|---|
+| `make instalar-semantica` (CPU) | Equipos sin GPU NVIDIA, Linux de servidor o cuando basta indexar de vez en cuando (167 fragmentos) | 0,3 GB |
+| `make instalar-semantica-gpu` (CUDA 13.0) | GPU NVIDIA con controlador compatible con CUDA 13 (probada en una RTX 5070 Ti Laptop GPU, sm_120); acelera la indexación y los experimentos | 2,1 GB |
+
+- `EMBEDDINGS_DEVICE=auto|cpu|cuda` (por defecto `auto`: `cuda` si PyTorch detecta una GPU) elige el dispositivo; el
+  usado queda en el registro y en los resultados.
+- La primera indexación descarga el modelo (unos 550 MB, a la caché de Hugging Face): `make indexar DESCARGAR=--descargar`.
+- `make instalar` o un `uv run` sin `--no-sync` dejan el entorno sin el extra: volver a ejecutar el objetivo de
+  instalación de la variante.

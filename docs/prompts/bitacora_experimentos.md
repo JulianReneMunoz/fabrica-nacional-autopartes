@@ -319,3 +319,93 @@ detectadas con Louvain de `networkx` (Leiden requiere `graspologic`, que no est�
 requiere `matplotlib` y `scipy`, ausentes en el entorno de la herramienta; en lugar de instalarlos, la vista
 `docs/imagenes/mapa_codigo.svg` agrupa `graph.json` por paquete (18 módulos, 51 pares con dependencias) con el
 `matplotlib` del proyecto. La salida no contiene rutas absolutas, nombres de usuario, correos ni secretos.
+
+
+## S-09 · `trust_remote_code` de nomic-embed-text-v1.5 con revisión fijada (2026-11-07)
+
+`nomic-ai/nomic-embed-text-v1.5` declara en `config.json` un `auto_map` hacia
+`nomic-ai/nomic-bert-2048--modeling_hf_nomic_bert.NomicBertModel`: cargarlo con `trust_remote_code=True` ejecuta
+código Python descargado de Hugging Face. Medidas (ADR-023):
+
+| Repositorio | Revisión fijada | Archivo | SHA-256 |
+|---|---|---|---|
+| `nomic-ai/nomic-embed-text-v1.5` | `e9b6763023c676ca8431644204f50c2b100d9aab` | `model.safetensors` (546 938 168 bytes) | — |
+| `nomic-ai/nomic-bert-2048` | `7710840340a098cfb869c4f65e87cf2b1b70caca` | `configuration_hf_nomic_bert.py` | `f7871694b8de3d3df4ac6640313d5799ce323261a0fb90c5cc567ecc34a0039e` |
+| `nomic-ai/nomic-bert-2048` | `7710840340a098cfb869c4f65e87cf2b1b70caca` | `modeling_hf_nomic_bert.py` | `3b24a366c4cc31b869466ccfb7bbb8879e138c97f8de06c83d4fa1e31a21f149` |
+
+- La revisión del modelo se pasa en `revision` y la del código remoto en `code_revision` (`model_kwargs` y
+  `config_kwargs`); el módulo cargado queda en
+  `~/.cache/huggingface/modules/transformers_modules/nomic_hyphen_ai/nomic_hyphen_bert_hyphen_2048/7710840340…`.
+  Sin las revisiones fijadas, `EmbeddingsNomic` se niega a cargar.
+- Revisión manual de los dos `.py` antes del primer uso: solo importan `torch`, `transformers`, `einops`,
+  `safetensors` y bibliotecas estándar (`megablocks`, opcional y no instalado); sin `subprocess`, sockets, `eval` ni
+  `exec`. `torch.load` (pickle) solo se usa si existe `pytorch_model.bin`, que la revisión fijada no publica (solo
+  `model.safetensors`).
+- Sin red por omisión: `local_files_only=True`; la descarga se hace solo con `fabrica indexar-vectores --descargar`
+  (la descarga inicial se hizo una vez, con aprobación, el 2026-11-07, con `EmbeddingsNomic(solo_local=False)`). El modelo es público: `HF_TOKEN` no es necesario.
+- Incompatibilidad encontrada: con `sentence-transformers` 6.2.0 y `transformers` 5.22.2, el código remoto falla
+  (`'NomicBertModel' object has no attribute 'get_extended_attention_mask'`). La revisión fijada es la última del
+  repositorio (2025-04-29); se fijan `sentence-transformers==5.7.0` y `transformers==4.57.6` en lugar de modificar el
+  código de terceros.
+
+Instalación (`uv sync --extra semantica-gpu`, índice `pytorch-cu130`): `torch==2.14.1+cu130` (descarga de 1,9 GiB),
+verificado con `torch.cuda.is_available()` = `True`, `NVIDIA GeForce RTX 5070 Ti Laptop GPU` y `sm_120` en
+`get_arch_list()`. `.venv` pasa de 684 a 4135 MiB (+3451 MiB; `torch`, 2934 MiB); modelo, 523 MiB en la caché de
+Hugging Face; índice `data/vectores/`, 3,3 MiB. La variante `semantica-cpu` se comprobó solo por resolución
+(`uv sync --extra semantica-cpu --dry-run`: reemplaza `torch==2.14.1+cu130` por `torch==2.14.1+cpu`). El servidor MCP
+en ejecución bloquea `fabrica-mcp.exe`, así que la instalación se completó con `--no-install-project --inexact`.
+
+
+## E-05 · Experimento C6: prefijos `search_query` y `search_document` (2026-11-07)
+
+Archivo: `evaluacion/resultados/20261107T202956Z_prefijos_c6.md` (`EMBEDDINGS_DEVICE=auto` → `cuda`). Se eligen tres
+pares consulta–fragmento con relevancia exclusiva (cada fragmento es relevante solo para su consulta dentro del trío)
+y al menos dos hechos presentes. Un primer intento con P01–P03 fijas se descartó: P02 no tiene fragmento relevante y
+P03 y P04 comparten fragmentos, de modo que la diagonal no era la única respuesta correcta.
+
+| Consulta | Fragmento | Coseno con prefijos | Coseno sin prefijos |
+|---|---|---|---|
+| Q1 · ¿Dónde queda la sede principal de Fanalca? (P01) | `contacto-sitio#000` | 0,6672 | 0,6503 |
+| Q2 · ¿En qué fecha se constituyó Fanalca? (P03) | `inicio#000` | 0,6873 | 0,6099 |
+| Q3 · ¿Qué cubre la Garantía Total Verdadera de Honda Autos? (P09) | `negocios-holda-autos#000` | 0,7673 | 0,7817 |
+
+| Variante | Diagonal media | Fuera de la diagonal | Margen | Aciertos top-1 |
+|---|---|---|---|---|
+| Con prefijos | 0,7073 | 0,5968 | 0,1105 | 3/3 |
+| Sin prefijos | 0,6806 | 0,5655 | 0,1151 | 2/3 |
+
+Con prefijos, cada consulta queda más cerca de su fragmento que de los otros dos (3/3). Sin prefijos, Q2 queda más
+cerca de `contacto-sitio#000` (0,6461) que de su fragmento (0,6099). Los prefijos elevan todas las similitudes, por lo
+que el margen medio casi no cambia; con 3 pares el resultado es ilustrativo, no estadístico. El índice usa siempre
+prefijos, como indica el modelo.
+
+
+## E-06 · Recuperadores: BM25 frente a semántico (nomic + Chroma) y tiempos por dispositivo (2026-11-07)
+
+Archivo: `evaluacion/resultados/20261107T202956Z_recuperadores.md`. Banco de 24 preguntas; se evalúan las 19
+`respondible` y se excluyen P02, P07 y P08 por no tener fragmento relevante en Gold (16 evaluadas). Relevante:
+fragmento con al menos `minimo` de los `hechos` de la pregunta (criterio aprobado).
+
+| Recuperador | hit@3 | hit@5 | MRR@10 | Rango 1 |
+|---|---|---|---|---|
+| BM25 (expansión de consultas) | 0,8125 | 0,9375 | 0,7646 | 11/16 |
+| Semántico (nomic + Chroma) | 0,8125 | 0,8750 | 0,8281 | 13/16 |
+
+- El semántico sube al rango 1 P11, P15 y P19 (BM25: 5, 5 y 3), pero no encuentra P01 (dirección de la sede, que BM25
+  resuelve en el rango 1) y baja P03 del rango 2 al 4. Ninguno encuentra P18.
+- Decisión: **BM25 sigue por defecto**. El semántico gana en MRR y pierde en hit@5, con 16 preguntas; la diferencia
+  no basta para cambiar. La complementariedad sugiere una recuperación híbrida como siguiente experimento.
+- Limitación del criterio: los hechos numéricos cortos coinciden por azar (por ejemplo, «450» en un fragmento sobre el
+  bus a hidrógeno), lo que puede marcar como relevantes fragmentos que no responden.
+
+Tiempo de indexación de los 167 fragmentos (codificación y carga en Chroma; 1 ejecución de calentamiento descartada,
+3 repeticiones, mediana; la carga del modelo se mide aparte):
+
+| `EMBEDDINGS_DEVICE` | Carga del modelo (s) | Repeticiones (s) | Mediana (s) |
+|---|---|---|---|
+| `cpu` | 1,826 | 30,168 · 16,473 · 16,226 | 16,473 |
+| `cuda` (RTX 5070 Ti Laptop GPU, CUDA 13.0) | 2,218 | 1,136 · 1,172 · 1,160 | 1,160 |
+
+La GPU indexa unas 14 veces más rápido. En CPU, la primera repetición después del calentamiento fue más lenta
+(30,2 s), probablemente por la frecuencia del procesador o por la memoria; la mediana la descarta. Ambas mediciones
+usan el mismo `torch==2.14.1+cu130`.

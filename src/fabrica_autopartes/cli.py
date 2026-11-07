@@ -12,6 +12,8 @@ Comandos:
   summary    Genera el resumen ejecutivo.
   evaluate   Ejecuta el banco de 24 preguntas y guarda métricas.
   stats      Muestra estadísticas de la base de conocimiento.
+  indexar-vectores       Construye el índice Chroma con nomic (extra semantica-cpu/gpu).
+  comparar-recuperadores Prefijos de nomic y BM25 frente a semántico (hit@k, MRR, tiempos).
   simulador  Genera o valida el ensamblaje 3D de demostración (v2.0).
   openapi    Exporta el contrato OpenAPI de la API.
 """
@@ -38,7 +40,16 @@ def _op(a: argparse.Namespace) -> dict[str, str | None]:
         "modelo": a.modelo,
         "version_prompt": a.version_prompt,
         "modo_contexto": getattr(a, "modo_contexto", None),
+        "recuperador": getattr(a, "recuperador", None),
     }
+
+
+def _opcion_recuperador(p: argparse.ArgumentParser) -> None:
+    p.add_argument(
+        "--recuperador",
+        choices=["bm25", "semantico"],
+        help="Recuperador del modo de contexto 'seleccion' (por defecto bm25; semantico requiere el índice)",
+    )
 
 
 def construir_parser() -> argparse.ArgumentParser:
@@ -84,6 +95,7 @@ def construir_parser() -> argparse.ArgumentParser:
         help="Si la base responde con la frase de rechazo, buscar en la web con Claude (WebSearch/WebFetch)",
     )
     _opciones_llm(a)
+    _opcion_recuperador(a)
 
     f = sub.add_parser("faq", help="Generar FAQ")
     f.add_argument("-n", type=int, default=8)
@@ -102,6 +114,21 @@ def construir_parser() -> argparse.ArgumentParser:
 
     e = sub.add_parser("evaluate", help="Evaluar con el banco de preguntas")
     _opciones_llm(e)
+    _opcion_recuperador(e)
+
+    iv = sub.add_parser("indexar-vectores", help="Construir data/vectores/ (Chroma + nomic, ADR-023)")
+    iv.add_argument(
+        "--descargar",
+        action="store_true",
+        help="Permitir la descarga del modelo desde Hugging Face (requiere red; por defecto solo la caché)",
+    )
+    cr = sub.add_parser("comparar-recuperadores", help="Experimento de prefijos y BM25 frente a semántico")
+    cr.add_argument(
+        "--dispositivos",
+        default="cpu,cuda",
+        help="Dispositivos para medir el tiempo de indexación, separados por comas (por defecto cpu,cuda)",
+    )
+    cr.add_argument("--repeticiones", type=int, default=3)
 
     sim = sub.add_parser("simulador", help="Simulador 3D v2.0: generar GLB y manifiesto")
     sim.add_argument("accion", choices=["generar", "validar"])
@@ -271,6 +298,17 @@ def _main(argv: list[str] | None = None) -> int:
 
     if args.comando == "stats":
         print(json.dumps(servicio.base.estadisticas().model_dump(mode="json"), ensure_ascii=False, indent=2))
+        return 0
+
+    if args.comando == "indexar-vectores":
+        info = servicio.indexar_vectores(descargar=args.descargar)
+        print(json.dumps(info, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.comando == "comparar-recuperadores":
+        dispositivos = [d.strip() for d in args.dispositivos.split(",") if d.strip()]
+        for resultado in servicio.evaluar_recuperacion(dispositivos, args.repeticiones):
+            print(f"Resultado: {resultado}")
         return 0
 
     if args.comando == "ask":

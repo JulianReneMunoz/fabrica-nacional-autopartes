@@ -6,14 +6,18 @@
 UV := uv run --no-sync
 PUERTO ?= 8000
 MAX_PAGINAS ?= 80
+DISPOSITIVOS ?= cpu,cuda
+DESCARGAR ?=
 
 .DEFAULT_GOAL := help
-.PHONY: help instalar calidad pruebas-web api app pipeline validar-moto enlaces graphify
+.PHONY: help instalar instalar-semantica instalar-semantica-gpu calidad pruebas-web api app pipeline \n	validar-moto enlaces graphify indexar comparar-recuperadores
 
 help: ## Lista los objetivos disponibles
-	$(info Uso: make <objetivo> [PUERTO=8000] [MAX_PAGINAS=80])
+	$(info Uso: make <objetivo> [PUERTO=8000] [MAX_PAGINAS=80] [DISPOSITIVOS=cpu,cuda] [DESCARGAR=--descargar])
 	$(info )
 	$(info   instalar      uv sync --locked y npm ci del visor)
+	$(info   instalar-semantica      Base semántica con PyTorch CPU (extra semantica-cpu, ADR-023))
+	$(info   instalar-semantica-gpu  Base semántica con PyTorch CUDA 13.0 (extra semantica-gpu))
 	$(info   calidad       ruff check, ruff format --check, mypy, verificar capas y pytest -q)
 	$(info   pruebas-web   Vitest del visor 3D (npm test en web/))
 	$(info   api           API FastAPI en http://127.0.0.1:$(PUERTO) (Swagger en /docs))
@@ -22,6 +26,8 @@ help: ## Lista los objetivos disponibles
 	$(info   validar-moto  Integridad del ensamblaje moto_honda)
 	$(info   enlaces       Enlaces relativos y anclas de README.md y docs/)
 	$(info   graphify      Grafo del código: --code-only, GRAPHIFY_BACKEND=none, salida fuera del repo (ADR-020))
+	$(info   indexar       Índice Chroma en data/vectores/ con nomic (DESCARGAR=--descargar la primera vez))
+	$(info   comparar-recuperadores  Prefijos C6 y BM25 frente a semántico; tiempos en $(DISPOSITIVOS))
 	$(info )
 	$(info Pospuesto (ver ADR-022): objetivos de Ollama retirados.)
 	@exit 0
@@ -36,6 +42,12 @@ calidad: ## Lint, formato, tipos, capas y pruebas de Python
 	$(UV) mypy
 	$(UV) python scripts/verificar_capas.py
 	$(UV) pytest -q
+
+instalar-semantica: ## Extra semantica-cpu (índice PyTorch CPU); no lo instala CI
+	uv sync --locked --extra semantica-cpu
+
+instalar-semantica-gpu: ## Extra semantica-gpu (índice PyTorch cu130, GPU NVIDIA con controlador CUDA 13)
+	uv sync --locked --extra semantica-gpu
 
 pruebas-web: ## Pruebas Vitest del visor
 	cd web && npm test
@@ -58,5 +70,11 @@ enlaces: ## Verificación de enlaces de la documentación (sin red)
 
 graphify: ## Mapa del código en el modo aprobado por la ADR-020
 	$(UV) python scripts/graphify_codigo.py
+
+indexar: ## Reconstruye data/vectores/ (Chroma + nomic); EMBEDDINGS_DEVICE=auto|cpu|cuda
+	$(UV) fabrica indexar-vectores $(DESCARGAR)
+
+comparar-recuperadores: ## Experimento de prefijos y comparación BM25 frente a semántico (evaluacion/resultados/)
+	$(UV) fabrica comparar-recuperadores --dispositivos $(DISPOSITIVOS)
 
 # Pospuesto (ver ADR-022): no hay objetivos de modelos locales; los LLM usan claude_code o extractivo.

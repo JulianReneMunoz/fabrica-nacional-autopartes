@@ -56,3 +56,6 @@ data/bronze/html/
 
 # Salida de Graphify (se genera fuera del repositorio; ADR-020)
 graphify-out/
+
+# Índice vectorial Chroma (se regenera con `fabrica indexar-vectores`; ADR-023)
+data/vectores/
