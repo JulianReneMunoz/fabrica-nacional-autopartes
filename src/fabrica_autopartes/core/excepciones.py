@@ -33,3 +33,17 @@ class ErrorScrapingBloqueado(ErrorFNA):
 
     codigo = "scraping_no_permitido"
     estado_http = 403
+
+
+class ErrorPreguntaBloqueada(ErrorFNA):
+    """La pregunta contiene instrucciones que intentan cambiar el comportamiento: no se busca en la web."""
+
+    codigo = "pregunta_bloqueada"
+    estado_http = 422
+
+
+class ErrorLimiteBusquedaWeb(ErrorFNA):
+    """Se superó el número de búsquedas web permitidas en la ventana de tiempo."""
+
+    codigo = "limite_busqueda_web"
+    estado_http = 429

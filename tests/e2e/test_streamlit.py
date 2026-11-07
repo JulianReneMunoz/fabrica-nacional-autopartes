@@ -153,3 +153,26 @@ def test_qa_no_cambia_la_llamada_al_servicio(app, monkeypatch) -> None:  # type:
         "modelo": "lexico-bm25",
         "version_prompt": "v3",
     }
+
+
+def test_busqueda_web_solo_tras_rechazo_y_etiquetada(app, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """Fase 9 (ADR-019): el botón aparece solo tras la frase de rechazo; la búsqueda es simulada (sin red)."""
+    from fabrica_autopartes.llm import busqueda_web as bw
+
+    llamadas: list[str] = []
+
+    def buscar(self, pregunta: str) -> bw.ResultadoBuscador:  # type: ignore[no-untyped-def]
+        llamadas.append(pregunta)
+        return bw.ResultadoBuscador("Dato web.", [{"dato": "Dato web", "url": "https://fanalca.com/x"}])
+
+    monkeypatch.setattr(bw.BuscadorClaudeCode, "buscar", buscar)
+    next(b for b in app.button if b.label.startswith("¿Dónde queda la sede")).click().run()
+    assert not any(b.label == "Buscar en la web con Claude" for b in app.button)  # respuesta de la base
+    app.chat_input[0].set_value("¿Cuál es la receta del sancocho valluno?").run()
+    boton = next(b for b in app.button if b.label == "Buscar en la web con Claude")
+    assert llamadas == []  # nunca automática
+    boton.click().run()
+    assert not app.exception
+    assert llamadas == ["¿Cuál es la receta del sancocho valluno?"]
+    assert any("no proviene de la base verificada" in str(w.value) for w in app.warning)
+    assert any("https://fanalca.com/x" in str(t.value) for t in app.text)  # texto plano, no Markdown

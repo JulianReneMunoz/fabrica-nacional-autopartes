@@ -80,7 +80,7 @@ flowchart LR
 
 **Regla de dependencias:** `scraping → pipelines → knowledge → llm → services → interfaces`; una capa solo importa
 capas de nivel igual o inferior (`scripts/verificar_capas.py`). El acceso a SQL pasa por `repositories/auditoria.py`.
-Decisiones: [`docs/arquitectura/adr/`](docs/arquitectura/adr/) (18 ADR). Diagramas: [`docs/arquitectura/diagramas/`](docs/arquitectura/diagramas/).
+Decisiones: [`docs/arquitectura/adr/`](docs/arquitectura/adr/) (19 ADR). Diagramas: [`docs/arquitectura/diagramas/`](docs/arquitectura/diagramas/).
 
 ## Flujos
 <details open>
@@ -170,6 +170,7 @@ la [bitácora](docs/prompts/bitacora_experimentos.md)).
 | Biblioteca de máquinas 3D | Freno de disco, prensa, línea de ensamble y motocicleta; método Anatomy (una pregunta, una relación medible) |
 | Explorador de la motocicleta | Diez sistemas, 79 piezas con su función, ficha con fuente y estado, pregunta sobre cada pieza (`#/explorador`) |
 | Fichas técnicas | Cada campo `publicado`, `no_publicado` o `supuesto`; lo no publicado se muestra como tal |
+| Búsqueda web complementaria | Tras la frase de rechazo y solo a petición: Claude con `WebSearch` y `WebFetch`, respuesta etiquetada con URL y fecha, hallazgos en revisión humana ([ADR-019](docs/arquitectura/adr/ADR-019-busqueda-web-complementaria.md)) |
 | API y MCP | API REST con OpenAPI y servidor MCP de solo lectura para agentes de código |
 
 ## Inicio rápido en Windows 11
@@ -195,7 +196,7 @@ Streamlit: http://localhost:8501 · Swagger: http://127.0.0.1:8000/docs. Guion d
 | `fabrica build` | Reconstruye Silver y Gold | `uv run fabrica build --fuente semilla` |
 | `fabrica validate` | Procedencia, duplicados y datos personales del corpus | `uv run fabrica validate` |
 | `fabrica graficas` | Regenera las gráficas por etapa | `uv run fabrica graficas` |
-| `fabrica ask` | Pregunta al Q&A | `uv run fabrica ask "¿Dónde queda la sede principal?" --proveedor claude_code --modelo sonnet` |
+| `fabrica ask` | Pregunta al Q&A; con `--web`, búsqueda complementaria solo si la base rechaza | `uv run fabrica ask "¿Dónde queda la sede principal?" --proveedor claude_code --modelo sonnet` |
 | `fabrica faq` · `summary` | FAQ y resumen | `uv run fabrica faq -n 8` |
 | `fabrica evaluate` | Evaluación con el banco de 24 preguntas | `uv run fabrica evaluate --proveedor claude_code --modelo sonnet --version-prompt v3` |
 | `fabrica faq-visor` | Precalcula `data/gold/faq_visor.json` | `uv run fabrica faq-visor` |
@@ -215,6 +216,7 @@ Contrato completo en [`docs/api/openapi.json`](docs/api/openapi.json) (Swagger e
 | GET | `/salud` | Disponibilidad |
 | GET | `/api/v1/base/estadisticas` · `/fragmentos` · `/fragmentos/{id}` | Corpus: estadísticas, búsqueda BM25 y fragmento por id |
 | POST | `/api/v1/tareas/qa` · `/faq` · `/resumen` | Tareas LLM ancladas al contexto |
+| POST | `/api/v1/tareas/qa-web` | Búsqueda web complementaria (422 si hay inyección, 429 al superar el límite) |
 | GET | `/api/v1/auditoria/interacciones` | Historial paginado |
 | GET / POST | `/api/v1/pipeline/ejecuciones` · `/reconstruir` | Historial y reconstrucción (`X-API-Key`) |
 | GET | `/api/v1/maquinas` · `/maquinas/{id}` | Biblioteca de máquinas con datos de la empresa |
@@ -292,8 +294,8 @@ scripts/                 PowerShell y utilidades Python
 ```
 | Verificación | Resultado (última corrida completa) |
 |---|---|
-| pytest | 270 pruebas (unitarias, integración y e2e de Streamlit), sin red |
-| Vitest | 110 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz y explorador) |
+| pytest | 288 pruebas (unitarias, integración y e2e de Streamlit), sin red |
+| Vitest | 113 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz, explorador y búsqueda web) |
 | Playwright | 46 pruebas e2e del visor con SwiftShader (≥ 50 fps exigidos) |
 | Ruff, mypy y capas | Sin hallazgos |
 | Integración continua | GitHub Actions en Ubuntu y Windows, más el visor |
@@ -326,7 +328,7 @@ ejecución, la aplicación usa `claude_code` con `sonnet` y el respaldo `extract
 |---|---|---|---|---|
 | Medallion (Bronze/Silver/Gold) | Aplicada | [ADR-002](docs/arquitectura/adr/ADR-002-medallion-archivos.md), `pipelines/` | Separar dato crudo, limpio y listo para el LLM con trazabilidad | F09–F11: `ingeniero-datos` (sonnet) |
 | SDD — Spec-Driven Development | Aplicada | [`openspec/specs/`](openspec/specs/) (6 especificaciones) | Cada funcionalidad parte de una especificación verificable | F07: `analista-requisitos` (opus) |
-| ADR — Architecture Decision Records | Aplicada | [`docs/arquitectura/adr/`](docs/arquitectura/adr/) (18) | Dejar el porqué de cada decisión estructural | F08: `revisor-calidad` (opus); ADR de las fases técnicas |
+| ADR — Architecture Decision Records | Aplicada | [`docs/arquitectura/adr/`](docs/arquitectura/adr/) (19) | Dejar el porqué de cada decisión estructural | F08: `revisor-calidad` (opus); ADR de las fases técnicas |
 | MCP — Model Context Protocol | Aplicada | [`.mcp.json`](.mcp.json), `src/fabrica_autopartes/mcp_server/` | Dar a los agentes acceso de solo lectura a la base | F06: `revisor-calidad` (opus); F24: `ingeniero-3d-frontend` (sonnet) |
 | GGA — Gentleman Guardian Angel | Aplicada | [`.gga`](.gga), [ADR-018](docs/arquitectura/adr/ADR-018-engram-y-gga.md) | Revisar cada commit contra `AGENTS.md` | Sesión principal de Claude Code; GGA revisa con `claude --print` |
 | CI — Continuous Integration | Aplicada | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Pruebas en Ubuntu y Windows en cada push a `main` | — |
@@ -353,8 +355,9 @@ cada requisito con su prueba.
 <details>
 <summary><b>ADR — Architecture Decision Records (registros de decisiones de arquitectura)</b></summary>
 
-Dieciocho registros con contexto, decisión, alternativas y consecuencias, desde el uso de archivos para Medallion
-hasta el proveedor `claude_code`, la motocicleta de referencia y las herramientas Engram y GGA.
+Diecinueve registros con contexto, decisión, alternativas y consecuencias, desde el uso de archivos para Medallion
+hasta el proveedor `claude_code`, la motocicleta de referencia, las herramientas Engram y GGA y la búsqueda web
+complementaria.
 </details>
 
 <details>
@@ -413,13 +416,15 @@ del modelo); y Data Thinking (pensamiento de datos).
 ## Limitaciones y hoja de ruta
 **Limitaciones**
 - Búsqueda léxica (BM25 con expansión de consultas), sin recuperación semántica.
+- La búsqueda web complementaria depende de la sesión de Claude Code y de la red; sus hallazgos no se verifican
+  de forma automática.
 - Fichas de motocicletas: solo la CB 160F; los campos no publicados usan supuestos marcados.
 - La moto es genérica y esquemática; el embrague no se modela.
 - Rendimiento del visor medido con renderizado por software (SwiftShader), no con GPU real.
 - El sitio de Autopartes Fanalca responde con un desafío anti-bots: sus datos entran por lectura web documentada.
 
 **Hoja de ruta**
-- Búsqueda web complementaria iniciada por la persona usuaria, con hallazgos en revisión humana y fuera de la base.
+- Flujo de revisión de `data/revision/hallazgos_web.jsonl` para incorporar a la base solo los datos aprobados.
 - Recuperación híbrida BM25 + vectorial con embeddings.
 - Más fichas de motocicletas cuando existan fuentes oficiales legibles.
 

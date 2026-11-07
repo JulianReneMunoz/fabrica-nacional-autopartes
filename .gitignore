@@ -46,3 +46,6 @@ docs/prompts/*
 !docs/prompts/bitacora_experimentos.md
 openspec/changes/rag-embeddings-modulo2/
 docs/evidencias/calidad_20*.txt
+
+# Cola de revisión humana de la búsqueda web complementaria (ADR-019)
+data/revision/

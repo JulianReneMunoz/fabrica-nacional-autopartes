@@ -41,6 +41,15 @@ class SolicitudQA(OpcionesLLM):
     modo_contexto: ModoAPI | None = None
 
 
+class SolicitudQAWeb(BaseModel):
+    pregunta: str = Field(
+        ...,
+        min_length=3,
+        max_length=500,
+        examples=["¿Cuántos empleados tiene Fanalca en la planta de Yumbo?"],
+    )
+
+
 class SolicitudFAQ(OpcionesLLM):
     n_preguntas: int = Field(8, ge=3, le=20)
 

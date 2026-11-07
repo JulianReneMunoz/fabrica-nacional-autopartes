@@ -5,8 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from fabrica_autopartes.api.dependencias import obtener_servicio
-from fabrica_autopartes.api.esquemas import SolicitudFAQ, SolicitudQA, SolicitudResumen
-from fabrica_autopartes.domain.modelos import RespuestaQA, ResultadoFAQ, ResultadoResumen
+from fabrica_autopartes.api.esquemas import SolicitudFAQ, SolicitudQA, SolicitudQAWeb, SolicitudResumen
+from fabrica_autopartes.domain.modelos import RespuestaQA, RespuestaWeb, ResultadoFAQ, ResultadoResumen
 from fabrica_autopartes.services.asistente import ServicioAsistente
 
 router = APIRouter(prefix="/api/v1/tareas", tags=["Tareas LLM"])
@@ -17,6 +17,22 @@ def qa(solicitud: SolicitudQA, servicio: ServicioAsistente = Depends(obtener_ser
     return servicio.responder(
         solicitud.pregunta, canal="api", modo_contexto=solicitud.modo_contexto, **solicitud.como_kwargs()
     )
+
+
+@router.post(
+    "/qa-web",
+    response_model=RespuestaWeb,
+    summary="Búsqueda web complementaria con Claude (solo a petición, tras la frase de rechazo)",
+    responses={
+        422: {"description": "Pregunta inválida o bloqueada"},
+        429: {"description": "Límite de búsquedas"},
+    },
+)
+def qa_web(
+    solicitud: SolicitudQAWeb, servicio: ServicioAsistente = Depends(obtener_servicio)
+) -> RespuestaWeb:
+    """Respuesta complementaria desde la web: no proviene de la base verificada ni entra en ella."""
+    return servicio.buscar_web(solicitud.pregunta)
 
 
 @router.post("/faq", response_model=ResultadoFAQ, summary="Generar preguntas frecuentes")

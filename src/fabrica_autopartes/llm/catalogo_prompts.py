@@ -10,7 +10,8 @@ import yaml
 from langchain_core.prompts import ChatPromptTemplate
 
 DIR_PROMPTS = Path(__file__).parent / "prompts"
-TAREAS = ("qa", "faq", "resumen")
+TAREAS = ("qa", "faq", "resumen")  # tareas evaluadas (v1–v3) y visibles en el laboratorio
+TAREAS_AUXILIARES = ("busqueda_web",)  # fuera de la evaluación (ADR-019)
 
 
 @dataclass(frozen=True)
@@ -30,7 +31,7 @@ class VersionPrompt:
 
 @cache
 def catalogo(tarea: str) -> dict[str, VersionPrompt]:
-    if tarea not in TAREAS:
+    if tarea not in TAREAS + TAREAS_AUXILIARES:
         raise ValueError(f"Tarea desconocida: {tarea}")
     datos = yaml.safe_load((DIR_PROMPTS / f"{tarea}.yaml").read_text(encoding="utf-8"))
     return {

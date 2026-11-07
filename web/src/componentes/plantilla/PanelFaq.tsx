@@ -1,6 +1,6 @@
 /** FAQ de Fanalca: respuestas precalculadas con citas (faq_visor.json) y pregunta en vivo. Autónoma: carga sus datos. */
 import { useEffect, useState } from "react";
-import { apiMoto, type FaqVisor, type RespuestaQa } from "../../api";
+import { apiMoto, type FaqVisor, type RespuestaQa, type RespuestaWebApi } from "../../api";
 import { FaqFanalca } from "../panelesMoto";
 
 export function FaqFanalcaAuto() {
@@ -14,12 +14,22 @@ export function FaqFanalcaAuto() {
       else setError(e.message);
     });
   }, []);
+  const [web, setWeb] = useState<{ respuesta: RespuestaWebApi | null; error: string | null; consultando: boolean }>({ respuesta: null, error: null, consultando: false });
   const preguntar = (pregunta: string) => {
+    setWeb({ respuesta: null, error: null, consultando: false });
     setEnVivo({ respuesta: null, error: null, consultando: true });
     apiMoto.qa(pregunta).then(
       (r) => setEnVivo({ respuesta: r, error: null, consultando: false }),
       (e: Error) => setEnVivo({ respuesta: null, error: e.message, consultando: false }),
     );
   };
-  return <FaqFanalca datos={datos} error={error} faltaArchivo={falta} enVivo={enVivo} alPreguntar={preguntar} />;
+  // Búsqueda web: solo a petición de la persona usuaria y solo tras la frase de rechazo (nunca automática).
+  const buscarWeb = (pregunta: string) => {
+    setWeb({ respuesta: null, error: null, consultando: true });
+    apiMoto.qaWeb(pregunta).then(
+      (r) => setWeb({ respuesta: r, error: null, consultando: false }),
+      (e: Error) => setWeb({ respuesta: null, error: e.message, consultando: false }),
+    );
+  };
+  return <FaqFanalca datos={datos} error={error} faltaArchivo={falta} enVivo={enVivo} alPreguntar={preguntar} web={web} alBuscarWeb={buscarWeb} />;
 }

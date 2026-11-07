@@ -229,3 +229,10 @@ herramienta solo se usa si nada ejecutable toca red, credenciales o persistencia
 - **Decisión:** hay código ejecutable con acceso a red y persistencia fuera de su carpeta, por lo que **no se usa**.
   Los diagramas del README siguen en Mermaid (`docs/arquitectura/diagramas/`), que GitHub renderiza de forma nativa en
   tema claro y oscuro. La instalación de usuario no se modifica; retirarla queda a decisión del usuario.
+
+
+## W-01 · Búsqueda web complementaria fuera de la evaluación (2026-11-06)
+
+La búsqueda web con Claude (ADR-019) no forma parte del banco de 24 preguntas ni de las métricas v1–v3: los resultados
+de esta bitácora siguen midiendo solo la base verificada. P24 (inyección) se bloquea antes de buscar y la búsqueda
+nunca se ejecuta sin una acción explícita. Las pruebas usan un buscador simulado, sin red.

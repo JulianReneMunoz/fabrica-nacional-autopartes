@@ -76,6 +76,32 @@ class RespuestaQA(BaseModel):
     latencia_ms: int = 0
 
 
+ETIQUETA_RESPUESTA_WEB = "Respuesta complementaria desde la web — no proviene de la base verificada"
+
+
+class HallazgoWeb(BaseModel):
+    """Un dato encontrado en la web con su URL y la fecha de consulta (pendiente de revisión humana)."""
+
+    dato: str
+    url: str
+    fecha_consulta: str
+
+
+class RespuestaWeb(BaseModel):
+    """Búsqueda web complementaria (fase 9): nunca entra a la base verificada ni a la evaluación v1–v3."""
+
+    pregunta: str
+    respuesta: str
+    hallazgos: list[HallazgoWeb] = Field(default_factory=list)
+    encontrado: bool
+    etiqueta: str = ETIQUETA_RESPUESTA_WEB
+    fecha_consulta: str
+    proveedor: str
+    modelo: str
+    version_prompt: str
+    latencia_ms: int = 0
+
+
 class ItemFAQ(BaseModel):
     pregunta: str
     respuesta: str

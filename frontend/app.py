@@ -201,7 +201,9 @@ with t_qa:
         r = ejecutar(servicio.responder, pregunta, canal="streamlit", modo_contexto=modo, **opciones)
         if r is not None:
             st.session_state.historial.append(r)
-    for r in reversed(st.session_state.historial[-10:]):
+    if "busquedas_web" not in st.session_state:
+        st.session_state.busquedas_web = {}
+    for i, r in enumerate(reversed(st.session_state.historial[-10:])):
         st.markdown(
             est.tarjeta_respuesta(
                 pregunta=r.pregunta,
@@ -219,6 +221,24 @@ with t_qa:
             ),
             unsafe_allow_html=True,
         )
+        # Búsqueda web complementaria (ADR-019): solo a petición y solo tras la frase de rechazo.
+        if es_rechazo(r.respuesta):
+            web = st.session_state.busquedas_web.get(r.pregunta)
+            if web is None and st.button("Buscar en la web con Claude", key=f"web-{i}-{r.pregunta}"):
+                web = ejecutar(servicio.buscar_web, r.pregunta)
+                if web is not None:
+                    st.session_state.busquedas_web[r.pregunta] = web
+            if web is not None:
+                st.warning(
+                    f"**{web.etiqueta}** · {web.proveedor}/{web.modelo} · consulta {web.fecha_consulta}"
+                )
+                # El texto web es un DATO: texto plano, sin Markdown que cargue recursos externos.
+                st.text(web.respuesta)
+                for h in web.hallazgos:
+                    st.text(f"- {h.dato} · {h.url} · consulta {h.fecha_consulta}")
+                st.caption(
+                    "Hallazgos pendientes de revisión humana; no se agregan a la base de conocimiento."
+                )
 
 # ---------------------------------------------------------------------- resumen
 with t_res:

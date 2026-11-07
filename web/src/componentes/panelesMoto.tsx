@@ -4,13 +4,18 @@
  * Todo número muestra su procedencia: «supuesto didáctico», ficha publicada o «No publicado».
  */
 import { useState } from "react";
-import type { FaqVisor, FichaMotoApi, ItemFaqVisor, RespuestaModeloApi, RespuestaQa } from "../api";
+import type { FaqVisor, FichaMotoApi, ItemFaqVisor, RespuestaModeloApi, RespuestaQa, RespuestaWebApi } from "../api";
 import { InsigniaFuente } from "./plantilla/InsigniaFuente";
 import { ETIQUETA_SUPUESTO, FASES_CICLO, type FaseCiclo, FASES_INFO, faseCiclo, type CampoFichaApi } from "../modelos/moto";
 
 export const fmt = (v: number, d = 0) => v.toLocaleString("es-CO", { minimumFractionDigits: d, maximumFractionDigits: d });
 export const NO_PUBLICADO = "No publicado";
 export const FRASE_RECHAZO = "La información solicitada no se encuentra en la base de conocimiento de Fanalca.";
+/** Misma regla que `llm.salvaguardas.es_rechazo` del backend (prefijo de la frase fija o su núcleo). */
+export function esRechazo(texto: string): boolean {
+  const t = texto.toLowerCase();
+  return t.includes(FRASE_RECHAZO.toLowerCase().slice(0, 45)) || t.includes("no se encuentra en la base de conocimiento");
+}
 
 /* ---------- insignias (una sola implementación: plantilla/InsigniaFuente) ---------- */
 export function InsigniaSupuesto({ texto = ETIQUETA_SUPUESTO }: { texto?: string }) {
@@ -320,8 +325,11 @@ export function FaqFanalca(props: {
   faltaArchivo: boolean;
   enVivo: { respuesta: RespuestaQa | null; error: string | null; consultando: boolean };
   alPreguntar: (pregunta: string) => void;
+  web?: { respuesta: RespuestaWebApi | null; error: string | null; consultando: boolean };
+  alBuscarWeb?: (pregunta: string) => void;
 }) {
   const [texto, setTexto] = useState("");
+  const rechazo = props.enVivo.respuesta !== null && esRechazo(props.enVivo.respuesta.respuesta);
   const { datos } = props;
   return (
     <div className="faq">
@@ -371,6 +379,32 @@ export function FaqFanalca(props: {
             en vivo · {props.enVivo.respuesta.proveedor} / {props.enVivo.respuesta.modelo} · confianza {props.enVivo.respuesta.confianza}
           </p>
           <CitasFanalca fuentes={props.enVivo.respuesta.fuentes} />
+          {rechazo && props.alBuscarWeb && (
+            <button className="boton secundario" data-testid="buscar-web" disabled={props.web?.consultando} onClick={() => props.alBuscarWeb!(props.enVivo.respuesta!.pregunta)}>
+              {props.web?.consultando ? "Buscando en la web…" : "Buscar en la web con Claude"}
+            </button>
+          )}
+        </div>
+      )}
+      {props.web?.error && <p className="aviso error">Búsqueda web: {props.web.error}</p>}
+      {props.web?.respuesta && (
+        <div className="respuesta-web" data-testid="respuesta-web" aria-live="polite">
+          <p className="aviso">
+            <b>{props.web.respuesta.etiqueta}</b> · {props.web.respuesta.proveedor} / {props.web.respuesta.modelo} · consulta {props.web.respuesta.fecha_consulta}
+          </p>
+          <p className="respuesta">{props.web.respuesta.respuesta}</p>
+          {props.web.respuesta.hallazgos.length > 0 && (
+            <ul className="datos">
+              {props.web.respuesta.hallazgos.map((h) => (
+                <li key={h.url + h.dato}>
+                  {h.dato}
+                  <br />
+                  <a href={h.url} target="_blank" rel="noreferrer">{h.url}</a> <span className="fecha">· consulta {h.fecha_consulta}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="fecha">Hallazgos pendientes de revisión humana; no se agregan a la base de conocimiento.</p>
         </div>
       )}
     </div>

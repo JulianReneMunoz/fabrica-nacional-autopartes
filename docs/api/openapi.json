@@ -389,6 +389,44 @@
         }
       }
     },
+    "/api/v1/tareas/qa-web": {
+      "post": {
+        "tags": [
+          "Tareas LLM"
+        ],
+        "summary": "Búsqueda web complementaria con Claude (solo a petición, tras la frase de rechazo)",
+        "description": "Respuesta complementaria desde la web: no proviene de la base verificada ni entra en ella.",
+        "operationId": "qa_web_api_v1_tareas_qa_web_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudQAWeb"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaWeb"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Pregunta inválida o bloqueada"
+          },
+          "429": {
+            "description": "Límite de búsquedas"
+          }
+        }
+      }
+    },
     "/api/v1/tareas/faq": {
       "post": {
         "tags": [
@@ -609,6 +647,53 @@
                     "$ref": "#/components/schemas/Pieza"
                   },
                   "title": "Response Piezas Api V1 Simulador Ensamblajes  Ens Id  Piezas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulador/ensamblajes/{ens_id}/sistemas": {
+      "get": {
+        "tags": [
+          "Simulador 3D (v2.0)"
+        ],
+        "summary": "Sistemas",
+        "description": "Sistemas funcionales del ensamblaje (vista «explorador»); lista vacía si no los define.",
+        "operationId": "sistemas_api_v1_simulador_ensamblajes__ens_id__sistemas_get",
+        "parameters": [
+          {
+            "name": "ens_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ens Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sistema"
+                  },
+                  "title": "Response Sistemas Api V1 Simulador Ensamblajes  Ens Id  Sistemas Get"
                 }
               }
             }
@@ -1936,6 +2021,13 @@
             "type": "array",
             "title": "Piezas"
           },
+          "sistemas": {
+            "items": {
+              "$ref": "#/components/schemas/Sistema"
+            },
+            "type": "array",
+            "title": "Sistemas"
+          },
           "articulaciones": {
             "items": {
               "$ref": "#/components/schemas/Articulacion"
@@ -2662,6 +2754,30 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HallazgoWeb": {
+        "properties": {
+          "dato": {
+            "type": "string",
+            "title": "Dato"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "fecha_consulta": {
+            "type": "string",
+            "title": "Fecha Consulta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dato",
+          "url",
+          "fecha_consulta"
+        ],
+        "title": "HallazgoWeb",
+        "description": "Un dato encontrado en la web con su URL y la fecha de consulta (pendiente de revisión humana)."
+      },
       "InteraccionDTO": {
         "properties": {
           "id": {
@@ -3321,6 +3437,62 @@
         ],
         "title": "RespuestaQA"
       },
+      "RespuestaWeb": {
+        "properties": {
+          "pregunta": {
+            "type": "string",
+            "title": "Pregunta"
+          },
+          "respuesta": {
+            "type": "string",
+            "title": "Respuesta"
+          },
+          "hallazgos": {
+            "items": {
+              "$ref": "#/components/schemas/HallazgoWeb"
+            },
+            "type": "array",
+            "title": "Hallazgos"
+          },
+          "encontrado": {
+            "type": "boolean",
+            "title": "Encontrado"
+          },
+          "etiqueta": {
+            "type": "string",
+            "title": "Etiqueta",
+            "default": "Respuesta complementaria desde la web — no proviene de la base verificada"
+          },
+          "fecha_consulta": {
+            "type": "string",
+            "title": "Fecha Consulta"
+          },
+          "proveedor": {
+            "type": "string",
+            "title": "Proveedor"
+          },
+          "modelo": {
+            "type": "string",
+            "title": "Modelo"
+          },
+          "latencia_ms": {
+            "type": "integer",
+            "title": "Latencia Ms",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "pregunta",
+          "respuesta",
+          "encontrado",
+          "fecha_consulta",
+          "proveedor",
+          "modelo"
+        ],
+        "title": "RespuestaWeb",
+        "description": "Búsqueda web complementaria (fase 9): nunca entra a la base verificada ni a la evaluación v1–v3."
+      },
       "ResultadoFAQ": {
         "properties": {
           "items": {
@@ -3706,6 +3878,40 @@
         ],
         "title": "ResumenMoto"
       },
+      "Sistema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "funcion": {
+            "type": "string",
+            "title": "Funcion"
+          },
+          "piezas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Piezas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "funcion",
+          "piezas"
+        ],
+        "title": "Sistema",
+        "description": "Sistema funcional para explorar el ensamblaje (agrupa piezas de uno o varios subconjuntos).\n\nTexto técnico genérico: describe la función, sin cifras, referencias de repuesto ni precios."
+      },
       "SolicitudCinematica": {
         "properties": {
           "valores": {
@@ -3946,6 +4152,24 @@
           "pregunta"
         ],
         "title": "SolicitudQA"
+      },
+      "SolicitudQAWeb": {
+        "properties": {
+          "pregunta": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Pregunta",
+            "examples": [
+              "¿Cuántos empleados tiene Fanalca en la planta de Yumbo?"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "pregunta"
+        ],
+        "title": "SolicitudQAWeb"
       },
       "SolicitudReconstruccion": {
         "properties": {

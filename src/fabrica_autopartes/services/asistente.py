@@ -14,9 +14,10 @@ from langchain_core.language_models.chat_models import BaseChatModel
 
 from fabrica_autopartes.core.config import Configuracion, obtener_configuracion
 from fabrica_autopartes.core.excepciones import ErrorProveedorLLM
-from fabrica_autopartes.domain.modelos import RespuestaQA, ResultadoFAQ, ResultadoResumen
+from fabrica_autopartes.domain.modelos import RespuestaQA, RespuestaWeb, ResultadoFAQ, ResultadoResumen
 from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.llm import cadenas
+from fabrica_autopartes.llm.busqueda_web import BuscadorWeb
 
 # Reexportada para las interfaces (Streamlit, API, CLI): estas solo importan de ``services``.
 from fabrica_autopartes.llm.salvaguardas import es_rechazo as es_rechazo
@@ -24,6 +25,7 @@ from fabrica_autopartes.pipelines.bronze import AlmacenBronze
 from fabrica_autopartes.pipelines.orquestador import ResultadoConstruccion, construir_base
 from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria
 from fabrica_autopartes.scraping.rastreador import Rastreador, ResultadoRastreo
+from fabrica_autopartes.services.busqueda_web import ServicioBusquedaWeb
 
 _ERRORES_CONEXION = {"ConnectError", "ConnectTimeout", "APIConnectionError", "APITimeoutError", "ReadTimeout"}
 
@@ -48,11 +50,15 @@ class ServicioAsistente:
         config: Configuracion | None = None,
         repositorio: RepositorioAuditoria | None = None,
         modelo_llm: BaseChatModel | None = None,
+        buscador_web: BuscadorWeb | None = None,
     ) -> None:
         self.config = config or obtener_configuracion()
         self.base = BaseConocimiento(self.config.dir_gold)
         self.repo = repositorio or RepositorioAuditoria(self.config.url_base_datos)
         self._modelo_inyectado = modelo_llm  # usado por pruebas
+        self._busqueda_web = ServicioBusquedaWeb(
+            self.config.dir_datos / "revision" / "hallazgos_web.jsonl", buscador=buscador_web
+        )
 
     # ------------------------------------------------------------ tareas LLM
     def responder(self, pregunta: str, canal: str = "api", **op: str | None) -> RespuestaQA:
@@ -72,6 +78,10 @@ class ServicioAsistente:
             latencia_ms=r.latencia_ms,
         )
         return r
+
+    def buscar_web(self, pregunta: str) -> RespuestaWeb:
+        """Búsqueda web complementaria (ADR-019): solo a petición, tras el rechazo; fuera de la base."""
+        return self._busqueda_web.buscar(pregunta)
 
     def generar_faq(self, n_preguntas: int = 8, canal: str = "api", **op: str | None) -> ResultadoFAQ:
         with _proveedor_disponible(self.config):

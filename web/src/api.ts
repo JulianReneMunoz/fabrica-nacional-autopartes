@@ -183,6 +183,19 @@ export interface RespuestaQa {
   modelo: string;
 }
 
+/** Búsqueda web complementaria (fase 9, ADR-019): fuera de la base verificada. */
+export interface RespuestaWebApi {
+  pregunta: string;
+  respuesta: string;
+  hallazgos: { dato: string; url: string; fecha_consulta: string }[];
+  encontrado: boolean;
+  etiqueta: string;
+  fecha_consulta: string;
+  proveedor: string;
+  modelo: string;
+  latencia_ms: number;
+}
+
 const enviar = (cuerpo: unknown): RequestInit => ({ method: "POST", body: JSON.stringify(cuerpo) });
 
 /** Cliente del simulador para un ensamblaje (el freno sigue con `freno_disco` exactamente igual). */
@@ -212,6 +225,7 @@ export function crearApi(ensamblaje: string) {
       pedir<CalculoMotoApi>(`/motos/${id}/calculo?con_ficha=${conFicha}`, enviar(entrada)),
     faqVisor: () => pedir<FaqVisor>("/faq-visor"),
     qa: (pregunta: string) => pedir<RespuestaQa>("/tareas/qa", enviar({ pregunta })),
+    qaWeb: (pregunta: string) => pedir<RespuestaWebApi>("/tareas/qa-web", enviar({ pregunta })),
   };
 }
 

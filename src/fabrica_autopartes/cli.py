@@ -78,6 +78,11 @@ def construir_parser() -> argparse.ArgumentParser:
 
     a = sub.add_parser("ask", help="Pregunta al sistema Q&A")
     a.add_argument("pregunta")
+    a.add_argument(
+        "--web",
+        action="store_true",
+        help="Si la base responde con la frase de rechazo, buscar en la web con Claude (WebSearch/WebFetch)",
+    )
     _opciones_llm(a)
 
     f = sub.add_parser("faq", help="Generar FAQ")
@@ -176,7 +181,7 @@ def _main(argv: list[str] | None = None) -> int:
         )
         return 0
 
-    from fabrica_autopartes.services.asistente import ServicioAsistente
+    from fabrica_autopartes.services.asistente import ServicioAsistente, es_rechazo
 
     servicio = ServicioAsistente()
 
@@ -277,6 +282,15 @@ def _main(argv: list[str] | None = None) -> int:
             f"(fundamentada={r.fundamentada}, confianza={r.confianza}, modo={r.modo_contexto}, "
             f"{r.latencia_ms} ms)"
         )
+        if args.web:
+            if not es_rechazo(r.respuesta):
+                print("La base de conocimiento respondió: no se busca en la web.")
+                return 0
+            w = servicio.buscar_web(args.pregunta)
+            print(f"\n{w.etiqueta}\n{w.respuesta}")
+            for h in w.hallazgos:
+                print(f"  - {h.dato}\n    {h.url} (consulta {h.fecha_consulta})")
+            print(f"({w.proveedor}/{w.modelo}, {w.latencia_ms} ms; hallazgos pendientes de revisión humana)")
         return 0
 
     if args.comando == "faq":
