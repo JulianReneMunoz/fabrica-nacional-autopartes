@@ -262,6 +262,26 @@ obligatorios: `calidad-y-pruebas (ubuntu-latest)`, `calidad-y-pruebas (windows-l
 No se crean PR retroactivos para los commits anteriores.
 
 
+## R-04 · Makefile y Ollama pospuesto (2026-11-07)
+
+El repositorio no tenía `Makefile` (`git ls-files` sin coincidencias). Se crea con los objetivos `help` (por
+defecto), `instalar`, `calidad`, `pruebas-web`, `api`, `app`, `pipeline`, `validar-moto`, `enlaces` y `graphify`,
+equivalentes a `scripts/*.ps1`. Las recetas usan solo `uv run --no-sync ...` y `cd web && ...`, válidos en sh y en
+cmd; `help` usa `$(info)` para no depender del shell. `graphify` llama a `scripts/graphify_codigo.py`, que aplica el
+modo de la ADR-020 (copia temporal sin pruebas, `--code-only`, `GRAPHIFY_BACKEND=none`) y rechaza una salida dentro
+del repositorio.
+
+Verificación con GNU Make 4.4.1: `make help` y `make -n` en los 10 objetivos (Git Bash); `make help`,
+`make validar-moto` («Ensamblaje íntegro»), `make enlaces` (0 enlaces rotos) y `make pruebas-web` (113 pruebas) desde
+PowerShell; `make graphify` reprodujo S-08 (113 archivos, 1252 nodos, 3492 aristas). `pipeline` no se ejecutó
+(requiere red y aprobación).
+
+Ollama queda pospuesto (ADR-022): sin objetivo en el `Makefile`, sin instalación y sin dependencias nuevas. La
+auditoría de entregables del curso marcó como faltantes de la Fase 1 los embeddings (C6), el índice vectorial (C7)
+y el modelo de embeddings descargado (C1), y de la Fase 2 el agente con `create_agent` (C5) y la memoria
+(`InMemorySaver`, `thread_id`, `trim_messages`). El retiro del proveedor `ollama` del código queda para un PR aparte.
+
+
 ## S-08 · Excepción documentada: Graphify (graphifyy 0.9.102) para el mapa del código (2026-11-07)
 
 Procedimiento: `fna-seguridad`, paso 5. Herramienta: SkillSpector v2.12.0 (`--no-llm`) sobre el paquete instalado
