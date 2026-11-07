@@ -14,7 +14,7 @@ test("biblioteca: tarjetas de máquinas alimentadas por la base de conocimiento"
   const errores = vigilarConsola(page);
   await page.goto("/app/#/");
   const tarjetas = page.locator("article.tarjeta");
-  await expect(tarjetas).toHaveCount(4);
+  await expect(tarjetas).toHaveCount(4); // el explorador de la moto se abre desde la tarjeta de la moto
   for (const id of ["freno", "prensa", "linea", "moto_honda"]) {
     const t = page.locator(`article[data-maquina="${id}"]`);
     await expect(t.locator("h2")).toContainText("¿");

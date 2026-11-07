@@ -46,6 +46,7 @@ export const MOTO_HONDA: DefinicionMaquina = {
   pestanas: ["componentes", "empresa", "ficha", "faq"],
   duracionRecorrido: 29,
   lamina: "moto_honda",
+  enlacesExtra: [{ texto: "Explorar piezas", ruta: "#/explorador" }],
   revisionExtra: [
     "Cada cifra indica su procedencia: ficha publicada, «No publicado» o supuesto didáctico",
     "Cámara lenta de los giros siempre visible (1/200 de la velocidad real por omisión)",

@@ -81,6 +81,13 @@ export interface Animacion {
   orden_desmontaje: string[];
   orden_reensamblaje: string[];
 }
+/** Sistema funcional del ensamblaje (vista «explorador», fase 14): texto de la definición del ensamblaje. */
+export interface SistemaApi {
+  id: string;
+  nombre: string;
+  funcion: string;
+  piezas: string[];
+}
 export interface ResumenEnsamblaje {
   id: string;
   nombre: string;
@@ -187,6 +194,7 @@ export function crearApi(ensamblaje: string) {
     resumen: () => pedir<ResumenEnsamblaje[]>("/simulador/ensamblajes"),
     piezas: () => pedir<Pieza[]>(`${e}/piezas`),
     jerarquia: () => pedir<NodoJerarquia>(`${e}/jerarquia`),
+    sistemas: () => pedir<SistemaApi[]>(`${e}/sistemas`),
     articulaciones: () => pedir<ArticulacionApi[]>(`${e}/articulaciones`),
     ensamblaje: () => pedir<EnsamblajeApi>(`${e}`),
     despiece: (factor: number) => pedir<Record<string, number[]>>(`${e}/despiece?factor=${factor}`),

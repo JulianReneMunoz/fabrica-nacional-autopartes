@@ -1,5 +1,5 @@
 /** Definición declarativa de una máquina: texto, controles y pestañas. Las páginas solo aportan escena y lógica. */
-export type IdPestana = "componentes" | "empresa" | "ficha" | "faq";
+export type IdPestana = "sistema" | "componentes" | "empresa" | "ficha" | "faq";
 
 export interface DefControl {
   id: string;
@@ -38,9 +38,13 @@ export interface DefinicionMaquina {
   pestanas: IdPestana[];
   /** Lista estática de componentes (máquinas 2D; las 3D la obtienen del backend). */
   componentes?: DefComponente[];
-  /** Duración del recorrido automático (s). */
+  /** Duración del recorrido automático (s); 0 = la vista no tiene recorrido. */
   duracionRecorrido: number;
   /** Texto breve para la biblioteca y la lámina. */
   lamina: "freno" | "prensa" | "linea" | "moto_honda";
   revisionExtra: string[];
+  /** `false` = la vista no tiene tarjeta propia en la biblioteca (solo navegación); por omisión, sí. */
+  enBiblioteca?: boolean;
+  /** Botones adicionales de la tarjeta (p. ej. «Explorar piezas» en la moto). */
+  enlacesExtra?: { texto: string; ruta: string }[];
 }

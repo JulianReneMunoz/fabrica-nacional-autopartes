@@ -394,6 +394,14 @@ export default function MaquinaMoto({ tour }: { tour: boolean }) {
     escena.current.camara = peticion;
   }, []);
   useEffect(() => irACamara("general"), [irACamara]); // encuadre inicial automático
+  // Lección enlazada desde el explorador: ?vista=corte (motor en corte y ciclo 4T) o ?vista=transmision.
+  useEffect(() => {
+    const v = /[?&]vista=(corte|transmision)\b/.exec(window.location.hash)?.[1];
+    if (v === "corte") {
+      setCorte(true);
+      irACamara("motor");
+    } else if (v === "transmision") irACamara("transmision");
+  }, [irACamara]);
   const reiniciar = useCallback((conservarSecuencia = false) => {
     const r = reloj.current;
     const sec = conservarSecuencia ? r.sec : { activa: false, t: 0, paso: -1 };

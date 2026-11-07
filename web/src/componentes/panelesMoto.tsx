@@ -84,7 +84,7 @@ export function DiagramaCiclo({ theta720 }: { theta720: number }) {
 }
 
 /* ---------- ficha técnica ---------- */
-const GRUPOS: Record<string, string> = {
+export const GRUPOS: Record<string, string> = {
   motor: "Motor",
   transmision: "Transmisión",
   suspension: "Suspensión",
@@ -93,7 +93,7 @@ const GRUPOS: Record<string, string> = {
   electrico: "Eléctrico",
   chasis: "Chasis y carrocería",
 };
-const CAMPOS: Record<string, string> = {
+export const CAMPOS: Record<string, string> = {
   tipo: "Tipo de motor",
   cilindrada: "Cilindrada",
   diametro_x_carrera: "Diámetro × carrera",
@@ -170,7 +170,7 @@ function valorLegible(c: CampoFichaApi): string {
   return `${String(c.valor)}${unidad}`;
 }
 
-function FilaFicha(props: { ruta: string; etiqueta: string; campo: CampoFichaApi; activa: boolean; alPulsar: (ruta: string) => void }) {
+export function FilaFicha(props: { ruta: string; etiqueta: string; campo: CampoFichaApi; activa: boolean; alPulsar: (ruta: string) => void }) {
   const { campo: c } = props;
   const sinDato = c.estado === "no_publicado";
   return (

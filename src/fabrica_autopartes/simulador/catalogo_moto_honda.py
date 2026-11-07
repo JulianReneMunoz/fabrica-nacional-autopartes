@@ -39,6 +39,7 @@ from fabrica_autopartes.simulador.modelos import (
     Geometria,
     LimitesMovimiento,
     Pieza,
+    Sistema,
     Subconjunto,
     TipoArticulacion,
     Transformacion,
@@ -357,6 +358,185 @@ def _despiece_radial(piezas: list[Pieza]) -> None:
         n = math.sqrt(vx * vx + vy * vy + vz * vz) or 1.0
         p.direccion_despiece = (_r(vx / n), _r(vy / n), _r(vz / n))
         p.distancia_despiece_m = _r(min(p.distancia_despiece_m * _FACTOR_DISTANCIA_RADIAL, 1.0))
+
+
+def sistemas_moto() -> list[Sistema]:
+    """Sistemas funcionales de la vista «explorador» (fase 14): cada pieza pertenece a uno solo.
+
+    Texto técnico genérico de la función de cada sistema; sin cifras, referencias de repuesto ni precios.
+    """
+    return [
+        Sistema(
+            id="motor",
+            nombre="Motor",
+            funcion=(
+                "Convierte la energía del combustible en giro del cigüeñal mediante el ciclo de cuatro "
+                "tiempos: admisión, compresión, expansión y escape."
+            ),
+            piezas=[
+                "carter",
+                "cilindro",
+                "culata",
+                "piston",
+                "biela",
+                "ciguenal",
+                "valvula_admision",
+                "valvula_escape",
+                "bujia",
+                "tapa_motor_izquierda",
+                "tapa_motor_derecha",
+                "cuerpo_aceleracion",
+                "filtro_aire",
+            ],
+        ),
+        Sistema(
+            id="transmision",
+            nombre="Transmisión",
+            funcion=(
+                "Adapta el régimen del motor a la velocidad de la rueda: la caja de cambios selecciona la "
+                "relación y el piñón, la cadena y la corona llevan el giro a la rueda trasera."
+            ),
+            piezas=[
+                "caja_cambios",
+                "pinon",
+                "cadena",
+                "corona",
+                "cubrecadena",
+                "pedal_cambios",
+                "tensor_izquierdo",
+                "tensor_derecho",
+            ],
+        ),
+        Sistema(
+            id="frenos",
+            nombre="Frenos",
+            funcion=(
+                "Convierten la fuerza de la manija o del pedal en presión hidráulica y, en los cálipers, en "
+                "fricción de las pastillas contra los discos, que decelera las ruedas."
+            ),
+            piezas=[
+                "manija_freno",
+                "bomba_freno",
+                "manguera_freno",
+                "caliper_delantero",
+                "disco_delantero",
+                "pedal_freno",
+                "caliper_trasero",
+                "disco_trasero",
+                "unidad_cbs",
+            ],
+        ),
+        Sistema(
+            id="suspension",
+            nombre="Suspensión",
+            funcion=(
+                "Mantiene las ruedas en contacto con el suelo y absorbe las irregularidades: la horquilla "
+                "telescópica guía la rueda delantera y el basculante con el monoamortiguador, la trasera."
+            ),
+            piezas=[
+                "puente_horquilla",
+                "tubo_izquierdo",
+                "botella_izquierda",
+                "tubo_derecho",
+                "botella_derecha",
+                "monoamortiguador",
+                "basculante",
+                "basculante_brazo_izquierdo",
+                "basculante_travesano",
+            ],
+        ),
+        Sistema(
+            id="iluminacion",
+            nombre="Iluminación",
+            funcion=(
+                "Hace visible el vehículo y su intención: la farola ilumina el camino, la luz trasera señala "
+                "el frenado y las direccionales indican el giro."
+            ),
+            piezas=[
+                "farola",
+                "stop",
+                "direccional_delantera_izquierda",
+                "direccional_delantera_derecha",
+                "direccional_trasera_izquierda",
+                "direccional_trasera_derecha",
+            ],
+        ),
+        Sistema(
+            id="electrico",
+            nombre="Sistema eléctrico",
+            funcion=(
+                "Almacena y distribuye la energía eléctrica que usan el encendido, las luces y los "
+                "instrumentos del tablero."
+            ),
+            piezas=["bateria", "velocimetro"],
+        ),
+        Sistema(
+            id="carroceria",
+            nombre="Chasis y carrocería",
+            funcion=(
+                "El chasis es la estructura que une motor, suspensiones y dirección; la carrocería cubre los "
+                "componentes, contiene el combustible y sostiene al conductor."
+            ),
+            piezas=[
+                "chasis",
+                "pipa_direccion",
+                "cuna_chasis",
+                "cuna_chasis_derecha",
+                "subchasis",
+                "tanque",
+                "tapa_tanque",
+                "sillin",
+                "colin",
+                "porta_placa",
+                "cubierta_izquierda",
+                "cubierta_derecha",
+                "guardabarros_delantero",
+                "guardabarros_trasero",
+                "estribo_izquierdo",
+                "estribo_derecho",
+                "caballete_lateral",
+            ],
+        ),
+        Sistema(
+            id="ruedas",
+            nombre="Ruedas",
+            funcion=(
+                "Transmiten al suelo las fuerzas de tracción, frenado y apoyo: la llanta hace el contacto, "
+                "el rin la soporta y el cubo gira sobre el eje."
+            ),
+            piezas=[
+                "cubo_delantero",
+                "rin_delantero",
+                "llanta_delantera",
+                "cubo_trasero",
+                "rin_trasero",
+                "llanta_trasera",
+            ],
+        ),
+        Sistema(
+            id="escape",
+            nombre="Escape",
+            funcion="Conduce los gases quemados fuera del cilindro y atenúa su ruido antes de expulsarlos.",
+            piezas=["tubo_escape", "silenciador"],
+        ),
+        Sistema(
+            id="direccion",
+            nombre="Dirección",
+            funcion=(
+                "Permite orientar la rueda delantera y reúne los mandos del conductor: manubrio, puños, "
+                "manija de embrague y espejos."
+            ),
+            piezas=[
+                "tija_superior",
+                "manubrio",
+                "puno_izquierdo",
+                "puno_derecho",
+                "manija_embrague",
+                "espejo_izquierdo",
+                "espejo_derecho",
+            ],
+        ),
+    ]
 
 
 def construir_moto(parametros: ParametrosMoto | None = None) -> Ensamblaje:
@@ -2154,6 +2334,7 @@ def construir_moto(parametros: ParametrosMoto | None = None) -> Ensamblaje:
             ),
         ],
         piezas=b.piezas,
+        sistemas=sistemas_moto(),
         articulaciones=arts,
         archivo_glb="modelos/moto_honda.glb",
         parametros=parametros_ens,

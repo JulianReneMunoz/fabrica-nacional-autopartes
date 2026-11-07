@@ -92,6 +92,13 @@ def validar_ensamblaje(ens: Ensamblaje) -> list[str]:
                 errores.append(f"{p.id}: referencia a pieza inexistente '{r}'")
         if p.id in p.retirar_antes:
             errores.append(f"{p.id}: se referencia a sí misma en retirar_antes")
+    ids_sistema = [s.id for s in ens.sistemas]
+    if len(ids_sistema) != len(set(ids_sistema)):
+        errores.append("Identificadores de sistema duplicados")
+    for s in ens.sistemas:
+        for pid in s.piezas:
+            if pid not in conjunto:
+                errores.append(f"sistema {s.id}: pieza inexistente '{pid}'")
     arts = {a.id: a for a in ens.articulaciones}
     hijos: dict[str, int] = defaultdict(int)
     for a in ens.articulaciones:

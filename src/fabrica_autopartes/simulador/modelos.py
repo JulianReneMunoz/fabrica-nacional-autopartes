@@ -142,6 +142,18 @@ class Subconjunto(BaseModel):
     descripcion: str
 
 
+class Sistema(BaseModel):
+    """Sistema funcional para explorar el ensamblaje (agrupa piezas de uno o varios subconjuntos).
+
+    Texto técnico genérico: describe la función, sin cifras, referencias de repuesto ni precios.
+    """
+
+    id: str = Field(pattern=r"^[a-z0-9_]+$")
+    nombre: str
+    funcion: str
+    piezas: list[str] = Field(min_length=1)
+
+
 class Ensamblaje(BaseModel):
     id: str
     nombre: str
@@ -150,6 +162,8 @@ class Ensamblaje(BaseModel):
     advertencia: str
     subconjuntos: list[Subconjunto]
     piezas: list[Pieza]
+    # Vista «explorador» (fase 14): vacía en los ensamblajes que no la usan, como el freno.
+    sistemas: list[Sistema] = Field(default_factory=list)
     articulaciones: list[Articulacion]
     archivo_glb: str
     parametros: dict[str, float]

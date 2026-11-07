@@ -77,6 +77,7 @@ beforeEach(() => {
 afterEach(() => {
   contenedor.remove();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks(); // reloj simulado (performance.now) de la prueba de cambio de marcha
 });
 
 async function montar(el: React.ReactElement) {
@@ -113,6 +114,21 @@ describe("máquina moto: interfaz", () => {
   });
 
   it("al cambiar de marcha saltan las rpm, nunca la velocidad; sin acelerar en marcha alta el motor se ahoga", async () => {
+    // Tiempo simulado: el bucle de la máquina solo avanza cuando la prueba entrega fotogramas, con un paso fijo
+    // de 101 ms (el bucle limita dt a 0,1 s y refresca la cabecera cada > 100 ms: lo mostrado = estado interno).
+    // No depende del reloj real ni de la carga del equipo.
+    let relojMs = 0;
+    const fotogramas: FrameRequestCallback[] = [];
+    vi.spyOn(performance, "now").mockImplementation(() => relojMs);
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => fotogramas.push(cb));
+    vi.stubGlobal("cancelAnimationFrame", () => undefined);
+    const avanzar = async (n: number) =>
+      act(async () => {
+        for (let i = 0; i < n; i++) {
+          relojMs += 101;
+          fotogramas.splice(0).forEach((cb) => cb(relojMs));
+        }
+      });
     const raiz = await montar(<MaquinaMoto tour={false} />);
     await clic(contenedor.querySelector('[data-marcha="3"]'));
     expect(porId("cab-marcha").textContent).toBe("3.ª");
@@ -123,6 +139,7 @@ describe("máquina moto: interfaz", () => {
     // Experimento 1: 72 km/h en 3.ª con el acelerador a fondo
     await clic(contenedor.querySelectorAll(".experimento .opciones button")[1]);
     await clic(Array.from(contenedor.querySelectorAll("button")).find((b) => b.textContent === "Ejecutar y comparar"));
+    await avanzar(5); // medio segundo de simulación en 5 pasos fijos de 0,1 s
     const v3 = leerNumero(porId("cab-velocidad").textContent!);
     const rpm3 = leerNumero(porId("cab-rpm").textContent!);
     expect(v3).toBeGreaterThan(71.9);
@@ -132,7 +149,7 @@ describe("máquina moto: interfaz", () => {
     await clic(contenedor.querySelector('[data-marcha="5"]'));
     const v5 = leerNumero(porId("cab-velocidad").textContent!);
     const rpm5 = leerNumero(porId("cab-rpm").textContent!);
-    expect(Math.abs(v5 - v3)).toBeLessThan(0.6); // la velocidad no salta (solo avanza unos ms de simulación)
+    expect(v5).toBe(v3); // la velocidad no salta: el cambio se aplica con dt = 0 y no corrió ningún fotograma
     expect(rpm5).toBeLessThan(rpm3 * 0.8); // las rpm sí saltan: 5.ª es una relación más larga
     act(() => raiz.unmount());
   });

@@ -124,6 +124,13 @@ export interface EstadoMoto {
   giraTrasera: Set<string>; // piezas solidarias a la rueda trasera (de las articulaciones)
   giraDelantera: Set<string>;
   grupoHorquilla: Set<string>; // botellas y todo lo montado en ellas: se comprimen con la horquilla
+  /** Piezas bajo el cursor (contorno tenue); opcional: solo lo usa el explorador. */
+  pasando?: Set<string>;
+  /**
+   * Explorador: rotular también las piezas atenuadas (se navega por las etiquetas) y ocultar las etiquetas cuya
+   * pieza queda fuera de cuadro al encuadrar un sistema. Por omisión, no (la máquina «moto» no cambia).
+   */
+  rotularTodo?: boolean;
 }
 
 export interface Ancla {
@@ -159,6 +166,10 @@ interface Props {
   /** Oclusión ambiental (SSAO/GTAO); solo con calidad «alta». */
   ssao?: boolean;
   alCalidad?: (c: Calidad) => void;
+  /** Anclas de las etiquetas (por omisión, las cifras de la máquina «moto»). */
+  anclas?: Record<string, Ancla>;
+  /** Pieza bajo el cursor (o `null`); si se define, el lienzo informa el paso del cursor. */
+  alPasar?: (id: string | null) => void;
 }
 
 /** «alta»: entorno de estudio con Lightformers (IBL) y SSAO en GPU; «ligera»: luces analíticas para render por software. */
@@ -262,7 +273,7 @@ function dibujoNeumatico(mat: THREE.MeshStandardMaterial, geo: THREE.BufferGeome
   mat.customProgramCacheKey = () => "neumatico-rodadura";
 }
 
-function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiquetasVisibles, calidad }: Omit<Props, "controles" | "ssao" | "alCalidad"> & { calidad: Calidad }) {
+function Modelo({ estado, geometria, alSeleccionar, alPasar, anclas = ANCLAS, etiquetas: etq, lineas, etiquetasVisibles, calidad }: Omit<Props, "controles" | "ssao" | "alCalidad"> & { calidad: Calidad }) {
   const { scene } = useGLTF(URL_MODELO_MOTO);
   const camara = useThree((t) => t.camera);
   const tamano = useThree((t) => t.size);
@@ -299,6 +310,7 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
   const contornos = useMemo(() => new Map<THREE.Mesh, THREE.Mesh>(), []);
   const matSel = useMemo(() => materialContorno("#eb6834", 0.0055), []);
   const matAlerta = useMemo(() => materialContorno("#c2410c", 0.0055), []);
+  const matPaso = useMemo(() => materialContorno("#f2a27e", 0.004), []);
   const tipoAplicado = useRef<Record<string, string>>({});
 
   const eslabones = useMemo(() => {
@@ -397,9 +409,10 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
       (chispa.material as THREE.Material).dispose();
       matSel.dispose();
       matAlerta.dispose();
+      matPaso.dispose();
       contornos.forEach((c) => c.geometry.dispose());
     },
-    [eslabones, gas, chispa, matSel, matAlerta, contornos],
+    [eslabones, gas, chispa, matSel, matAlerta, matPaso, contornos],
   );
 
   useFrame((_, dtReal) => {
@@ -546,7 +559,8 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
 
       const sel = s.seleccion === id || s.resaltadas.has(id);
       const alerta = s.alerta.has(id);
-      const fantasma = s.enfoque !== null && !s.enfoque.has(id) && !sel;
+      const paso = !sel && !alerta && Boolean(s.pasando?.has(id));
+      const fantasma = s.enfoque !== null && !s.enfoque.has(id) && !sel && !paso;
       const op = fantasma ? OPACIDAD_FANTASMA : 1 - s.transparencia;
       for (let i = 0; i < n.mallas.length; i++) {
         const malla = n.mallas[i];
@@ -560,15 +574,15 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
         mat.depthWrite = op >= 1;
         // Contorno (casco invertido): la pieza seleccionada conserva su material.
         let c = contornos.get(malla);
-        if ((sel || alerta) && !c) {
+        if ((sel || alerta || paso) && !c) {
           c = new THREE.Mesh(geometriaContorno(malla.geometry), matSel);
           c.renderOrder = -1;
           malla.add(c);
           contornos.set(malla, c);
         }
         if (c) {
-          c.visible = sel || alerta;
-          c.material = sel ? matSel : matAlerta;
+          c.visible = sel || alerta || paso;
+          c.material = sel ? matSel : alerta ? matAlerta : matPaso;
         }
       }
     }
@@ -644,7 +658,7 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
     }
     const visibles = etiquetasVisibles.current;
     const entradas: { clave: string; px: number; py: number; pref: [number, number]; w: number; h: number }[] = [];
-    for (const [clave, ancla] of Object.entries(ANCLAS)) {
+    for (const [clave, ancla] of Object.entries(anclas)) {
       const div = etq.current[clave];
       const g = lineas.current[clave];
       const n = nodos.get(ancla.pieza);
@@ -654,7 +668,7 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
         if (g?.punto) g.punto.style.visibility = "hidden";
       };
       // En el corte del motor solo se rotulan las piezas que se mantienen opacas.
-      const fueraDeEnfoque = s.enfoque !== null && !s.enfoque.has(ancla.pieza);
+      const fueraDeEnfoque = !s.rotularTodo && s.enfoque !== null && !s.enfoque.has(ancla.pieza);
       if (!div || !n || !visibles || !n.obj.visible || fueraDeEnfoque) {
         ocultar();
         continue;
@@ -667,7 +681,7 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
       n.obj.localToWorld(tmp.set(...ancla.desfase));
       grupo.current?.localToWorld(tmp); // cabeceo del conjunto
       tmp.project(camara);
-      if (tmp.z >= 1) {
+      if (tmp.z >= 1 || (s.rotularTodo && (Math.abs(tmp.x) > 1 || Math.abs(tmp.y) > 1))) {
         ocultar();
         continue;
       }
@@ -711,6 +725,21 @@ function Modelo({ estado, geometria, alSeleccionar, etiquetas: etq, lineas, etiq
           alSeleccionar(o ? o.name : null);
         }}
         onPointerMissed={() => alSeleccionar(null)}
+        {...(alPasar
+          ? {
+              onPointerOver: (e: { stopPropagation: () => void; object: THREE.Object3D }) => {
+                e.stopPropagation();
+                let o: THREE.Object3D | null = e.object;
+                while (o && !nodos.has(o.name)) o = o.parent;
+                gl.domElement.style.cursor = o ? "pointer" : "";
+                alPasar(o ? o.name : null);
+              },
+              onPointerOut: () => {
+                gl.domElement.style.cursor = "";
+                alPasar(null);
+              },
+            }
+          : {})}
       />
       <primitive object={eslabones.im} />
       <primitive object={gas} />
@@ -790,6 +819,8 @@ function Contenido(props: Props & { calidad: Calidad }) {
         estado={props.estado}
         geometria={props.geometria}
         alSeleccionar={props.alSeleccionar}
+        alPasar={props.alPasar}
+        anclas={props.anclas}
         etiquetas={props.etiquetas}
         lineas={props.lineas}
         etiquetasVisibles={props.etiquetasVisibles}

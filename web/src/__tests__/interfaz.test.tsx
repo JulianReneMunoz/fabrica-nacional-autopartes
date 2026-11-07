@@ -65,6 +65,11 @@ describe("biblioteca de máquinas", () => {
     const raiz = await montar(<Biblioteca />);
     const tarjetas = contenedor.querySelectorAll("article.tarjeta");
     expect(tarjetas).toHaveLength(4); // la biblioteca sale de maquinas/*.ts; la API aporta los datos de la empresa
+    // Fase 14: el explorador no tiene tarjeta propia; la tarjeta de la moto lo abre con «Explorar piezas».
+    expect(contenedor.querySelector('article.tarjeta[data-maquina="moto_explorador"]')).toBeNull();
+    const explorar = contenedor.querySelector('article.tarjeta[data-maquina="moto_honda"] a[data-enlace-extra]')!;
+    expect(explorar.textContent).toBe("Explorar piezas");
+    expect(explorar.getAttribute("href")).toBe("#/explorador");
     expect(tarjetas[0].querySelector("h2")?.textContent).toContain("freno de disco");
     expect(tarjetas[0].querySelector(".relacion")?.textContent).toBe("T = 2 · μ · p · A · r");
     expect(tarjetas[0].querySelector(".datos a")?.getAttribute("href")).toBe("https://autopartesfanalca.com.co/");

@@ -77,7 +77,7 @@ test("cabecera: navegación unificada, estado activo y menú plegable por debajo
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/app/#/maquina/prensa");
   const nav = page.getByRole("navigation", { name: "Principal" });
-  await expect(nav.getByRole("link")).toHaveText(["Biblioteca", "Freno", "Prensa", "Línea", "Moto", "API"]);
+  await expect(nav.getByRole("link")).toHaveText(["Biblioteca", "Freno", "Prensa", "Línea", "Moto", "Explorador", "API"]);
   await expect(nav.locator("a[aria-current=page]")).toHaveText("Prensa");
   await page.setViewportSize({ width: 800, height: 800 });
   await expect(nav).toBeHidden();

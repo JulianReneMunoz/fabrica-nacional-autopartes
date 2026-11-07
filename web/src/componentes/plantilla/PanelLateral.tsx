@@ -3,6 +3,7 @@ import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { IdPestana } from "../../maquinas/tipos";
 
 export const TITULO_PESTANA: Record<IdPestana, string> = {
+  sistema: "Sistema",
   componentes: "Componentes",
   empresa: "Datos de la empresa",
   ficha: "Ficha técnica",

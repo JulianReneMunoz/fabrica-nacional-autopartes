@@ -28,7 +28,7 @@ export default function Biblioteca() {
         </p>
       )}
       <div className="rejilla">
-        {MAQUINAS.map((def) => (
+        {MAQUINAS.filter((def) => def.enBiblioteca !== false).map((def) => (
           <TarjetaMaquina key={def.id} def={def} datos={maquinas?.find((m) => m.id === def.id) ?? null} />
         ))}
       </div>

@@ -175,11 +175,11 @@ describe("plantilla común", () => {
 });
 
 describe("navegación unificada", () => {
-  it("muestra Biblioteca · Freno · Prensa · Línea · Moto · API con la página activa marcada", async () => {
+  it("muestra Biblioteca · Freno · Prensa · Línea · Moto · Explorador · API con la página activa marcada", async () => {
     window.location.hash = "#/maquina/prensa";
     const raiz = await montar(<App />);
     const enlaces = Array.from(contenedor.querySelectorAll("header nav a"));
-    expect(enlaces.map((a) => a.textContent)).toEqual(["Biblioteca", "Freno", "Prensa", "Línea", "Moto", "API"]);
+    expect(enlaces.map((a) => a.textContent)).toEqual(["Biblioteca", "Freno", "Prensa", "Línea", "Moto", "Explorador", "API"]);
     expect(contenedor.querySelector('header nav a[aria-current="page"]')?.textContent).toBe("Prensa");
     expect(contenedor.querySelector(".boton-menu")).toBeTruthy();
     act(() => raiz.unmount());

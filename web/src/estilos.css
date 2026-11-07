@@ -286,3 +286,47 @@ svg text { font-family: var(--mono); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---------- Explorador de la motocicleta (fase 14) ---------- */
+.etiqueta-3d.etiqueta-sistema { background: none; padding: 0; pointer-events: auto; }
+.boton-etiqueta {
+  font: var(--t-xs)/1.25 var(--mono); background: var(--tinta); color: var(--papel); border: 1px solid var(--tinta);
+  border-radius: var(--radio-sm); padding: 3px 7px; white-space: nowrap; cursor: pointer;
+}
+.boton-etiqueta:hover { background: var(--tinta-2); }
+.etiqueta-sistema.activa .boton-etiqueta { background: var(--acento); border-color: var(--acento); color: var(--tinta); font-weight: 600; }
+.boton-etiqueta:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+.selector-vista { display: flex; flex-wrap: wrap; gap: var(--e2); margin-bottom: var(--e3); }
+.buscador-piezas { display: grid; gap: var(--e1); }
+.buscador-piezas label { font: var(--t-xs) var(--mono); text-transform: uppercase; color: var(--tinta-2); }
+.buscador-piezas input, .fila-pregunta input {
+  font: inherit; font-size: var(--t-sm); padding: var(--e2); border: var(--borde); border-radius: var(--radio-sm); background: var(--papel); color: var(--tinta);
+}
+.buscador-resultados { list-style: none; margin: 0; padding: var(--e1) 0; display: grid; gap: var(--e1); }
+.franja-sistemas { margin: var(--e3) 0; }
+.franja-botones { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: var(--e2); }
+.boton-sistema {
+  display: grid; justify-items: center; gap: var(--e1); padding: var(--e2); font-size: var(--t-sm); cursor: pointer;
+  background: var(--papel); color: var(--tinta); border: var(--borde); border-radius: var(--radio-sm);
+}
+.boton-sistema:hover { border-color: var(--tinta); }
+.boton-sistema.activo { background: var(--acento-suave); border-color: var(--acento); box-shadow: inset 0 -3px 0 var(--acento); font-weight: 600; }
+.icono-sistema { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; flex: none; }
+.panel-sistema h4.nombre-sistema { display: flex; align-items: center; gap: var(--e2); margin: 0 0 var(--e2); font-size: var(--t-md); }
+.panel-sistema h5, .pregunta-pieza h4, .respuesta-pieza h5 {
+  margin: var(--e4) 0 var(--e2); font: var(--t-xs) var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--tinta-2);
+}
+.piezas-sistema, .lista-partes ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e2); }
+.piezas-sistema li { display: grid; gap: 2px; padding-left: var(--e2); border-left: 2px solid transparent; }
+.piezas-sistema li.activa { border-left-color: var(--acento); }
+.funcion-pieza { font-size: var(--t-xs); color: var(--tinta-2); }
+.fila-pregunta { display: flex; flex-wrap: wrap; gap: var(--e2); }
+.fila-pregunta input { flex: 1 1 180px; }
+.respuesta-pieza { margin-top: var(--e3); font-size: var(--t-sm); }
+.respuesta-pieza .rechazo { font-weight: 600; }
+.lista-partes {
+  position: absolute; inset: 0; z-index: 3; overflow: auto; background: var(--papel); padding: var(--e4);
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--e4); align-content: start;
+}
+.lista-partes h4 { display: flex; align-items: center; gap: var(--e2); margin: 0 0 var(--e2); font-size: var(--t-sm); }
+.lista-partes li { display: grid; gap: 2px; }

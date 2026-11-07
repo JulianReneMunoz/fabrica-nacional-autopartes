@@ -88,7 +88,12 @@ export function TarjetaMaquina({ def, datos }: { def: DefinicionMaquina; datos: 
         </ul>
         <div className="pie barra">
           <a className="boton" href={def.ruta}>Abrir máquina →</a>
-          <a className="boton secundario" href={`${def.ruta}?tour=1&inicio=manual`}>Recorrido 30 s</a>
+          {def.duracionRecorrido > 0 && (
+            <a className="boton secundario" href={`${def.ruta}?tour=1&inicio=manual`}>Recorrido 30 s</a>
+          )}
+          {(def.enlacesExtra ?? []).map((e) => (
+            <a key={e.ruta} className="boton secundario" href={e.ruta} data-enlace-extra={e.ruta}>{e.texto}</a>
+          ))}
         </div>
       </div>
     </article>

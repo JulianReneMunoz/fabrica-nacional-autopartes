@@ -25,7 +25,7 @@ from fabrica_autopartes.services.simulador import (
 )
 from fabrica_autopartes.simulador import cinematica as cin
 from fabrica_autopartes.simulador.fisica_freno import EntradaFreno, ResultadoFreno, calcular
-from fabrica_autopartes.simulador.modelos import Articulacion, Ensamblaje, NodoJerarquia, Pieza
+from fabrica_autopartes.simulador.modelos import Articulacion, Ensamblaje, NodoJerarquia, Pieza, Sistema
 
 router = APIRouter(prefix="/api/v1", tags=["Simulador 3D (v2.0)"])
 
@@ -132,6 +132,12 @@ def jerarquia(ens_id: str) -> NodoJerarquia:
 @router.get("/simulador/ensamblajes/{ens_id}/piezas", response_model=list[Pieza])
 def piezas(ens_id: str) -> list[Pieza]:
     return obtener_ensamblaje(ens_id).piezas
+
+
+@router.get("/simulador/ensamblajes/{ens_id}/sistemas", response_model=list[Sistema])
+def sistemas(ens_id: str) -> list[Sistema]:
+    """Sistemas funcionales del ensamblaje (vista «explorador»); lista vacía si no los define."""
+    return obtener_ensamblaje(ens_id).sistemas
 
 
 @router.get("/simulador/ensamblajes/{ens_id}/piezas/{pieza_id}", response_model=Pieza)

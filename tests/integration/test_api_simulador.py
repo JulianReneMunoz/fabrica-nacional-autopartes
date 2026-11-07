@@ -48,6 +48,27 @@ def test_catalogo_incluye_moto_y_animacion_condiciona_frenado(cliente) -> None: 
     assert fuera.status_code == 422
 
 
+def test_sistemas_del_explorador(cliente) -> None:  # type: ignore[no-untyped-def]
+    """Fase 14: 10 sistemas que cubren cada pieza de la moto una sola vez; el freno no define sistemas."""
+    assert cliente.get(f"{BASE}/sistemas").json() == []
+    assert cliente.get("/api/v1/simulador/ensamblajes/otro/sistemas").status_code == 404
+    sistemas = cliente.get("/api/v1/simulador/ensamblajes/moto_honda/sistemas").json()
+    ids = [s["id"] for s in sistemas]
+    assert ids == [
+        "motor", "transmision", "frenos", "suspension", "iluminacion",
+        "electrico", "carroceria", "ruedas", "escape", "direccion",
+    ]  # fmt: skip
+    piezas = cliente.get("/api/v1/simulador/ensamblajes/moto_honda/piezas").json()
+    asignadas = [p for s in sistemas for p in s["piezas"]]
+    assert sorted(asignadas) == sorted(p["id"] for p in piezas)
+    # Cada pieza trae su función (texto del ensamblaje) y ningún texto informativo usa cifras ni precios.
+    assert all(p["funcion"].strip() for p in piezas)
+    for s in sistemas:
+        assert s["funcion"].strip()
+        assert not any(c.isdigit() for c in s["funcion"])
+        assert not any(t in s["funcion"].lower() for t in ("precio", "disponib", "repuesto", "$"))
+
+
 def test_despiece_y_secuencias(cliente) -> None:  # type: ignore[no-untyped-def]
     assert cliente.get(f"{BASE}/despiece", params={"factor": 2}).status_code == 422
     pos = cliente.get(f"{BASE}/despiece", params={"factor": 0}).json()

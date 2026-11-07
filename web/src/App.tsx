@@ -7,12 +7,20 @@ import MaquinaPrensa from "./paginas/MaquinaPrensa";
 // El simulador 3D carga three.js; se separa en su propio fragmento para que la biblioteca abra rápido.
 const MaquinaFreno = lazy(() => import("./paginas/MaquinaFreno"));
 const MaquinaMoto = lazy(() => import("./paginas/MaquinaMoto"));
+const ExploradorMoto = lazy(() => import("./paginas/ExploradorMoto"));
 
 /** Enrutador por hash (#/, #/maquina/freno?tour=1): funciona servido como estático desde FastAPI. */
 export function leerRuta(hash: string) {
   const limpio = hash.replace(/^#/, "") || "/";
   const [ruta, consulta = ""] = limpio.split("?");
   return { ruta, parametros: new URLSearchParams(consulta) };
+}
+
+/** Id de la máquina de una ruta. Alias: #/moto → moto_honda; #/explorador → explorador de la moto. */
+export function idDeRuta(ruta: string): string | null {
+  if (ruta === "/moto") return "moto_honda";
+  if (ruta === "/explorador" || ruta === "/maquina/moto_honda/explorador") return "moto_explorador";
+  return ruta.startsWith("/maquina/") ? ruta.slice("/maquina/".length) : null;
 }
 
 export default function App() {
@@ -28,14 +36,14 @@ export default function App() {
   }, []);
   const { ruta, parametros } = leerRuta(hash);
   const tour = parametros.get("tour") === "1";
-  // #/moto es un alias de #/maquina/moto_honda
-  const id = ruta === "/moto" ? "moto_honda" : ruta.startsWith("/maquina/") ? ruta.slice("/maquina/".length) : null;
+  const id = idDeRuta(ruta);
 
   let pagina;
   if (id === "freno") pagina = <MaquinaFreno tour={tour} />;
   else if (id === "prensa") pagina = <MaquinaPrensa tour={tour} />;
   else if (id === "linea") pagina = <MaquinaLinea tour={tour} />;
   else if (id === "moto_honda") pagina = <MaquinaMoto tour={tour} />;
+  else if (id === "moto_explorador") pagina = <ExploradorMoto />;
   else pagina = <Biblioteca />;
 
   return (
