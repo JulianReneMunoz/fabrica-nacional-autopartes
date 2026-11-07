@@ -6,38 +6,31 @@
 ![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)
 ![React y three.js](https://img.shields.io/badge/visor-React%20%2B%20three.js-61DAFB?logo=react&logoColor=black)
 ![MCP](https://img.shields.io/badge/servidor-MCP-black)
+![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green)
 
-Base de conocimiento semántica construida por web scraping responsable de los sitios oficiales de Fanalca, con
-Q&A anclado a citas, Resumen y FAQ (LangChain), API REST, servidor MCP y una biblioteca de máquinas 3D interactivas
-con física verificable.
+Base de conocimiento construida por web scraping responsable de los sitios oficiales de Fanalca, con Q&A anclado a
+citas, API REST, servidor MCP y una biblioteca de máquinas 3D interactivas con física verificable.
 
-[![Motocicleta de referencia en el visor](docs/capturas/readme/05_moto_ensamblada.png)](docs/videos/recorrido_moto_honda.mp4)
+[![Motocicleta de referencia en el visor 3D](docs/capturas/readme/05_moto_ensamblada.png)](docs/videos/recorrido_moto_honda.mp4)
 
-*Visor 3D: motocicleta de referencia genérica con ficha técnica. [Video del recorrido (30 s)](docs/videos/recorrido_moto_honda.mp4).*
+*Visor 3D: motocicleta de referencia genérica. [Video del recorrido (30 s)](docs/videos/recorrido_moto_honda.mp4) ·
+[más capturas](docs/capturas/).*
 
-> Proyecto técnico independiente. No es un canal oficial de Fanalca. La geometría y las cifras de las máquinas son
+> Proyecto técnico independiente; no es un canal oficial de Fanalca. La geometría y las cifras de las máquinas son
 > demostrativas; los datos de la empresa provienen de sitios oficiales citados por URL.
 
-## Contenido
-[Características](#características) · [Arquitectura](#arquitectura) · [Flujos](#flujos) · [Capturas](#capturas) ·
-[Inicio rápido en Windows 11](#inicio-rápido-en-windows-11) · [Uso](#uso) · [API](#api) ·
-[Servidor MCP](#servidor-mcp) · [Proveedores LLM](#proveedores-llm) · [Calidad](#calidad) ·
-[Herramientas de desarrollo](#herramientas-de-desarrollo) · [Datos y ética](#datos-y-ética) · [Estructura](#estructura-del-proyecto) ·
-[Limitaciones y hoja de ruta](#limitaciones-y-hoja-de-ruta) · [Licencia](#licencia)
+**Contenido:** [En 30 segundos](#en-30-segundos) · [Arquitectura](#arquitectura) · [Flujos](#flujos) ·
+[Capacidades](#capacidades) · [Inicio rápido](#inicio-rápido-en-windows-11) · [Referencia](#referencia) ·
+[Calidad](#calidad) · [Metodologías](#metodologías) · [Datos y ética](#datos-y-ética) ·
+[Limitaciones y hoja de ruta](#limitaciones-y-hoja-de-ruta) · [Glosario de siglas](#glosario-de-siglas) · [Licencia](#licencia)
 
-## Características
-- **Base de conocimiento por scraping responsable:** respeta `robots.txt` y `Crawl-delay`, User-Agent identificable,
-  pausa mínima de 2 s y dominios permitidos; no elude CAPTCHAs ni bloqueos. Medallion Bronze → Silver → Gold con una
-  gráfica por etapa.
-- **Q&A con citas y rechazo anti-alucinación:** responde solo con el contexto, cada cita corresponde a un fragmento
-  entregado, y una pregunta sin dato devuelve una frase de rechazo fija. Bloqueo previo de inyección de instrucciones.
-- **Resumen y FAQ** con prompts versionados (v1, v2, v3) y comparación en el laboratorio de prompts.
-- **Biblioteca de máquinas 3D** (freno de disco, prensa de estampado, línea de ensamble y motocicleta) con física
-  verificable: el cálculo en TypeScript se compara con el de Python (tolerancia 1e-6).
-- **Fichas técnicas con fuente y estado:** cada campo es `publicado`, `no_publicado` o `supuesto`; lo no publicado se
-  muestra como tal.
-- **API REST** documentada con OpenAPI y **servidor MCP** de solo lectura para agentes de código.
-- Streamlit con el mismo estilo del visor y verificación de calidad automatizada (pytest, Vitest, Playwright, CI).
+## En 30 segundos
+| | |
+|---|---|
+| **Qué hace** | Extrae información pública de Fanalca (Bronze → Silver → Gold), responde preguntas solo con ese contexto y con citas, o con una frase de rechazo fija, y explica máquinas de autopartes en 3D |
+| **Para quién** | Personas que consultan información de la empresa y equipos que evalúan asistentes con LLM fundamentados en fuentes |
+| **Cómo se ejecuta** | `uv sync` → `uv run fabrica build` → API (`uvicorn`) con el visor en `/app` y Streamlit; sin GPU y sin red en las pruebas |
+| **Qué lo distingue** | Rechazo anti-alucinación evaluado (24 preguntas, prompts v1–v3), procedencia visible de cada dato y paridad Python–TypeScript del cálculo físico |
 
 ## Arquitectura
 ```mermaid
@@ -77,24 +70,22 @@ flowchart LR
 
 | Capa | Contenido |
 |---|---|
-| `domain` | Modelos Pydantic del dominio (fragmentos, respuestas) |
 | `scraping` | Rastreador responsable, `robots.txt`, sitemaps, cliente HTTP |
 | `pipelines` | Bronze, Silver, Gold, calidad y gráficas por etapa |
-| `knowledge` | Base de conocimiento: carga, búsqueda BM25 y armado de contexto |
-| `llm` | Cadenas LCEL, prompts versionados, salvaguardas y proveedores |
+| `knowledge` | Carga del corpus, búsqueda BM25 con expansión y armado de contexto |
+| `llm` | Cadenas LCEL, prompts versionados (v1–v3), salvaguardas y proveedores |
 | `services` | `ServicioAsistente`, `ServicioSimulador`, fichas de motocicletas, FAQ del visor |
-| `api`, `frontend`, `mcp_server`, `cli` | Interfaces: solo llaman a la capa de servicios |
-| `simulador` | Modelo de componentes, cinemática, física, generación GLB (solo stdlib, Pydantic, numpy y trimesh) |
+| `api`, `frontend`, `cli`, `mcp_server` | Interfaces: solo llaman a la capa de servicios |
+| `simulador` | Componentes, cinemática, física y generación GLB (solo stdlib, Pydantic, numpy y trimesh) |
 
-**Regla de dependencias:** `scraping → pipelines → knowledge → llm → services → interfaces`. Una capa solo importa
-capas de nivel igual o inferior; `scripts/verificar_capas.py` lo comprueba. El acceso a SQL pasa por
-`repositories/auditoria.py`. Las decisiones están en [`docs/arquitectura/adr/`](docs/arquitectura/adr/) (17 ADR) y
-el árbol del repositorio en [`docs/arquitectura/arbol.txt`](docs/arquitectura/arbol.txt).
-
-Diagramas completos: [`docs/arquitectura/diagramas/`](docs/arquitectura/diagramas/).
+**Regla de dependencias:** `scraping → pipelines → knowledge → llm → services → interfaces`; una capa solo importa
+capas de nivel igual o inferior (`scripts/verificar_capas.py`). El acceso a SQL pasa por `repositories/auditoria.py`.
+Decisiones: [`docs/arquitectura/adr/`](docs/arquitectura/adr/) (18 ADR). Diagramas: [`docs/arquitectura/diagramas/`](docs/arquitectura/diagramas/).
 
 ## Flujos
-**Medallion**
+<details open>
+<summary><b>Medallion: del sitio a la base de conocimiento</b></summary>
+
 ```mermaid
 flowchart LR
   sitio[("Sitios oficiales")]
@@ -112,8 +103,11 @@ flowchart LR
   rastreo -.-> graficas
   gold -.-> graficas
 ```
+</details>
 
-**Pregunta de Q&A**
+<details open>
+<summary><b>Una pregunta de Q&A con salvaguardas</b></summary>
+
 ```mermaid
 sequenceDiagram
   actor U as Usuario
@@ -137,81 +131,83 @@ sequenceDiagram
   S-->>UI: respuesta con citas o frase de rechazo
   UI-->>U: tarjeta con insignias de fuente
 ```
+</details>
 
-**Flujo funcional del usuario**
+<details open>
+<summary><b>Simulador 3D</b></summary>
+
 ```mermaid
 flowchart LR
-  u(["Usuario"]) --> pest["Pestaña o máquina"]
-  pest --> q["Streamlit: Q&A"]
-  pest --> m["Visor: motocicleta"]
-  q --> aq["Servicio de Q&A o POST /api/v1/tareas/qa"]
-  m --> am["GET /api/v1/motos/cb160f<br/>POST /api/v1/motos/cb160f/calculo"]
-  aq --> r1["Tarjeta con respuesta y citas"]
-  am --> r2["Números, ficha con fuente y estado"]
+  cat["Catálogo de ensamblajes<br/>freno_disco y moto_honda"]
+  gen["Generación procedural<br/>trimesh"]
+  glb[("GLB y manifiesto<br/>web/public/modelos")]
+  fisica["Física didáctica<br/>fisica_freno.py y fisica_moto.py"]
+  fichas[("Fichas curadas<br/>data/catalogo/motos_honda.yaml")]
+  api["API<br/>/api/v1/simulador y /api/v1/motos"]
+  visor["Visor<br/>React Three Fiber"]
+  ts["moto.ts y freno.ts"]
+  ref[("referencia_moto.json<br/>paridad Python y TypeScript, 1e-6")]
+  cat --> gen --> glb --> visor
+  cat --> api
+  fisica --> api
+  fichas --> api
+  api -- "jerarquía, sistemas, despiece, cinemática, cálculo" --> visor
+  ts --> visor
+  fisica -. "exporta casos" .-> ref
+  ref -. "prueba Vitest" .-> ts
 ```
+</details>
 
-Simulador 3D y ciclo de vida del dato de la ficha: [`04_simulador_3d.md`](docs/arquitectura/diagramas/04_simulador_3d.md)
-y [`05_ciclo_dato_ficha.md`](docs/arquitectura/diagramas/05_ciclo_dato_ficha.md). Modelo físico, supuestos y fuentes de la
-motocicleta: [`docs/arquitectura/moto_honda.md`](docs/arquitectura/moto_honda.md).
+Los diagramas se mantienen en Mermaid, que GitHub renderiza de forma nativa en tema claro y oscuro (decisión S-07 de
+la [bitácora](docs/prompts/bitacora_experimentos.md)).
 
-## Capturas
-| | |
+## Capacidades
+| Capacidad | Detalle |
 |---|---|
-| ![Biblioteca de máquinas](docs/capturas/readme/01_biblioteca.png)<br/>Biblioteca de máquinas | ![Freno de disco](docs/capturas/readme/02_freno.png)<br/>Freno de disco |
-| ![Prensa](docs/capturas/readme/03_prensa.png)<br/>Prensa de estampado | ![Línea de ensamble](docs/capturas/readme/04_linea.png)<br/>Línea de ensamble |
-| ![Moto ensamblada](docs/capturas/readme/05_moto_ensamblada.png)<br/>Motocicleta ensamblada | ![Moto en despiece](docs/capturas/readme/06_moto_despiece.png)<br/>Despiece radial por subconjunto |
-| ![Corte del motor](docs/capturas/readme/07_moto_corte_motor.png)<br/>Corte del motor | ![Ficha técnica](docs/capturas/readme/08_moto_ficha_tecnica.png)<br/>Ficha técnica con fuente y estado |
-| ![FAQ en el visor](docs/capturas/readme/09_moto_faq.png)<br/>FAQ de Fanalca con citas | ![Q&A en Streamlit](docs/capturas/readme/10_streamlit_qa.png)<br/>Q&A en Streamlit |
-| ![Resumen](docs/capturas/readme/11_streamlit_resumen.png)<br/>Resumen | ![FAQ en Streamlit](docs/capturas/readme/12_streamlit_faq.png)<br/>FAQ |
-| ![Proceso de datos](docs/capturas/readme/13_streamlit_proceso.png)<br/>Proceso de datos | ![Laboratorio de prompts](docs/capturas/readme/14_streamlit_laboratorio.png)<br/>Laboratorio de prompts |
-| ![Swagger](docs/capturas/readme/15_swagger.png)<br/>API en Swagger | ![Recorrido de la moto](docs/capturas/readme/16_recorrido_moto.gif)<br/>Recorrido de la moto (GIF) |
+| Base de conocimiento | Scraping responsable y Medallion con una gráfica por etapa; lectura web documentada del dominio protegido |
+| Q&A con citas | Respuesta solo con el contexto, citas por `id` de fragmento, frase de rechazo fija y bloqueo de inyección |
+| Resumen y FAQ | Prompts versionados v1, v2 y v3 con laboratorio de comparación en Streamlit |
+| Biblioteca de máquinas 3D | Freno de disco, prensa, línea de ensamble y motocicleta; método Anatomy (una pregunta, una relación medible) |
+| Explorador de la motocicleta | Diez sistemas, 79 piezas con su función, ficha con fuente y estado, pregunta sobre cada pieza (`#/explorador`) |
+| Fichas técnicas | Cada campo `publicado`, `no_publicado` o `supuesto`; lo no publicado se muestra como tal |
+| API y MCP | API REST con OpenAPI y servidor MCP de solo lectura para agentes de código |
 
 ## Inicio rápido en Windows 11
-**Requisitos:** Python 3.12, [uv](https://docs.astral.sh/uv/), Node.js LTS, Git y Claude Code (para el proveedor
-`claude_code`). Opcionales: Ollama, Docker Desktop (PostgreSQL), FFmpeg (videos) y GitHub CLI.
-
+Requisitos: Python 3.12, [uv](https://docs.astral.sh/uv/), Node.js LTS, Git y Claude Code (proveedor `claude_code`).
 ```powershell
-cd C:\fabrica-nacional-autopartes
-uv sync                                   # entorno reproducible desde uv.lock
-cd web; npm ci; npm run build; cd ..      # visor 3D → web/dist (la API lo sirve en /app)
-uv run fabrica build                      # base de conocimiento desde la semilla (sin red)
+uv sync
+uv run fabrica build
+cd web; npm ci; npm run build; cd ..
+uv run uvicorn fabrica_autopartes.api.main:app --host 127.0.0.1 --port 8000
+uv run streamlit run frontend/app.py
 ```
+Visor y biblioteca: http://127.0.0.1:8000/app/ · Explorador: http://127.0.0.1:8000/app/#/explorador ·
+Streamlit: http://localhost:8501 · Swagger: http://127.0.0.1:8000/docs. Guion de demostración: [`docs/demo.md`](docs/demo.md).
 
-Ejecución (dos ventanas de PowerShell):
-```powershell
-uv run uvicorn fabrica_autopartes.api.main:app --host 127.0.0.1 --port 8000   # API y visor
-uv run streamlit run frontend/app.py                                          # Streamlit
-```
+## Referencia
+<details>
+<summary><b>CLI <code>fabrica</code></b></summary>
 
-| Qué | URL |
-|---|---|
-| Streamlit | http://localhost:8501 |
-| Visor y biblioteca | http://127.0.0.1:8000/app/ |
-| Motocicleta | http://127.0.0.1:8000/app/#/maquina/moto_honda |
-| Swagger | http://127.0.0.1:8000/docs |
-
-Guion de demostración con URL, comandos y preguntas de ejemplo: [`docs/demo.md`](docs/demo.md). Instalación detallada de
-herramientas: [`docs/manuales/instalacion_windows.md`](docs/manuales/instalacion_windows.md).
-
-## Uso
 | Comando | Descripción | Ejemplo |
 |---|---|---|
 | `fabrica pipeline` | Rastreo → Bronze → Silver/Gold → validación → gráficas (accede a la red) | `uv run fabrica pipeline --max-paginas 80` |
 | `fabrica scrape` | Solo el rastreo (Bronze) | `uv run fabrica scrape --max-paginas 60` |
 | `fabrica build` | Reconstruye Silver y Gold | `uv run fabrica build --fuente semilla` |
-| `fabrica validate` | Valida procedencia, duplicados y datos personales del corpus | `uv run fabrica validate` |
-| `fabrica graficas` | Regenera las seis gráficas por etapa | `uv run fabrica graficas` |
+| `fabrica validate` | Procedencia, duplicados y datos personales del corpus | `uv run fabrica validate` |
+| `fabrica graficas` | Regenera las gráficas por etapa | `uv run fabrica graficas` |
 | `fabrica ask` | Pregunta al Q&A | `uv run fabrica ask "¿Dónde queda la sede principal?" --proveedor claude_code --modelo sonnet` |
-| `fabrica faq` | Genera preguntas frecuentes | `uv run fabrica faq -n 8` |
-| `fabrica summary` | Genera el resumen | `uv run fabrica summary --enfoque "negocios y productos"` |
-| `fabrica evaluate` | Evalúa con el banco de 24 preguntas | `uv run fabrica evaluate --proveedor claude_code --modelo sonnet --version-prompt v3` |
-| `fabrica faq-visor` | Precalcula `data/gold/faq_visor.json` para el visor | `uv run fabrica faq-visor` |
-| `fabrica simulador` | Genera o valida el GLB de un ensamblaje | `uv run fabrica simulador generar --ensamblaje moto_honda` |
+| `fabrica faq` · `summary` | FAQ y resumen | `uv run fabrica faq -n 8` |
+| `fabrica evaluate` | Evaluación con el banco de 24 preguntas | `uv run fabrica evaluate --proveedor claude_code --modelo sonnet --version-prompt v3` |
+| `fabrica faq-visor` | Precalcula `data/gold/faq_visor.json` | `uv run fabrica faq-visor` |
+| `fabrica simulador` | Genera o valida el GLB de un ensamblaje | `uv run fabrica simulador validar --ensamblaje moto_honda` |
 | `fabrica openapi` | Exporta `docs/api/openapi.json` | `uv run fabrica openapi` |
 
-`fabrica pipeline` accede a la red y debe ejecutarse en el computador local, no dentro de las pruebas.
+`fabrica pipeline` accede a la red y se ejecuta en el equipo local, nunca dentro de las pruebas.
+</details>
 
-## API
+<details>
+<summary><b>API REST</b></summary>
+
 Contrato completo en [`docs/api/openapi.json`](docs/api/openapi.json) (Swagger en `/docs`).
 
 | Método | Ruta | Descripción |
@@ -222,65 +218,89 @@ Contrato completo en [`docs/api/openapi.json`](docs/api/openapi.json) (Swagger e
 | GET | `/api/v1/auditoria/interacciones` | Historial paginado |
 | GET / POST | `/api/v1/pipeline/ejecuciones` · `/reconstruir` | Historial y reconstrucción (`X-API-Key`) |
 | GET | `/api/v1/maquinas` · `/maquinas/{id}` | Biblioteca de máquinas con datos de la empresa |
-| GET / POST | `/api/v1/simulador/ensamblajes/{id}/…` | Jerarquía, piezas, articulaciones, despiece, cinemática validada, cálculo del freno, estados y eventos |
-| GET | `/api/v1/motos` · `/motos/{id}` · `/motos/{id}/faq` | Fichas de motocicletas y preguntas del modelo (deterministas, con campo y fuente) |
-| POST | `/api/v1/motos/{id}/calculo` | Cálculo didáctico; valida rpm, marcha, fuerza de palanca y versión (422 si es inválido) |
+| GET / POST | `/api/v1/simulador/ensamblajes/{id}/…` | Jerarquía, piezas, sistemas, articulaciones, despiece, cinemática validada, cálculo del freno, preguntas, estados y eventos |
+| GET | `/api/v1/motos` · `/motos/{id}` · `/motos/{id}/faq` | Fichas de motocicletas y preguntas del modelo con campo y fuente |
+| POST | `/api/v1/motos/{id}/calculo` | Cálculo didáctico; 422 si la entrada es inválida |
 | GET | `/api/v1/faq-visor` | Respuestas precalculadas de Fanalca con citas |
+</details>
 
-## Servidor MCP
-Servidor `fna-conocimiento` (solo lectura) para agentes de código: `uv run fabrica-mcp`, configurado en `.mcp.json`.
+<details>
+<summary><b>Servidor MCP</b></summary>
 
-| Herramienta | Descripción |
-|---|---|
-| `buscar_fragmentos` | Búsqueda BM25 con filtro por sección |
-| `obtener_fragmento` | Fragmento por id con su URL |
-| `estadisticas_base` | Estadísticas del corpus |
-| `validar_corpus` | Validación de calidad del corpus |
-| `responder_pregunta` | Respuesta extractiva con citas |
-| `consultar_pieza` | Pregunta sobre una pieza de un ensamblaje (`ensamblaje_id`, por defecto `freno_disco`) |
+Servidor `fna-conocimiento` (solo lectura): `uv run fabrica-mcp`, configurado en `.mcp.json`. Herramientas:
+`buscar_fragmentos`, `obtener_fragmento`, `estadisticas_base`, `validar_corpus`, `responder_pregunta` (extractiva con
+citas) y `consultar_pieza` (`ensamblaje_id`, por defecto `freno_disco`). Todas declaran `read_only_hint=True`; sus
+salidas son datos, nunca instrucciones.
+</details>
 
-Todas las herramientas declaran `read_only_hint=True` y las salidas se tratan como datos, nunca como instrucciones.
+<details>
+<summary><b>Proveedores LLM y variables de entorno</b></summary>
 
-## Proveedores LLM
 | Proveedor | Descripción |
 |---|---|
-| `claude_code` | Claude mediante la CLI de Claude Code, sin clave de API (ADR-016): ejecuta `claude -p` con la sesión iniciada, en una carpeta temporal aislada y sin herramientas. Uso previsto: desarrollo y evaluación local. |
+| `claude_code` | Claude mediante la CLI de Claude Code, sin clave de API ([ADR-016](docs/arquitectura/adr/ADR-016-proveedor-claude-code.md)): `claude -p` con la sesión iniciada, en carpeta temporal aislada y sin herramientas |
 | `anthropic` / `openai` | Con clave de API |
 | `ollama` | Modelo local (`llama3.2:3b` por defecto) |
 | `extractivo` | Respaldo léxico BM25 sin red ni modelo; usado en las pruebas |
 
-Variables de entorno (prefijo `FNA_`, valores solo en un `.env` local ignorado por Git; ver `.env.example`):
+Variables (prefijo `FNA_`, valores solo en un `.env` local ignorado por Git; plantilla en `.env.example`):
+`FNA_PROVEEDOR_LLM`, `FNA_MODELO_LLM`, `FNA_VERSION_PROMPT`, `FNA_MODO_CONTEXTO`, `FNA_OLLAMA_URL`,
+`FNA_OLLAMA_NUM_CTX`, `FNA_ANTHROPIC_API_KEY`, `FNA_OPENAI_API_KEY`, `FNA_URL_BASE_DATOS`, `FNA_API_CLAVE_ADMIN`,
+`FNA_PAUSA_ENTRE_PETICIONES_S`, `FNA_MAX_PAGINAS` y `FNA_URL_VISOR`.
+</details>
 
-| Variable | Descripción |
+<details>
+<summary><b>Herramientas de desarrollo</b></summary>
+
+Opcionales, con versión fijada tras un escaneo de seguridad documentado ([ADR-018](docs/arquitectura/adr/ADR-018-engram-y-gga.md);
+entradas S-05 a S-07 de la [bitácora](docs/prompts/bitacora_experimentos.md)). Ninguna es requisito de la aplicación.
+
+| Herramienta | Versión | Función |
+|---|---|---|
+| [Engram](https://github.com/Gentleman-Programming/engram) | v3.6.2 | Memoria persistente local entre sesiones del agente (SQLite + MCP) |
+| [GGA](https://github.com/Gentleman-Programming/gentleman-guardian-angel) | v2.10.1 | Revisión del diff preparado contra `AGENTS.md` antes de cada commit (`.gga`; hook en `.git/hooks`, no versionado) |
+</details>
+
+<details>
+<summary><b>Estructura del proyecto y problemas frecuentes</b></summary>
+
+```
+src/fabrica_autopartes/  core · domain · scraping · pipelines · knowledge · llm · simulador · repositories
+                         services · api · mcp_server · cli.py
+frontend/                Streamlit (estilo con los tokens del visor)
+web/                     Visor 3D (Vite + React + three.js), pruebas Vitest y Playwright
+data/                    seed · bronze · silver · gold · catalogo (fichas curadas)
+evaluacion/              Banco de 24 preguntas y resultados
+tests/                   unit · integration · e2e
+skills/ openspec/ .mcp.json AGENTS.md   Skills, especificaciones y reglas para agentes
+docs/                    api · arquitectura · capturas · graficas · videos · evidencias · manuales
+scripts/                 PowerShell y utilidades Python
+```
+
+| Síntoma | Solución |
 |---|---|
-| `FNA_PROVEEDOR_LLM`, `FNA_MODELO_LLM`, `FNA_VERSION_PROMPT` | Proveedor, modelo y versión de prompt |
-| `FNA_MODO_CONTEXTO` | `auto`, `completo` o `seleccion` |
-| `FNA_OLLAMA_URL`, `FNA_OLLAMA_NUM_CTX` | Ollama |
-| `FNA_ANTHROPIC_API_KEY`, `FNA_OPENAI_API_KEY` | Claves de API (opcionales) |
-| `FNA_URL_BASE_DATOS` | SQLite por defecto; PostgreSQL con `docker-compose.yml` |
-| `FNA_API_CLAVE_ADMIN` | Clave de las rutas administrativas |
-| `FNA_PAUSA_ENTRE_PETICIONES_S`, `FNA_MAX_PAGINAS` | Límites del rastreo |
-| `FNA_URL_VISOR` | URL del visor enlazada desde Streamlit |
+| `uv run` falla con «failed to remove file … fabrica-mcp.exe» | `$env:UV_NO_SYNC = "1"` (o `uv run --no-sync`), o cerrar el servidor MCP y ejecutar `uv sync` |
+| `/app` responde 404 | `cd web; npm ci; npm run build` y reiniciar la API |
+| La FAQ de Fanalca del visor dice «Aún no hay respuestas» | `uv run fabrica faq-visor` (usa `claude_code`) |
+| `proveedor_llm_no_disponible` | Iniciar sesión en Claude Code (`claude`) o usar el proveedor `extractivo` |
+| `base_conocimiento_vacia` | `uv run fabrica build` |
+</details>
 
 ## Calidad
 ```powershell
-$env:UV_NO_SYNC = "1"                       # solo si uv run falla por un ejecutable en uso (ver problemas frecuentes)
 .\scripts\verificar_calidad.ps1 -ConE2E     # Ruff, mypy, capas, pytest, Vitest, build y Playwright
 ```
-| Verificación | Estado |
+| Verificación | Resultado (última corrida completa) |
 |---|---|
-| `pytest` | 269 pruebas (unitarias, integración, e2e de Streamlit) |
-| Vitest | 99 pruebas (paridad Python y TypeScript del cálculo, plantilla, interfaz) |
-| Playwright | 41 pruebas e2e del visor |
+| pytest | 270 pruebas (unitarias, integración y e2e de Streamlit), sin red |
+| Vitest | 110 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz y explorador) |
+| Playwright | 46 pruebas e2e del visor con SwiftShader (≥ 50 fps exigidos) |
 | Ruff, mypy y capas | Sin hallazgos |
 | Integración continua | GitHub Actions en Ubuntu y Windows, más el visor |
 
-Las pruebas no acceden a Internet (sitio simulado con `responses`) ni requieren GPU. Los resultados de cada corrida
-quedan en [`docs/evidencias/`](docs/evidencias/). La trazabilidad de requisitos está en
-[`docs/requisitos/matriz_trazabilidad.md`](docs/requisitos/matriz_trazabilidad.md).
+Evidencias en [`docs/evidencias/`](docs/evidencias/); trazabilidad en [`docs/requisitos/matriz_trazabilidad.md`](docs/requisitos/matriz_trazabilidad.md).
 
-**Evaluación v1–v3** (banco de 24 preguntas: 19 respondibles y 5 de rechazo; informes en
-[`evaluacion/resultados/`](evaluacion/resultados/)):
+**Evaluación v1–v3** (24 preguntas: 19 respondibles y 5 de rechazo; informes en [`evaluacion/resultados/`](evaluacion/resultados/)):
 
 | Proveedor y modo | Prompt | Exactitud en respondibles | Rechazo correcto | Fundamentada | Exactitud global |
 |---|---|---|---|---|---|
@@ -291,81 +311,146 @@ quedan en [`docs/evidencias/`](docs/evidencias/). La trazabilidad de requisitos 
 | Claude (`sonnet`), automático | v3 | 0,789 | 1,0 | 0,842 | 0,833 |
 | Claude (`sonnet`), contexto completo | v3 | 0,737 | 1,0 | 0,579 | 0,792 |
 
-Con Claude, el prompt v3 en modo automático iguala la exactitud global de v2 (0,833) y supera su tasa de
-fundamentación (0,842 frente a 0,789); v1 no rechaza correctamente las preguntas ausentes. La latencia media con
-Claude es de unos 3,5 a 4,5 s por respuesta.
+Con Claude, v3 en modo automático iguala la exactitud global de v2 y supera su fundamentación; v1 no rechaza las
+preguntas sin respuesta. Una repetición de v3 automático del 2026-11-07
+([`20261107T013627Z_claude_code_sonnet_v3_auto.md`](evaluacion/resultados/20261107T013627Z_claude_code_sonnet_v3_auto.md))
+reprodujo las mismas cifras (0,789 · 1,0 · 0,842 · 0,833), con latencia media de 5,3 s.
 
-## Herramientas de desarrollo
-Herramientas opcionales de terceros, instaladas con versión fijada tras un escaneo de seguridad documentado
-([ADR-018](docs/arquitectura/adr/ADR-018-engram-y-gga.md); entradas S-05 y S-06 de
-[la bitácora](docs/prompts/bitacora_experimentos.md)). Ninguna es requisito para ejecutar la aplicación.
+## Metodologías
+Estado según la evidencia del repositorio. **Modelo** indica el agente de Claude Code y su modelo (campo `model` de
+`.claude/agents/*.md`, configuración local no versionada), la asignación por fase de
+[`fases_agentes.yaml`](docs/manuales/fases_agentes.yaml) y los commits con `Co-Authored-By: Claude Sonnet 5.5`; en
+ejecución, la aplicación usa `claude_code` con `sonnet` y el respaldo `extractivo`.
 
-| Herramienta | Versión | Función | Instalación |
-|---|---|---|---|
-| [Engram](https://github.com/Gentleman-Programming/engram) | v3.6.2 | Memoria persistente local entre sesiones del agente (SQLite + MCP) | Binario del release oficial con verificación de SHA-256; plugin: `claude plugin marketplace add Gentleman-Programming/engram` y `claude plugin install engram` |
-| [GGA](https://github.com/Gentleman-Programming/gentleman-guardian-angel) | v2.10.1 | Revisión automática del diff preparado contra `AGENTS.md` antes de cada commit | `bash install.sh` desde Git Bash, `gga install` en el repositorio |
+| Metodología | Estado | Dónde | Por qué aquí | Modelo |
+|---|---|---|---|---|
+| Medallion (Bronze/Silver/Gold) | Aplicada | [ADR-002](docs/arquitectura/adr/ADR-002-medallion-archivos.md), `pipelines/` | Separar dato crudo, limpio y listo para el LLM con trazabilidad | F09–F11: `ingeniero-datos` (sonnet) |
+| SDD — Spec-Driven Development | Aplicada | [`openspec/specs/`](openspec/specs/) (6 especificaciones) | Cada funcionalidad parte de una especificación verificable | F07: `analista-requisitos` (opus) |
+| ADR — Architecture Decision Records | Aplicada | [`docs/arquitectura/adr/`](docs/arquitectura/adr/) (18) | Dejar el porqué de cada decisión estructural | F08: `revisor-calidad` (opus); ADR de las fases técnicas |
+| MCP — Model Context Protocol | Aplicada | [`.mcp.json`](.mcp.json), `src/fabrica_autopartes/mcp_server/` | Dar a los agentes acceso de solo lectura a la base | F06: `revisor-calidad` (opus); F24: `ingeniero-3d-frontend` (sonnet) |
+| GGA — Gentleman Guardian Angel | Aplicada | [`.gga`](.gga), [ADR-018](docs/arquitectura/adr/ADR-018-engram-y-gga.md) | Revisar cada commit contra `AGENTS.md` | Sesión principal de Claude Code; GGA revisa con `claude --print` |
+| CI — Continuous Integration | Aplicada | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Pruebas en Ubuntu y Windows en cada push a `main` | — |
+| CD — Continuous Delivery/Deployment | No aplicada | — | No hay despliegue automático; se ejecuta en local | — |
+| Método Anatomy | Aplicada | [`skills/fna-maquinas-anatomia/`](skills/fna-maquinas-anatomia/) | Una pregunta y una relación medible por máquina | F21: `ingeniero-3d-frontend` (sonnet) |
+| TDD — Test-Driven Development | Parcial | `tests/`, `web/src/__tests__/`, `web/e2e/` | Cada cambio llega con pruebas; no hay evidencia de escribir la prueba antes del código | F14, F15 y F22: `revisor-calidad` (opus) |
 
-La configuración de GGA vive en `.gga` (proveedor `claude`, sin claves; solo `*.py`, `*.ts` y `*.tsx`, sin
-pruebas, datos ni documentación). El hook queda en `.git/hooks/pre-commit` y no se versiona; `git commit
---no-verify` lo omite de forma explícita. Una actualización de cualquiera de las dos herramientas exige repetir
-el escaneo y el análisis manual.
+<details>
+<summary><b>Medallion</b></summary>
+
+Bronze guarda el HTML y un manifiesto por página; Silver limpia, segmenta, extrae el contacto del pie, deduplica y
+anonimiza; Gold produce documentos, `fragmentos.jsonl` y `base_conocimiento.txt`. Cada etapa tiene una gráfica
+(`fabrica graficas`) y el corpus se valida con `fabrica validate`.
+</details>
+
+<details>
+<summary><b>SDD — Spec-Driven Development (desarrollo guiado por especificaciones)</b></summary>
+
+Las especificaciones de OpenSpec en `openspec/specs/` (extracción de datos, base de conocimiento, tareas LLM, interfaz
+de prueba, simulador 3D y biblioteca de máquinas) definen requisitos y escenarios; la matriz de trazabilidad enlaza
+cada requisito con su prueba.
+</details>
+
+<details>
+<summary><b>ADR — Architecture Decision Records (registros de decisiones de arquitectura)</b></summary>
+
+Dieciocho registros con contexto, decisión, alternativas y consecuencias, desde el uso de archivos para Medallion
+hasta el proveedor `claude_code`, la motocicleta de referencia y las herramientas Engram y GGA.
+</details>
+
+<details>
+<summary><b>MCP — Model Context Protocol (protocolo de contexto para modelos)</b></summary>
+
+El servidor `fna-conocimiento` expone búsqueda, fragmentos, estadísticas, validación y consulta de piezas, todas de
+solo lectura; Claude Code lo usa durante el desarrollo.
+</details>
+
+<details>
+<summary><b>GGA — Gentleman Guardian Angel (revisión automática previa al commit)</b></summary>
+
+El hook `pre-commit` envía el diff de `*.py`, `*.ts` y `*.tsx` a Claude y bloquea el commit si incumple `AGENTS.md`;
+la versión está fijada (v2.10.1) y su auditoría es la entrada S-06 de la bitácora.
+</details>
+
+<details>
+<summary><b>CI — Continuous Integration (integración continua)</b></summary>
+
+GitHub Actions ejecuta Ruff, mypy, verificación de capas, pytest, Vitest y la compilación del visor en Ubuntu y
+Windows; localmente, `scripts/verificar_calidad.ps1 -ConE2E` añade Playwright.
+</details>
+
+<details>
+<summary><b>Método Anatomy</b></summary>
+
+Cada máquina responde una pregunta con una relación medible, 2 a 4 controles, cifras junto a las piezas, recorrido de
+menos de 30 s y modo experimento; la plantilla común está en `web/src/componentes/plantilla/`.
+</details>
+
+<details>
+<summary><b>TDD — Test-Driven Development (desarrollo guiado por pruebas), parcial</b></summary>
+
+Cada fase añade pruebas unitarias, de integración y e2e, y la paridad Python–TypeScript se fija con casos de
+referencia exportados. El historial no permite afirmar que la prueba se escribió antes que el código, por eso el
+estado es parcial.
+</details>
+
+**No aplicadas** (sin evidencia en el repositorio): AAA — Arrange, Act, Assert (preparar, actuar, comprobar) como
+convención explícita; ReAct — Reasoning and Acting (razonar y actuar) en la aplicación, cuyo proveedor responde en un
+solo turno y sin herramientas; MVC — Model-View-Controller (modelo-vista-controlador), sustituido por la arquitectura
+por capas; PR — Pull Request (solicitud de integración), pues la integración se hace por avance rápido a `main`;
+WIP — Work In Progress (límite de trabajo en curso); CRISP-DM — Cross-Industry Standard Process for Data Mining
+(proceso estándar intersectorial para minería de datos); BMC — Business Model Canvas (lienzo del modelo de negocio);
+OKR — Objectives and Key Results (objetivos y resultados clave); KPI — Key Performance Indicator (indicador clave de
+desempeño) de negocio; CPM — Critical Path Method (método de la ruta crítica); diagrama de Gantt; Model Card (ficha
+del modelo); y Data Thinking (pensamiento de datos).
 
 ## Datos y ética
-- Scraping responsable: `robots.txt` y `Crawl-delay` respetados, User-Agent identificable
-  (`FNA-KB/1.0 (+URL del repositorio)`), pausa mínima de 2 s y dominios permitidos.
-- Protección anti-bots (ADR-015): un dominio que responde con un desafío se marca como protegido y se omite; no se
-  elude. La base complementa con lectura web documentada (`origen: lectura_web`, con URL).
+- Scraping responsable: `robots.txt` y `Crawl-delay`, User-Agent identificable (`FNA-KB/1.0 (+URL del repositorio)`),
+  pausa mínima de 2 s y dominios permitidos; no se eluden CAPTCHAs ni bloqueos ([ADR-015](docs/arquitectura/adr/ADR-015-proteccion-antibots.md)).
 - Sin datos personales (Ley 1581 de 2012): los correos no corporativos se anonimizan en Silver.
-- El corpus es contenido publicado por Fanalca y se cita con su fuente. Cada dato de empresa mostrado en el visor
-  cita su URL y su origen (`scraping`, `lectura_web` o `semilla`).
-- Cifras demostrativas y supuestos didácticos siempre marcados; la geometría no es diseño industrial certificado, la
-  animación no valida propiedades mecánicas y no se generan procedimientos de reparación ni de seguridad.
-
-## Estructura del proyecto
-```
-src/fabrica_autopartes/  core · domain · scraping · pipelines · knowledge · llm · simulador · repositories
-                         services · api · mcp_server · cli.py
-frontend/                Streamlit: app.py, estilo.py y estilo.css (tokens de web/src/tema)
-web/                     Visor 3D y biblioteca de máquinas (Vite + React + three.js), pruebas Vitest y Playwright
-data/                    seed · bronze · silver · gold · catalogo (fichas curadas)
-evaluacion/              Banco de 24 preguntas y resultados
-tests/                   unit · integration · e2e
-alembic/                 Migraciones de la base de auditoría
-skills/ openspec/ .mcp.json AGENTS.md   Skills del proyecto, especificaciones y reglas para agentes
-docs/                    api · arquitectura (ADR, diagramas) · capturas · graficas · videos · evidencias · manuales
-scripts/                 PowerShell y utilidades Python
-infra/ docker-compose.yml .github/workflows/ci.yml postman/
-```
+- Cada dato de empresa en el visor cita su URL y su origen (`scraping`, `lectura_web` o `semilla`).
+- Cifras demostrativas y supuestos didácticos siempre marcados; sin procedimientos de reparación ni de seguridad.
 
 ## Limitaciones y hoja de ruta
-**Limitaciones conocidas**
-- La búsqueda es léxica (BM25 con expansión de consultas): no hay recuperación semántica con embeddings.
-- Con un proveedor extractivo la respuesta no se sintetiza y puede no reconocer preguntas sin respuesta.
-- Fichas de motocicletas: solo la CB 160F, con los datos de una lámina comercial; cilindrada, diámetro por carrera,
-  relaciones de transmisión y potencia no están publicados y la simulación usa valores típicos marcados como supuesto.
-- La moto es genérica y esquemática; el embrague no se modela y los discos usan un radio efectivo supuesto.
-- El rendimiento del visor se midió con renderizado por software (SwiftShader), no con una GPU real.
-- El sitio de Autopartes Fanalca responde con un desafío anti-bots: sus datos entran por lectura web, no por rastreo.
+**Limitaciones**
+- Búsqueda léxica (BM25 con expansión de consultas), sin recuperación semántica.
+- Fichas de motocicletas: solo la CB 160F; los campos no publicados usan supuestos marcados.
+- La moto es genérica y esquemática; el embrague no se modela.
+- Rendimiento del visor medido con renderizado por software (SwiftShader), no con GPU real.
+- El sitio de Autopartes Fanalca responde con un desafío anti-bots: sus datos entran por lectura web documentada.
 
-**Hoja de ruta técnica**
-- Búsqueda web complementaria opcional, siempre iniciada por la persona usuaria, con los hallazgos en una cola de
-  revisión humana y fuera de la base verificada.
-- Recuperación semántica con embeddings.
-- Más fichas de motocicletas a medida que existan fuentes oficiales legibles.
-- Medición de rendimiento del visor en GPU real.
+**Hoja de ruta**
+- Búsqueda web complementaria iniciada por la persona usuaria, con hallazgos en revisión humana y fuera de la base.
+- Recuperación híbrida BM25 + vectorial con embeddings.
+- Más fichas de motocicletas cuando existan fuentes oficiales legibles.
+
+## Glosario de siglas
+| Sigla | Nombre en inglés | Traducción |
+|---|---|---|
+| AAA | Arrange, Act, Assert | Preparar, actuar, comprobar |
+| ADR | Architecture Decision Record | Registro de decisión de arquitectura |
+| API | Application Programming Interface | Interfaz de programación de aplicaciones |
+| BM25 | Best Matching 25 | Función de ranking léxico «mejor coincidencia 25» |
+| BMC | Business Model Canvas | Lienzo del modelo de negocio |
+| CBS | Combined Braking System | Sistema de frenado combinado |
+| CI/CD | Continuous Integration / Continuous Delivery | Integración continua / entrega continua |
+| CLI | Command-Line Interface | Interfaz de línea de comandos |
+| CPM | Critical Path Method | Método de la ruta crítica |
+| CRISP-DM | Cross-Industry Standard Process for Data Mining | Proceso estándar intersectorial para minería de datos |
+| GGA | Gentleman Guardian Angel | Revisión automática previa al commit |
+| GLB | GL Transmission Format Binary | Formato binario de transmisión de modelos 3D |
+| KPI | Key Performance Indicator | Indicador clave de desempeño |
+| LCEL | LangChain Expression Language | Lenguaje de expresiones de LangChain |
+| LLM | Large Language Model | Modelo de lenguaje de gran tamaño |
+| MCP | Model Context Protocol | Protocolo de contexto para modelos |
+| MVC | Model-View-Controller | Modelo-vista-controlador |
+| OKR | Objectives and Key Results | Objetivos y resultados clave |
+| PR | Pull Request | Solicitud de integración |
+| Q&A | Questions and Answers | Preguntas y respuestas |
+| ReAct | Reasoning and Acting | Razonar y actuar |
+| SDD | Spec-Driven Development | Desarrollo guiado por especificaciones |
+| TDD | Test-Driven Development | Desarrollo guiado por pruebas |
+| WIP | Work In Progress | Trabajo en curso |
 
 ## Licencia
-El código se distribuye bajo la licencia MIT (ver [`LICENSE`](LICENSE)). El contenido del corpus es propiedad de
-Fanalca y se cita con su fuente; el modelo 3D lo genera el propio proyecto, sin modelos externos. Las dependencias
-conservan sus licencias (`uv tree`, `npm ls`).
-
-## Problemas frecuentes
-| Síntoma | Solución |
-|---|---|
-| `uv run` falla con «failed to remove file … fabrica-mcp.exe» | Definir `$env:UV_NO_SYNC = "1"` (o `uv run --no-sync`), o cerrar el servidor MCP y ejecutar `uv sync` |
-| `/app` responde 404 | `cd web; npm ci; npm run build` y reiniciar la API |
-| El despiece de la moto se ve plano | La API en ejecución es anterior a los cambios: reiniciarla |
-| La FAQ de Fanalca del visor dice «Aún no hay respuestas» | `uv run fabrica faq-visor` (usa `claude_code`) |
-| `proveedor_llm_no_disponible` | Iniciar sesión en Claude Code (`claude`) o usar el proveedor `extractivo` |
-| `base_conocimiento_vacia` | `uv run fabrica build` |
-| `fabrica pipeline` termina con código 2 | Ninguna página capturada: revisar `data/bronze/errores.jsonl` y la conexión |
+Código bajo licencia MIT ([`LICENSE`](LICENSE)). El contenido del corpus es propiedad de Fanalca y se cita con su
+fuente; el modelo 3D lo genera el propio proyecto. Las dependencias conservan sus licencias (`uv tree`, `npm ls`).

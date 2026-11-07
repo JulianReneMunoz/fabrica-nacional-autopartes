@@ -207,3 +207,25 @@ Versión fijada:
 - `gga version` → `gga v2.10.1`. Hook `pre-commit` instalado con `gga install` (en `.git/hooks`, no versionado); configuración versionada en `.gga` (sin secretos).
 - Prueba del hook: commit de un archivo `.py` pequeño en una rama temporal (descartada): revisión `PASSED` en 19 s.
 - Cualquier actualización exige repetir este análisis.
+
+
+## S-07 · Archify: nueva revisión de la instalación de usuario y decisión de no usarla (2026-11-06)
+
+Procedimiento: `fna-seguridad`, paso 5, con el criterio de excepción aplicado a Engram y GGA (S-05, S-06): la
+herramienta solo se usa si nada ejecutable toca red, credenciales o persistencia fuera de su carpeta.
+
+- **Instalación revisada:** `~/.agents/skills/archify` (`~/.claude/skills/archify` es un enlace simbólico a ella),
+  idéntica archivo por archivo a la carpeta `archify/` de `github.com/tt-a1i/archify` en el commit
+  `edf158c4e7a1d18d20cc329840f864289634c090` (2026-10-25; `package.json` declara 3.2.0, posterior al tag `v3.2.0`).
+- **SkillSpector v2.12.0 (`--no-llm`):** 100/100, «DO NOT INSTALL», 154 hallazgos sobre 206 componentes, cobertura del
+  18 %. Hallazgos altos: 36 AE1 (límites del analizador sobre `bin/*.mjs`, `renderers/` y `explainer/`), 16 YR4
+  (fuente WOFF2 en base64 dentro de `@font-face` en `assets/template.html:146` y 15 ejemplos: falso positivo),
+  1 AR2 (`references/delivery-contract.md:493`, documentación: falso positivo) y 1 AE3 (separador NUL de una clave de
+  deduplicación en `renderers/shared/diagnostics.mjs:37`).
+- **Revisión manual del código ejecutable (104 archivos):** `renderers/shared/brand-marks.mjs` descarga logotipos por
+  HTTPS cuando un diagrama declara una marca remota (con filtros contra credenciales e IP privadas);
+  `bin/preview.mjs` abre un servidor HTTP en `127.0.0.1`; `bin/open-artifact.mjs` abre el navegador; la skill crea
+  carpetas `.archify/` en el directorio de trabajo. No lee credenciales ni usa `eval`.
+- **Decisión:** hay código ejecutable con acceso a red y persistencia fuera de su carpeta, por lo que **no se usa**.
+  Los diagramas del README siguen en Mermaid (`docs/arquitectura/diagramas/`), que GitHub renderiza de forma nativa en
+  tema claro y oscuro. La instalación de usuario no se modifica; retirarla queda a decisión del usuario.
