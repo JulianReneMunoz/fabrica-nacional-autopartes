@@ -160,3 +160,50 @@ Procedimiento: `fna-seguridad`, paso 5. Herramienta: SkillSpector v2.12.0 (`skil
 | archify | 100/100 (CRITICAL) | DO NOT INSTALL | 36 HIGH AE1 (artefactos referenciados sin inspección completa), 16 HIGH YR4 (regla YARA de envenenamiento de metadatos de herramientas, p. ej. `assets/template.html:146`), 1 HIGH AR2 (`references/delivery-contract.md:493`), 1 HIGH AE3 (bytes NUL en `renderers/shared/diagnostics.mjs:37`) y 69 de severidad baja o media | 18,4 % | **rechazada, no se instala** |
 
 El análisis fue parcial (185 excepciones por límite de tiempo de ejecución del analizador), pero la puntuación supera el umbral y la recomendación es no instalar. Decisión: los diagramas del README se elaboran con Mermaid, que GitHub renderiza de forma nativa y no requiere instalar herramientas de terceros. Los diagramas viven en `docs/arquitectura/diagramas/` (Markdown con bloques `mermaid`) y se incrustan en el README. No se generan HTML interactivos ni SVG exportados con variantes clara y oscura, porque dependían de Archify.
+
+
+## S-05 · Excepción documentada: Engram v3.6.2 (memoria persistente) (2026-11-06)
+
+Procedimiento: `fna-seguridad`, paso 5. Herramienta: SkillSpector v2.12.0 (`skillspector scan <ruta> --no-llm --format markdown`) sobre un clon de `Gentleman-Programming/engram` (HEAD `a957599`). Criterio de rechazo: puntuación ≥ 51. Excepción autorizada por el usuario para el plugin y el binario, solo en la versión fijada, con las condiciones de la ADR-018.
+
+| Alcance | Puntuación | Hallazgos | Resultado |
+|---|---|---|---|
+| Skill `plugin/claude-code/skills/memory` | 0/100 | ninguno | aprobada |
+| Plugin `plugin/claude-code` (scripts de hooks) | 71/100 | 2 HIGH TM1 (`scripts/session-start.sh:110`), 6 MEDIUM E1, 1 MEDIUM BH1 | **excepción** |
+| Repositorio completo (1 082 componentes) | 100/100 (CRITICAL) | 416 hallazgos: 57 HIGH SC9, 31 HIGH PE3, 20 HIGH AS1, 15 HIGH TM1, 8 HIGH AR2, 7 HIGH P6, 6 HIGH MP3 y otros menores | **excepción** (solo se usa el binario y el plugin de Claude Code) |
+
+Análisis manual:
+- **TM1 `session-start.sh:110`:** manejo de un bloqueo de importación con `mkdir`/`rmdir`/`rm -f` sobre un directorio de bloqueo propio del plugin; no ejecuta entrada externa.
+- **E1 / scripts de hooks:** llamadas `curl` al servidor local de Engram (127.0.0.1) para registrar sesión, prompts y fin de sesión. Implican que los prompts del usuario llegan al servidor local de Engram; no salen de la máquina.
+- **SC9 (57):** archivos bajo carpetas ocultas (`.github/scripts`, `.github/workflows`) marcados como «artefacto oculto»; son scripts de CI del proyecto, no se instalan.
+- **PE3 (31) y AR2 (8, parte):** volcados de memoria del propio desarrollo en `.engram/chunks/*.jsonl.gz` y documentación que menciona rutas de credenciales o frases de «no rechazar»; texto de datos, no código que se ejecute.
+- **AS1 (20), AS2 (3), MP3 (6):** `internal/setup` y pruebas que leen o escriben la configuración de otros agentes; es el propósito de `engram setup <agente>`, que **no** se ejecuta para Claude Code. La manipulación de memoria es la función de la herramienta.
+- **TM1 (15), TM2 (3), P6 (7), P2 (1), E2 (3), YR4 (2), AR3 (1):** código del almacén SQLite, consultas del panel en la nube (`internal/cloud`, no usado), pruebas, `pico.min.css` y el plugin `plugin/pi` (no instalado).
+- No apareció ningún hallazgo grave fuera de estas categorías ya analizadas.
+
+Versión fijada y verificación de integridad:
+- Release oficial `v3.6.2`, Windows amd64. SHA-256 del zip: `2e1b2355ce6e21c14733e3dd7736a88a729f84fa9ec26f0f87747e71922a4491` (coincide con `checksums.txt` del release).
+- SHA-256 de `engram.exe`: `59b3468a33e4b07d5bfbc3bb5ba8cf59220c9408fc02478c6cbb1ed161f0c973`; `engram version` → `engram 3.6.2`.
+- Ruta: `%LOCALAPPDATA%\engram\bin` (añadida al PATH de usuario). Sin permisos globales añadidos; el plugin lo instala el usuario con `claude plugin marketplace add Gentleman-Programming/engram` y `claude plugin install engram`.
+- Cualquier actualización exige repetir este análisis.
+
+
+## S-06 · Excepción documentada: GGA v2.10.1 (Gentleman Guardian Angel) (2026-11-06)
+
+Procedimiento: `fna-seguridad`, paso 5, con SkillSpector v2.12.0 sobre `Gentleman-Programming/gentleman-guardian-angel`. Criterio de rechazo: puntuación ≥ 51. Excepción autorizada por el usuario solo para la versión fijada.
+
+| Herramienta | Puntuación | Hallazgos principales | Resultado |
+|---|---|---|---|
+| gentleman-guardian-angel (73 hallazgos) | 100/100 | 12 HIGH SC2 (descarga de scripts externos), 6 HIGH TM1, 4 HIGH PE3, 1 HIGH TM2, 1 HIGH YR1 y 49 MEDIUM | **excepción** |
+
+Análisis manual:
+- **SC2 (12):** `curl … | sh` aparece en `.github/workflows/ci.yml:48` (instalación de ShellSpec en CI del proyecto), `release.yml:29`, y como **texto de ayuda** en `lib/providers.sh:82` (instrucciones para instalar Cursor Agent) y en la documentación. Ningún flujo de `install.sh` ni de `bin/gga` descarga o ejecuta scripts remotos.
+- **YR1 `README.md:79`:** coincidencia con la regla de persistencia por el comando de instalación que añade `PATH` a `~/.bashrc`; `install.sh` no modifica `~/.bashrc` (solo lo sugiere).
+- **TM1 / TM2 / PE3:** líneas de documentación, `Makefile` y pruebas ShellSpec (`spec/`) sin ejecución en la instalación.
+- **Código revisado a mano (`install.sh`, `bin/gga`, `lib/*.sh`):** `install.sh` copia `bin/gga`, `lib/providers.sh`, `cache.sh` y `pr_mode.sh` a `%USERPROFILE%\bin`, crea `gga.bat`, ajusta `VERSION` y `LIB_DIR` con `sed` y no cambia el PATH. En tiempo de uso, `gga run` envía el diff preparado y `AGENTS.md` a `claude --print` y consulta `api.github.com/repos/.../releases/latest` (2 s) para el aviso de versión.
+
+Versión fijada:
+- Tag `v2.10.1` = commit `1124c3672f082c56b033c4e23a30e95d0e8cd593` (el que se instala). El análisis se hizo sobre `fbf1091da170a33d42cb97577a9813e652e98a4a` (HEAD de `main`, un commit posterior que solo cambia `.github/workflows/release.yml`); `git diff 1124c36 fbf1091 -- install.sh bin lib` está vacío, por lo que el código instalado es idéntico al revisado.
+- `gga version` → `gga v2.10.1`. Hook `pre-commit` instalado con `gga install` (en `.git/hooks`, no versionado); configuración versionada en `.gga` (sin secretos).
+- Prueba del hook: commit de un archivo `.py` pequeño en una rama temporal (descartada): revisión `PASSED` en 19 s.
+- Cualquier actualización exige repetir este análisis.

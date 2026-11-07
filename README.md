@@ -22,7 +22,7 @@ con física verificable.
 [Características](#características) · [Arquitectura](#arquitectura) · [Flujos](#flujos) · [Capturas](#capturas) ·
 [Inicio rápido en Windows 11](#inicio-rápido-en-windows-11) · [Uso](#uso) · [API](#api) ·
 [Servidor MCP](#servidor-mcp) · [Proveedores LLM](#proveedores-llm) · [Calidad](#calidad) ·
-[Datos y ética](#datos-y-ética) · [Estructura](#estructura-del-proyecto) ·
+[Herramientas de desarrollo](#herramientas-de-desarrollo) · [Datos y ética](#datos-y-ética) · [Estructura](#estructura-del-proyecto) ·
 [Limitaciones y hoja de ruta](#limitaciones-y-hoja-de-ruta) · [Licencia](#licencia)
 
 ## Características
@@ -294,6 +294,21 @@ quedan en [`docs/evidencias/`](docs/evidencias/). La trazabilidad de requisitos 
 Con Claude, el prompt v3 en modo automático iguala la exactitud global de v2 (0,833) y supera su tasa de
 fundamentación (0,842 frente a 0,789); v1 no rechaza correctamente las preguntas ausentes. La latencia media con
 Claude es de unos 3,5 a 4,5 s por respuesta.
+
+## Herramientas de desarrollo
+Herramientas opcionales de terceros, instaladas con versión fijada tras un escaneo de seguridad documentado
+([ADR-018](docs/arquitectura/adr/ADR-018-engram-y-gga.md); entradas S-05 y S-06 de
+[la bitácora](docs/prompts/bitacora_experimentos.md)). Ninguna es requisito para ejecutar la aplicación.
+
+| Herramienta | Versión | Función | Instalación |
+|---|---|---|---|
+| [Engram](https://github.com/Gentleman-Programming/engram) | v3.6.2 | Memoria persistente local entre sesiones del agente (SQLite + MCP) | Binario del release oficial con verificación de SHA-256; plugin: `claude plugin marketplace add Gentleman-Programming/engram` y `claude plugin install engram` |
+| [GGA](https://github.com/Gentleman-Programming/gentleman-guardian-angel) | v2.10.1 | Revisión automática del diff preparado contra `AGENTS.md` antes de cada commit | `bash install.sh` desde Git Bash, `gga install` en el repositorio |
+
+La configuración de GGA vive en `.gga` (proveedor `claude`, sin claves; solo `*.py`, `*.ts` y `*.tsx`, sin
+pruebas, datos ni documentación). El hook queda en `.git/hooks/pre-commit` y no se versiona; `git commit
+--no-verify` lo omite de forma explícita. Una actualización de cualquiera de las dos herramientas exige repetir
+el escaneo y el análisis manual.
 
 ## Datos y ética
 - Scraping responsable: `robots.txt` y `Crawl-delay` respetados, User-Agent identificable

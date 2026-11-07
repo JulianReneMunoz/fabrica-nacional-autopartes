@@ -1,0 +1,13 @@
+# Gentleman Guardian Angel (gga v2.10.1, fijada; ver docs/arquitectura/adr/ADR-018)
+# Sin secretos: el proveedor "claude" usa la sesión local de Claude Code, no una clave en este archivo.
+PROVIDER="claude"
+
+# Solo código fuente de producción
+FILE_PATTERNS="*.py,*.ts,*.tsx"
+
+# Se excluyen pruebas, datos, documentación y la compilación del visor
+EXCLUDE_PATTERNS="tests/*,*/tests/*,data/*,docs/*,web/dist/*,web/e2e/*,web/src/__tests__/*,*.test.ts,*.spec.ts,*.test.tsx,*.spec.tsx,*.d.ts,test_*.py,conftest.py"
+
+RULES_FILE="AGENTS.md"
+STRICT_MODE="true"
+TIMEOUT="180"
