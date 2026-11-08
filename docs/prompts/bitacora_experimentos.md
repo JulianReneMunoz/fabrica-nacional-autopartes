@@ -540,6 +540,20 @@ Hecho:
   corrigió además el texto sobre los créditos de Max, que había quedado sin corregir en `main` porque el PR #6 se
   integró con la versión anterior al `--amend`.
 
-Pendiente: la demostración real (tres turnos en un mismo `thread_id`, con tokens, costo y latencia) y la prueba
-opcional `FNA_PRUEBAS_AGENTE_REAL=1`, cuando `make verificar-agente` indique «Disponible» y con aprobación previa
-del gasto de créditos.
+Correcciones tras la revisión de GGA (commit aparte): el docstring de `llm/proveedores.py` describe ahora los
+créditos de API (Pro no los incluye; Max y Ultra sí) y los proveedores por defecto (Q&A: `FNA_PROVEEDOR_LLM`;
+agente: `anthropic` con Claude Haiku 5.5; Ollama opcional); el mensaje de `ImportError` de `langchain-anthropic` ya
+no sugiere `uv sync --extra anthropic` (es dependencia principal) sino sincronizar con `uv.lock`; y el `assert` de
+`crear_modelo_agente` pasa a ser un `if` con `ErrorProveedorLLM`, con una prueba que lo confirma también con
+`python -O`.
+
+Pendiente:
+- La demostración real (tres turnos en un mismo `thread_id`, con tokens, costo y latencia) y la prueba opcional
+  `FNA_PRUEBAS_AGENTE_REAL=1`, cuando `make verificar-agente` indique «Disponible» y con aprobación previa del
+  gasto de créditos.
+- (Nota 3 de GGA) `verificar_proveedor_agente` importa `anthropic` directamente, pero el paquete no está declarado
+  en `pyproject.toml`: llega como dependencia de `langchain-anthropic`. Declararlo con su versión o hacer la
+  consulta a través del cliente de LangChain. Relacionado: el extra opcional `anthropic` de `pyproject.toml` es
+  redundante, porque `langchain-anthropic` ya es dependencia principal.
+- (Nota 5 de GGA) En `crear_modelo` (Q&A con `anthropic`), `max_tokens` está fijo en 1024; el agente usa
+  `FNA_AGENTE_MAX_TOKENS`. Convertirlo en una constante con nombre o en una configuración.

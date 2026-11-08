@@ -391,6 +391,70 @@ def test_anthropic_sin_clave_da_error_claro(config_con_base: Configuracion) -> N
         pv.crear_modelo_agente(config)
 
 
+@pytest.mark.parametrize("clave", [None, "", "   "])
+def test_crear_modelo_agente_sin_clave_falla_aunque_se_omita_la_verificacion(
+    config_con_base: Configuracion, monkeypatch: pytest.MonkeyPatch, clave: str | None
+) -> None:
+    """La comprobación de la clave es un ``if`` explícito, no un ``assert`` (desaparece con ``-O``)."""
+    from pydantic import SecretStr
+
+    disponible = pv.EstadoProveedor("anthropic", "claude-haiku-5-5", True, "simulado")
+    monkeypatch.setattr(pv, "verificar_proveedor_agente", lambda *a, **k: disponible)
+    config = _config(
+        config_con_base,
+        proveedor_agente="anthropic",
+        anthropic_api_key=None if clave is None else SecretStr(clave),
+    )
+    with pytest.raises(ErrorProveedorLLM, match="Falta FNA_ANTHROPIC_API_KEY"):
+        pv.crear_modelo_agente(config)
+
+
+def test_crear_modelo_agente_no_usa_assert_para_la_clave() -> None:
+    """Con ``python -O`` (sin asserts) la comprobación de la clave sigue activa."""
+    import subprocess
+    import sys
+
+    codigo = (
+        "from unittest import mock\n"
+        "from fabrica_autopartes.core.config import Configuracion\n"
+        "from fabrica_autopartes.core.excepciones import ErrorProveedorLLM\n"
+        "from fabrica_autopartes.llm import proveedores as pv\n"
+        "c = Configuracion(_env_file=None, proveedor_agente='anthropic', anthropic_api_key=None)\n"
+        "e = pv.EstadoProveedor('anthropic', 'claude-haiku-5-5', True, 'simulado')\n"
+        "with mock.patch.object(pv, 'verificar_proveedor_agente', lambda *a, **k: e):\n"
+        "    try:\n"
+        "        pv.crear_modelo_agente(c)\n"
+        "    except ErrorProveedorLLM:\n"
+        "        print('ok')\n"
+    )
+    r = subprocess.run([sys.executable, "-O", "-c", codigo], capture_output=True, text=True, check=False)
+    assert r.stdout.strip() == "ok", r.stderr
+
+
+def test_import_de_langchain_anthropic_no_sugiere_el_extra(
+    config_con_base: Configuracion, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``langchain-anthropic`` es dependencia principal: el mensaje no sugiere el extra ``anthropic``."""
+    import builtins
+
+    from pydantic import SecretStr
+
+    importar = builtins.__import__
+
+    def sin_langchain_anthropic(nombre: str, *args: object, **kwargs: object) -> object:
+        if nombre == "langchain_anthropic":
+            raise ImportError("simulado")
+        return importar(nombre, *args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(builtins, "__import__", sin_langchain_anthropic)
+    config = _config(
+        config_con_base, proveedor_llm="anthropic", anthropic_api_key=SecretStr("clave-de-prueba")
+    )
+    with pytest.raises(ErrorProveedorLLM) as error:
+        pv.crear_modelo(config, "anthropic", "claude-haiku-5-5")
+    assert "--extra anthropic" not in str(error.value) and "uv.lock" in str(error.value)
+
+
 def test_anthropic_con_clave_construye_el_modelo_sin_red(config_con_base: Configuracion) -> None:
     from pydantic import SecretStr
 

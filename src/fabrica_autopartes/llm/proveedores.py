@@ -1,14 +1,22 @@
 """Fábrica de modelos de chat (LangChain) según el proveedor configurado.
 
+Proveedores por defecto:
+
+* Q&A, FAQ y resumen (``crear_modelo``): el de ``FNA_PROVEEDOR_LLM``.
+* Agente con memoria (``crear_modelo_agente``): ``anthropic`` con Claude Haiku 5.5
+  (``claude-haiku-5-5``, ADR-026); ``ollama`` es opcional. Sin respaldo automático entre proveedores.
+
 Proveedores soportados:
 
-* ``ollama``: modelos abiertos locales (p. ej. ``llama3.2:3b``, ``mistral``). Opción por
-  defecto del proyecto: sin costo por token y los datos no salen del equipo.
+* ``ollama``: modelos abiertos locales (p. ej. ``llama3.2:3b``, ``qwen3:8b``), opcional: sin costo por
+  token y sin que los datos salgan del equipo; no viene instalado.
 * ``openai``: API privada (requiere ``FNA_OPENAI_API_KEY`` con facturación activa).
-* ``anthropic``: API de Anthropic (requiere ``FNA_ANTHROPIC_API_KEY`` de la Consola;
-  una suscripción Claude Pro/Max **no** incluye créditos de API).
+* ``anthropic``: API de Anthropic con ``FNA_ANTHROPIC_API_KEY`` (nunca ``ANTHROPIC_API_KEY``) de la
+  Claude Console. Créditos de API: Claude Pro no los incluye; los planes Max y Ultra incluyen créditos
+  mensuales al vincular una organización de la Console (``docs/arquitectura/modelos.md``).
 * ``claude_code``: Claude mediante la CLI de Claude Code (``claude -p``) con la sesión de la
   suscripción, sin clave de API; para desarrollo y evaluación local (ver ``llm/claude_code.py``).
+  No se usa en el agente.
 * ``extractivo``: línea base determinista sin LLM, para pruebas y CI.
 """
 
@@ -89,7 +97,11 @@ def crear_modelo(
         try:
             from langchain_anthropic import ChatAnthropic
         except ImportError as exc:
-            raise ErrorProveedorLLM("Instalar el extra: uv sync --extra anthropic") from exc
+            # langchain-anthropic es dependencia principal: si falta, el entorno no coincide con uv.lock.
+            raise ErrorProveedorLLM(
+                "No se pudo importar langchain-anthropic (dependencia del proyecto): el entorno no está "
+                "sincronizado con uv.lock. Ejecutar 'make instalar-semantica-gpu' o 'uv sync --locked'."
+            ) from exc
         # Diccionario de argumentos: los alias de Pydantic (model, max_tokens) no son visibles para mypy.
         argumentos: dict = {
             "model": modelo,
@@ -201,9 +213,12 @@ def crear_modelo_agente(config: Configuracion) -> BaseChatModel:
             reasoning=config.ollama_razonamiento,
             client_kwargs={"timeout": config.agente_timeout_s},
         )
+    # Comprobación explícita (no un assert, que desaparece con python -O): sin clave no se construye el
+    # modelo, aunque verificar_proveedor_agente se haya omitido o sustituido.
+    if config.anthropic_api_key is None or not config.anthropic_api_key.get_secret_value().strip():
+        raise ErrorProveedorLLM("Falta FNA_ANTHROPIC_API_KEY. " + INSTRUCCION_ANTHROPIC)
     from langchain_anthropic import ChatAnthropic
 
-    assert config.anthropic_api_key is not None  # comprobado en verificar_proveedor_agente
     argumentos: dict = {
         "model": config.modelo_anthropic,
         "api_key": config.anthropic_api_key,  # explícita: nunca se toma ANTHROPIC_API_KEY del entorno
