@@ -128,7 +128,8 @@ class Configuracion(BaseSettings):
     )
 
     # --- Agente con memoria (ADR-024) --------------------------------------
-    proveedor_agente: ProveedorAgente = "ollama"
+    # Por defecto Claude Haiku 5.5 vía API (créditos de API del plan Max; ADR-026). Ollama es opcional.
+    proveedor_agente: ProveedorAgente = "anthropic"
     modelo_ollama: str = "qwen3:8b"
     # qwen3 y otros modelos «que razonan»: True activa el razonamiento en ChatOllama; nunca se muestra.
     ollama_razonamiento: bool = False

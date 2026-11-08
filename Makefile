@@ -31,10 +31,10 @@ help: ## Lista los objetivos disponibles
 	$(info   graphify      Grafo del código: --code-only, GRAPHIFY_BACKEND=none, salida fuera del repo (ADR-020))
 	$(info   indexar       Índice Chroma en data/vectores/ con nomic (DESCARGAR=--descargar la primera vez))
 	$(info   comparar-recuperadores  Prefijos C6 y BM25 frente a semántico; tiempos en $(DISPOSITIVOS))
-	$(info   agente        Agente con memoria (THREAD=$(THREAD)); sin PREGUNTA abre el modo interactivo (ADR-024))
+	$(info   agente        Agente con memoria, Claude Haiku 5.5 por defecto (THREAD=$(THREAD)); sin PREGUNTA, interactivo)
 	$(info   verificar-agente  Proveedor del agente configurado (FNA_PROVEEDOR_AGENTE) y si responde)
 	$(info )
-	$(info Ollama: sin objetivos de instalación (ADR-022); el agente puede usarlo si ya está activo (ADR-024).)
+	$(info Ollama: opcional en el código, sin objetivos de instalación (ADR-022, ADR-026).)
 	@exit 0
 
 instalar: ## Entorno reproducible desde uv.lock y dependencias exactas del visor
@@ -82,11 +82,11 @@ indexar: ## Reconstruye data/vectores/ (Chroma + nomic); EMBEDDINGS_DEVICE=auto|
 comparar-recuperadores: ## Experimento de prefijos y comparación BM25 frente a semántico (evaluacion/resultados/)
 	$(UV) fabrica comparar-recuperadores --dispositivos $(DISPOSITIVOS)
 
-agente: ## Agente con memoria; requiere Ollama local o FNA_ANTHROPIC_API_KEY (CONTRIBUTING.md)
+agente: ## Agente con memoria; Claude Haiku 5.5 con FNA_ANTHROPIC_API_KEY (ADR-026) u Ollama opcional
 	$(UV) fabrica agente $(if $(PREGUNTA),"$(PREGUNTA)") --thread $(THREAD)
 
 verificar-agente: ## Informa el proveedor del agente y si responde (sin respaldo a otro proveedor)
 	$(UV) fabrica agente --verificar
 
-# Pospuesto (ver ADR-022): no hay objetivos que instalen modelos locales; el agente usa Ollama solo si ya está
-# instalado y activo, o Anthropic con FNA_ANTHROPIC_API_KEY (ADR-024).
+# Pospuesto (ver ADR-022): no hay objetivos que instalen modelos locales. El agente usa Claude Haiku 5.5 con
+# FNA_ANTHROPIC_API_KEY por defecto (ADR-026); Ollama solo si se instala y se elige FNA_PROVEEDOR_AGENTE=ollama.

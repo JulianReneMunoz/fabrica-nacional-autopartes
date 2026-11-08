@@ -9,6 +9,10 @@
   seleccionable. **`claude_code` no se usa en el agente:** se evaluó un adaptador que tradujera JSON a `tool_calls`
   y se descartó; ese proveedor queda solo para el Q&A, con la invocación endurecida en la
   [ADR-025](ADR-025-endurecimiento-claude-p.md).
+- **Reemplazada parcialmente por la [ADR-026](ADR-026-haiku-proveedor-principal-agente.md) (2026-11-08):** el
+  proveedor por defecto del agente pasa a ser **Claude Haiku 5.5 vía API** (`FNA_PROVEEDOR_AGENTE=anthropic`,
+  créditos de API del plan Max); Ollama queda como opción no instalada. El resto del diseño (herramienta, memoria,
+  recorte, anclaje y límites) sigue vigente.
 - **Contexto:** la Fase 2 exige un agente con `create_agent` (LangChain v1), una herramienta tipada sobre el corpus y
   memoria por conversación (`InMemorySaver` + `thread_id`) con recorte del historial (`trim_messages`). El proveedor
   `claude_code` (CLI `claude -p`) no admite llamadas a herramientas (`bind_tools`), así que el agente necesita un

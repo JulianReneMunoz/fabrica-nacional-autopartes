@@ -517,3 +517,29 @@ incluido el argumento vacío de `--tools ""`. La búsqueda web endurecida no se 
 
 Agente (ADR-024, actualización): Ollama por defecto, Anthropic como segunda opción; `claude_code` no se usa en el
 agente. Las cifras de E-01 a E-07 se obtuvieron sin estos flags.
+
+
+## A-02 · Claude Haiku 5.5 como proveedor principal del agente (2026-11-08)
+
+Decisión del usuario (ADR-026): el agente usa `FNA_PROVEEDOR_AGENTE=anthropic` por defecto con
+`claude-haiku-5-5`, pagado con los créditos mensuales de API del plan Max (USD 100), una bolsa aparte que no resta
+cupo a Claude Code. Ollama queda como proveedor opcional en el código (no instalado; según el usuario, se probó e
+instaló y luego se desinstaló sin usarse); `claude_code` no se usa en el agente (adaptador descartado por frágil).
+Sin respaldo automático entre proveedores.
+
+Hecho:
+- Valor por defecto `anthropic`; sin clave, el mensaje indica cómo vincular los créditos de Max, crear la clave y
+  guardarla como `FNA_ANTHROPIC_API_KEY` (nunca `ANTHROPIC_API_KEY`), y comprobarla con `make verificar-agente`.
+  Las pruebas de Ollama fijan ahora su proveedor de forma explícita; una prueba nueva cubre el valor por defecto y el
+  mensaje sin clave.
+- `docs/arquitectura/modelos.md`: precios de Haiku, Sonnet y Opus 5.5 (consultados en noviembre de 2026), costo
+  estimado por turno (≈ USD 0,001 con Haiku y ≈ USD 0,02 con Sonnet, con 3000 tokens de entrada y 300 de salida por
+  llamada y 2 llamadas), uso de cada modelo y condiciones de los créditos, con sus fuentes.
+- `CONTRIBUTING.md`: activación de Haiku (vinculación de créditos, clave en la Console, `Read-Host
+  -AsSecureString` para guardarla sin mostrarla, `make verificar-agente`). La sección ya no documenta Ollama. Se
+  corrigió además el texto sobre los créditos de Max, que había quedado sin corregir en `main` porque el PR #6 se
+  integró con la versión anterior al `--amend`.
+
+Pendiente: la demostración real (tres turnos en un mismo `thread_id`, con tokens, costo y latencia) y la prueba
+opcional `FNA_PRUEBAS_AGENTE_REAL=1`, cuando `make verificar-agente` indique «Disponible» y con aprobación previa
+del gasto de créditos.
