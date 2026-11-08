@@ -14,6 +14,9 @@ dependencies = [
     # Orquestación LLM (LangChain, recomendado por el taller)
     "langchain-core>=1.0,<2",
     "langchain-text-splitters>=1.0,<2",
+    # Agente con memoria (ADR-024): create_agent y middleware (langchain v1), InMemorySaver (langgraph)
+    "langchain==1.4.9",
+    "langgraph==1.2.20",
     "langchain-ollama>=1.0,<2",
     "langchain-openai>=1.0,<2",
     # Configuración, validación y datos

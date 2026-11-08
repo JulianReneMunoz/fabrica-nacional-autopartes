@@ -21,6 +21,7 @@ Proveedor = Literal["ollama", "openai", "anthropic", "claude_code", "extractivo"
 ModoContexto = Literal["auto", "completo", "seleccion"]
 Recuperador = Literal["bm25", "semantico"]
 DispositivoEmbeddings = Literal["auto", "cpu", "cuda"]
+ProveedorAgente = Literal["ollama", "anthropic"]
 
 
 class Configuracion(BaseSettings):
@@ -105,7 +106,11 @@ class Configuracion(BaseSettings):
     modelo_llm: str = "llama3.2:3b"
     # 0: salida lo más determinista posible (C4); claude_code y extractivo no la usan (aplica_temperatura).
     temperatura: float = 0.0
-    ollama_url: str = "http://localhost:11434"
+    # Se lee de OLLAMA_BASE_URL (sin prefijo) o de FNA_OLLAMA_URL; el agente solo acepta un host local.
+    ollama_url: str = Field(
+        default="http://localhost:11434",
+        validation_alias=AliasChoices("OLLAMA_BASE_URL", "FNA_OLLAMA_URL", "ollama_url"),
+    )
     ollama_num_ctx: int = 16384
     openai_api_key: SecretStr | None = None
     anthropic_api_key: SecretStr | None = None
@@ -121,6 +126,19 @@ class Configuracion(BaseSettings):
         default="auto",
         validation_alias=AliasChoices("EMBEDDINGS_DEVICE", "FNA_EMBEDDINGS_DEVICE", "embeddings_dispositivo"),
     )
+
+    # --- Agente con memoria (ADR-024) --------------------------------------
+    proveedor_agente: ProveedorAgente = "ollama"
+    modelo_ollama: str = "qwen3:8b"
+    # qwen3 y otros modelos «que razonan»: True activa el razonamiento en ChatOllama; nunca se muestra.
+    ollama_razonamiento: bool = False
+    modelo_anthropic: str = "claude-haiku-5-5"
+    agente_max_tokens: int = Field(default=1024, ge=64, le=4096)
+    agente_max_iteraciones: int = Field(default=6, ge=1, le=20)
+    agente_limite_historial_tokens: int = Field(default=3000, ge=200, le=100_000)
+    agente_timeout_s: float = Field(default=60.0, gt=0, le=600)
+    # Tope de conversaciones en memoria (vive en el proceso): al superarlo se descarta la menos usada.
+    agente_max_hilos: int = Field(default=500, ge=1, le=100_000)
 
     # --- Persistencia y API -----------------------------------------------
     url_base_datos: str = f"sqlite:///{(RAIZ_PROYECTO / 'data' / 'app.db').as_posix()}"

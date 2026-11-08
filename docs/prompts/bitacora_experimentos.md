@@ -445,3 +445,43 @@ Conclusión: con `claude_code`, dos ejecuciones idénticas difieren en 1 de 24 a
 ese margen de variación. Medir el efecto real de T exige un proveedor que la aplique (`anthropic` con clave de API u
 `ollama`, pospuesto en la ADR-022). Las cuatro preguntas representativas están en la
 [tabla Q1–Q4](../evaluacion/tabla_q1_q4.md).
+
+
+## A-01 · Agente con memoria, probado con un modelo simulado (2026-11-07)
+
+Implementación de la Fase 2 (ADR-024): `create_agent` (`langchain==1.4.9`) con la herramienta tipada
+`buscar_fragmentos`, prompt de sistema `llm/prompts/agente.yaml` v1, `InMemorySaver` (`langgraph==1.2.20`) por
+`thread_id` y recorte con `trim_messages` en un middleware. Proveedores `ollama` (`qwen3:8b`, solo hosts locales) y
+`anthropic` (`claude-haiku-5-5`, clave `FNA_ANTHROPIC_API_KEY`), sin respaldo automático entre ellos.
+
+Hecho (con un modelo simulado que emite `tool_calls`, sin red ni clave; `tests/unit/test_agente.py` y
+`tests/integration/test_api_agente.py`, 41 pruebas):
+- la herramienta rechaza `k` fuera de 1–10, consultas vacías y recuperadores desconocidos (`ValidationError`);
+- el agente llama a la herramienta y la respuesta cita la URL; sin evidencia, la frase de rechazo fija;
+- anclaje exigido por el código (hallazgo de GGA en el primer intento de commit): una respuesta sin llamar a la
+  herramienta o sin citas válidas se reemplaza por la frase de rechazo, y las URL o ids inventados se retiran del
+  texto; el contenido de cada `<fragmento>` se escapa; `FNA_AGENTE_MAX_HILOS` acota los hilos en memoria. El
+  anclaje no depende solo del prompt: lo exige el código. Por eso una pregunta sobre la conversación misma («¿cuál
+  fue mi pregunta anterior?») recibe la frase de rechazo, y la memoria se comprueba con un seguimiento que exige
+  buscar («¿y cuál es su teléfono?»), en la prueba simulada y en la prueba real opcional;
+- memoria: el segundo turno del mismo `thread_id` recibe el historial y otro `thread_id` no;
+- recorte: con un límite de 200 tokens, lo enviado al modelo empieza en la última pregunta y sin resultados de
+  herramienta huérfanos, mientras el estado guardado conserva los 16 mensajes;
+- la pregunta de inyección del banco (P24) se bloquea sin llamar al modelo y sin guardarse en la memoria;
+- el razonamiento (bloques `reasoning` o etiquetas `<think>`) nunca aparece en la respuesta;
+- el límite de iteraciones devuelve un mensaje propio, no la frase de rechazo, y deja el hilo utilizable;
+- errores: falta de clave u Ollama inaccesible → mensaje con la instrucción y 503; un 401 o saldo agotado de
+  Anthropic → «clave FNA_ANTHROPIC_API_KEY inválida o sin créditos», distinto de «no respondió»; `thread_id` o
+  pregunta inválidos → 422.
+
+`fabrica agente --verificar` en este equipo: «No disponible: Ollama no responde en http://localhost:11434…». La
+prueba con modelo real (`tests/integration/test_agente_real.py`) es opcional (`FNA_PRUEBAS_AGENTE_REAL=1`) y quedó
+omitida.
+
+Pendiente:
+1. Activar un proveedor (Ollama con `qwen3:8b` o `FNA_ANTHROPIC_API_KEY`) y ejecutar la demostración real
+   (`make agente`), con la prueba opcional.
+2. Evaluar el agente con el banco de 24 preguntas y compararlo con el Q&A (E-01 a E-07), con el mismo criterio de
+   aciertos y rechazos.
+3. Para un despliegue con varios workers o persistente, reemplazar `InMemorySaver` por `SqliteSaver` o
+   `PostgresSaver`.

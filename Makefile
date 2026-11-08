@@ -8,12 +8,15 @@ PUERTO ?= 8000
 MAX_PAGINAS ?= 80
 DISPOSITIVOS ?= cpu,cuda
 DESCARGAR ?=
+THREAD ?= cli
+PREGUNTA ?=
 
 .DEFAULT_GOAL := help
-.PHONY: help instalar instalar-semantica instalar-semantica-gpu calidad pruebas-web api app pipeline \n	validar-moto enlaces graphify indexar comparar-recuperadores
+.PHONY: help instalar instalar-semantica instalar-semantica-gpu calidad pruebas-web api app pipeline \n	validar-moto enlaces graphify indexar comparar-recuperadores agente verificar-agente
 
 help: ## Lista los objetivos disponibles
 	$(info Uso: make <objetivo> [PUERTO=8000] [MAX_PAGINAS=80] [DISPOSITIVOS=cpu,cuda] [DESCARGAR=--descargar])
+	$(info              [THREAD=cli] [PREGUNTA="texto"])
 	$(info )
 	$(info   instalar      uv sync --locked y npm ci del visor)
 	$(info   instalar-semantica      Base semántica con PyTorch CPU (extra semantica-cpu, ADR-023))
@@ -28,8 +31,10 @@ help: ## Lista los objetivos disponibles
 	$(info   graphify      Grafo del código: --code-only, GRAPHIFY_BACKEND=none, salida fuera del repo (ADR-020))
 	$(info   indexar       Índice Chroma en data/vectores/ con nomic (DESCARGAR=--descargar la primera vez))
 	$(info   comparar-recuperadores  Prefijos C6 y BM25 frente a semántico; tiempos en $(DISPOSITIVOS))
+	$(info   agente        Agente con memoria (THREAD=$(THREAD)); sin PREGUNTA abre el modo interactivo (ADR-024))
+	$(info   verificar-agente  Proveedor del agente configurado (FNA_PROVEEDOR_AGENTE) y si responde)
 	$(info )
-	$(info Pospuesto (ver ADR-022): objetivos de Ollama retirados.)
+	$(info Ollama: sin objetivos de instalación (ADR-022); el agente puede usarlo si ya está activo (ADR-024).)
 	@exit 0
 
 instalar: ## Entorno reproducible desde uv.lock y dependencias exactas del visor
@@ -77,4 +82,11 @@ indexar: ## Reconstruye data/vectores/ (Chroma + nomic); EMBEDDINGS_DEVICE=auto|
 comparar-recuperadores: ## Experimento de prefijos y comparación BM25 frente a semántico (evaluacion/resultados/)
 	$(UV) fabrica comparar-recuperadores --dispositivos $(DISPOSITIVOS)
 
-# Pospuesto (ver ADR-022): no hay objetivos de modelos locales; los LLM usan claude_code o extractivo.
+agente: ## Agente con memoria; requiere Ollama local o FNA_ANTHROPIC_API_KEY (CONTRIBUTING.md)
+	$(UV) fabrica agente $(if $(PREGUNTA),"$(PREGUNTA)") --thread $(THREAD)
+
+verificar-agente: ## Informa el proveedor del agente y si responde (sin respaldo a otro proveedor)
+	$(UV) fabrica agente --verificar
+
+# Pospuesto (ver ADR-022): no hay objetivos que instalen modelos locales; el agente usa Ollama solo si ya está
+# instalado y activo, o Anthropic con FNA_ANTHROPIC_API_KEY (ADR-024).

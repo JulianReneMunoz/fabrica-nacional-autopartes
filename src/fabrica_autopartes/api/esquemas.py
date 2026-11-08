@@ -46,6 +46,20 @@ class SolicitudQA(OpcionesLLM):
     )
 
 
+class SolicitudAgente(BaseModel):
+    pregunta: str = Field(
+        ..., min_length=3, max_length=500, examples=["¿Dónde queda la sede principal de Fanalca?"]
+    )
+    thread_id: str = Field(
+        ...,
+        min_length=1,
+        max_length=64,
+        pattern=r"^[A-Za-z0-9_-]+$",
+        description="Identificador de la conversación: la memoria del agente se guarda por thread_id",
+        examples=["demo-1"],
+    )
+
+
 class SolicitudQAWeb(BaseModel):
     pregunta: str = Field(
         ...,

@@ -103,3 +103,36 @@ cambiar de una a otra reemplaza `torch`.
 - La primera indexación descarga el modelo (unos 550 MB, a la caché de Hugging Face): `make indexar DESCARGAR=--descargar`.
 - `make instalar` o un `uv run` sin `--no-sync` dejan el entorno sin el extra: volver a ejecutar el objetivo de
   instalación de la variante.
+
+### Agente con memoria: activar el proveedor
+El agente (`fabrica agente`, `POST /api/v1/agente`; [ADR-024](docs/arquitectura/adr/ADR-024-agente-con-memoria.md))
+necesita un modelo con llamadas a herramientas. Sin proveedor responde 503 con la instrucción; nunca cambia de
+proveedor por su cuenta. Comprobar en cualquier momento con `make verificar-agente`.
+
+**Opción A: Ollama local** (`FNA_PROVEEDOR_AGENTE=ollama`, por defecto). Sin costo por token y sin enviar datos fuera
+del equipo; solo se aceptan hosts locales.
+
+```powershell
+winget install Ollama.Ollama          # o el instalador de https://ollama.com/download
+ollama pull qwen3:8b                  # unos 5 GB
+ollama serve                          # si el servicio no quedó activo tras la instalación
+make verificar-agente                 # debe indicar «Disponible»
+make agente PREGUNTA="¿Dónde queda la sede principal de Fanalca?" THREAD=demo
+```
+
+`qwen3` razona antes de responder: `FNA_OLLAMA_RAZONAMIENTO=true` activa ese modo (más lento); el razonamiento nunca
+aparece en la respuesta.
+
+**Opción B: Anthropic** (`FNA_PROVEEDOR_AGENTE=anthropic`, modelo `FNA_MODELO_ANTHROPIC=claude-haiku-5-5`). Requiere
+una clave de la Consola de Anthropic con créditos (una suscripción Claude Pro o Max no incluye créditos de API):
+
+1. Abrir `.env` (no versionado) con `notepad .env` y agregar `FNA_PROVEEDOR_AGENTE=anthropic` y
+   `FNA_ANTHROPIC_API_KEY=<clave>`. Usar **`FNA_ANTHROPIC_API_KEY`, nunca `ANTHROPIC_API_KEY`**: esta última haría
+   que Claude Code facture por API en lugar de usar el plan.
+2. No escribir la clave en la terminal, en `.env.example`, en commits ni en capturas; `git status` no debe mostrar
+   `.env`.
+3. `make verificar-agente` (consulta el modelo sin consumir tokens) y luego `make agente`.
+
+La prueba con modelo real es opcional para no consumir la API en cada ejecución:
+`$env:FNA_PRUEBAS_AGENTE_REAL = "1"; uv run --no-sync pytest -q tests/integration/test_agente_real.py`.
+La memoria vive en el proceso: se pierde al reiniciar y requiere un solo worker de uvicorn.

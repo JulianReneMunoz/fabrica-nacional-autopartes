@@ -14,6 +14,7 @@ Comandos:
   stats      Muestra estadísticas de la base de conocimiento.
   indexar-vectores       Construye el índice Chroma con nomic (extra semantica-cpu/gpu).
   comparar-recuperadores Prefijos de nomic y BM25 frente a semántico (hit@k, MRR, tiempos).
+  agente     Agente con memoria por conversación (--thread); --verificar informa el proveedor.
   simulador  Genera o valida el ensamblaje 3D de demostración (v2.0).
   openapi    Exporta el contrato OpenAPI de la API.
 """
@@ -23,8 +24,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from typing import TYPE_CHECKING
 
 from fabrica_autopartes.core.registro import configurar_registro
+
+if TYPE_CHECKING:
+    from fabrica_autopartes.domain.modelos import RespuestaAgente
+    from fabrica_autopartes.services.asistente import ServicioAsistente
 
 
 def _opciones_llm(p: argparse.ArgumentParser) -> None:
@@ -50,6 +56,48 @@ def _opcion_recuperador(p: argparse.ArgumentParser) -> None:
         choices=["bm25", "semantico"],
         help="Recuperador del modo de contexto 'seleccion' (por defecto bm25; semantico requiere el índice)",
     )
+
+
+def _imprimir_respuesta_agente(r: RespuestaAgente) -> None:
+    print(r.respuesta)
+    for f in r.fuentes:
+        print(f"  - [{f.fragmento_id}] {f.url}")
+    print(
+        f"(thread={r.thread_id}, {r.proveedor}/{r.modelo}, herramienta={r.llamadas_herramienta}, "
+        f"{r.latencia_ms} ms)"
+    )
+
+
+def _comando_agente(servicio: ServicioAsistente, args: argparse.Namespace) -> int:
+    import re
+
+    from fabrica_autopartes.core.excepciones import ErrorFNA
+
+    if args.verificar:
+        estado = servicio.verificar_agente(consultar=True)
+        print(f"Proveedor: {estado.proveedor} · modelo: {estado.modelo}")
+        print(("Disponible: " if estado.disponible else "No disponible: ") + estado.mensaje)
+        return 0 if estado.disponible else 1
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", args.thread):
+        print("--thread admite 1 a 64 caracteres: letras, dígitos, '_' y '-'.", file=sys.stderr)
+        return 2
+    try:
+        if args.pregunta:
+            _imprimir_respuesta_agente(servicio.preguntar_agente(args.pregunta, args.thread, canal="cli"))
+            return 0
+        print(f"Agente (thread '{args.thread}'). Escribir 'salir' para terminar.")
+        while True:
+            try:
+                pregunta = input("> ").strip()
+            except EOFError:
+                return 0
+            if pregunta.lower() in ("salir", "exit", "quit"):
+                return 0
+            if len(pregunta) >= 3:
+                _imprimir_respuesta_agente(servicio.preguntar_agente(pregunta, args.thread, canal="cli"))
+    except ErrorFNA as exc:
+        print(f"{exc.codigo}: {exc}", file=sys.stderr)
+        return 1
 
 
 def construir_parser() -> argparse.ArgumentParser:
@@ -115,6 +163,15 @@ def construir_parser() -> argparse.ArgumentParser:
     e = sub.add_parser("evaluate", help="Evaluar con el banco de preguntas")
     _opciones_llm(e)
     _opcion_recuperador(e)
+
+    ag = sub.add_parser("agente", help="Agente con memoria y herramienta de búsqueda (ADR-024)")
+    ag.add_argument("pregunta", nargs="?", help="Pregunta; sin ella se abre el modo interactivo")
+    ag.add_argument("--thread", default="cli", help="Identificador de la conversación (por defecto 'cli')")
+    ag.add_argument(
+        "--verificar",
+        action="store_true",
+        help="Mostrar el proveedor configurado (FNA_PROVEEDOR_AGENTE) y comprobar si responde",
+    )
 
     iv = sub.add_parser("indexar-vectores", help="Construir data/vectores/ (Chroma + nomic, ADR-023)")
     iv.add_argument(
@@ -299,6 +356,9 @@ def _main(argv: list[str] | None = None) -> int:
     if args.comando == "stats":
         print(json.dumps(servicio.base.estadisticas().model_dump(mode="json"), ensure_ascii=False, indent=2))
         return 0
+
+    if args.comando == "agente":
+        return _comando_agente(servicio, args)
 
     if args.comando == "indexar-vectores":
         info = servicio.indexar_vectores(descargar=args.descargar)
