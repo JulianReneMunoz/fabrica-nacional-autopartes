@@ -105,34 +105,30 @@ cambiar de una a otra reemplaza `torch`.
   instalación de la variante.
 
 ### Agente con memoria: activar el proveedor
-El agente (`fabrica agente`, `POST /api/v1/agente`; [ADR-024](docs/arquitectura/adr/ADR-024-agente-con-memoria.md))
-necesita un modelo con llamadas a herramientas. Sin proveedor responde 503 con la instrucción; nunca cambia de
-proveedor por su cuenta. Comprobar en cualquier momento con `make verificar-agente`.
+El agente (`fabrica agente`, `POST /api/v1/agente`) usa Claude Haiku 5.5 vía API
+([ADR-026](docs/arquitectura/adr/ADR-026-haiku-proveedor-principal-agente.md); precios y costo estimado en
+[`docs/arquitectura/modelos.md`](docs/arquitectura/modelos.md)). Sin clave responde 503 con la instrucción.
 
-**Opción A: Ollama local** (`FNA_PROVEEDOR_AGENTE=ollama`, por defecto). Sin costo por token y sin enviar datos fuera
-del equipo; solo se aceptan hosts locales.
+**A. Activar el agente con Claude Haiku 5.5 (por defecto)**
 
-```powershell
-winget install Ollama.Ollama          # o el instalador de https://ollama.com/download
-ollama pull qwen3:8b                  # unos 5 GB
-ollama serve                          # si el servicio no quedó activo tras la instalación
-make verificar-agente                 # debe indicar «Disponible»
-make agente PREGUNTA="¿Dónde queda la sede principal de Fanalca?" THREAD=demo
-```
+1. Vincular los créditos del plan Max: en claude.ai, *Settings > Billing > API credits > Link organization*.
+   Requisitos: 7 días en el plan y rol Owner, Admin o Billing en la organización de la Claude Console; solo se
+   puede vincular una organización. No activar la recarga automática (*auto-reload*).
+   Fuente: https://support.claude.com/en/articles/17154008-monthly-api-credits-for-max-and-team-plans
+2. Crear la clave en la Claude Console (*API keys*), en la organización vinculada.
+3. Guardarla en `.env` con `Read-Host -AsSecureString` en PowerShell: la clave no se muestra ni queda en el
+   historial. Nunca pegarla en chats, capturas ni commits. Si `.env` ya tiene una línea `FNA_ANTHROPIC_API_KEY=`,
+   borrarla antes con `notepad .env`.
 
-`qwen3` razona antes de responder: `FNA_OLLAMA_RAZONAMIENTO=true` activa ese modo (más lento); el razonamiento nunca
-aparece en la respuesta.
+   ```powershell
+   $segura = Read-Host "Clave de la API (no se muestra)" -AsSecureString
+   $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($segura)
+   $clave = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+   Add-Content -Path .env -Value "FNA_ANTHROPIC_API_KEY=$clave" -Encoding ascii
+   [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr); Remove-Variable clave, segura, bstr
+   git status --short .env          # no debe mostrar nada: .env está ignorado
+   ```
+4. Comprobar con `make verificar-agente`: debe decir «Disponible».
 
-**Opción B: Anthropic** (`FNA_PROVEEDOR_AGENTE=anthropic`, modelo `FNA_MODELO_ANTHROPIC=claude-haiku-5-5`). Requiere
-una clave de la Consola de Anthropic con créditos (una suscripción Claude Pro o Max no incluye créditos de API):
-
-1. Abrir `.env` (no versionado) con `notepad .env` y agregar `FNA_PROVEEDOR_AGENTE=anthropic` y
-   `FNA_ANTHROPIC_API_KEY=<clave>`. Usar **`FNA_ANTHROPIC_API_KEY`, nunca `ANTHROPIC_API_KEY`**: esta última haría
-   que Claude Code facture por API en lugar de usar el plan.
-2. No escribir la clave en la terminal, en `.env.example`, en commits ni en capturas; `git status` no debe mostrar
-   `.env`.
-3. `make verificar-agente` (consulta el modelo sin consumir tokens) y luego `make agente`.
-
-La prueba con modelo real es opcional para no consumir la API en cada ejecución:
-`$env:FNA_PRUEBAS_AGENTE_REAL = "1"; uv run --no-sync pytest -q tests/integration/test_agente_real.py`.
-La memoria vive en el proceso: se pierde al reiniciar y requiere un solo worker de uvicorn.
+**B. Advertencia:** usar siempre `FNA_ANTHROPIC_API_KEY` y nunca `ANTHROPIC_API_KEY`, porque esta última haría que
+Claude Code facture por API en lugar de usar el plan Max.

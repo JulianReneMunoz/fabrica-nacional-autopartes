@@ -109,8 +109,10 @@ INSTRUCCION_OLLAMA = (
     "activo ('ollama serve'); o elegir FNA_PROVEEDOR_AGENTE=anthropic."
 )
 INSTRUCCION_ANTHROPIC = (
-    "Definir FNA_ANTHROPIC_API_KEY en .env (clave de la Consola de Anthropic; nunca ANTHROPIC_API_KEY, "
-    "para no afectar a Claude Code); o elegir FNA_PROVEEDOR_AGENTE=ollama."
+    "Los planes Max y Ultra incluyen créditos mensuales de API: vincular una organización de la Claude "
+    "Console en claude.ai > Settings > Billing > API credits, crear allí una clave y guardarla en .env como "
+    "FNA_ANTHROPIC_API_KEY (nunca ANTHROPIC_API_KEY, para no afectar a Claude Code); comprobar con "
+    "'make verificar-agente' (pasos en CONTRIBUTING.md)."
 )
 
 

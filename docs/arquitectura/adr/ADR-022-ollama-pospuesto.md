@@ -2,7 +2,8 @@
 
 - **Estado:** aceptada (2026-11-07); **reemplazada parcialmente por la [ADR-024](ADR-024-agente-con-memoria.md)**,
   que define Ollama como proveedor del agente (código escrito, sin instalar ni activar). Detalle en la entrada R-04
-  de `docs/prompts/bitacora_experimentos.md`.
+  de `docs/prompts/bitacora_experimentos.md`. Desde la [ADR-026](ADR-026-haiku-proveedor-principal-agente.md)
+  (2026-11-08), el agente usa Claude Haiku 5.5 por defecto y Ollama queda como proveedor opcional, sin instalar.
 - **Contexto:** Ollama figura como proveedor LLM (`llm/proveedores.py`, ADR-004), como dependencia
   (`langchain-ollama`), en los scripts de instalación y verificación de Windows y en la propuesta OpenSpec de embeddings
   del Módulo 2. Nunca se instaló en la máquina de desarrollo: la evaluación v1–v3 se ejecutó con `extractivo` (E-00) y

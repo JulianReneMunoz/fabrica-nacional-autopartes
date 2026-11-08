@@ -309,7 +309,7 @@ scripts/                 PowerShell y utilidades Python
 ```
 | Verificación | Resultado (última corrida completa) |
 |---|---|
-| pytest | 382 pruebas (unitarias, integración y e2e de Streamlit), sin red: se omiten la del agente con modelo real (opcional) y, sin el extra semántico, las 3 del modelo nomic |
+| pytest | 394 pruebas (unitarias, integración y e2e de Streamlit), sin red: se omiten la del agente con modelo real (opcional) y, sin el extra semántico, las 3 del modelo nomic |
 | Vitest | 113 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz, explorador y búsqueda web) |
 | Playwright | 46 pruebas E2E (de extremo a extremo) del visor con SwiftShader (≥ 50 fps exigidos) |
 | Ruff, mypy y capas | Sin hallazgos |
@@ -382,7 +382,7 @@ y Archify (evaluada y descartada); motivos en [el detalle](docs/metodologias.md#
 
 ## Limitaciones y hoja de ruta
 **Limitaciones**
-- Agente con memoria por conversación (`fabrica agente`, `POST /api/v1/agente`, Ollama local o Anthropic) construido y probado con un modelo simulado; la conexión real está pendiente ([ADR-024](docs/arquitectura/adr/ADR-024-agente-con-memoria.md)).
+- Agente con memoria por conversación (`fabrica agente`, `POST /api/v1/agente`) con Claude Haiku 5.5 vía API por defecto, pagado con los créditos de API del plan Max; probado con un modelo simulado y con la demostración real pendiente ([ADR-026](docs/arquitectura/adr/ADR-026-haiku-proveedor-principal-agente.md); precios y uso de cada modelo en [`modelos.md`](docs/arquitectura/modelos.md)).
 - Búsqueda léxica (BM25 con expansión de consultas) por defecto; la base semántica opcional (nomic + Chroma, `--recuperador semantico`) se compara en la [ADR-023](docs/arquitectura/adr/ADR-023-base-semantica-nomic-chroma.md).
 - La búsqueda web complementaria depende de la sesión de Claude Code y de la red; sus hallazgos no se verifican
   de forma automática.

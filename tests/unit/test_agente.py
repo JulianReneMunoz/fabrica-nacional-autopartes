@@ -427,12 +427,14 @@ def test_anthropic_consulta_simulada(config_con_base: Configuracion, monkeypatch
 
 
 def test_ollama_solo_host_local(config_con_base: Configuracion) -> None:
-    estado = pv.verificar_proveedor_agente(_config(config_con_base, ollama_url="http://192.0.2.10:11434"))
+    config = _config(config_con_base, proveedor_agente="ollama", ollama_url="http://192.0.2.10:11434")
+    estado = pv.verificar_proveedor_agente(config)
     assert not estado.disponible and "host local" in estado.mensaje
 
 
 @responses.activate
 def test_ollama_inaccesible_y_modelo_ausente(config_con_base: Configuracion) -> None:
+    config_con_base = _config(config_con_base, proveedor_agente="ollama")  # Ollama es opcional (ADR-026)
     rechazo = requests.exceptions.ConnectionError("rechazada")
     responses.add(responses.GET, "http://localhost:11434/api/tags", body=rechazo)
     estado = pv.verificar_proveedor_agente(config_con_base, consultar=True)
@@ -453,6 +455,7 @@ def test_ollama_inaccesible_y_modelo_ausente(config_con_base: Configuracion) -> 
 
 
 def test_ollama_construye_chatollama_con_razonamiento(config_con_base: Configuracion) -> None:
+    config_con_base = _config(config_con_base, proveedor_agente="ollama")  # Ollama es opcional (ADR-026)
     modelo = pv.crear_modelo_agente(_config(config_con_base, ollama_razonamiento=True))
     assert type(modelo).__name__ == "ChatOllama"
     assert modelo.reasoning is True and modelo.temperature == 0  # type: ignore[attr-defined]
@@ -460,14 +463,27 @@ def test_ollama_construye_chatollama_con_razonamiento(config_con_base: Configura
     assert pv.crear_modelo_agente(config_con_base).reasoning is False  # type: ignore[attr-defined]
 
 
+def test_por_defecto_claude_haiku_5_5_y_mensaje_sin_clave(monkeypatch: pytest.MonkeyPatch) -> None:
+    """ADR-026: el agente usa Claude Haiku 5.5 por defecto; sin clave, el mensaje indica cómo obtenerla."""
+    for variable in ("FNA_PROVEEDOR_AGENTE", "FNA_MODELO_ANTHROPIC", "FNA_ANTHROPIC_API_KEY"):
+        monkeypatch.delenv(variable, raising=False)
+    c = Configuracion(_env_file=None)  # type: ignore[call-arg]
+    assert (c.proveedor_agente, c.modelo_anthropic) == ("anthropic", "claude-haiku-5-5")
+    estado = pv.verificar_proveedor_agente(c)
+    assert not estado.disponible and estado.proveedor == "anthropic" and estado.modelo == "claude-haiku-5-5"
+    for texto in ("Falta FNA_ANTHROPIC_API_KEY", "Max y Ultra", "créditos", "make verificar-agente"):
+        assert texto in estado.mensaje
+    assert "nunca ANTHROPIC_API_KEY" in estado.mensaje
+
+
 def test_variables_de_entorno_del_agente(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("FNA_PROVEEDOR_AGENTE", "anthropic")
+    monkeypatch.setenv("FNA_PROVEEDOR_AGENTE", "ollama")
     monkeypatch.setenv("FNA_MODELO_ANTHROPIC", "claude-sonnet-5-5")
     monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11500")
     monkeypatch.setenv("FNA_OLLAMA_RAZONAMIENTO", "true")
     c = Configuracion(_env_file=None)  # type: ignore[call-arg]
     assert (c.proveedor_agente, c.modelo_anthropic, c.ollama_url, c.ollama_razonamiento) == (
-        "anthropic",
+        "ollama",
         "claude-sonnet-5-5",
         "http://127.0.0.1:11500",
         True,
