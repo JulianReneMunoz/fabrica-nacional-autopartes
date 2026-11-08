@@ -78,6 +78,24 @@ class RespuestaQA(BaseModel):
     latencia_ms: int = 0
 
 
+class RespuestaAgente(BaseModel):
+    """Respuesta del agente con memoria (ADR-024)."""
+
+    pregunta: str
+    respuesta: str
+    fuentes: list[Fuente] = Field(default_factory=list)
+    thread_id: str
+    proveedor: str
+    modelo: str
+    version_prompt: str = "v1"
+    llamadas_herramienta: int = 0
+    # Comparación de la respuesta con el texto de los fragmentos citados (mismo criterio que el Q&A).
+    fundamentada: bool = False
+    bloqueada: bool = False
+    limite_alcanzado: bool = False
+    latencia_ms: int = 0
+
+
 ETIQUETA_RESPUESTA_WEB = "Respuesta complementaria desde la web — no proviene de la base verificada"
 
 

@@ -11,7 +11,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 DIR_PROMPTS = Path(__file__).parent / "prompts"
 TAREAS = ("qa", "faq", "resumen")  # tareas evaluadas (v1–v3) y visibles en el laboratorio
-TAREAS_AUXILIARES = ("busqueda_web",)  # fuera de la evaluación (ADR-019)
+TAREAS_AUXILIARES = ("busqueda_web", "agente")  # fuera de la evaluación v1–v3 (ADR-019, ADR-024)
 
 
 @dataclass(frozen=True)

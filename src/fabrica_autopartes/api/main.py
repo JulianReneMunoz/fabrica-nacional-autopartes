@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from fabrica_autopartes import __version__
-from fabrica_autopartes.api.routes import base, faq_visor, motos, operacion, simulador, tareas
+from fabrica_autopartes.api.routes import agente, base, faq_visor, motos, operacion, simulador, tareas
 from fabrica_autopartes.core.config import RAIZ_PROYECTO
 from fabrica_autopartes.core.excepciones import ErrorFNA
 from fabrica_autopartes.core.registro import configurar_registro, obtener_registro
@@ -70,6 +70,7 @@ def crear_app() -> FastAPI:
     app.include_router(operacion.router)
     app.include_router(base.router)
     app.include_router(tareas.router)
+    app.include_router(agente.router)
     app.include_router(simulador.router)
     app.include_router(motos.router)
     app.include_router(faq_visor.router)

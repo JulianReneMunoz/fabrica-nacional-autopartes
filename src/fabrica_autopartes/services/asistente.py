@@ -9,12 +9,19 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
 from fabrica_autopartes.core.config import Configuracion, obtener_configuracion
 from fabrica_autopartes.core.excepciones import ErrorProveedorLLM
-from fabrica_autopartes.domain.modelos import RespuestaQA, RespuestaWeb, ResultadoFAQ, ResultadoResumen
+from fabrica_autopartes.domain.modelos import (
+    RespuestaAgente,
+    RespuestaQA,
+    RespuestaWeb,
+    ResultadoFAQ,
+    ResultadoResumen,
+)
 from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.llm import cadenas
 from fabrica_autopartes.llm.busqueda_web import BuscadorWeb
@@ -26,6 +33,10 @@ from fabrica_autopartes.pipelines.orquestador import ResultadoConstruccion, cons
 from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria
 from fabrica_autopartes.scraping.rastreador import Rastreador, ResultadoRastreo
 from fabrica_autopartes.services.busqueda_web import ServicioBusquedaWeb
+
+if TYPE_CHECKING:  # importación perezosa en tiempo de ejecución: langchain.agents solo se carga si se usa
+    from fabrica_autopartes.llm.proveedores import EstadoProveedor
+    from fabrica_autopartes.services.agente import ServicioAgente
 
 _ERRORES_CONEXION = {"ConnectError", "ConnectTimeout", "APIConnectionError", "APITimeoutError", "ReadTimeout"}
 
@@ -51,6 +62,7 @@ class ServicioAsistente:
         repositorio: RepositorioAuditoria | None = None,
         modelo_llm: BaseChatModel | None = None,
         buscador_web: BuscadorWeb | None = None,
+        modelo_agente: BaseChatModel | None = None,
     ) -> None:
         self.config = config or obtener_configuracion()
         self.base = BaseConocimiento(
@@ -61,6 +73,8 @@ class ServicioAsistente:
         )
         self.repo = repositorio or RepositorioAuditoria(self.config.url_base_datos)
         self._modelo_inyectado = modelo_llm  # usado por pruebas
+        self._modelo_agente = modelo_agente  # modelo simulado en pruebas (ADR-024)
+        self._agente: ServicioAgente | None = None
         self._busqueda_web = ServicioBusquedaWeb(
             self.config.dir_datos / "revision" / "hallazgos_web.jsonl", buscador=buscador_web
         )
@@ -150,6 +164,39 @@ class ServicioAsistente:
             },
         )
         return resultado
+
+    # ------------------------------------------------- agente con memoria
+    @property
+    def agente(self) -> ServicioAgente:
+        """Agente con memoria en proceso (una instancia por servicio; ADR-024)."""
+        if self._agente is None:
+            from fabrica_autopartes.services.agente import ServicioAgente
+
+            self._agente = ServicioAgente(self.config, self.base, self._modelo_agente)
+        return self._agente
+
+    def preguntar_agente(self, pregunta: str, thread_id: str, canal: str = "api") -> RespuestaAgente:
+        r = self.agente.preguntar(pregunta, thread_id)
+        self.repo.registrar_interaccion(
+            tarea="agente",
+            canal=canal,
+            entrada=pregunta,
+            salida=r.respuesta,
+            proveedor=r.proveedor,
+            modelo=r.modelo,
+            version_prompt=r.version_prompt,
+            modo_contexto="bloqueado" if r.bloqueada else "agente",
+            fuentes=[f.fragmento_id for f in r.fuentes],
+            fundamentada=r.fundamentada,
+            latencia_ms=r.latencia_ms,
+        )
+        return r
+
+    def verificar_agente(self, consultar: bool = True) -> EstadoProveedor:
+        """Proveedor configurado para el agente y si responde (sin respaldo automático a otro proveedor)."""
+        from fabrica_autopartes.llm.proveedores import verificar_proveedor_agente
+
+        return verificar_proveedor_agente(self.config, consultar=consultar)
 
     # ------------------------------------------------------- base semántica
     def disponibilidad_semantica(self) -> tuple[bool, str]:

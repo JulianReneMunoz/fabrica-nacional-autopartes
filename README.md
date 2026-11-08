@@ -309,7 +309,7 @@ scripts/                 PowerShell y utilidades Python
 ```
 | Verificación | Resultado (última corrida completa) |
 |---|---|
-| pytest | 334 pruebas (unitarias, integración y e2e de Streamlit), sin red; sin el extra semántico se omiten las 3 que usan el modelo nomic |
+| pytest | 376 pruebas (unitarias, integración y e2e de Streamlit), sin red: se omiten la del agente con modelo real (opcional) y, sin el extra semántico, las 3 del modelo nomic |
 | Vitest | 113 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz, explorador y búsqueda web) |
 | Playwright | 46 pruebas E2E (de extremo a extremo) del visor con SwiftShader (≥ 50 fps exigidos) |
 | Ruff, mypy y capas | Sin hallazgos |
@@ -382,6 +382,7 @@ y Archify (evaluada y descartada); motivos en [el detalle](docs/metodologias.md#
 
 ## Limitaciones y hoja de ruta
 **Limitaciones**
+- Agente con memoria por conversación (`fabrica agente`, `POST /api/v1/agente`, Ollama local o Anthropic) construido y probado con un modelo simulado; la conexión real está pendiente ([ADR-024](docs/arquitectura/adr/ADR-024-agente-con-memoria.md)).
 - Búsqueda léxica (BM25 con expansión de consultas) por defecto; la base semántica opcional (nomic + Chroma, `--recuperador semantico`) se compara en la [ADR-023](docs/arquitectura/adr/ADR-023-base-semantica-nomic-chroma.md).
 - La búsqueda web complementaria depende de la sesión de Claude Code y de la red; sus hallazgos no se verifican
   de forma automática.
