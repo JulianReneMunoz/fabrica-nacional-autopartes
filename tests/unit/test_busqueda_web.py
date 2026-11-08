@@ -67,10 +67,41 @@ def test_el_proceso_claude_solo_tiene_websearch_y_webfetch() -> None:
     assert "--max-turns" in comando and "--dangerously-skip-permissions" not in comando
 
 
+def test_busqueda_web_aplica_los_flags_que_conservan_websearch_y_webfetch() -> None:
+    """ADR-025: sin MCP, CLAUDE.md, hooks, permisos ni sesión guardada; conserva las herramientas web."""
+    comando = bw.BuscadorClaudeCode().comando("claude")
+    for flag in ("--strict-mcp-config", "--safe-mode", "--no-session-persistence"):
+        assert flag in comando
+    assert comando[comando.index("--permission-prompts") + 1] == "none"
+    assert (
+        "--restricted" not in comando
+    )  # quitaría WebFetch salvo que --tools lo nombre: se omite por prudencia
+    assert "--mcp-config" not in comando and "--bare" not in comando
+    assert comando.count("--tools") == 1 and comando[comando.index("--tools") + 1] != ""
+
+
+def test_busqueda_web_no_se_ejecuta_si_falta_un_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    from tests.simulados import AYUDA_CLAUDE, es_ayuda, respuesta_ayuda
+
+    def falso_run(comando: list[str], **kw: Any) -> subprocess.CompletedProcess[str]:
+        if es_ayuda(comando):
+            return respuesta_ayuda(comando, AYUDA_CLAUDE.replace("--strict-mcp-config", ""))
+        raise AssertionError("no debe buscarse sin aislamiento")
+
+    monkeypatch.setattr(bw.shutil, "which", lambda _: "claude")
+    monkeypatch.setattr(bw.subprocess, "run", falso_run)
+    with pytest.raises(bw.ErrorProveedorLLM, match="no admite: --strict-mcp-config"):
+        bw.BuscadorClaudeCode().buscar("¿Dónde queda la planta?")
+
+
 def test_buscador_claude_code_corre_en_carpeta_temporal(monkeypatch: pytest.MonkeyPatch) -> None:
+    from tests.simulados import es_ayuda, respuesta_ayuda
+
     visto: dict[str, Any] = {}
 
     def falso_run(comando: list[str], **kw: Any) -> subprocess.CompletedProcess[str]:
+        if es_ayuda(comando):
+            return respuesta_ayuda(comando)
         visto.update(kw, comando=comando)
         salida = {
             "result": json.dumps(
