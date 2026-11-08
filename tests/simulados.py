@@ -64,3 +64,28 @@ def responder_citando_primera_url(prefijo: str = "Respuesta") -> Callable[[list[
         return AIMessage(f"{prefijo} ({url}).")
 
     return paso
+
+
+# ------------------------------------------------------------- CLI de Claude Code (ADR-025)
+AYUDA_CLAUDE = """Usage: claude [options] [command] [prompt]
+
+Options:
+  --tools <tools...>                    Specify the list of available tools
+  --allowedTools, --allowed-tools <tools...>
+  --strict-mcp-config                   Only use MCP servers from --mcp-config
+  --safe-mode                           Start with all customizations disabled
+  --restricted                          Restricted mode
+  --permission-prompts <target>         Who answers permission prompts
+  --no-session-persistence              Disable session persistence
+"""
+
+
+def es_ayuda(comando: Sequence[str]) -> bool:
+    """La llamada es ``claude --help`` (comprobación previa del aislamiento, sin consumir cupo)."""
+    return list(comando[1:]) == ["--help"]
+
+
+def respuesta_ayuda(comando: Sequence[str], texto: str = AYUDA_CLAUDE) -> Any:
+    import subprocess
+
+    return subprocess.CompletedProcess(list(comando), 0, stdout=texto, stderr="")

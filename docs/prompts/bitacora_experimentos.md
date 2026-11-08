@@ -485,3 +485,35 @@ Pendiente:
    aciertos y rechazos.
 3. Para un despliegue con varios workers o persistente, reemplazar `InMemorySaver` por `SqliteSaver` o
    `PostgresSaver`.
+
+
+## S-10 · Endurecimiento de `claude -p` (2026-11-08)
+
+Revisión de `llm/claude_code.py` (proveedor `claude_code` del Q&A): el comando era
+`claude -p … --output-format json --model … --max-turns 1` en una carpeta temporal vacía; **no desactivaba las
+herramientas propias de Claude Code** (Read, Glob y Grep no piden permiso) y cargaba la configuración, los hooks, los
+plugins, los servidores MCP y el CLAUDE.md del usuario. Riesgo: inyección indirecta desde un fragmento o una página
+que pida leer archivos locales.
+
+Decisión (ADR-025), con flags verificados en `claude --help` de Claude Code 2.1.319:
+- Q&A: `--tools ""`, `--strict-mcp-config`, `--safe-mode`, `--restricted`, `--permission-prompts none` y
+  `--no-session-persistence`.
+- Búsqueda web: los mismos salvo `--tools ""` (conserva `--tools WebSearch,WebFetch`) y `--restricted` (según la
+  ayuda, quita WebFetch salvo que `--tools` lo nombre; se omite por prudencia).
+- Antes de la primera llamada se comprueba con `claude --help` (sin consumir cupo) que la CLI admite los flags; si
+  falta alguno, `ErrorProveedorLLM` y no se ejecuta sin aislamiento. `--bare` se descartó: obliga a usar
+  `ANTHROPIC_API_KEY` en lugar de la suscripción.
+
+Pruebas sin ejecutar la CLI real (`subprocess.run` simulado, que también responde a `--help`): el comando del Q&A
+incluye los seis flags y no incluye `--bare` ni `--mcp-config`; el de la búsqueda web conserva WebSearch y WebFetch con
+sus cuatro flags; si la ayuda no lista un flag, o no puede leerse, no se ejecuta `claude -p`; la ayuda se consulta una
+sola vez por ejecutable; se conservan la entrada estándar, la carpeta temporal y el timeout.
+
+Verificación real (una sola llamada, aprobada por el usuario): `fabrica ask "¿Dónde queda la sede principal?"
+--proveedor claude_code` → «La dirección publicada de Fanalca es Calle 13 # 31A - 80, Urbanización Industrial Acopi,
+Yumbo (Valle del Cauca), Colombia…», fuentes `contacto-sitio#000` y `autopartes-contacto#000`, `fundamentada=True`,
+modo `seleccion`, 4236 ms, con la CLI instalada como `claude.CMD` (npm, Windows). La combinación de flags funciona,
+incluido el argumento vacío de `--tools ""`. La búsqueda web endurecida no se ejecutó con red.
+
+Agente (ADR-024, actualización): Ollama por defecto, Anthropic como segunda opción; `claude_code` no se usa en el
+agente. Las cifras de E-01 a E-07 se obtuvieron sin estos flags.

@@ -48,3 +48,11 @@ def servicio(config_con_base: Configuracion) -> ServicioAsistente:
         RepositorioAuditoria(config_con_base.url_base_datos),
         modelo_llm=ModeloExtractivo(),
     )
+
+
+@pytest.fixture(autouse=True)
+def _sin_cache_de_flags_claude() -> None:
+    """Cada prueba vuelve a comprobar los flags de aislamiento de ``claude`` (ADR-025)."""
+    from fabrica_autopartes.llm import claude_code
+
+    claude_code._CLI_VERIFICADAS.clear()

@@ -4,6 +4,11 @@
   simulado; Ollama no está instalado y no hay clave de Anthropic configurada. Reemplaza parcialmente a la
   [ADR-022](ADR-022-ollama-pospuesto.md) (Ollama queda como proveedor del agente, sin activar). Detalle en la entrada
   A-01 de `docs/prompts/bitacora_experimentos.md`.
+- **Actualización (2026-11-08, decisión del usuario):** el agente usa **Ollama por defecto**
+  (`FNA_PROVEEDOR_AGENTE=ollama`; la instalación la hace el usuario), con **Anthropic** como segunda opción
+  seleccionable. **`claude_code` no se usa en el agente:** se evaluó un adaptador que tradujera JSON a `tool_calls`
+  y se descartó; ese proveedor queda solo para el Q&A, con la invocación endurecida en la
+  [ADR-025](ADR-025-endurecimiento-claude-p.md).
 - **Contexto:** la Fase 2 exige un agente con `create_agent` (LangChain v1), una herramienta tipada sobre el corpus y
   memoria por conversación (`InMemorySaver` + `thread_id`) con recorte del historial (`trim_messages`). El proveedor
   `claude_code` (CLI `claude -p`) no admite llamadas a herramientas (`bind_tools`), así que el agente necesita un
