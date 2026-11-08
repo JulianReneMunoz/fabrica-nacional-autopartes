@@ -11,6 +11,9 @@
      tampoco por agentes de código (regla en `AGENTS.md`).
   2. **CI obligatorio:** el flujo `CI` se dispara con `push` a `main` y con `pull_request`; los checks
      `calidad-y-pruebas (ubuntu-latest)`, `calidad-y-pruebas (windows-latest)` y `visor-web` deben pasar antes del merge.
+     **Actualización (2026-11-08):** el runner de Ubuntu se fijó en `ubuntu-26.04`, por lo que el primer check pasa a
+     llamarse `calidad-y-pruebas (ubuntu-26.04)` (entrada A-03 de la bitácora). En esa fecha `main` no tenía protección
+     configurada (`gh api …/branches/main/protection` → 404), así que el cambio no bloquea merges.
   3. **Squash merge:** cada PR queda como un único commit en `main` con mensaje de Conventional Commits; la rama se
      borra después del merge.
   4. La protección de `main` (PR requerido, checks requeridos, historial lineal) se configura en GitHub; la configura el

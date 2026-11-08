@@ -572,3 +572,26 @@ aviso con la instrucción y el chat desactivado; un `ErrorProveedorLLM` al pregu
 traza. Pruebas e2e con `AppTest` y el modelo simulado (clave ficticia en el entorno, nunca la de `.env`):
 respuesta con fuentes y chips, memoria compartida entre dos mensajes de la sesión, «Nueva conversación» cambia el
 `thread_id`, sin clave aviso y chat desactivado, y error del proveedor como aviso.
+
+**Parte B, GitHub Actions** (`.github/workflows/ci.yml`). El último CI de `main` (run 42524024614, commit
+`7824354`) emitió dos anotaciones: «Node.js 20 is deprecated… actions/checkout@v4, astral-sh/setup-uv@v6,
+actions/setup-node@v4» y «The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026»
+(`actions/runner-images#14748`). Versiones verificadas con `gh api` (`releases/latest`, `git/ref/tags/…` y el
+`runs.using` de cada `action.yml`):
+
+| Action | Antes (Node) | Última publicada (fecha) | Después en el workflow (Node) |
+|---|---|---|---|
+| `actions/checkout` | `v4` (node20) | `v7.0.1` (2026-07-20) | `v7` (node24); la etiqueta `v7` apunta al mismo commit que `v7.0.1` |
+| `astral-sh/setup-uv` | `v6` (node20) | `v10.3.3` (2026-10-28) | `v10.3.3` (node24); **no existe la etiqueta móvil `v10`** (`git/ref/tags/v10` → 404), así que se fija la versión exacta |
+| `actions/setup-node` | `v4` (node20) | `v7.1.0` (2026-10-08) | `v7` (node24); la etiqueta `v7` apunta al mismo commit que `v7.1.0` |
+
+Los parámetros usados (`enable-cache` en setup-uv; `node-version`, `cache` y `cache-dependency-path` en setup-node)
+siguen existiendo en esas versiones. `node-version: 22` es la versión de Node con la que se compila el visor, no el
+entorno de las actions, y no cambia.
+
+Ubuntu: el log de ese mismo run muestra que la etiqueta de Ubuntu por defecto ya ejecutaba `ubuntu-26.04` (Ubuntu 26.04.1 LTS, imagen
+20261101.186.1) con el CI en verde. Se fija `ubuntu-26.04` en los dos trabajos de Linux para que el entorno sea
+explícito y desaparezca el aviso. Consecuencia: el check de la matriz pasa a llamarse
+`calidad-y-pruebas (ubuntu-26.04)`; `main` no tiene protección configurada (404), así que no bloquea merges, y se
+actualizaron `CONTRIBUTING.md` y la ADR-021. `windows-latest` no recibió avisos y no cambia. Sintaxis: `actionlint`
+no está instalado; el YAML se validó con `yaml.safe_load` (dos trabajos, disparadores `push` y `pull_request`).
