@@ -24,6 +24,7 @@ from fabrica_autopartes.llm.catalogo_prompts import obtener_prompt
 from fabrica_autopartes.llm.claude_code import (
     FLAGS_AISLAMIENTO_WEB,
     flags_requeridos,
+    leer_salida_json,
     verificar_flags_aislamiento,
 )
 
@@ -145,12 +146,7 @@ class BuscadorClaudeCode:
                 raise ErrorProveedorLLM(
                     f"La búsqueda web no terminó en {self.tiempo_espera_s:.0f} s"
                 ) from exc
-        try:
-            datos = json.loads(proceso.stdout)
-        except json.JSONDecodeError as exc:
-            raise ErrorProveedorLLM(
-                f"Respuesta no válida de Claude Code (código {proceso.returncode})"
-            ) from exc
+        datos = leer_salida_json(proceso)  # objeto JSON o ErrorProveedorLLM con el detalle de stderr
         if datos.get("is_error") or proceso.returncode != 0:
             raise ErrorProveedorLLM(f"Claude Code devolvió un error: {str(datos.get('result', ''))[:300]}")
         return interpretar_salida(str(datos.get("result", "")))

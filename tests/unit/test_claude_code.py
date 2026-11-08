@@ -137,3 +137,27 @@ def test_errores_claros(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(claude_code.subprocess, "run", falso_run)
     with pytest.raises(ErrorProveedorLLM, match="Verificar la sesión"):
         ChatClaudeCode().invoke([HumanMessage("hola")])
+
+
+@pytest.mark.parametrize("salida", ["[]", '["result", "ok"]', "42", '"texto"', "null", "true"])
+def test_json_que_no_es_objeto_da_error_claro(monkeypatch, salida: str) -> None:  # type: ignore[no-untyped-def]
+    """Una salida JSON válida pero que no es un objeto no produce AttributeError."""
+
+    def falso_run(comando, **kwargs):  # type: ignore[no-untyped-def]
+        if es_ayuda(comando):
+            return respuesta_ayuda(comando)
+        return subprocess.CompletedProcess(comando, 0, stdout=salida, stderr="")
+
+    monkeypatch.setattr(claude_code.shutil, "which", lambda _: "claude")
+    monkeypatch.setattr(claude_code.subprocess, "run", falso_run)
+    with pytest.raises(ErrorProveedorLLM, match="se esperaba un objeto JSON"):
+        ChatClaudeCode().invoke([HumanMessage("hola")])
+
+
+def test_leer_salida_json_conserva_el_detalle_de_stderr() -> None:
+    proceso = subprocess.CompletedProcess(["claude"], 2, stdout="no es json", stderr="Error: sesión expirada")
+    with pytest.raises(ErrorProveedorLLM, match=r"código 2\): Error: sesión expirada"):
+        claude_code.leer_salida_json(proceso)
+    assert claude_code.leer_salida_json(
+        subprocess.CompletedProcess(["claude"], 0, '{"result": "x"}', "")
+    ) == {"result": "x"}

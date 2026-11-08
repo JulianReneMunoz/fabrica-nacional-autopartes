@@ -101,6 +101,29 @@ def verificar_flags_aislamiento(
     _CLI_VERIFICADAS.add((ruta, requeridos))
 
 
+def leer_salida_json(proceso: subprocess.CompletedProcess[str]) -> dict[str, Any]:
+    """Objeto JSON de ``--output-format json``.
+
+    Cualquier otra salida es ``ErrorProveedorLLM`` (nunca ``AttributeError``): texto que no es JSON, o JSON
+    válido que no es un objeto (lista, número, cadena o null).
+    """
+    detalle = (proceso.stderr or proceso.stdout or "").strip()[:300]
+    try:
+        datos = json.loads(proceso.stdout)
+    except json.JSONDecodeError as exc:
+        raise ErrorProveedorLLM(
+            f"Respuesta no válida de Claude Code (código {proceso.returncode}): {detalle}. "
+            "Verificar la sesión con 'claude' (iniciar sesión con la cuenta de la suscripción)."
+        ) from exc
+    if not isinstance(datos, dict):
+        raise ErrorProveedorLLM(
+            f"Respuesta inesperada de Claude Code (código {proceso.returncode}): se esperaba un objeto "
+            f"JSON y se recibió {type(datos).__name__}: {detalle}. Verificar la versión de la CLI "
+            "('claude --version')."
+        )
+    return datos
+
+
 def comando_claude(ruta: str, modelo: str) -> list[str]:
     """Comando de ``claude -p`` con aislamiento; el contenido viaja por la entrada estándar."""
     return [
@@ -163,14 +186,7 @@ class ChatClaudeCode(BaseChatModel):
                 )
             except subprocess.TimeoutExpired as exc:
                 raise ErrorProveedorLLM(f"Claude Code no respondió en {self.tiempo_espera_s:.0f} s") from exc
-        try:
-            datos = json.loads(proceso.stdout)
-        except json.JSONDecodeError as exc:
-            detalle = (proceso.stderr or proceso.stdout).strip()[:300]
-            raise ErrorProveedorLLM(
-                f"Respuesta no válida de Claude Code (código {proceso.returncode}): {detalle}. "
-                "Verificar la sesión con 'claude' (iniciar sesión con la cuenta de la suscripción)."
-            ) from exc
+        datos = leer_salida_json(proceso)
         if datos.get("is_error") or proceso.returncode != 0:
             raise ErrorProveedorLLM(f"Claude Code devolvió un error: {str(datos.get('result', ''))[:300]}")
         texto = str(datos.get("result", ""))

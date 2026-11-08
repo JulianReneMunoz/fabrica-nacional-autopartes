@@ -94,6 +94,23 @@ def test_busqueda_web_no_se_ejecuta_si_falta_un_flag(monkeypatch: pytest.MonkeyP
         bw.BuscadorClaudeCode().buscar("¿Dónde queda la planta?")
 
 
+@pytest.mark.parametrize("salida", ["[]", "42", '"texto"', "null"])
+def test_busqueda_web_json_que_no_es_objeto_da_error_claro(
+    monkeypatch: pytest.MonkeyPatch, salida: str
+) -> None:
+    from tests.simulados import es_ayuda, respuesta_ayuda
+
+    def falso_run(comando: list[str], **kw: Any) -> subprocess.CompletedProcess[str]:
+        if es_ayuda(comando):
+            return respuesta_ayuda(comando)
+        return subprocess.CompletedProcess(comando, 0, stdout=salida, stderr="")
+
+    monkeypatch.setattr(bw.shutil, "which", lambda _: "claude")
+    monkeypatch.setattr(bw.subprocess, "run", falso_run)
+    with pytest.raises(bw.ErrorProveedorLLM, match="se esperaba un objeto JSON"):
+        bw.BuscadorClaudeCode().buscar("¿Dónde queda la planta?")
+
+
 def test_buscador_claude_code_corre_en_carpeta_temporal(monkeypatch: pytest.MonkeyPatch) -> None:
     from tests.simulados import es_ayuda, respuesta_ayuda
 
