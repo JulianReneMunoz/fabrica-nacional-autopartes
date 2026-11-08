@@ -327,6 +327,45 @@ def tarjeta_respuesta(
     )
 
 
+def respuesta_agente_html(
+    *,
+    respuesta: str,
+    fuentes: Iterable[Any],
+    fundamentada: bool,
+    proveedor: str,
+    modelo: str,
+    llamadas_herramienta: int,
+    latencia_ms: int,
+    es_rechazo: bool = False,
+    bloqueada: bool = False,
+    limite_alcanzado: bool = False,
+) -> str:
+    """Mensaje del agente (ADR-024): texto escapado, chips y fuentes como enlaces seguros."""
+    fuentes = list(fuentes)
+    if bloqueada or es_rechazo or limite_alcanzado:
+        cuerpo = (
+            '<div class="fna-respuesta fna-rechazo">'
+            f"{insignia('no_publicado')}<span>{_esc(respuesta)}</span></div>"
+        )
+    else:
+        cuerpo = f'<div class="fna-respuesta">{markdown_a_html(respuesta)}</div>'
+    chips = [
+        chip("fundamentación", "con respaldo" if fundamentada else "sin respaldo", "estado", ok=fundamentada),
+        chip("modelo", f"{proveedor} · {modelo}"),
+        chip("herramienta", f"{llamadas_herramienta} llamada" + ("" if llamadas_herramienta == 1 else "s")),
+        chip("latencia", f"{latencia_ms} ms", "dato"),
+    ]
+    citas = ""
+    if fuentes:
+        filas = "".join(
+            f"<li><code>{_esc(f.fragmento_id)}</code> {enlace(f.url, f.titulo or f.url)}"
+            f'<span class="fna-url">{_esc(f.url)}</span></li>'
+            for f in fuentes
+        )
+        citas = f'<h4 class="fna-rotulo">Fuentes ({len(fuentes)})</h4><ul class="fna-citas">{filas}</ul>'
+    return f'<div class="fna-agente">{cuerpo}{fila_chips(chips)}{citas}</div>'
+
+
 def ficha_dato(origen: str, texto: str, url: str = "") -> str:
     """Dato con insignia de procedencia, texto y, si existe, su URL (todo escapado)."""
     destino = f" — {enlace(url)}" if url else ""

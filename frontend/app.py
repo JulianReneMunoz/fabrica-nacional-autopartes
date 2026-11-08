@@ -9,6 +9,7 @@ import io
 import json
 import os
 import sys
+import uuid
 from pathlib import Path
 
 import pandas as pd
@@ -16,7 +17,7 @@ import streamlit as st
 import streamlit.components.v1 as componentes
 
 from fabrica_autopartes.core.config import RAIZ_PROYECTO, Configuracion
-from fabrica_autopartes.core.excepciones import ErrorFNA
+from fabrica_autopartes.core.excepciones import ErrorFNA, ErrorProveedorLLM
 from fabrica_autopartes.llm.catalogo_prompts import catalogo
 from fabrica_autopartes.pipelines.calidad import validar_fragmentos
 from fabrica_autopartes.pipelines.graficas import ETAPAS, generar_graficas, series_etapas
@@ -122,11 +123,12 @@ if stats.origenes.get("semilla"):
         "ejecutar `uv run fabrica pipeline` (scraping → Silver/Gold → validación → gráficas)."
     )
 
-(t_panel, t_proc, t_qa, t_res, t_faq, t_lab, t_eval, t_base, t_sim, t_aud) = st.tabs(
+(t_panel, t_proc, t_qa, t_agente, t_res, t_faq, t_lab, t_eval, t_base, t_sim, t_aud) = st.tabs(
     [
         "📊 Panel",
         "🔄 Proceso de datos",
         "💬 Q&A",
+        "🤖 Agente",
         "📝 Resumen",
         "❓ FAQ",
         "🧪 Laboratorio de prompts",
@@ -272,6 +274,74 @@ with t_qa:
                 st.caption(
                     "Hallazgos pendientes de revisión humana; no se agregan a la base de conocimiento."
                 )
+
+
+# ----------------------------------------------------------------------- agente
+def nuevo_hilo_agente() -> None:
+    """Conversación nueva: ``thread_id`` único por sesión de Streamlit (la memoria vive en el servicio)."""
+    st.session_state.agente_thread = f"streamlit-{uuid.uuid4().hex[:12]}"
+    st.session_state.agente_historial = []
+
+
+with t_agente:
+    st.subheader("Agente con memoria")
+    st.caption(
+        "Busca en la base de conocimiento con una herramienta, cita la URL de cada dato y recuerda la "
+        "conversación. Claude Haiku 5.5 por defecto (ADR-026)."
+    )
+    if "agente_thread" not in st.session_state:
+        nuevo_hilo_agente()
+    # Sin red: solo comprueba la configuración (la clave o el host local); no consume créditos.
+    estado_agente = servicio.verificar_agente(consultar=False)
+    col_info, col_nueva = st.columns([4, 1])
+    # El botón se procesa antes de escribir el encabezado, para mostrar ya el thread_id nuevo.
+    if col_nueva.button("Nueva conversación", key="agente_nueva", width="stretch"):
+        nuevo_hilo_agente()
+    hilo = st.session_state.agente_thread
+    col_info.caption(f"Conversación `{hilo}` · {estado_agente.proveedor} · {estado_agente.modelo}")
+    if not estado_agente.disponible:
+        st.warning(
+            f"El agente no está disponible: {estado_agente.mensaje} "
+            "Pasos en CONTRIBUTING.md («Agente con memoria»)."
+        )
+    for mensaje in st.session_state.agente_historial:
+        with st.chat_message(mensaje["rol"]):
+            if mensaje["rol"] == "user":
+                st.text(mensaje["texto"])  # texto de la persona usuaria: sin Markdown ni HTML
+            else:
+                st.markdown(mensaje["html"], unsafe_allow_html=True)  # escapado en estilo.py
+    pregunta_agente = st.chat_input(
+        "Preguntar al agente…", key="agente_entrada", disabled=not estado_agente.disponible
+    )
+    if pregunta_agente and estado_agente.disponible:
+        st.session_state.agente_historial.append({"rol": "user", "texto": pregunta_agente})
+        with st.chat_message("user"):
+            st.text(pregunta_agente)
+        with st.chat_message("assistant"):
+            try:
+                with st.spinner("Consultando el agente…"):
+                    ra = servicio.preguntar_agente(
+                        pregunta_agente, st.session_state.agente_thread, canal="streamlit"
+                    )
+            except ErrorProveedorLLM as exc:
+                st.warning(f"El proveedor del agente no respondió: {exc}")
+            except ErrorFNA as exc:
+                st.error(f"{exc.codigo}: {exc}")
+            else:
+                html_agente = est.respuesta_agente_html(
+                    respuesta=ra.respuesta,
+                    fuentes=ra.fuentes,
+                    fundamentada=ra.fundamentada,
+                    proveedor=ra.proveedor,
+                    modelo=ra.modelo,
+                    llamadas_herramienta=ra.llamadas_herramienta,
+                    latencia_ms=ra.latencia_ms,
+                    es_rechazo=es_rechazo(ra.respuesta),
+                    bloqueada=ra.bloqueada,
+                    limite_alcanzado=ra.limite_alcanzado,
+                )
+                st.markdown(html_agente, unsafe_allow_html=True)
+                st.session_state.agente_historial.append({"rol": "assistant", "html": html_agente})
 
 # ---------------------------------------------------------------------- resumen
 with t_res:
@@ -550,7 +620,7 @@ with t_sim:
 # -------------------------------------------------------------------- auditoría
 with t_aud:
     st.subheader("Auditoría de interacciones")
-    tarea = st.selectbox("Tarea", ["(todas)", "qa", "faq", "resumen"])
+    tarea = st.selectbox("Tarea", ["(todas)", "qa", "agente", "faq", "resumen"])
     filas_aud, total = servicio.repo.listar_interacciones(1, 200, None if tarea == "(todas)" else tarea)
     st.caption(f"{total} interacciones registradas")
     if filas_aud:

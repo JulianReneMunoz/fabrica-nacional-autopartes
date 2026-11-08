@@ -557,3 +557,18 @@ Pendiente:
   redundante, porque `langchain-anthropic` ya es dependencia principal.
 - (Nota 5 de GGA) En `crear_modelo` (Q&A con `anthropic`), `max_tokens` está fijo en 1024; el agente usa
   `FNA_AGENTE_MAX_TOKENS`. Convertirlo en una constante con nombre o en una configuración.
+
+
+## A-03 · Pulido de la Fase 3: agente en Streamlit, GitHub Actions y docker-compose (2026-11-08)
+
+**Parte A, pestaña «🤖 Agente» en Streamlit** (`frontend/app.py`, solo a través de `ServicioAsistente`):
+`st.chat_message` y `st.chat_input` con el historial de la sesión; `thread_id` único por sesión
+(`streamlit-<uuid>`, en `st.session_state`) y botón «Nueva conversación»; el servicio se crea una sola vez
+(`st.cache_resource`), así que la memoria del agente persiste entre recargas. Cada respuesta muestra las fuentes
+como enlaces seguros (solo `http(s)`), si está fundamentada, proveedor y modelo (`anthropic · claude-haiku-5-5`
+por defecto), las llamadas a la herramienta y la latencia (`estilo.respuesta_agente_html`, con el texto escapado).
+Al abrir la pestaña se llama a `verificar_agente(consultar=False)`, sin red ni consumo de créditos: sin clave, un
+aviso con la instrucción y el chat desactivado; un `ErrorProveedorLLM` al preguntar se muestra como aviso, no como
+traza. Pruebas e2e con `AppTest` y el modelo simulado (clave ficticia en el entorno, nunca la de `.env`):
+respuesta con fuentes y chips, memoria compartida entre dos mensajes de la sesión, «Nueva conversación» cambia el
+`thread_id`, sin clave aviso y chat desactivado, y error del proveedor como aviso.
