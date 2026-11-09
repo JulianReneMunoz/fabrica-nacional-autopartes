@@ -34,7 +34,8 @@ Las cifras reales se registran en la bitácora cuando se ejecute la demostració
 | Uso | Herramienta y modelo | Se paga con |
 |---|---|---|
 | Desarrollo del proyecto | Claude Code (sesión interactiva) | Cupo del plan Max |
-| Q&A, evaluación y FAQ del visor | Proveedor `claude_code` (`claude -p`, Sonnet; [ADR-016](adr/ADR-016-proveedor-claude-code.md), [ADR-025](adr/ADR-025-endurecimiento-claude-p.md)) | Cupo del plan Max |
+| Q&A por defecto | Proveedor `extractivo` (sin LLM; [ADR-027](adr/ADR-027-proveedor-qa-por-defecto.md)) | Sin costo |
+| Q&A, evaluación y FAQ del visor con un LLM | Proveedor `claude_code` (`FNA_PROVEEDOR_LLM=claude_code` o `--proveedor claude_code`; `claude -p`, Sonnet; [ADR-016](adr/ADR-016-proveedor-claude-code.md), [ADR-025](adr/ADR-025-endurecimiento-claude-p.md)) | Cupo del plan Max |
 | Agente con memoria | Proveedor `anthropic` (API, Claude Haiku 5.5; [ADR-026](adr/ADR-026-haiku-proveedor-principal-agente.md)) | Créditos mensuales de API del plan Max: una bolsa aparte que no resta cupo a Claude Code |
 
 La clave del agente se define como `FNA_ANTHROPIC_API_KEY` y **nunca** como `ANTHROPIC_API_KEY`: con esta última,

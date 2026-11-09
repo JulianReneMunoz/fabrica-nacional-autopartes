@@ -28,7 +28,7 @@ services:
       - uv run alembic upgrade head && uv run uvicorn fabrica_autopartes.api.main:app --host 0.0.0.0 --port 8000 --workers 1
     environment: &entorno_fna
       FNA_URL_BASE_DATOS: postgresql+psycopg://${FNA_PG_USUARIO:-fna}:${FNA_PG_CLAVE:-fna_local}@postgres:5432/${FNA_PG_BASE:-fna}
-      # Q&A: el proveedor por defecto de config.py no está disponible en Compose; extractivo funciona sin red ni LLM.
+      # Q&A: extractivo, igual que el valor por defecto de config.py (ADR-027); explícito en Compose.
       FNA_PROVEEDOR_LLM: ${FNA_PROVEEDOR_LLM:-extractivo}
       # Agente: proveedor y modelo, sin valores secretos (la clave viene de .env).
       FNA_PROVEEDOR_AGENTE: ${FNA_PROVEEDOR_AGENTE:-anthropic}

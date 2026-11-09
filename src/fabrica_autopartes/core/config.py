@@ -102,7 +102,9 @@ class Configuracion(BaseSettings):
     solapamiento_fragmento: int = 150
 
     # --- LLM ---------------------------------------------------------------
-    proveedor_llm: Proveedor = "ollama"
+    # Q&A, FAQ y resumen (ADR-027): extractivo funciona en un clon nuevo sin instalar nada, sin red ni costo,
+    # igual que en CI y Docker. claude_code, anthropic u ollama se eligen con FNA_PROVEEDOR_LLM en .env.
+    proveedor_llm: Proveedor = "extractivo"
     modelo_llm: str = "llama3.2:3b"
     # 0: salida lo más determinista posible (C4); claude_code y extractivo no la usan (aplica_temperatura).
     temperatura: float = 0.0
