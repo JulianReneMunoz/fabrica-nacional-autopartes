@@ -2,7 +2,7 @@
 
 Proveedores por defecto:
 
-* Q&A, FAQ y resumen (``crear_modelo``): el de ``FNA_PROVEEDOR_LLM``.
+* Q&A, FAQ y resumen (``crear_modelo``): el de ``FNA_PROVEEDOR_LLM``, ``extractivo`` por defecto (ADR-027).
 * Agente con memoria (``crear_modelo_agente``): ``anthropic`` con Claude Haiku 5.5
   (``claude-haiku-5-5``, ADR-026); ``ollama`` es opcional. Sin respaldo automático entre proveedores.
 

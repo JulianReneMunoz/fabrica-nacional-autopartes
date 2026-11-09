@@ -643,3 +643,21 @@ Incidencias: el primer `mem_save` no guardó nada (`unknown_session`: un hook ag
 Claude Code, que Engram no tenía registrado). Se registró la sesión con `mem_session_start`; con la ruta de Windows,
 Engram asignó el proyecto «unknown», así que se volvió a registrar con la ruta que el propio Engram detecta
 (`/mnt/c/fabrica-nacional-autopartes`, proyecto por remoto de Git) y el guardado se hizo con el proyecto explícito.
+
+
+## R-05 · `extractivo` como proveedor por defecto del Q&A (2026-11-08)
+
+Decisión del usuario (ADR-027): `proveedor_llm` pasa de `ollama` a `extractivo` en `core/config.py`. Análisis previo,
+solo leyendo código y documentación: el valor por defecto solo afecta a un clon nuevo sin `.env`, porque el CI fija
+`FNA_PROVEEDOR_LLM: extractivo` en el paso de pytest (y `tests/conftest.py` usa `extractivo`) y `docker-compose.yml`
+fija `${FNA_PROVEEDOR_LLM:-extractivo}`. En un clon nuevo, `ollama` fallaba (sin servidor), `claude_code` exige la
+CLI con sesión del plan (consume cupo), `anthropic` exige clave y créditos, y `extractivo` funciona sin instalación,
+red ni costo (exactitud global 0,625 frente a 0,792–0,833 con `claude_code`).
+
+Pruebas nuevas (`tests/unit/test_proveedor_qa_defecto.py`): el valor por defecto es `extractivo` con
+`delenv("FNA_PROVEEDOR_LLM")` y `Configuracion(_env_file=None)`; la variable lo sobrescribe; y el Q&A responde con el
+valor por defecto sin modelo inyectado ni red. Se comprobó que aíslan el valor: con `config.py` en `ollama` y
+`FNA_PROVEEDOR_LLM=extractivo` en el entorno (como en el CI), fallan 2 de las 3 pruebas.
+
+Pendiente (otro PR): `modelo_llm` vale `llama3.2:3b` por defecto; con `FNA_PROVEEDOR_LLM=anthropic` ese nombre se
+enviaría a la API y la solicitud fallaría, así que hoy hay que definir también `FNA_MODELO_LLM` con un modelo Claude.

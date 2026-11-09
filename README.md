@@ -198,7 +198,8 @@ Streamlit: http://localhost:8501 · Swagger: http://127.0.0.1:8000/docs. Guion d
 **Con Docker** (`docker compose up --build`): PostgreSQL, la API (un solo worker, porque la memoria del agente vive
 en el proceso) y Streamlit. El agente usa Claude Haiku 5.5 y la clave llega solo por `.env` como
 `FNA_ANTHROPIC_API_KEY`; Compose no incluye Ollama ([ADR-026](docs/arquitectura/adr/ADR-026-haiku-proveedor-principal-agente.md)).
-En Compose el Q&A usa extractivo por defecto (sin LLM); para anthropic, defina `FNA_PROVEEDOR_LLM` en `.env`.
+En Compose el Q&A usa extractivo por defecto (sin LLM), igual que fuera de Docker (ADR-027); para anthropic, defina
+`FNA_PROVEEDOR_LLM` en `.env` (y `FNA_MODELO_LLM` con un modelo Claude).
 
 La base Gold (`data/gold`) está versionada y lista para usarse. El HTML crudo de Bronze (`data/bronze/html/`) no se
 versiona por ser contenido de terceros; se regenera con `uv run fabrica pipeline` (accede a la red y respeta
@@ -263,7 +264,7 @@ salidas son datos, nunca instrucciones.
 | `claude_code` | Claude mediante la CLI de Claude Code, sin clave de API ([ADR-016](docs/arquitectura/adr/ADR-016-proveedor-claude-code.md)): `claude -p` con la sesión iniciada, en carpeta temporal aislada y sin herramientas |
 | `anthropic` / `openai` | Con clave de API |
 | `ollama` | Modelo local (`llama3.2:3b` por defecto) |
-| `extractivo` | Respaldo léxico BM25 sin red ni modelo; usado en las pruebas |
+| `extractivo` | **Valor por defecto** de `FNA_PROVEEDOR_LLM` ([ADR-027](docs/arquitectura/adr/ADR-027-proveedor-qa-por-defecto.md)): respaldo léxico BM25 sin red ni modelo; usado también en CI, Docker y las pruebas |
 
 Variables (prefijo `FNA_`, valores solo en un `.env` local ignorado por Git; plantilla en `.env.example`):
 `FNA_PROVEEDOR_LLM`, `FNA_MODELO_LLM`, `FNA_VERSION_PROMPT`, `FNA_MODO_CONTEXTO`, `FNA_OLLAMA_URL`,
@@ -315,7 +316,7 @@ scripts/                 PowerShell y utilidades Python
 ```
 | Verificación | Resultado (última corrida completa) |
 |---|---|
-| pytest | 408 pruebas (unitarias, integración y e2e de Streamlit), sin red: se omiten la del agente con modelo real (opcional) y, sin el extra semántico, las 3 del modelo nomic |
+| pytest | 411 pruebas (unitarias, integración y e2e de Streamlit), sin red: se omiten la del agente con modelo real (opcional) y, sin el extra semántico, las 3 del modelo nomic |
 | Vitest | 113 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz, explorador y búsqueda web) |
 | Playwright | 46 pruebas E2E (de extremo a extremo) del visor con SwiftShader (≥ 50 fps exigidos) |
 | Ruff, mypy y capas | Sin hallazgos |
