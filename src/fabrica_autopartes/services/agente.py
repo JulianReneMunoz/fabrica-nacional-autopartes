@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import time
 from collections import OrderedDict
@@ -43,7 +44,8 @@ from fabrica_autopartes.llm.proveedores import (
     traducir_error_anthropic,
 )
 
-VERSION_PROMPT_AGENTE = "v1"
+VERSION_PROMPT_AGENTE = "v2"  # búsqueda en cada turno y reformulación de seguimientos (ADR-029)
+_log = logging.getLogger(__name__)
 RESPUESTA_BLOQUEADA = (
     "La solicitud contiene instrucciones que intentan modificar el comportamiento del asistente y no se "
     "procesa. Reformular la pregunta sobre la empresa."
@@ -139,7 +141,26 @@ class RecorteHistorial(AgentMiddleware):
     def wrap_model_call(
         self, request: ModelRequest, handler: Callable[[ModelRequest], ModelResponse]
     ) -> ModelResponse:
-        return handler(request.override(messages=recortar_historial(request.messages, self.limite_tokens)))
+        enviados = recortar_historial(request.messages, self.limite_tokens)
+        # Diagnóstico (ADR-029), solo en el log local: hilo, mensajes y tokens aproximados enviados al modelo.
+        _log.info(
+            "Agente · llamada al modelo · thread=%s · mensajes=%d de %d · tokens≈%d",
+            _thread_id_actual(),
+            len(enviados),
+            len(request.messages),
+            count_tokens_approximately(enviados),
+        )
+        return handler(request.override(messages=enviados))
+
+
+def _thread_id_actual() -> str:
+    """``thread_id`` de la ejecución en curso del grafo (``?`` fuera de una ejecución)."""
+    try:
+        from langgraph.config import get_config
+
+        return str(get_config().get("configurable", {}).get("thread_id", "?"))
+    except RuntimeError:
+        return "?"
 
 
 # ------------------------------------------------------------ texto de salida
@@ -311,6 +332,16 @@ class ServicioAgente:
             respuesta, fuentes, fundamentada = MENSAJE_TRUNCADO, [], False
         if limite:
             respuesta, fuentes, fundamentada = MENSAJE_LIMITE, [], False
+        # Diagnóstico (ADR-029), solo en el log local: texto original del modelo antes de cualquier reemplazo.
+        finales = [m for m in turno if isinstance(m, AIMessage) and not m.tool_calls]
+        original = texto_visible(finales[-1]) if finales else ""
+        _log.info(
+            "Agente · turno · thread=%s · llamadas=%d · reemplazada=%s · respuesta original=%r",
+            thread_id,
+            llamadas,
+            "sí" if respuesta != original else "no",
+            original[:500],
+        )
         return RespuestaAgente(
             pregunta=pregunta,
             respuesta=respuesta,
