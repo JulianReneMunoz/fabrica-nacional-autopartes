@@ -595,3 +595,31 @@ explícito y desaparezca el aviso. Consecuencia: el check de la matriz pasa a ll
 `calidad-y-pruebas (ubuntu-26.04)`; `main` no tiene protección configurada (404), así que no bloquea merges, y se
 actualizaron `CONTRIBUTING.md` y la ADR-021. `windows-latest` no recibió avisos y no cambia. Sintaxis: `actionlint`
 no está instalado; el YAML se validó con `yaml.safe_load` (dos trabajos, disparadores `push` y `pull_request`).
+
+**Parte C, `docker-compose.yml`.** Ollama no figura en Compose, ni siquiera como perfil opcional (ADR-026: no se
+usa por ahora): se retiraron el servicio `ollama`, su volumen, `FNA_OLLAMA_URL`, el `depends_on` de la API y los
+comentarios de `ollama pull`. El código que admite Ollama como proveedor opcional no cambia. La API se lanza con
+`uvicorn … --workers 1`, porque la memoria del agente vive en el proceso (ADR-024); Streamlit es otro proceso, con
+memoria propia. La API y Streamlit comparten las variables del agente (ancla YAML): `FNA_PROVEEDOR_AGENTE`
+(`anthropic` por defecto) y `FNA_MODELO_ANTHROPIC` (`claude-haiku-5-5` por defecto), sin valores secretos; la clave
+llega solo por `env_file: .env` como `FNA_ANTHROPIC_API_KEY`. Validación con Docker 29.9.2 y Compose v5.6.1:
+`docker compose config --quiet` (válido) y `--services` → `postgres`, `api` y `app`. No se usó
+`docker compose config` sin `--quiet`, porque imprimiría las variables de `.env`, clave incluida.
+Q&A en Compose: el valor por defecto de `config.py` (`FNA_PROVEEDOR_LLM=ollama`, `core/config.py:105`) no tiene
+servidor en Compose, y `claude_code` no está en la imagen. Por eso el ancla `&entorno_fna` define
+`FNA_PROVEEDOR_LLM: ${FNA_PROVEEDOR_LLM:-extractivo}`: el Q&A usa `extractivo` por defecto (sin red ni LLM), y
+`anthropic` se elige definiendo `FNA_PROVEEDOR_LLM` en `.env`. `config.py` no cambia. Resuelto: Compose fija
+FNA_PROVEEDOR_LLM=extractivo por defecto.
+`tests/unit/test_docker_compose.py` comprueba que no hay servicio ni volumen de Ollama, que la API usa un solo
+worker, el valor de `FNA_PROVEEDOR_LLM` en `api` y `app`, y que el archivo no contiene secretos.
+
+Al crear el ruleset `proteger-main`, los checks exigidos deben ser `calidad-y-pruebas (ubuntu-26.04)`,
+`calidad-y-pruebas (windows-latest)` y `visor-web`.
+
+Pendientes:
+- El valor por defecto de FNA_PROVEEDOR_LLM en config.py sigue siendo ollama, aunque Ollama no se usa (ADR-026);
+  evaluarlo en otro PR con su ADR.
+- Validación con modelo real antes de la entrega: una ejecución de tests/integration/test_agente_real.py con
+  FNA_PRUEBAS_AGENTE_REAL=1 y Claude Haiku 5.5 (3 turnos, incluido "¿Y cuál es su teléfono?") y el banco de 24
+  preguntas; requiere FNA_ANTHROPIC_API_KEY y aprobación antes de gastar créditos. Las pruebas simuladas validan el
+  código, no el comportamiento del modelo real.

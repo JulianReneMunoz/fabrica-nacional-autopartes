@@ -195,6 +195,11 @@ uv run streamlit run frontend/app.py
 Visor y biblioteca: http://127.0.0.1:8000/app/ · Explorador: http://127.0.0.1:8000/app/#/explorador ·
 Streamlit: http://localhost:8501 · Swagger: http://127.0.0.1:8000/docs. Guion de demostración: [`docs/demo.md`](docs/demo.md).
 
+**Con Docker** (`docker compose up --build`): PostgreSQL, la API (un solo worker, porque la memoria del agente vive
+en el proceso) y Streamlit. El agente usa Claude Haiku 5.5 y la clave llega solo por `.env` como
+`FNA_ANTHROPIC_API_KEY`; Compose no incluye Ollama ([ADR-026](docs/arquitectura/adr/ADR-026-haiku-proveedor-principal-agente.md)).
+En Compose el Q&A usa extractivo por defecto (sin LLM); para anthropic, defina `FNA_PROVEEDOR_LLM` en `.env`.
+
 La base Gold (`data/gold`) está versionada y lista para usarse. El HTML crudo de Bronze (`data/bronze/html/`) no se
 versiona por ser contenido de terceros; se regenera con `uv run fabrica pipeline` (accede a la red y respeta
 `robots.txt`), y después `uv run fabrica build` reconstruye Silver y Gold. Sin red, `uv run fabrica build --fuente
@@ -310,7 +315,7 @@ scripts/                 PowerShell y utilidades Python
 ```
 | Verificación | Resultado (última corrida completa) |
 |---|---|
-| pytest | 405 pruebas (unitarias, integración y e2e de Streamlit), sin red: se omiten la del agente con modelo real (opcional) y, sin el extra semántico, las 3 del modelo nomic |
+| pytest | 408 pruebas (unitarias, integración y e2e de Streamlit), sin red: se omiten la del agente con modelo real (opcional) y, sin el extra semántico, las 3 del modelo nomic |
 | Vitest | 113 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz, explorador y búsqueda web) |
 | Playwright | 46 pruebas E2E (de extremo a extremo) del visor con SwiftShader (≥ 50 fps exigidos) |
 | Ruff, mypy y capas | Sin hallazgos |

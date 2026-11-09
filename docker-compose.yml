@@ -1,7 +1,8 @@
 # Despliegue local: docker compose up --build
-# Luego descargar el modelo dentro del contenedor de Ollama:
-#   docker compose exec ollama ollama pull llama3.2:3b
 # Visor 3D: http://localhost:8000/app/ · API: http://localhost:8000/docs · Streamlit: http://localhost:8501
+#
+# Agente (ADR-026): Claude Haiku 5.5 vía API. La clave llega SOLO por env_file (.env, no versionado) como
+# FNA_ANTHROPIC_API_KEY; nunca se escribe aquí ni se usa ANTHROPIC_API_KEY.
 services:
   postgres:
     image: postgres:17
@@ -17,30 +18,33 @@ services:
       timeout: 3s
       retries: 20
 
-  ollama:
-    image: ollama/ollama:latest
-    ports: ["11434:11434"]
-    volumes: ["ollama:/root/.ollama"]
-
   api:
     build: { context: ., dockerfile: infra/docker/Dockerfile }
-    command: ["sh", "-c", "uv run alembic upgrade head && uv run uvicorn fabrica_autopartes.api.main:app --host 0.0.0.0 --port 8000"]
-    environment:
-      FNA_OLLAMA_URL: http://ollama:11434
+    # Un solo worker: la memoria del agente (InMemorySaver) vive en el proceso; con varios workers, cada uno tendría
+    # la suya y un mismo thread_id vería historiales distintos (ADR-024).
+    command:
+      - sh
+      - -c
+      - uv run alembic upgrade head && uv run uvicorn fabrica_autopartes.api.main:app --host 0.0.0.0 --port 8000 --workers 1
+    environment: &entorno_fna
       FNA_URL_BASE_DATOS: postgresql+psycopg://${FNA_PG_USUARIO:-fna}:${FNA_PG_CLAVE:-fna_local}@postgres:5432/${FNA_PG_BASE:-fna}
+      # Q&A: el proveedor por defecto de config.py no está disponible en Compose; extractivo funciona sin red ni LLM.
+      FNA_PROVEEDOR_LLM: ${FNA_PROVEEDOR_LLM:-extractivo}
+      # Agente: proveedor y modelo, sin valores secretos (la clave viene de .env).
+      FNA_PROVEEDOR_AGENTE: ${FNA_PROVEEDOR_AGENTE:-anthropic}
+      FNA_MODELO_ANTHROPIC: ${FNA_MODELO_ANTHROPIC:-claude-haiku-5-5}
     env_file: [{ path: .env, required: false }]
     ports: ["8000:8000"]
     volumes: ["datos:/app/data"]
     depends_on:
       postgres: { condition: service_healthy }
-      ollama: { condition: service_started }
 
   app:
     build: { context: ., dockerfile: infra/docker/Dockerfile }
     command: ["uv", "run", "streamlit", "run", "frontend/app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+    # Streamlit es otro proceso: su pestaña «Agente» tiene memoria propia, separada de la de la API.
     environment:
-      FNA_OLLAMA_URL: http://ollama:11434
-      FNA_URL_BASE_DATOS: postgresql+psycopg://${FNA_PG_USUARIO:-fna}:${FNA_PG_CLAVE:-fna_local}@postgres:5432/${FNA_PG_BASE:-fna}
+      <<: *entorno_fna
       FNA_URL_VISOR: http://localhost:8000/app/
     env_file: [{ path: .env, required: false }]
     ports: ["8501:8501"]
@@ -50,5 +54,4 @@ services:
 
 volumes:
   postgres:
-  ollama:
   datos:
