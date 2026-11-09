@@ -282,6 +282,10 @@ entradas S-05 a S-07 de la [bitácora](docs/prompts/bitacora_experimentos.md)). 
 |---|---|---|
 | [Engram](https://github.com/Gentleman-Programming/engram) | v3.6.2 | Memoria persistente local entre sesiones del agente (SQLite + MCP) |
 | [GGA](https://github.com/Gentleman-Programming/gentleman-guardian-angel) | v2.10.1 | Revisión del diff preparado contra `AGENTS.md` antes de cada commit (`.gga`; hook en `.git/hooks`, no versionado) |
+
+Agentes de desarrollo: Claude Code (principal) y Antigravity CLI 1.5.3 (instalado según la guía del curso); ambos
+leen AGENTS.md. Antigravity no figura en la tabla porque no tiene escaneo de seguridad documentado (entrada R-06 de la
+[bitácora](docs/prompts/bitacora_experimentos.md)).
 </details>
 
 <details>
