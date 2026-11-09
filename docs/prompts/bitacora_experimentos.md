@@ -677,3 +677,32 @@ agente en este repositorio:
 Por no tener escaneo de seguridad documentado, Antigravity va en un párrafo aparte y no en la tabla de herramientas de
 desarrollo, cuyo texto introductorio indica «versión fijada tras un escaneo de seguridad documentado». No se ejecutó
 `agy` ni ningún otro agente o proveedor.
+
+
+## A-05 · Compatibilidad con Claude Haiku 5.5 (2026-11-08)
+
+Hallazgo de la prueba real (el usuario, en Streamlit): la primera pregunta al agente con Claude Haiku 5.5 falló con
+un 400 de Anthropic, «temperature: Extra inputs are not permitted» (request_id `req_011CgrZ1YPt63B8jXatHpBYJ`), y
+el error se mostró como traza. Causa, comprobada sin red: con `temperature=0`, `langchain-anthropic` 1.7.9 la mueve
+a `extra_body` y la envía; esa versión solo la retira para `claude-fable-5` y `claude-sonnet-5-5`.
+
+Correcciones (ADR-028), sin llamadas reales a la API ni a `claude -p`:
+- No se envían temperature, top_p ni top_k a los modelos Claude 5.x (agente y Q&A con `anthropic`); T=0 no se fija
+  con Haiku 5.5 y el determinismo se guía con el prompt. Los demás proveedores conservan `FNA_TEMPERATURA`.
+- `traducir_error_anthropic()`: 400 → «La API de Anthropic rechazó la solicitud (400): …» con el `request_id`;
+  credenciales y red siguen separados. Conectado en el agente y en `_proveedor_disponible` (Q&A).
+- Agente: `stop_reason` `refusal` y `max_tokens` con mensajes propios, solo en el turno actual; Streamlit los dibuja
+  como rechazo, sin fuentes.
+- `agente_max_tokens`: 1024 → 16000 (ejemplo de la guía oficial), con límite de 32000. El razonamiento adaptativo
+  está activo por defecto y se cobra como salida; el costo real por turno se medirá en la prueba real con Haiku y se
+  registrará en esta bitácora.
+
+Pruebas nuevas (`tests/unit/test_haiku_5_5.py` y dos en `test_estilo_streamlit.py`): la solicitud de Haiku 5.5 no
+lleva parámetros de muestreo, ni en el cuerpo ni en `extra_body`; el `AnthropicInvalidRequestError` real de
+`langchain_anthropic`, encadenado a un `BadRequestError` como en la traza, llega como `ErrorProveedorLLM` en el
+agente y en el Q&A; `refusal` y `max_tokens` no marcan el turno siguiente; Streamlit los muestra sin fuentes.
+Mutación: con `git stash` de `src/` y `frontend/` (sin `tests/`), fallan 16 de las 55 pruebas de esos dos archivos;
+tras `git stash pop`, pasan las 55.
+
+Pendientes: refusal en el Q&A (`cadenas.py`) y `max_tokens` fijo de `crear_modelo`, en el PR de `modelo_llm`; la
+prueba real después del merge, a cargo del usuario.

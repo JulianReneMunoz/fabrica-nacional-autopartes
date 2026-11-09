@@ -18,7 +18,8 @@ def test_temperatura_por_defecto_es_cero(monkeypatch: pytest.MonkeyPatch) -> Non
     ("proveedor", "modelo", "esperado"),
     [
         ("ollama", "llama3.2:3b", True),
-        ("anthropic", "claude-haiku-5-5", True),
+        ("anthropic", "claude-haiku-5-5", False),  # Claude 5.x no acepta temperature (ADR-028)
+        ("anthropic", "claude-haiku-4-5", True),
         ("openai", "gpt-4o-mini", True),
         ("claude_code", "sonnet", False),
         ("extractivo", "lexico-bm25", False),

@@ -25,6 +25,7 @@ from fabrica_autopartes.domain.modelos import (
 from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.llm import cadenas
 from fabrica_autopartes.llm.busqueda_web import BuscadorWeb
+from fabrica_autopartes.llm.proveedores import traducir_error_anthropic
 
 # Reexportada para las interfaces (Streamlit, API, CLI): estas solo importan de ``services``.
 from fabrica_autopartes.llm.salvaguardas import es_rechazo as es_rechazo
@@ -43,10 +44,17 @@ _ERRORES_CONEXION = {"ConnectError", "ConnectTimeout", "APIConnectionError", "AP
 
 @contextmanager
 def _proveedor_disponible(config: Configuracion) -> Iterator[None]:
-    """Traduce fallos de conexión del proveedor LLM (Ollama apagado, red caída) a un error 503."""
+    """Traduce fallos del proveedor LLM a un error 503 con un mensaje claro (nunca una traza).
+
+    Primero los errores de estado de Anthropic (credenciales 401/403 o saldo; solicitud inválida 400;
+    ADR-028) y después los de conexión (Ollama apagado, red caída).
+    """
     try:
         yield
     except Exception as exc:
+        traducido = traducir_error_anthropic(exc)
+        if traducido is not None:
+            raise traducido from exc
         if isinstance(exc, ConnectionError) or type(exc).__name__ in _ERRORES_CONEXION:
             raise ErrorProveedorLLM(
                 f"No fue posible conectar con el proveedor '{config.proveedor_llm}'. "

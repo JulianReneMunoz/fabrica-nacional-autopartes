@@ -339,6 +339,8 @@ with t_agente:
                     es_rechazo=es_rechazo(ra.respuesta),
                     bloqueada=ra.bloqueada,
                     limite_alcanzado=ra.limite_alcanzado,
+                    rechazada_por_seguridad=ra.rechazada_por_seguridad,
+                    respuesta_truncada=ra.respuesta_truncada,
                 )
                 st.markdown(html_agente, unsafe_allow_html=True)
                 st.session_state.agente_historial.append({"rol": "assistant", "html": html_agente})

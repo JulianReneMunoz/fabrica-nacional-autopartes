@@ -463,7 +463,8 @@ def test_anthropic_con_clave_construye_el_modelo_sin_red(config_con_base: Config
     )
     modelo = pv.crear_modelo_agente(config)
     assert type(modelo).__name__ == "ChatAnthropic"
-    assert modelo.temperature == 0 and modelo.max_tokens == config.agente_max_tokens  # type: ignore[attr-defined]
+    # Claude 5.x no acepta temperature (ADR-028): no se fija.
+    assert modelo.temperature is None and modelo.max_tokens == config.agente_max_tokens  # type: ignore[attr-defined]
     assert modelo.model == "claude-haiku-5-5"  # type: ignore[attr-defined]
 
 

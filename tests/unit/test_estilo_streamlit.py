@@ -320,3 +320,37 @@ def test_respuesta_agente_escapa_el_texto_y_solo_enlaza_http() -> None:
         llamadas_herramienta=1, latencia_ms=1, es_rechazo=True,
     )  # fmt: skip
     assert "fna-rechazo" in rechazo and "Fuentes" not in rechazo and "1 llamada<" in rechazo
+
+
+def test_respuesta_agente_rechazada_por_seguridad_sin_fuentes_y_no_publicado() -> None:
+    """ADR-028: un «refusal» se dibuja como rechazo, sin lista de fuentes y con la insignia no_publicado."""
+    from fabrica_autopartes.domain.modelos import Fuente
+
+    html = est.respuesta_agente_html(
+        respuesta="El modelo declinó la solicitud por sus filtros de seguridad.",
+        fuentes=[Fuente(fragmento_id="ok#000", titulo="Contacto", url="https://fanalca.com/contacto/")],
+        fundamentada=False,
+        proveedor="anthropic",
+        modelo="claude-haiku-5-5",
+        llamadas_herramienta=1,
+        latencia_ms=5,
+        rechazada_por_seguridad=True,
+    )
+    assert "fna-rechazo" in html and "fna-fuente-no_publicado" in html
+    assert "Fuentes (" not in html and "fna-citas" not in html and "fanalca.com/contacto" not in html
+
+
+def test_respuesta_agente_truncada_se_dibuja_como_rechazo() -> None:
+    from fabrica_autopartes.domain.modelos import Fuente
+
+    html = est.respuesta_agente_html(
+        respuesta="La respuesta se cortó al alcanzar el límite de tokens.",
+        fuentes=[Fuente(fragmento_id="ok#000", titulo="Contacto", url="https://fanalca.com/contacto/")],
+        fundamentada=False,
+        proveedor="anthropic",
+        modelo="claude-haiku-5-5",
+        llamadas_herramienta=1,
+        latencia_ms=5,
+        respuesta_truncada=True,
+    )
+    assert "fna-rechazo" in html and "Fuentes (" not in html

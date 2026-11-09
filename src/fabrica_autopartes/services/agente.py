@@ -35,20 +35,28 @@ from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.llm import salvaguardas as sg
 from fabrica_autopartes.llm.catalogo_prompts import obtener_prompt
 from fabrica_autopartes.llm.extractivo import RECHAZO
-from fabrica_autopartes.llm.proveedores import crear_modelo_agente, modelo_del_agente
+from fabrica_autopartes.llm.proveedores import (
+    MENSAJE_RECHAZO_SEGURIDAD,
+    crear_modelo_agente,
+    es_rechazo_de_seguridad,
+    modelo_del_agente,
+    traducir_error_anthropic,
+)
 
 VERSION_PROMPT_AGENTE = "v1"
 RESPUESTA_BLOQUEADA = (
     "La solicitud contiene instrucciones que intentan modificar el comportamiento del asistente y no se "
     "procesa. Reformular la pregunta sobre la empresa."
 )
+# stop_reason «max_tokens»: el razonamiento de Claude 5.x cuenta dentro de max_tokens y puede dejar la
+# respuesta vacía o cortada; no es la frase de rechazo, porque la información pudo existir (ADR-028).
+MENSAJE_TRUNCADO = (
+    "La respuesta se cortó al alcanzar el límite de tokens (FNA_AGENTE_MAX_TOKENS); reformular la pregunta "
+    "de forma más concreta o aumentar el límite."
+)
 # Límite de iteraciones: no es la frase de rechazo, porque la información pudo existir en la base.
 MENSAJE_LIMITE = (
     "No fue posible completar la consulta dentro del límite de iteraciones; reformular la pregunta."
-)
-MENSAJE_CREDENCIALES = (
-    "La API de Anthropic rechazó la autenticación: clave FNA_ANTHROPIC_API_KEY inválida o sin créditos. "
-    "Revisarla en .env y en la Consola de Anthropic."
 )
 _PENSAMIENTO = re.compile(r"<think(?:ing)?>.*?</think(?:ing)?>", re.S | re.I)
 # Módulos cuyos errores indican que el proveedor no responde (Ollama apagado, red, API).
@@ -182,14 +190,10 @@ def _retirar_citas_inventadas(texto: str, devueltas: dict[str, Fuente]) -> str:
     return re.sub(r"[ \t]{2,}", " ", texto).strip()
 
 
-def _es_error_de_credenciales(exc: BaseException) -> bool:
-    """401/403 de Anthropic (clave inválida o sin permiso) o saldo agotado: no es un problema de red."""
-    if type(exc).__module__.split(".")[0] != "anthropic":
-        return False
-    estado = getattr(exc, "status_code", None)
-    nombre = type(exc).__name__
-    sin_credito = estado in (400, 402) and "credit" in str(exc).lower()
-    return estado in (401, 403) or nombre in ("AuthenticationError", "PermissionDeniedError") or sin_credito
+def _stop_reason(mensaje: BaseMessage) -> str | None:
+    """``stop_reason`` de la respuesta del modelo (``response_metadata`` de LangChain), si lo informa."""
+    valor = (getattr(mensaje, "response_metadata", None) or {}).get("stop_reason")
+    return str(valor) if valor is not None else None
 
 
 def _es_error_de_red(exc: BaseException) -> bool:
@@ -283,8 +287,10 @@ class ServicioAgente:
             self._cerrar_turno_interrumpido(agente, configuracion)
             limite, mensajes = True, self.historial(thread_id)[previos:]
         except Exception as exc:
-            if _es_error_de_credenciales(exc):
-                raise ErrorProveedorLLM(MENSAJE_CREDENCIALES) from exc
+            # Anthropic: credenciales (401/403, saldo) o solicitud inválida (400) → aviso claro (ADR-028).
+            traducido = traducir_error_anthropic(exc)
+            if traducido is not None:
+                raise traducido from exc
             if _es_error_de_red(exc):
                 raise ErrorProveedorLLM(
                     f"El proveedor del agente ({self.config.proveedor_agente}) no respondió: {exc}. "
@@ -292,6 +298,17 @@ class ServicioAgente:
                 ) from exc
             raise
         respuesta, fuentes, llamadas, fundamentada = self._resultado(mensajes)
+        # Solo el turno actual (desde la última pregunta): un rechazo de un turno anterior no marca este.
+        humanos = [i for i, m in enumerate(mensajes) if isinstance(m, HumanMessage)]
+        turno = mensajes[humanos[-1] :] if humanos else mensajes
+        rechazo_seguridad = any(isinstance(m, AIMessage) and es_rechazo_de_seguridad(m) for m in turno)
+        truncada = not rechazo_seguridad and any(
+            isinstance(m, AIMessage) and _stop_reason(m) == "max_tokens" for m in turno
+        )
+        if rechazo_seguridad:  # stop_reason «refusal» de Claude 5.x: sin fuentes ni reintento automático
+            respuesta, fuentes, fundamentada = MENSAJE_RECHAZO_SEGURIDAD, [], False
+        if truncada:
+            respuesta, fuentes, fundamentada = MENSAJE_TRUNCADO, [], False
         if limite:
             respuesta, fuentes, fundamentada = MENSAJE_LIMITE, [], False
         return RespuestaAgente(
@@ -305,6 +322,8 @@ class ServicioAgente:
             llamadas_herramienta=llamadas,
             fundamentada=fundamentada,
             limite_alcanzado=limite,
+            rechazada_por_seguridad=rechazo_seguridad,
+            respuesta_truncada=truncada,
             latencia_ms=int((time.perf_counter() - inicio) * 1000),
         )
 

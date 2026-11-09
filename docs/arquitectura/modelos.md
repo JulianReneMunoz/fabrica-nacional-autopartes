@@ -29,6 +29,22 @@ decidir la búsqueda y otra para responder con los fragmentos).
 Con los créditos de Max (USD 100 al mes), la estimación equivale a unos 100 000 turnos con Haiku o unos 5000 con Sonnet.
 Las cifras reales se registran en la bitácora cuando se ejecute la demostración con el modelo real.
 
+## Particularidades de Claude Haiku 5.5 en la API
+
+Según la guía de migración oficial ([ADR-028](adr/ADR-028-compatibilidad-claude-haiku-5-5.md)):
+
+- **Sin parámetros de muestreo:** se omiten `temperature`, `top_p` y `top_k`; cualquier valor no predeterminado
+  da un 400. Con Haiku 5.5 no se fija T=0: el determinismo se guía con el prompt y con el anclaje del código.
+- **Razonamiento adaptativo activo por defecto:** sus tokens cuentan dentro de `max_tokens` y se cobran como salida
+  (indicación del usuario; pendiente de medir). Por eso `FNA_AGENTE_MAX_TOKENS` vale 16000, el valor del ejemplo
+  oficial; es un tope, no un gasto. La estimación por turno de arriba no incluye el razonamiento: el costo real se
+  registrará en la bitácora tras la prueba real.
+- **`stop_reason`:** `refusal` (filtros de seguridad) y `max_tokens` (respuesta cortada) tienen mensajes propios en
+  el agente.
+- **Sin prefill:** el último mensaje enviado nunca es del asistente.
+
+Fuente: [Claude Haiku 5.5 migration guide](https://platform.claude.com/docs/en/models/haiku-5-5/migration-guide).
+
 ## Cada modelo en su lugar
 
 | Uso | Herramienta y modelo | Se paga con |

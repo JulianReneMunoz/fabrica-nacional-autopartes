@@ -9,7 +9,8 @@
   Claude Code ([modelos.md](../modelos.md)).
 - **Decisión:**
   1. `FNA_PROVEEDOR_AGENTE=anthropic` por defecto, con `FNA_MODELO_ANTHROPIC=claude-haiku-5-5` (Claude Haiku 5.5),
-     temperatura 0, `max_tokens` acotado (`FNA_AGENTE_MAX_TOKENS`, 1024) y la clave en `FNA_ANTHROPIC_API_KEY`
+     temperatura 0 (sin fijar en Claude 5.x desde la ADR-028), `max_tokens` acotado (`FNA_AGENTE_MAX_TOKENS`, 1024;
+     16000 desde la ADR-028) y la clave en `FNA_ANTHROPIC_API_KEY`
      (nunca `ANTHROPIC_API_KEY`, para que Claude Code siga usando el plan).
   2. Sin clave, el agente responde 503 con la instrucción para obtenerla (créditos de Max, vinculación de la
      organización de la Console, `make verificar-agente`). No hay respaldo automático a otro proveedor.
