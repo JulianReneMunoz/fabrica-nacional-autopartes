@@ -661,3 +661,19 @@ valor por defecto sin modelo inyectado ni red. Se comprobó que aíslan el valor
 
 Pendiente (otro PR): `modelo_llm` vale `llama3.2:3b` por defecto; con `FNA_PROVEEDOR_LLM=anthropic` ese nombre se
 enviaría a la API y la solicitud fallaría, así que hoy hay que definir también `FNA_MODELO_LLM` con un modelo Claude.
+
+
+## R-06 · Agentes de desarrollo: Claude Code y Antigravity CLI (2026-11-08)
+
+El README («Herramientas de desarrollo») registra los agentes que se usan para desarrollar el proyecto: Claude Code
+como principal y Antigravity CLI 1.5.3 como agente secundario. Datos indicados por el usuario, no verificados por el
+agente en este repositorio:
+- Antigravity CLI 1.5.3, instalado por el usuario según la guía del curso; la versión la comprobó el usuario con
+  `agy --version`.
+- Que lee `AGENTS.md` proviene de la documentación pública de Google, no de una verificación en este repositorio.
+- Es un binario de Google, no una skill; el escaneo con SkillSpector queda **pendiente** según `fna-seguridad`.
+- Se usa solo como agente de desarrollo secundario y no forma parte de la aplicación.
+
+Por no tener escaneo de seguridad documentado, Antigravity va en un párrafo aparte y no en la tabla de herramientas de
+desarrollo, cuyo texto introductorio indica «versión fijada tras un escaneo de seguridad documentado». No se ejecutó
+`agy` ni ningún otro agente o proveedor.
