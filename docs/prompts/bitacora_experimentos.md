@@ -623,3 +623,23 @@ Pendientes:
   FNA_PRUEBAS_AGENTE_REAL=1 y Claude Haiku 5.5 (3 turnos, incluido "¿Y cuál es su teléfono?") y el banco de 24
   preguntas; requiere FNA_ANTHROPIC_API_KEY y aprobación antes de gastar créditos. Las pruebas simuladas validan el
   código, no el comportamiento del modelo real.
+
+
+## A-04 · Decisión del proveedor del agente registrada en Engram (C3) (2026-11-08)
+
+Para el entregable C3 («decisión registrada en Engram»), la decisión principal del agente se guardó en Engram una
+sola vez (`mem_save`): observación **id 19**, título «Proveedor del agente: Claude Haiku 5.5 vía API (ADR-026)»,
+tipo `decision`, `topic_key` `decision/proveedor-agente`, proyecto `fabrica-nacional-autopartes`, estado `active`.
+`mem_search` («proveedor agente Haiku ADR-026») la devuelve como único resultado.
+
+Contenido: Claude Haiku 5.5 vía API como proveedor del agente (ADR-026), con las alternativas descartadas y sus
+motivos, y las restricciones (clave solo como `FNA_ANTHROPIC_API_KEY`, sin auto-reload, pruebas con modelo
+simulado). Entre las alternativas figura **DeepSeek**, que la ADR-026 no registra: según el usuario, se descartó
+fuera del repositorio el 8/11/2026 porque exigía comprar créditos aparte, mientras que el plan Max ya incluye
+créditos de API de Anthropic sin costo adicional; además, mantener un solo proveedor simplifica las pruebas y la
+documentación.
+
+Incidencias: el primer `mem_save` no guardó nada (`unknown_session`: un hook agrega el identificador de la sesión de
+Claude Code, que Engram no tenía registrado). Se registró la sesión con `mem_session_start`; con la ruta de Windows,
+Engram asignó el proyecto «unknown», así que se volvió a registrar con la ruta que el propio Engram detecta
+(`/mnt/c/fabrica-nacional-autopartes`, proyecto por remoto de Git) y el guardado se hizo con el proyecto explícito.
