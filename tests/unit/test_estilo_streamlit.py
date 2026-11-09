@@ -293,3 +293,30 @@ def test_grafica_usa_una_sola_escala_con_el_color_de_los_tokens() -> None:
     assert tokens["dato"] in texto
     colores = set(re.findall(r"#[0-9a-fA-F]{6}", texto))
     assert colores <= set(tokens.values()), colores - set(tokens.values())
+
+
+def test_respuesta_agente_escapa_el_texto_y_solo_enlaza_http() -> None:
+    """Pestaña «Agente»: el texto del modelo y las fuentes se escapan; javascript: no produce href."""
+    from fabrica_autopartes.domain.modelos import Fuente
+
+    html = est.respuesta_agente_html(
+        respuesta="Dato <script>alert(1)</script> **clave**",
+        fuentes=[
+            Fuente(fragmento_id="ok#000", titulo="Contacto", url="https://fanalca.com/contacto/"),
+            Fuente(fragmento_id="x#001", titulo="<img src=x onerror=alert(1)>", url="javascript:alert(1)"),
+        ],
+        fundamentada=True,
+        proveedor="anthropic",
+        modelo="claude-haiku-5-5",
+        llamadas_herramienta=2,
+        latencia_ms=12,
+    )
+    assert "<script" not in html and "<img" not in html and 'href="javascript' not in html
+    assert "<strong>clave</strong>" in html
+    assert 'href="https://fanalca.com/contacto/"' in html and "Fuentes (2)" in html
+    assert "anthropic · claude-haiku-5-5" in html and "2 llamadas" in html
+    rechazo = est.respuesta_agente_html(
+        respuesta="No se encuentra.", fuentes=[], fundamentada=False, proveedor="p", modelo="m",
+        llamadas_herramienta=1, latencia_ms=1, es_rechazo=True,
+    )  # fmt: skip
+    assert "fna-rechazo" in rechazo and "Fuentes" not in rechazo and "1 llamada<" in rechazo

@@ -557,3 +557,69 @@ Pendiente:
   redundante, porque `langchain-anthropic` ya es dependencia principal.
 - (Nota 5 de GGA) En `crear_modelo` (Q&A con `anthropic`), `max_tokens` está fijo en 1024; el agente usa
   `FNA_AGENTE_MAX_TOKENS`. Convertirlo en una constante con nombre o en una configuración.
+
+
+## A-03 · Pulido de la Fase 3: agente en Streamlit, GitHub Actions y docker-compose (2026-11-08)
+
+**Parte A, pestaña «🤖 Agente» en Streamlit** (`frontend/app.py`, solo a través de `ServicioAsistente`):
+`st.chat_message` y `st.chat_input` con el historial de la sesión; `thread_id` único por sesión
+(`streamlit-<uuid>`, en `st.session_state`) y botón «Nueva conversación»; el servicio se crea una sola vez
+(`st.cache_resource`), así que la memoria del agente persiste entre recargas. Cada respuesta muestra las fuentes
+como enlaces seguros (solo `http(s)`), si está fundamentada, proveedor y modelo (`anthropic · claude-haiku-5-5`
+por defecto), las llamadas a la herramienta y la latencia (`estilo.respuesta_agente_html`, con el texto escapado).
+Al abrir la pestaña se llama a `verificar_agente(consultar=False)`, sin red ni consumo de créditos: sin clave, un
+aviso con la instrucción y el chat desactivado; un `ErrorProveedorLLM` al preguntar se muestra como aviso, no como
+traza. Pruebas e2e con `AppTest` y el modelo simulado (clave ficticia en el entorno, nunca la de `.env`):
+respuesta con fuentes y chips, memoria compartida entre dos mensajes de la sesión, «Nueva conversación» cambia el
+`thread_id`, sin clave aviso y chat desactivado, y error del proveedor como aviso.
+
+**Parte B, GitHub Actions** (`.github/workflows/ci.yml`). El último CI de `main` (run 42524024614, commit
+`7824354`) emitió dos anotaciones: «Node.js 20 is deprecated… actions/checkout@v4, astral-sh/setup-uv@v6,
+actions/setup-node@v4» y «The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026»
+(`actions/runner-images#14748`). Versiones verificadas con `gh api` (`releases/latest`, `git/ref/tags/…` y el
+`runs.using` de cada `action.yml`):
+
+| Action | Antes (Node) | Última publicada (fecha) | Después en el workflow (Node) |
+|---|---|---|---|
+| `actions/checkout` | `v4` (node20) | `v7.0.1` (2026-07-20) | `v7` (node24); la etiqueta `v7` apunta al mismo commit que `v7.0.1` |
+| `astral-sh/setup-uv` | `v6` (node20) | `v10.3.3` (2026-10-28) | `v10.3.3` (node24); **no existe la etiqueta móvil `v10`** (`git/ref/tags/v10` → 404), así que se fija la versión exacta |
+| `actions/setup-node` | `v4` (node20) | `v7.1.0` (2026-10-08) | `v7` (node24); la etiqueta `v7` apunta al mismo commit que `v7.1.0` |
+
+Los parámetros usados (`enable-cache` en setup-uv; `node-version`, `cache` y `cache-dependency-path` en setup-node)
+siguen existiendo en esas versiones. `node-version: 22` es la versión de Node con la que se compila el visor, no el
+entorno de las actions, y no cambia.
+
+Ubuntu: el log de ese mismo run muestra que la etiqueta de Ubuntu por defecto ya ejecutaba `ubuntu-26.04` (Ubuntu 26.04.1 LTS, imagen
+20261101.186.1) con el CI en verde. Se fija `ubuntu-26.04` en los dos trabajos de Linux para que el entorno sea
+explícito y desaparezca el aviso. Consecuencia: el check de la matriz pasa a llamarse
+`calidad-y-pruebas (ubuntu-26.04)`; `main` no tiene protección configurada (404), así que no bloquea merges, y se
+actualizaron `CONTRIBUTING.md` y la ADR-021. `windows-latest` no recibió avisos y no cambia. Sintaxis: `actionlint`
+no está instalado; el YAML se validó con `yaml.safe_load` (dos trabajos, disparadores `push` y `pull_request`).
+
+**Parte C, `docker-compose.yml`.** Ollama no figura en Compose, ni siquiera como perfil opcional (ADR-026: no se
+usa por ahora): se retiraron el servicio `ollama`, su volumen, `FNA_OLLAMA_URL`, el `depends_on` de la API y los
+comentarios de `ollama pull`. El código que admite Ollama como proveedor opcional no cambia. La API se lanza con
+`uvicorn … --workers 1`, porque la memoria del agente vive en el proceso (ADR-024); Streamlit es otro proceso, con
+memoria propia. La API y Streamlit comparten las variables del agente (ancla YAML): `FNA_PROVEEDOR_AGENTE`
+(`anthropic` por defecto) y `FNA_MODELO_ANTHROPIC` (`claude-haiku-5-5` por defecto), sin valores secretos; la clave
+llega solo por `env_file: .env` como `FNA_ANTHROPIC_API_KEY`. Validación con Docker 29.9.2 y Compose v5.6.1:
+`docker compose config --quiet` (válido) y `--services` → `postgres`, `api` y `app`. No se usó
+`docker compose config` sin `--quiet`, porque imprimiría las variables de `.env`, clave incluida.
+Q&A en Compose: el valor por defecto de `config.py` (`FNA_PROVEEDOR_LLM=ollama`, `core/config.py:105`) no tiene
+servidor en Compose, y `claude_code` no está en la imagen. Por eso el ancla `&entorno_fna` define
+`FNA_PROVEEDOR_LLM: ${FNA_PROVEEDOR_LLM:-extractivo}`: el Q&A usa `extractivo` por defecto (sin red ni LLM), y
+`anthropic` se elige definiendo `FNA_PROVEEDOR_LLM` en `.env`. `config.py` no cambia. Resuelto: Compose fija
+FNA_PROVEEDOR_LLM=extractivo por defecto.
+`tests/unit/test_docker_compose.py` comprueba que no hay servicio ni volumen de Ollama, que la API usa un solo
+worker, el valor de `FNA_PROVEEDOR_LLM` en `api` y `app`, y que el archivo no contiene secretos.
+
+Al crear el ruleset `proteger-main`, los checks exigidos deben ser `calidad-y-pruebas (ubuntu-26.04)`,
+`calidad-y-pruebas (windows-latest)` y `visor-web`.
+
+Pendientes:
+- El valor por defecto de FNA_PROVEEDOR_LLM en config.py sigue siendo ollama, aunque Ollama no se usa (ADR-026);
+  evaluarlo en otro PR con su ADR.
+- Validación con modelo real antes de la entrega: una ejecución de tests/integration/test_agente_real.py con
+  FNA_PRUEBAS_AGENTE_REAL=1 y Claude Haiku 5.5 (3 turnos, incluido "¿Y cuál es su teléfono?") y el banco de 24
+  preguntas; requiere FNA_ANTHROPIC_API_KEY y aprobación antes de gastar créditos. Las pruebas simuladas validan el
+  código, no el comportamiento del modelo real.

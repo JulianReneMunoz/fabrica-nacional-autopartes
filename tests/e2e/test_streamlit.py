@@ -41,7 +41,7 @@ def test_panel_muestra_metricas_como_chips(app) -> None:  # type: ignore[no-unty
     assert {"Documentos", "Fragmentos", "Tokens aprox.", "Fuentes (URL)"} <= set(c)
     assert c["Documentos"].isdigit() and int(c["Documentos"]) > 0
     assert int(c["Fragmentos"]) > 0 and int(c["Fuentes (URL)"]) > 0
-    assert len(app.tabs) == 10
+    assert len(app.tabs) == 11  # incluye «🤖 Agente» (ADR-024, ADR-026)
     assert not app.metric  # las métricas ya no usan st.metric
     html = " ".join(str(m.value) for m in app.markdown)
     assert 'data-variante="dato"' in html and "fna-insignia" in html  # cifra con su procedencia
@@ -289,3 +289,118 @@ def test_selector_recuperador_semantico_llega_al_servicio(config_con_base, monke
         assert "semántico" in tarjeta and 'href="https://fanalca.com/contacto/"' in tarjeta
     finally:
         st.cache_data.clear()
+
+
+# ------------------------------------------------------------- pestaña «Agente» (ADR-024, ADR-026)
+@pytest.fixture
+def app_agente(config_con_base, monkeypatch):  # type: ignore[no-untyped-def]
+    """Fábrica de la app con el agente: modelo simulado y clave ficticia (sin red ni API real).
+
+    ``FNA_ANTHROPIC_API_KEY`` se fija en el entorno (tiene prioridad sobre ``.env``), así que nunca se usa
+    una clave real; ``crear_modelo_agente`` se reemplaza por el modelo simulado. La caché de recursos se
+    limpia antes y después, para que el servicio (y su memoria) no se comparta con otras pruebas.
+    """
+    import streamlit as st
+
+    from fabrica_autopartes.services import agente as ag
+
+    def crear(modelo=None, clave: str = "clave-de-prueba"):  # type: ignore[no-untyped-def]
+        st.cache_resource.clear()
+        st.cache_data.clear()
+        monkeypatch.setenv("FNA_DIR_DATOS", str(config_con_base.dir_datos))
+        monkeypatch.setenv("FNA_URL_BASE_DATOS", config_con_base.url_base_datos)
+        monkeypatch.setenv("FNA_PROVEEDOR_LLM", "extractivo")
+        monkeypatch.setenv("FNA_PROVEEDOR_AGENTE", "anthropic")
+        monkeypatch.setenv("FNA_ANTHROPIC_API_KEY", clave)
+        if modelo is not None:
+            monkeypatch.setattr(ag, "crear_modelo_agente", lambda config: modelo)
+        at = AppTest.from_file(str(APP), default_timeout=60)
+        at.run()
+        assert not at.exception, at.exception
+        return at
+
+    yield crear
+    st.cache_resource.clear()
+    st.cache_data.clear()
+
+
+def _mensajes_agente(at) -> str:  # type: ignore[no-untyped-def]
+    return " ".join(str(m.value) for m in at.markdown if "fna-agente" in str(m.value))
+
+
+def test_agente_responde_con_fuentes_y_chips(app_agente) -> None:  # type: ignore[no-untyped-def]
+    from tests.simulados import ModeloSimulado, llamada, responder_citando_primera_url
+
+    modelo = ModeloSimulado(guion=[llamada("sede principal", "c1"), responder_citando_primera_url("La sede")])
+    at = app_agente(modelo)
+    at.chat_input(key="agente_entrada").set_value("¿Dónde queda la sede principal?").run()
+    assert not at.exception, at.exception
+    html = _mensajes_agente(at)
+    assert "La sede" in html and "Fuentes (1)" in html and 'href="https://' in html
+    assert "anthropic · claude-haiku-5-5" in html  # proveedor y modelo por defecto
+    assert "1 llamada" in html and "fundamentación" in html
+    assert any(
+        "¿Dónde queda la sede principal?" in str(t.value) for t in at.text
+    )  # pregunta como texto plano
+
+
+def test_agente_dos_mensajes_comparten_memoria(app_agente) -> None:  # type: ignore[no-untyped-def]
+    from langchain_core.messages import HumanMessage
+
+    from tests.simulados import ModeloSimulado, llamada, responder_citando_primera_url
+
+    modelo = ModeloSimulado(
+        guion=[
+            llamada("sede principal", "c1"),
+            responder_citando_primera_url("La sede"),
+            llamada("teléfono de contacto", "c2"),
+            responder_citando_primera_url("El teléfono"),
+        ]
+    )
+    at = app_agente(modelo)
+    hilo = at.session_state["agente_thread"]
+    at.chat_input(key="agente_entrada").set_value("¿Dónde queda la sede principal?").run()
+    at.chat_input(key="agente_entrada").set_value("¿Y cuál es su teléfono?").run()
+    assert not at.exception, at.exception
+    assert at.session_state["agente_thread"] == hilo
+    humanos = [m.content for m in modelo.recibidos[-1] if isinstance(m, HumanMessage)]
+    assert humanos == ["¿Dónde queda la sede principal?", "¿Y cuál es su teléfono?"]
+    assert len(at.session_state["agente_historial"]) == 4  # dos preguntas y dos respuestas visibles
+
+
+def test_nueva_conversacion_cambia_el_thread_id(app_agente) -> None:  # type: ignore[no-untyped-def]
+    from tests.simulados import ModeloSimulado, llamada, responder_citando_primera_url
+
+    modelo = ModeloSimulado(guion=[llamada("sede", "c1"), responder_citando_primera_url("La sede")])
+    at = app_agente(modelo)
+    at.chat_input(key="agente_entrada").set_value("¿Dónde queda la sede?").run()
+    anterior = at.session_state["agente_thread"]
+    assert anterior.startswith("streamlit-") and at.session_state["agente_historial"]
+    at.button(key="agente_nueva").click().run()
+    assert not at.exception, at.exception
+    assert at.session_state["agente_thread"] != anterior
+    assert at.session_state["agente_historial"] == []
+    assert any(
+        at.session_state["agente_thread"] in str(c.value) for c in at.caption
+    )  # se muestra el hilo nuevo
+
+
+def test_sin_clave_aviso_y_chat_desactivado(app_agente) -> None:  # type: ignore[no-untyped-def]
+    at = app_agente(clave="")
+    entrada = at.chat_input(key="agente_entrada")
+    assert entrada.disabled
+    avisos = " ".join(str(w.value) for w in at.warning)
+    assert "El agente no está disponible" in avisos
+    for texto in ("FNA_ANTHROPIC_API_KEY", "créditos", "make verificar-agente"):
+        assert texto in avisos
+
+
+def test_error_del_proveedor_se_muestra_como_aviso(app_agente) -> None:  # type: ignore[no-untyped-def]
+    from fabrica_autopartes.core.excepciones import ErrorProveedorLLM
+    from tests.simulados import ModeloSimulado
+
+    modelo = ModeloSimulado(guion=[ErrorProveedorLLM("La API de Anthropic no respondió (simulado)")])
+    at = app_agente(modelo)
+    at.chat_input(key="agente_entrada").set_value("¿Dónde queda la sede?").run()
+    assert not at.exception, at.exception  # sin traza
+    assert any("no respondió (simulado)" in str(w.value) for w in at.warning)

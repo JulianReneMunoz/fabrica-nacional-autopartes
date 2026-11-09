@@ -54,9 +54,11 @@ git pull --ff-only
 
 ## Checks obligatorios del CI
 Trabajos de `.github/workflows/ci.yml` que deben pasar antes del merge:
-- `calidad-y-pruebas (ubuntu-latest)`
+- `calidad-y-pruebas (ubuntu-26.04)`
 - `calidad-y-pruebas (windows-latest)`
-- `visor-web`
+- `visor-web` (en `ubuntu-26.04`)
+
+Si se configura la protección de `main` con checks requeridos, usar estos nombres.
 
 ## Makefile
 Atajos para los comandos frecuentes; funcionan con GNU make en Windows (PowerShell o cmd) y en Linux. Instalación en
