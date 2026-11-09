@@ -706,3 +706,32 @@ tras `git stash pop`, pasan las 55.
 
 Pendientes: refusal en el Q&A (`cadenas.py`) y `max_tokens` fijo de `crear_modelo`, en el PR de `modelo_llm`; la
 prueba real después del merge, a cargo del usuario.
+
+
+## A-06 · Preguntas de seguimiento en el agente: prompt v2 y log de diagnóstico (2026-11-08)
+
+Prueba real del usuario en Streamlit (Claude Haiku 5.5, mismo hilo): el turno 1, «¿Dónde queda la sede
+principal?», hizo 1 llamada a `buscar_fragmentos` y respondió con 4 fuentes; el turno 2, «¿Y cuál es su
+teléfono?», hizo 0 llamadas, tardó unos 1,4 s y devolvió la frase de rechazo, dos veces igual.
+
+Diagnóstico sin red (ADR-029): el modelo respondió sin buscar y la garantía de anclaje (`_resultado` en
+`services/agente.py`) reemplazó la respuesta por la frase de rechazo. El recorte del historial podría haber quitado
+el turno 1 si las firmas de los bloques de razonamiento fueran grandes, pero con fragmentos reales y firmas supuestas
+de 2000 caracteres el turno 1 suma unos 1523 tokens y se conserva; queda sin confirmar. La auditoría guarda la
+respuesta ya reemplazada, así que no se sabe qué respondió el modelo.
+
+Cambios (opciones (a) y (d), aprobadas): prompt del agente v2 por defecto, con búsqueda en cada turno, reformulación
+del seguimiento como consulta autocontenida y URL en texto plano, sin Markdown (en la prueba real, Haiku escribió
+un enlace Markdown con la URL como texto); la v1 se conserva. Log local de diagnóstico (INFO): `thread_id`, mensajes y tokens aproximados enviados
+en cada llamada al modelo, y por turno las llamadas a la herramienta, si se reemplazó la respuesta y la respuesta
+original recortada a 500 caracteres; sin clave ni encabezados, y no se guarda en la base.
+
+Pruebas (`tests/unit/test_agente_seguimiento.py`, sin red): el seguimiento sin búsqueda sigue en rechazo; la v2 va
+por defecto y su prompt pide buscar en cada turno y citar sin Markdown; un seguimiento reformulado responde con
+fuente; la v1 se conserva; el log tiene los campos pedidos, recorta a 500 caracteres y no contiene secretos (con un
+manejador propio, porque el proyecto ejecuta pytest con `-p no:logging`). Mutación: con `git stash` de `src/`,
+fallan 2 de las 5 (prompt v2 y log); las otras 3 pasan por diseño, porque documentan la garantía de anclaje, el
+guion del modelo simulado y la v1.
+
+Pendiente: la prueba real tras el merge dirá si Haiku 5.5 obedece la v2 y, con el log, si el recorte de 3000 tokens
+interviene.
