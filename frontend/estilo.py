@@ -339,10 +339,18 @@ def respuesta_agente_html(
     es_rechazo: bool = False,
     bloqueada: bool = False,
     limite_alcanzado: bool = False,
+    rechazada_por_seguridad: bool = False,
+    respuesta_truncada: bool = False,
 ) -> str:
-    """Mensaje del agente (ADR-024): texto escapado, chips y fuentes como enlaces seguros."""
+    """Mensaje del agente (ADR-024): texto escapado, chips y fuentes como enlaces seguros.
+
+    Un rechazo (frase fija, bloqueo, límite o ``stop_reason`` «refusal», ADR-028) usa el estilo
+    ``no_publicado`` y no muestra fuentes.
+    """
     fuentes = list(fuentes)
-    if bloqueada or es_rechazo or limite_alcanzado:
+    rechazo = bloqueada or es_rechazo or limite_alcanzado or rechazada_por_seguridad or respuesta_truncada
+    if rechazo:
+        fuentes = []
         cuerpo = (
             '<div class="fna-respuesta fna-rechazo">'
             f"{insignia('no_publicado')}<span>{_esc(respuesta)}</span></div>"
@@ -356,7 +364,7 @@ def respuesta_agente_html(
         chip("latencia", f"{latencia_ms} ms", "dato"),
     ]
     citas = ""
-    if fuentes:
+    if fuentes and not rechazo:
         filas = "".join(
             f"<li><code>{_esc(f.fragmento_id)}</code> {enlace(f.url, f.titulo or f.url)}"
             f'<span class="fna-url">{_esc(f.url)}</span></li>'

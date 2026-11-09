@@ -136,7 +136,9 @@ class Configuracion(BaseSettings):
     # qwen3 y otros modelos «que razonan»: True activa el razonamiento en ChatOllama; nunca se muestra.
     ollama_razonamiento: bool = False
     modelo_anthropic: str = "claude-haiku-5-5"
-    agente_max_tokens: int = Field(default=1024, ge=64, le=4096)
+    # Haiku 5.5 razona por defecto y ese razonamiento cuenta dentro de max_tokens (ADR-028): 16000 es el
+    # valor del ejemplo de la guía de migración oficial. Es un tope, no un gasto.
+    agente_max_tokens: int = Field(default=16000, ge=64, le=32000)
     agente_max_iteraciones: int = Field(default=6, ge=1, le=20)
     agente_limite_historial_tokens: int = Field(default=3000, ge=200, le=100_000)
     agente_timeout_s: float = Field(default=60.0, gt=0, le=600)

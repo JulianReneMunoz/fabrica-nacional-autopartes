@@ -320,7 +320,7 @@ scripts/                 PowerShell y utilidades Python
 ```
 | Verificación | Resultado (última corrida completa) |
 |---|---|
-| pytest | 411 pruebas (unitarias, integración y e2e de Streamlit), sin red: se omiten la del agente con modelo real (opcional) y, sin el extra semántico, las 3 del modelo nomic |
+| pytest | 433 pruebas (unitarias, integración y e2e de Streamlit), sin red: se omiten la del agente con modelo real (opcional) y, sin el extra semántico, las 3 del modelo nomic |
 | Vitest | 113 pruebas (paridad Python–TypeScript del cálculo, plantilla, interfaz, explorador y búsqueda web) |
 | Playwright | 46 pruebas E2E (de extremo a extremo) del visor con SwiftShader (≥ 50 fps exigidos) |
 | Ruff, mypy y capas | Sin hallazgos |

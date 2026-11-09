@@ -22,6 +22,7 @@ Proveedores soportados:
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
@@ -38,17 +39,75 @@ def _modelo_sin_temperatura(modelo: str) -> bool:
     return modelo.startswith(("gpt-5", "o1", "o3", "o4"))
 
 
+# No enviar temperature, top_p ni top_k (400 «Extra inputs are not permitted»; ADR-028). Verificado en la
+# documentación oficial para Haiku 5.5 (también para Sonnet 5.5 y Opus 5.5); se aplica a toda la familia
+# Claude 5.x por precaución. El comportamiento se guía con el prompt.
+_CLAUDE_5 = re.compile(r"^claude-(?:haiku|sonnet|opus|fable)-5(?:[-.]|$)")
+
+
+def modelo_sin_parametros_de_muestreo(modelo: str) -> bool:
+    """``True`` para los modelos Claude 5.x, a los que no se envían temperature, top_p ni top_k."""
+    return bool(_CLAUDE_5.match(modelo))
+
+
 def aplica_temperatura(proveedor: str, modelo: str) -> bool:
     """Indica si ``config.temperatura`` llega realmente al modelo.
 
     ``claude_code`` usa la CLI ``claude -p``, sin opción de temperatura, y ``extractivo`` no es un LLM;
-    algunos modelos de razonamiento de OpenAI solo aceptan la temperatura por defecto.
+    algunos modelos de razonamiento de OpenAI solo aceptan la temperatura por defecto, y los Claude 5.x no
+    aceptan ninguna (ADR-028).
     """
-    if proveedor in ("ollama", "anthropic"):
+    if proveedor == "ollama":
         return True
+    if proveedor == "anthropic":
+        return not modelo_sin_parametros_de_muestreo(modelo)
     if proveedor == "openai":
         return not _modelo_sin_temperatura(modelo)
     return False
+
+
+# ------------------------------------------------------------- errores y respuestas de Anthropic
+MENSAJE_CREDENCIALES = (
+    "La API de Anthropic rechazó la autenticación: clave FNA_ANTHROPIC_API_KEY inválida o sin créditos. "
+    "Revisarla en .env y en la Consola de Anthropic."
+)
+MENSAJE_RECHAZO_SEGURIDAD = (
+    "El modelo declinó la solicitud por sus filtros de seguridad (stop_reason «refusal»). Reformular la "
+    "pregunta sobre la empresa; repetir la misma solicitud suele producir otro rechazo."
+)
+
+
+def traducir_error_anthropic(exc: BaseException) -> ErrorProveedorLLM | None:
+    """Convierte un error de estado HTTP de Anthropic en ``ErrorProveedorLLM`` (503) con un mensaje claro.
+
+    - 401/403, o 400/402 por saldo agotado → credenciales (``MENSAJE_CREDENCIALES``);
+    - otros 400 (``BadRequestError``, ``AnthropicInvalidRequestError``) → solicitud inválida, con el detalle;
+    - cualquier otro error (red, 429, 5xx) → ``None``: lo trata quien llama (p. ej., como «no respondió»).
+    """
+    try:
+        import anthropic
+    except ImportError:  # pragma: no cover - langchain-anthropic es dependencia principal
+        return None
+    if not isinstance(exc, anthropic.APIStatusError):
+        return None
+    estado = exc.status_code
+    detalle = str(getattr(exc, "message", "") or exc)
+    if estado in (401, 403) or (estado in (400, 402) and "credit" in detalle.lower()):
+        return ErrorProveedorLLM(MENSAJE_CREDENCIALES)
+    if estado == 400:
+        solicitud = getattr(exc, "request_id", None)
+        return ErrorProveedorLLM(
+            f"La API de Anthropic rechazó la solicitud (400): {detalle[:300]}"
+            + (f" (request_id {solicitud})" if solicitud else "")
+            + ". Revisar el modelo (FNA_MODELO_ANTHROPIC o FNA_MODELO_LLM) y sus parámetros (ADR-028)."
+        )
+    return None
+
+
+def es_rechazo_de_seguridad(mensaje: object) -> bool:
+    """La respuesta terminó con ``stop_reason: "refusal"`` (clasificadores de seguridad de Claude 5.x)."""
+    metadatos = getattr(mensaje, "response_metadata", None) or {}
+    return metadatos.get("stop_reason") == "refusal"
 
 
 def crear_modelo(
@@ -106,9 +165,10 @@ def crear_modelo(
         argumentos: dict = {
             "model": modelo,
             "api_key": config.anthropic_api_key,
-            "temperature": config.temperatura,
             "max_tokens": 1024,
         }
+        if aplica_temperatura("anthropic", modelo):  # nunca a los Claude 5.x (ADR-028)
+            argumentos["temperature"] = config.temperatura
         return ChatAnthropic(**argumentos)
 
     raise ErrorProveedorLLM(f"Proveedor no soportado: {proveedor}")
@@ -222,9 +282,11 @@ def crear_modelo_agente(config: Configuracion) -> BaseChatModel:
     argumentos: dict = {
         "model": config.modelo_anthropic,
         "api_key": config.anthropic_api_key,  # explícita: nunca se toma ANTHROPIC_API_KEY del entorno
-        "temperature": 0,
         "max_tokens": config.agente_max_tokens,
         "default_request_timeout": config.agente_timeout_s,
         "max_retries": 1,
     }
+    # Claude 5.x (p. ej. claude-haiku-5-5) no acepta temperatura: el determinismo se guía con el prompt.
+    if aplica_temperatura("anthropic", config.modelo_anthropic):
+        argumentos["temperature"] = 0
     return ChatAnthropic(**argumentos)
