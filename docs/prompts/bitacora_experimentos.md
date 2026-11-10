@@ -1055,10 +1055,72 @@ Mutaciones:
 **Las cifras del banco v1 y del v2 no se comparan directamente**: los hechos esperados de P02, P07, P12, P15 y P16 son
 distintos.
 
+### Ejecución real con el banco v2 (2026-11-10)
+
+La ejecutó el usuario en PowerShell con su clave: `anthropic` / `claude-haiku-5-5`, prompt v2 del agente, base Gold y
+un `thread_id` por pregunta. Comando: `scripts/evaluar_agente_real.py --banco v2 --tope-usd 0.10`. Informe:
+`evaluacion/resultados/20261110T192320Z_agente_claude-haiku-5-5_banco-v2.json`, versionado con `git add -f` después de
+comprobar que no contiene el prefijo de clave, `api_key`, `secret` ni las demás cadenas vetadas. Fue la única ejecución real de este PR.
+
+| Métrica | A-08 (banco v1) | A-10 (banco v2) |
+|---|---|---|
+| Preguntas ejecutadas | 24/24 | 24/24 |
+| Exactitud de respondibles | 0,789 (15/19) | **0,895 (17/19)** |
+| Rechazo correcto | 0,8 (4/5) | 0,8 (4/5) |
+| Tasa fundamentada | 0,579 (fórmula anterior); 0,737 recalculada con la de A-09 | 0,737 (14/19, fórmula de A-09) |
+| Exactitud global | 0,792 (19/24) | **0,875 (21/24)** |
+| URL inválidas / errores | 0 / 0 | 0 / 0 |
+| Latencia media | 3298 ms | 3265 ms |
+| Consumo | 49 llamadas · 101 774 / 7057 tokens · USD 0,0137 | 50 llamadas · 104 721 / 7333 tokens · USD 0,0141 |
+| Llamadas con tarifa alta | 0 | 0 |
+
+- **Cifra oficial con el banco v2: 0,875.**
+- El costo medido (USD 0,0141) coincide con la estimación previa (unos USD 0,014) y queda lejos del tope de USD 0,10.
+- Cambios de acierto respecto de A-08 (comparados por id entre los dos JSON):
+  - P02, P07 y P15 pasan de fallo a acierto.
+  - P18 pasa de acierto a fallo.
+  - P12 y P16 aciertan en las dos ejecuciones.
+- **P15 confirma en real la corrección de citas de A-09**: la respuesta conserva `https://fanalca.com/vacantes/` y
+  acierta.
+- **La comparación con A-08 no aísla el efecto del banco.** Entre las dos ejecuciones cambiaron el banco (P02, P07 y
+  P15), el filtro de citas (A-09) y la variación propia del modelo (P18). Haiku 5.5 no admite temperatura 0
+  (ADR-028).
+
+### Diagnóstico de los fallos (sin red)
+
+Se leyeron solo las entradas P11, P18 y P21 del JSON. Las posiciones salen de `BaseConocimiento.buscar(…,
+recuperador="bm25")` sobre los 167 fragmentos del Gold, que es el recuperador por defecto de `buscar_fragmentos`, con
+`k=5`.
+
+| Id | Tipo | Causa | Evidencia |
+|---|---|---|---|
+| P11 | respondible | **Recuperación BM25**, igual que en A-08 | El agente hizo 2 búsquedas, citó Autopartes y Fanalvías, y respondió que no encuentra una unidad «Ambiental». `negocios-ambiental#000` queda en la posición 9 con la pregunta literal, en la 8 con «unidad Ambiental productos» y en la 2 con «Fanalca Ambiental». |
+| P18 | respondible | **Recuperación que depende de la consulta del modelo** | Respondió con la frase de rechazo después de 2 búsquedas. La pregunta no cambió en v2, y el hecho sí está en el Gold: `nosotros#000` («con un grupo de 12 colaboradores») y `en-who-we-are#000` (en inglés). Posiciones BM25 de `nosotros#000` en la tabla siguiente. |
+| P21 | ausente | **Criterio estricto** (ADR-024) | No inventa precios. Responde que no hay precios publicados y agrega la gama de 100 a 250 cc, citada de `negocios-honda-motocicletas#000`, en lugar de la frase fija. Es la misma conducta que en A-08, y por regla de negocio sigue contando como fallo. |
+
+Posición de `nosotros#000` con BM25 para la pregunta de P18 y tres reformulaciones razonables:
+
+| Consulta | Posición |
+|---|---|
+| «¿Con cuántos colaboradores empezó la empresa?» (literal) | 38 |
+| «colaboradores iniciales fundación Fanalca» | 36 |
+| «historia de Fanalca fundación 1958 número de empleados» | **3** |
+| «cuántos empleados tenía Fanalca al inicio» | 60 |
+
+- **BM25 es determinista; lo que varía es la consulta del modelo.** El fragmento solo entra entre los 5 primeros
+  cuando la consulta incluye términos históricos («historia», «1958»).
+- En A-08 el agente citó `nosotros#000` («La empresa inició con un grupo de 12 colaboradores»), así que esa vez alguna
+  de sus 2 búsquedas lo trajo.
+- El JSON no guarda los argumentos de cada llamada a la herramienta, así que no se puede confirmar qué consultas usó en
+  cada ejecución. Queda para el PR de recuperación.
+- Con la pregunta literal, el fragmento queda muy lejos del corte de 5. Por eso no basta con subir `k`: hace falta
+  expansión de consulta o el recuperador semántico.
+
 ### Pendiente
 
-- Ejecutar el banco v2 contra el agente real (`anthropic` / `claude-haiku-5-5`), a cargo del usuario y con su clave.
-  Costo estimado según A-08: unos USD 0,014 (49 llamadas y USD 0,0137 con 24 preguntas); el peor caso ronda USD 0,03.
+- PR de recuperación (A-08, punto 2), que cubre P11 y P18:
+  - registrar en el JSON los argumentos de cada llamada a `buscar_fragmentos`;
+  - evaluar la expansión de consulta y el recuperador semántico;
+  - medir con `evaluar_recuperacion` antes y después.
 - Decidir si `faq_visor` y `evaluar_recuperacion` pasan a v2, lo que regenera `data/gold/faq_visor.json` y obliga a
   repetir las mediciones de E-06.
-- Recuperación de P11 (A-08, punto 2), sin cambios en este PR.
