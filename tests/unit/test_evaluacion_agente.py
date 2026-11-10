@@ -162,6 +162,14 @@ def test_banco_con_criterios_estructurados_y_json_sin_secretos(
     texto = Path(informe["archivo"]).read_text(encoding="utf-8")
     assert CLAVE_FICTICIA not in texto and "[secreto retirado]" in texto
     assert json.loads(texto)["metricas"]["exactitud_respondibles"] == 1.0
+    # El informe registra el banco (v2 por defecto) en el JSON y en el nombre del archivo.
+    assert json.loads(texto)["banco"] == "v2" and Path(informe["archivo"]).name.endswith("_banco-v2.json")
+
+
+def test_evaluar_agente_rechaza_banco_desconocido(config_con_base: Configuracion) -> None:
+    servicio = _servicio(config_con_base)
+    with pytest.raises(ValueError, match="Banco desconocido"):
+        ea.evaluar_agente(servicio, PREGUNTAS, guardar=False, banco="v9")
 
 
 def test_banco_rechazo_estructurado_cuenta_como_acierto(

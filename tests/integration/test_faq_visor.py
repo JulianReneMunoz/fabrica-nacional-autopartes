@@ -21,7 +21,7 @@ OP = {"proveedor": "extractivo", "modelo": "extractivo"}
 
 def test_solo_preguntas_respondibles_y_guarda_json(servicio) -> None:  # type: ignore[no-untyped-def]
     datos = generar_faq_visor(servicio, OP, maximo=4)
-    esperadas = [p for p in cargar_preguntas() if p["tipo"] in TIPOS_INCLUIDOS][:4]
+    esperadas = [p for p in cargar_preguntas("v1") if p["tipo"] in TIPOS_INCLUIDOS][:4]
     assert [i["id"] for i in datos["items"]] == [p["id"] for p in esperadas]
     ruta = servicio.config.dir_gold / NOMBRE_ARCHIVO
     guardado = json.loads(ruta.read_text(encoding="utf-8"))
@@ -33,7 +33,7 @@ def test_solo_preguntas_respondibles_y_guarda_json(servicio) -> None:  # type: i
 
 def test_nunca_incluye_inyeccion_ni_fuera_de_alcance(servicio) -> None:  # type: ignore[no-untyped-def]
     datos = generar_faq_visor(servicio, OP, guardar=False)
-    ids_excluidos = {p["id"] for p in cargar_preguntas() if p["tipo"] != "respondible"}
+    ids_excluidos = {p["id"] for p in cargar_preguntas("v1") if p["tipo"] != "respondible"}
     assert ids_excluidos and not ids_excluidos & {i["id"] for i in datos["items"]}
     assert "archivo" not in datos
 

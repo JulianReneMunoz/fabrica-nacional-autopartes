@@ -1,6 +1,7 @@
 # Bitácora de experimentación con prompts
 
-Protocolo: mismo banco de 24 preguntas (`evaluacion/preguntas.yaml`), misma base Gold, temperatura configurada
+Protocolo: mismo banco de 24 preguntas (`evaluacion/preguntas.yaml`, banco v1, hasta A-09; desde A-10 el banco
+por defecto es v2, `evaluacion/preguntas_v2.yaml`), misma base Gold, temperatura configurada
 0,1 hasta E-06 y 0 desde E-07 (`claude_code` no la aplica; ver E-07), una variable cambiada por experimento.
 Métricas definidas en `services/evaluacion.py`.
 Toda cifra de esta bitácora proviene de un archivo en `evaluacion/resultados/`.
@@ -654,6 +655,10 @@ fija `${FNA_PROVEEDOR_LLM:-extractivo}`. En un clon nuevo, `ollama` fallaba (sin
 CLI con sesión del plan (consume cupo), `anthropic` exige clave y créditos, y `extractivo` funciona sin instalación,
 red ni costo (exactitud global 0,625 frente a 0,792–0,833 con `claude_code`).
 
+> **Nota (A-10):** el 0,625 se midió sobre la **semilla** (`data/seed`; informes del 2026-11-04), no sobre el Gold
+> (ver A-09). Con el Gold, el extractivo da 0,375 con el banco v1 y 0,458 con el banco v2 (selección BM25). La cifra de
+> arriba se conserva como se registró.
+
 Pruebas nuevas (`tests/unit/test_proveedor_qa_defecto.py`): el valor por defecto es `extractivo` con
 `delenv("FNA_PROVEEDOR_LLM")` y `Configuracion(_env_file=None)`; la variable lo sobrescribe; y el Q&A responde con el
 valor por defecto sin modelo inyectado ni red. Se comprobó que aíslan el valor: con `config.py` en `ollama` y
@@ -956,3 +961,104 @@ global del extractivo medida hoy en los 6 modos y versiones. Para `claude_code` 
 
 P15 sigue fallando en el banco aunque se conserve la URL: los hechos esperados («empleoscolombia», «trabaja con
 nosotros») solo están en la semilla. Queda para el PR del banco (A-08, punto 1).
+
+## A-10 · Banco de preguntas v2 alineado con el Gold (2026-11-10)
+
+Rama `banco-v2-gold`, desde `7d80ac6`. Resuelve el punto 1 de los PR derivados de A-08. Sin llamadas reales: pruebas
+con `FNA_ANTHROPIC_API_KEY=clave-ficticia ANTHROPIC_API_KEY=` y `uv run --no-sync`.
+
+### Versión nueva sin tocar la v1
+
+- `evaluacion/preguntas.yaml` (v1) no cambia, así que las métricas anteriores (E-01 a E-07, R-05, A-08 y A-09) siguen
+  siendo reproducibles con `--banco v1`.
+- `evaluacion/preguntas_v2.yaml` (v2) conserva los 24 ids y la proporción de 19 respondibles y 5 negativas. Cada
+  pregunta que cambia lleva `cambio_v2` con el motivo, y cada ausente lleva `dato_ausente`, con las expresiones del
+  dato que no debe estar en el Gold.
+- Banco por defecto: **v2**, en `fabrica evaluate --banco {v1,v2}` y en
+  `scripts/evaluar_agente_real.py --banco {v1,v2}`. El informe de los dos evaluadores registra `banco` en el JSON, en el
+  Markdown y en el nombre del archivo (`…_banco-v2`).
+- Siguen fijos en v1, para no regenerar `data/gold/faq_visor.json` ni cambiar las mediciones de E-05 y E-06:
+  `services/faq_visor.py`, `ServicioAsistente.evaluar_recuperacion` y `tests/unit/test_busqueda_web.py` (este último ya
+  leía `preguntas.yaml` directamente).
+
+### Revisión de las 24 preguntas contra el Gold
+
+Cada hecho de v1 se buscó en los 167 fragmentos de `data/gold/fragmentos.jsonl` con la normalización de
+`hechos_presentes`.
+
+| Id | Hallazgo en el Gold | Cambio en v2 |
+|---|---|---|
+| P02 | «651 5343» no está en ningún fragmento (solo en `data/seed/contacto.md`). `autopartes-contacto#000` publica «+57 310 211 23 08» | Hecho: `310 211 23 08` |
+| P07 | «1982» no está en ninguna variante (solo en `data/seed/quienes-somos.md`). Cerca de «ensambl» solo hay años de otros hechos. `nosotros#001` dice: «En el año 1971 … inicia la negociación con Honda Japón para comercializar sus motocicletas y posteriormente realizar su ensamblaje» | Se reformula como respondible: «¿En qué año inició Fanalca la negociación con Honda Japón?», hecho `1971` |
+| P12 | «barrera» no está; `negocios-fanalvias#000` dice «defensas viales metálicas» | `barrera` → `defensas` |
+| P15 | «empleoscolombia» y «trabaja con nosotros» no están. «portal» solo aparece como «portal de colaboradores» | Hechos: `fanalca.com/vacantes` (`autopartes-contacto#002`) y `postúlate` (`nosotros-por-que-trabajar-en-fanalca#004`) |
+| P16 | El formulario (`autopartes-contacto#001`) no pide «unidad de negocio»: pide nombre completo, empresa, correo, teléfono móvil, ciudad, país y mensaje | `unidad de negocio` → `empresa` y `ciudad` |
+| P20, P21, P22 | Sin horario («La página no publica horario de atención»), sin precios de motos y sin correos personales | Solo se agrega `dato_ausente` |
+| Resto | Cada hecho aparece en al menos un fragmento | Ninguno |
+
+**Elección para P07.** Antes de decidir se buscó cualquier año cerca de «ensambl» y cualquier «desde 19xx». Solo
+aparecieron años de otros hechos: 1958 y 1959 (carrocerías), 1969, 1971 (negociación con Honda), 1981 (Ambiental) y
+2014 (parque). El usuario eligió reformularla como respondible sobre 1971, en lugar de reclasificarla como ausente.
+Así se conservan el id, la categoría «historia» y la proporción 19/5, y la pregunta queda respondible con un dato
+publicado.
+
+**P21 conserva el criterio estricto** (frase de rechazo fija), porque es la regla de negocio de ADR-024. Una respuesta
+del tipo «no hay precios» con un dato citado sigue contando como fallo.
+
+**P12 y P16 estaban bien en A-08 aunque uno de sus hechos no esté en el Gold.** Las dos piden `minimo: 2`, y los
+demás hechos sí están publicados: en P12, «amortiguador» y «terminal»; en P16, «nombre», «teléfono» y «correo». Por
+eso una respuesta correcta acertaba sin el hecho ausente, y en A-08 no aparecieron entre los fallos. Se corrigen para
+que todos los hechos del banco sean verificables en el Gold.
+
+### Prueba del banco contra el Gold
+
+`tests/unit/test_banco_gold.py` (29 pruebas):
+- cada hecho de cada respondible de v2 aparece en al menos un fragmento del Gold;
+- ningún fragmento cumple el `dato_ausente` de una ausente de v2;
+- cada `dato_ausente` detecta un texto de ejemplo que sí trae el dato, para que una expresión que nunca coincide no pase
+  la prueba en silencio;
+- v2 conserva los ids, la proporción 19/5 y el tipo de P21;
+- toda diferencia con v1 lleva `cambio_v2`;
+- v1 conserva sus hechos originales;
+- el banco por defecto es v2, y un banco desconocido da `ValueError`.
+
+Si falta `data/gold/fragmentos.jsonl`, las pruebas que lo leen se saltan con el motivo «Gold no disponible
+(data/gold/fragmentos.jsonl): ejecutar `uv run fabrica build`». El Gold está versionado, así que en el CI corren.
+
+Mutaciones:
+- Aplicada a las respondibles de v1, la prueba falla en P02, P07, P12 y P15.
+- **No detecta P16**, porque «unidad de negocio» sí aparece en otros fragmentos del Gold (noticias de Ambiental),
+  aunque no en el formulario. La prueba exige que cada hecho exista en el corpus, no que la pregunta y el hecho estén en
+  el mismo fragmento, así que el caso de P16 se detectó en la revisión manual.
+- Con un Gold inexistente, se saltan las 22 pruebas que lo leen, con el motivo indicado, y pasan las que no lo leen.
+
+### Medición sin red: Q&A extractivo sobre el Gold, v1 frente a v2
+
+- Configuración: `Configuracion(_env_file=None, proveedor_llm="extractivo")`, con `FNA_PROVEEDOR_LLM=extractivo` en el
+  comando. Proveedor efectivo impreso antes de medir: `extractivo`.
+- Corpus: 167 fragmentos de 64 documentos de `data/gold/fragmentos.jsonl`.
+- Se usó `guardar=False` con la auditoría en una SQLite temporal, como en A-09: no se escribió ningún archivo en
+  `evaluacion/resultados/`.
+
+| Banco | Prompt | Modo | Exactitud respondibles | Cobertura contexto | Rechazo correcto | Fundamentadas | Exactitud global |
+|---|---|---|---|---|---|---|---|
+| v1 | v1, v2, v3 | completo | 0,263 | 0,789 | 0,8 | 0,579 | 0,375 |
+| v1 | v1, v2, v3 | selección | 0,368 | 0,842 | 0,4 | 0,789 | 0,375 |
+| v2 | v1, v2, v3 | completo | 0,263 | 0,842 | 0,8 | 0,579 | 0,375 |
+| v2 | v1, v2, v3 | selección | **0,474** | **0,947** | 0,4 | 0,789 | **0,458** |
+
+- El extractivo no usa el prompt, así que las tres versiones dan lo mismo.
+- Con v1 se reproduce el **0,375** de A-09 en los 6 casos.
+- Con v2, en selección, pasan a ser aciertos P02 y P07. En completo no cambia ningún acierto: sube la cobertura del
+  contexto (0,789 → 0,842), pero la respuesta extractiva no contiene los hechos nuevos.
+
+**Las cifras del banco v1 y del v2 no se comparan directamente**: los hechos esperados de P02, P07, P12, P15 y P16 son
+distintos.
+
+### Pendiente
+
+- Ejecutar el banco v2 contra el agente real (`anthropic` / `claude-haiku-5-5`), a cargo del usuario y con su clave.
+  Costo estimado según A-08: unos USD 0,014 (49 llamadas y USD 0,0137 con 24 preguntas); el peor caso ronda USD 0,03.
+- Decidir si `faq_visor` y `evaluar_recuperacion` pasan a v2, lo que regenera `data/gold/faq_visor.json` y obliga a
+  repetir las mediciones de E-06.
+- Recuperación de P11 (A-08, punto 2), sin cambios en este PR.

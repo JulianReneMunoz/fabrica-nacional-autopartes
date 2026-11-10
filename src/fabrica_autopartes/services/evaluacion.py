@@ -1,4 +1,5 @@
-"""Evaluación sistemática del Q&A con el banco de ``evaluacion/preguntas.yaml``.
+"""Evaluación sistemática del Q&A con el banco de preguntas (``v1``: ``evaluacion/preguntas.yaml``;
+``v2``, por defecto: ``evaluacion/preguntas_v2.yaml``, alineado con el Gold actual).
 
 Métricas (todas calculadas, ninguna supuesta):
 
@@ -27,8 +28,15 @@ from fabrica_autopartes.llm.proveedores import aplica_temperatura
 from fabrica_autopartes.llm.salvaguardas import es_rechazo
 from fabrica_autopartes.services.asistente import ServicioAsistente
 
-ARCHIVO_PREGUNTAS = RAIZ_PROYECTO / "evaluacion" / "preguntas.yaml"
-DIR_RESULTADOS = RAIZ_PROYECTO / "evaluacion" / "resultados"
+DIR_EVALUACION = RAIZ_PROYECTO / "evaluacion"
+# v1 no se modifica (métricas anteriores reproducibles); v2 alinea los hechos con el Gold actual (A-10).
+BANCOS: dict[str, Path] = {
+    "v1": DIR_EVALUACION / "preguntas.yaml",
+    "v2": DIR_EVALUACION / "preguntas_v2.yaml",
+}
+BANCO_POR_DEFECTO = "v2"
+ARCHIVO_PREGUNTAS = BANCOS["v1"]
+DIR_RESULTADOS = DIR_EVALUACION / "resultados"
 
 
 def _norm(texto: str) -> str:
@@ -56,7 +64,16 @@ class ResultadoPregunta:
     recuperador: str = "no_aplica"  # el realmente usado (no_aplica con contexto completo o bloqueado)
 
 
-def cargar_preguntas(ruta: Path = ARCHIVO_PREGUNTAS) -> list[dict]:
+def ruta_banco(banco: str) -> Path:
+    """Archivo del banco ``v1`` o ``v2``; cualquier otro nombre es un error."""
+    if banco not in BANCOS:
+        raise ValueError(f"Banco desconocido: {banco!r}. Opciones: {', '.join(BANCOS)}.")
+    return BANCOS[banco]
+
+
+def cargar_preguntas(banco: str | Path = BANCO_POR_DEFECTO) -> list[dict]:
+    """Preguntas del banco indicado por nombre (``v1``, ``v2``) o por ruta."""
+    ruta = banco if isinstance(banco, Path) else ruta_banco(banco)
     return list(yaml.safe_load(ruta.read_text(encoding="utf-8"))["preguntas"])
 
 
@@ -65,9 +82,11 @@ def evaluar(
     opciones: dict[str, str | None] | None = None,
     preguntas: list[dict] | None = None,
     guardar: bool = True,
+    banco: str = BANCO_POR_DEFECTO,
 ) -> dict:
     op = {k: v for k, v in (opciones or {}).items() if v}
-    preguntas = preguntas or cargar_preguntas()
+    ruta_banco(banco)  # valida el nombre aunque las preguntas vengan dadas
+    preguntas = preguntas or cargar_preguntas(banco)
     resultados: list[ResultadoPregunta] = []
     for p in preguntas:
         r = servicio.responder(p["pregunta"], canal="evaluacion", **op)
@@ -129,6 +148,7 @@ def evaluar(
     version = op.get("version_prompt") or servicio.config.version_prompt
     informe = {
         "fecha": datetime.now(UTC).isoformat(timespec="seconds"),
+        "banco": banco,
         "proveedor": proveedor,
         "modelo": modelo,
         "version_prompt": version,
@@ -151,7 +171,9 @@ def evaluar(
         )
         DIR_RESULTADOS.mkdir(parents=True, exist_ok=True)
         sello = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-        nombre = f"{sello}_{proveedor}_{modelo}_{version}_{modo}".replace(":", "-").replace(".", "-")
+        nombre = f"{sello}_{proveedor}_{modelo}_{version}_{modo}_banco-{banco}".replace(":", "-").replace(
+            ".", "-"
+        )
         ruta = DIR_RESULTADOS / nombre
         Path(f"{ruta}.json").write_text(
             json.dumps(informe, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n"
@@ -175,7 +197,9 @@ def informe_markdown(informe: dict) -> str:
         f"# Evaluación Q&A — {informe['proveedor']} / {informe['modelo']} / "
         f"prompt {informe['version_prompt']}",
         "",
-        f"Fecha: {informe['fecha']} · Modo de contexto: {informe['modo_contexto']}"
+        f"Fecha: {informe['fecha']}"
+        + (f" · Banco: {informe['banco']}" if "banco" in informe else "")
+        + f" · Modo de contexto: {informe['modo_contexto']}"
         + (f" · Recuperador: {informe['recuperador']}" if "recuperador" in informe else ""),
         _linea_temperatura(informe),
         "",

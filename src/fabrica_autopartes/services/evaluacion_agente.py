@@ -26,7 +26,13 @@ from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.llm import salvaguardas as sg
 from fabrica_autopartes.services.agente import urls_permitidas
 from fabrica_autopartes.services.asistente import ServicioAsistente
-from fabrica_autopartes.services.evaluacion import DIR_RESULTADOS, cargar_preguntas, hechos_presentes
+from fabrica_autopartes.services.evaluacion import (
+    BANCO_POR_DEFECTO,
+    DIR_RESULTADOS,
+    cargar_preguntas,
+    hechos_presentes,
+    ruta_banco,
+)
 
 TOPE_USD_POR_DEFECTO = 0.50
 
@@ -158,12 +164,14 @@ def evaluar_agente(
     guardar: bool = True,
     directorio: Path = DIR_RESULTADOS,
     tarifa: Tarifa = TARIFA_HAIKU_5_5,
+    banco: str = BANCO_POR_DEFECTO,
 ) -> dict:
-    """Corre el banco contra el agente, una pregunta por ``thread_id``.
+    """Corre el banco (``v1`` o ``v2``) contra el agente, una pregunta por ``thread_id``.
 
     Se detiene al superar ``tope_usd`` o ante el primer ``ErrorProveedorLLM``, que queda en el detalle.
     """
-    preguntas = preguntas or cargar_preguntas()
+    ruta_banco(banco)  # valida el nombre aunque las preguntas vengan dadas
+    preguntas = preguntas or cargar_preguntas(banco)
     sello = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     resultados: list[ResultadoAgente] = []
     acumulado = 0.0
@@ -226,6 +234,7 @@ def evaluar_agente(
     total = ConsumoTurno(llamadas)
     informe = {
         "fecha": datetime.now(UTC).isoformat(timespec="seconds"),
+        "banco": banco,
         "proveedor": servicio.agente.proveedor,
         "modelo": servicio.agente.modelo,
         "tarifa_usd_por_millon": asdict(tarifa),
@@ -257,7 +266,7 @@ def evaluar_agente(
         texto = json.dumps(informe, ensure_ascii=False, indent=2)
         texto = _sin_secretos(texto, [clave.get_secret_value() if clave else ""])
         directorio.mkdir(parents=True, exist_ok=True)
-        ruta = directorio / f"{sello}_agente_{informe['modelo']}.json".replace(":", "-")
+        ruta = directorio / f"{sello}_agente_{informe['modelo']}_banco-{banco}.json".replace(":", "-")
         ruta.write_text(texto, encoding="utf-8", newline="\n")
         informe["archivo"] = str(ruta)
     return informe

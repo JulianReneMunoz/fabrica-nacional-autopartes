@@ -2,9 +2,9 @@
 
 Consume la API: se ejecuta solo con ``FNA_PRUEBAS_AGENTE_REAL=1``. Usa la configuración y la base del entorno
 del usuario, una pregunta por ``thread_id``, y se detiene si el costo acumulado supera ``--tope-usd``.
-El informe (sin la clave) queda en ``evaluacion/resultados/<fecha>_agente_<modelo>.json``.
+El informe (sin la clave) queda en ``evaluacion/resultados/<fecha>_agente_<modelo>_banco-<banco>.json``.
 
-Uso: ``uv run --no-sync python scripts/evaluar_agente_real.py [--tope-usd 0.50]``
+Uso: ``uv run --no-sync python scripts/evaluar_agente_real.py [--banco v2] [--tope-usd 0.50]``
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import sys
 from fabrica_autopartes.core.config import Configuracion
 from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria
 from fabrica_autopartes.services.asistente import ServicioAsistente
+from fabrica_autopartes.services.evaluacion import BANCO_POR_DEFECTO, BANCOS
 from fabrica_autopartes.services.evaluacion_agente import TOPE_USD_POR_DEFECTO, evaluar_agente
 
 PROVEEDOR_ESPERADO = "anthropic"
@@ -25,6 +26,12 @@ MODELO_ESPERADO = "claude-haiku-5-5"
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--tope-usd", type=float, default=TOPE_USD_POR_DEFECTO)
+    parser.add_argument(
+        "--banco",
+        choices=sorted(BANCOS),
+        default=BANCO_POR_DEFECTO,
+        help=f"Versión del banco (por defecto {BANCO_POR_DEFECTO}; v1 reproduce A-08)",
+    )
     args = parser.parse_args(argv)
     if os.environ.get("FNA_PRUEBAS_AGENTE_REAL") != "1":
         print("Ejecución con modelo real desactivada: definir FNA_PRUEBAS_AGENTE_REAL=1.", file=sys.stderr)
@@ -48,9 +55,9 @@ def main(argv: list[str] | None = None) -> int:
     if not estado.disponible:
         print(f"Proveedor del agente no disponible: {estado.mensaje}", file=sys.stderr)
         return 3
-    informe = evaluar_agente(servicio, tope_usd=args.tope_usd)
+    informe = evaluar_agente(servicio, tope_usd=args.tope_usd, banco=args.banco)
     m, c = informe["metricas"], informe["consumo"]
-    print(f"Agente {informe['proveedor']} / {informe['modelo']}")
+    print(f"Agente {informe['proveedor']} / {informe['modelo']} · banco {informe['banco']}")
     print(f"Preguntas ejecutadas: {m['preguntas_ejecutadas']}/{m['total_preguntas']}", end="")
     print(" (interrumpido por el tope de costo)" if informe["interrumpido_por_tope"] else "")
     for clave in ("exactitud_respondibles", "rechazo_correcto", "tasa_fundamentada", "exactitud_global"):

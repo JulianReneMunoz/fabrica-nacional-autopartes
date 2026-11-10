@@ -40,7 +40,8 @@ def generar_faq_visor(
     """Responde las preguntas respondibles del banco y, opcionalmente, guarda el JSON del visor."""
     op: dict[str, str | None] = {**VALORES_PREDETERMINADOS}
     op.update({k: v for k, v in (opciones or {}).items() if v})
-    preguntas = [p for p in cargar_preguntas() if p.get("tipo") in TIPOS_INCLUIDOS]
+    # Fijo en v1: cambiar de banco regeneraría data/gold/faq_visor.json (pendiente fuera de A-10).
+    preguntas = [p for p in cargar_preguntas("v1") if p.get("tipo") in TIPOS_INCLUIDOS]
     if maximo is not None:
         preguntas = preguntas[: max(0, maximo)]
     items: list[dict[str, Any]] = []
