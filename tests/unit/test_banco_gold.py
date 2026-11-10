@@ -1,15 +1,20 @@
-"""Banco de preguntas v2 frente al Gold (A-10).
+"""Banco de preguntas v2 frente al Gold versionado (A-10).
 
 Cada hecho esperado de una respondible debe aparecer en al menos un fragmento de
 ``data/gold/fragmentos.jsonl`` (con la misma normalización que el evaluador) y ningún fragmento debe
 contener el ``dato_ausente`` de una ausente. El banco v1 no se modifica: se comprueba que conserva sus
 hechos originales.
+
+El Gold se lee del repositorio (``git show HEAD:data/gold/fragmentos.jsonl``), no del disco: el CI ejecuta
+``fabrica build --fuente semilla`` antes de pytest y sobrescribe ``data/gold`` con un Gold construido desde
+``data/seed`` (48 fragmentos frente a 167), que no es el corpus de las evaluaciones.
 """
 
 from __future__ import annotations
 
 import json
 import re
+import subprocess
 
 import pytest
 
@@ -22,9 +27,8 @@ from fabrica_autopartes.services.evaluacion import (
     ruta_banco,
 )
 
-ARCHIVO_GOLD = RAIZ_PROYECTO / "data" / "gold" / "fragmentos.jsonl"
-RUTA_RELATIVA_GOLD = ARCHIVO_GOLD.relative_to(RAIZ_PROYECTO).as_posix()
-MOTIVO_SIN_GOLD = f"Gold no disponible ({RUTA_RELATIVA_GOLD}): ejecutar `uv run fabrica build`"
+RUTA_GOLD = "data/gold/fragmentos.jsonl"
+TIEMPO_MAXIMO_GIT_S = 30
 
 V1 = cargar_preguntas("v1")
 V2 = cargar_preguntas("v2")
@@ -32,14 +36,35 @@ RESPONDIBLES_V2 = [p for p in V2 if p["tipo"] == "respondible"]
 AUSENTES_V2 = [p for p in V2 if p["tipo"] == "ausente"]
 
 
+def leer_gold_versionado() -> str:
+    """Contenido de ``HEAD:data/gold/fragmentos.jsonl``; salta la prueba si git o el archivo no están."""
+    try:
+        proceso = subprocess.run(
+            ["git", "show", f"HEAD:{RUTA_GOLD}"],
+            cwd=RAIZ_PROYECTO,
+            capture_output=True,
+            encoding="utf-8",
+            timeout=TIEMPO_MAXIMO_GIT_S,
+            check=False,
+        )
+    except FileNotFoundError:
+        pytest.skip(f"Gold versionado no disponible: git no está instalado (se necesita HEAD:{RUTA_GOLD})")
+    except subprocess.TimeoutExpired:
+        pytest.skip(
+            f"Gold versionado no disponible: git show HEAD:{RUTA_GOLD} superó {TIEMPO_MAXIMO_GIT_S} s"
+        )
+    if proceso.returncode != 0:
+        motivo = proceso.stderr.strip().splitlines()[0] if proceso.stderr.strip() else "sin detalle"
+        pytest.skip(f"Gold versionado no disponible: {RUTA_GOLD} no está en HEAD ({motivo})")
+    return proceso.stdout
+
+
 @pytest.fixture(scope="module")
 def textos_gold() -> list[str]:
-    if not ARCHIVO_GOLD.is_file():
-        pytest.skip(MOTIVO_SIN_GOLD)
-    lineas = ARCHIVO_GOLD.read_text(encoding="utf-8").splitlines()
+    lineas = leer_gold_versionado().splitlines()
     textos = [json.loads(linea)["texto"] for linea in lineas if linea.strip()]
     if not textos:
-        pytest.skip(MOTIVO_SIN_GOLD)
+        pytest.skip(f"Gold versionado vacío: HEAD:{RUTA_GOLD} no tiene fragmentos")
     return textos
 
 

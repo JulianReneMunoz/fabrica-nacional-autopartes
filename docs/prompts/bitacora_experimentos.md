@@ -1022,15 +1022,34 @@ que todos los hechos del banco sean verificables en el Gold.
 - v1 conserva sus hechos originales;
 - el banco por defecto es v2, y un banco desconocido da `ValueError`.
 
-Si falta `data/gold/fragmentos.jsonl`, las pruebas que lo leen se saltan con el motivo «Gold no disponible
-(data/gold/fragmentos.jsonl): ejecutar `uv run fabrica build`». El Gold está versionado, así que en el CI corren.
+**El Gold de la prueba es el versionado** (`git show HEAD:data/gold/fragmentos.jsonl`, con timeout y `encoding="utf-8"`),
+no el archivo del disco. Si git no está instalado, el archivo no está en `HEAD` o la orden supera el timeout, las
+pruebas que lo leen se saltan con un motivo explícito, por ejemplo «Gold versionado no disponible:
+data/gold/fragmentos.jsonl no está en HEAD (…)».
+
+> **Corrección:** la primera versión de esta entrada decía «El Gold está versionado, así que en el CI corren», y
+> leía `data/gold/fragmentos.jsonl` del disco. Es incorrecto. En el CI, el paso anterior a pytest
+> (`.github/workflows/ci.yml`) ejecuta `uv run fabrica build --fuente semilla` y **reconstruye `data/gold` desde
+> `data/seed`**: 48 fragmentos (34 `semilla` y 14 `lectura_web`) frente a los 167 del Gold versionado.
+>
+> En el PR #20, la prueba falló en Ubuntu y en Windows solo en P15 («hechos sin fragmento en el Gold: ['postúlate']»):
+> - «postúlate» está en el Gold versionado (`nosotros-por-que-trabajar-en-fanalca#004`), pero no en la semilla;
+> - P02 y `fanalca.com/vacantes` pasaban solo porque la semilla también los contiene.
+>
+> Se descartó que fuera un problema de forma Unicode: la «ú» es U+00FA en NFC en el banco y en el Gold, y
+> `hechos_presentes` normaliza a NFD sin tildes. El fallo se reprodujo sin red construyendo la semilla en un directorio
+> temporal. Ni el Gold ni el workflow cambian.
+>
+> No afecta al resultado real: P15 acertó solo con `fanalca.com/vacantes` (la respuesta dice «postularte»), y la cifra
+> oficial sigue en 0,875.
 
 Mutaciones:
 - Aplicada a las respondibles de v1, la prueba falla en P02, P07, P12 y P15.
 - **No detecta P16**, porque «unidad de negocio» sí aparece en otros fragmentos del Gold (noticias de Ambiental),
   aunque no en el formulario. La prueba exige que cada hecho exista en el corpus, no que la pregunta y el hecho estén en
   el mismo fragmento, así que el caso de P16 se detectó en la revisión manual.
-- Con un Gold inexistente, se saltan las 22 pruebas que lo leen, con el motivo indicado, y pasan las que no lo leen.
+- Con una ruta que no está en `HEAD` o con un ejecutable de git inexistente, se saltan las 22 pruebas que leen el Gold,
+  cada vez con su motivo, y pasan las que no lo leen.
 
 ### Medición sin red: Q&A extractivo sobre el Gold, v1 frente a v2
 
