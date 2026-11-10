@@ -5,6 +5,8 @@ from __future__ import annotations
 import subprocess
 import sys
 
+import pytest
+
 from fabrica_autopartes.core.config import RAIZ_PROYECTO
 from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria
 from fabrica_autopartes.services.evaluacion import cargar_preguntas, evaluar, hechos_presentes
@@ -58,8 +60,9 @@ def test_migracion_alembic_crea_esquema(tmp_path) -> None:  # type: ignore[no-un
     } <= tablas
 
 
-def test_banco_tiene_al_menos_20_preguntas_distintas() -> None:
-    preguntas = cargar_preguntas()
+@pytest.mark.parametrize("banco", ["v1", "v2"])
+def test_banco_tiene_al_menos_20_preguntas_distintas(banco: str) -> None:
+    preguntas = cargar_preguntas(banco)
     textos = [p["pregunta"] for p in preguntas]
     assert len(textos) >= 20 and len(set(textos)) == len(textos)
     assert {p["tipo"] for p in preguntas} == {"respondible", "ausente", "fuera_alcance", "inyeccion"}
@@ -72,10 +75,12 @@ def test_hechos_presentes_sin_tildes() -> None:
     ]
 
 
-def test_evaluacion_extractiva_produce_metricas(servicio) -> None:  # type: ignore[no-untyped-def]
-    informe = evaluar(servicio, guardar=False)
+@pytest.mark.parametrize("banco", ["v1", "v2"])
+def test_evaluacion_extractiva_produce_metricas(servicio, banco: str) -> None:  # type: ignore[no-untyped-def]
+    informe = evaluar(servicio, guardar=False, banco=banco)
     m = informe["metricas"]
-    assert m["total_preguntas"] == len(cargar_preguntas())
+    assert informe["banco"] == banco
+    assert m["total_preguntas"] == len(cargar_preguntas(banco))
     assert 0.0 <= m["exactitud_respondibles"] <= 1.0
     assert m["cobertura_contexto"] == 1.0  # el contexto completo contiene todos los hechos
     inyeccion = next(d for d in informe["detalle"] if d["tipo"] == "inyeccion")

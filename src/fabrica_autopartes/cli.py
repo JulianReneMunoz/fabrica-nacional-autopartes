@@ -163,6 +163,11 @@ def construir_parser() -> argparse.ArgumentParser:
     e = sub.add_parser("evaluate", help="Evaluar con el banco de preguntas")
     _opciones_llm(e)
     _opcion_recuperador(e)
+    e.add_argument(
+        "--banco",
+        choices=["v1", "v2"],  # services.evaluacion.BANCOS; literal para no importar el servicio al arrancar
+        help="Versión del banco de preguntas (por defecto v2; v1 reproduce las métricas anteriores)",
+    )
 
     ag = sub.add_parser("agente", help="Agente con memoria y herramienta de búsqueda (ADR-024)")
     ag.add_argument("pregunta", nargs="?", help="Pregunta; sin ella se abre el modo interactivo")
@@ -415,9 +420,10 @@ def _main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.comando == "evaluate":
-        from fabrica_autopartes.services.evaluacion import evaluar
+        from fabrica_autopartes.services.evaluacion import BANCO_POR_DEFECTO, evaluar
 
-        informe = evaluar(servicio, _op(args))
+        informe = evaluar(servicio, _op(args), banco=args.banco or BANCO_POR_DEFECTO)
+        print(f"Banco: {informe['banco']}")
         print(json.dumps(informe["metricas"], ensure_ascii=False, indent=2))
         print(f"Informe: {informe.get('archivo')}")
         return 0

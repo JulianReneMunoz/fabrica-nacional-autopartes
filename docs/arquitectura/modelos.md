@@ -29,7 +29,7 @@ decidir la búsqueda y otra para responder con los fragmentos).
 Con los créditos de Max (USD 100 al mes), la estimación equivale a unos 100 000 turnos con Haiku o unos 5000 con Sonnet.
 Las cifras reales se registran en la bitácora cuando se ejecute la demostración con el modelo real.
 
-## Costo medido del agente (A-08)
+## Costo medido del agente (A-08 y A-10)
 
 La medición usa `usage_metadata` de cada respuesta del modelo, incluidas las que solo piden la herramienta. En Haiku
 5.5 la salida incluye los tokens de razonamiento. El cálculo (`services/evaluacion_agente.py`) aplica 0,10 / 0,50 por
@@ -39,8 +39,9 @@ de `docs/prompts/bitacora_experimentos.md`.
 | Ejecución | Llamadas al modelo | Tokens de entrada | Tokens de salida | Costo (USD) |
 |---|---|---|---|---|
 | Prueba de 3 turnos (mismo `thread_id`) | 6 | 17 852 | 605 | 0,00209 |
-| Banco de 24 preguntas | 49 | 101 774 | 7057 | 0,0137 |
-| **Total** | **55** | **119 626** | **7662** | **≈ 0,016** |
+| Banco de 24 preguntas, v1 (A-08) | 49 | 101 774 | 7057 | 0,0137 |
+| Banco de 24 preguntas, v2 (A-10) | 50 | 104 721 | 7333 | 0,0141 |
+| **Total** | **105** | **224 347** | **14 995** | **≈ 0,030** |
 
 Medido el 2026-11-10 con `claude-haiku-5-5`, sin ninguna llamada con tarifa alta. El costo medio fue de unos USD 0,0006
 por pregunta del banco, por debajo de los USD 0,001 por turno estimados arriba. Hubo menos entrada por llamada de la
@@ -54,6 +55,20 @@ Calidad del mismo banco: exactitud global oficial 0,792 (ajustada como análisis
 > **Nota (A-09):** el 0,625 del extractivo se midió sobre la semilla (`data/seed`), no sobre el Gold. Con el mismo
 > corpus que el agente y `claude_code` (Gold), el extractivo da **0,375**, frente a **0,792** del agente. La cifra
 > anterior se conserva como se registró.
+
+Calidad por banco, todo sobre el Gold:
+
+| Sistema | Banco | Exactitud respondibles | Rechazo correcto | Fundamentadas | Exactitud global | Fuente |
+|---|---|---|---|---|---|---|
+| Agente `anthropic` / `claude-haiku-5-5` | v1 | 0,789 | 0,8 | 0,579 (0,737 con la fórmula de A-09) | 0,792 | A-08 |
+| Agente `anthropic` / `claude-haiku-5-5` | v2 | 0,895 | 0,8 | 0,737 | **0,875** | A-10 |
+| Q&A `extractivo` (selección BM25) | v1 | 0,368 | 0,4 | 0,789 | 0,375 | A-09 y A-10 |
+| Q&A `extractivo` (selección BM25) | v2 | 0,474 | 0,4 | 0,789 | 0,458 | A-10 |
+
+- Cifra oficial del agente con el banco v2 (A-10): **0,875**, sin errores, sin URL inválidas y sin ninguna llamada con
+  tarifa alta.
+- Los bancos v1 y v2 no se comparan directamente: cambian los hechos de P02, P07, P12, P15 y P16.
+- `claude_code` (0,792–0,833) solo se midió con v1.
 
 ## Particularidades de Claude Haiku 5.5 en la API
 

@@ -1,6 +1,7 @@
 # Bitácora de experimentación con prompts
 
-Protocolo: mismo banco de 24 preguntas (`evaluacion/preguntas.yaml`), misma base Gold, temperatura configurada
+Protocolo: mismo banco de 24 preguntas (`evaluacion/preguntas.yaml`, banco v1, hasta A-09; desde A-10 el banco
+por defecto es v2, `evaluacion/preguntas_v2.yaml`), misma base Gold, temperatura configurada
 0,1 hasta E-06 y 0 desde E-07 (`claude_code` no la aplica; ver E-07), una variable cambiada por experimento.
 Métricas definidas en `services/evaluacion.py`.
 Toda cifra de esta bitácora proviene de un archivo en `evaluacion/resultados/`.
@@ -654,6 +655,10 @@ fija `${FNA_PROVEEDOR_LLM:-extractivo}`. En un clon nuevo, `ollama` fallaba (sin
 CLI con sesión del plan (consume cupo), `anthropic` exige clave y créditos, y `extractivo` funciona sin instalación,
 red ni costo (exactitud global 0,625 frente a 0,792–0,833 con `claude_code`).
 
+> **Nota (A-10):** el 0,625 se midió sobre la **semilla** (`data/seed`; informes del 2026-11-04), no sobre el Gold
+> (ver A-09). Con el Gold, el extractivo da 0,375 con el banco v1 y 0,458 con el banco v2 (selección BM25). La cifra de
+> arriba se conserva como se registró.
+
 Pruebas nuevas (`tests/unit/test_proveedor_qa_defecto.py`): el valor por defecto es `extractivo` con
 `delenv("FNA_PROVEEDOR_LLM")` y `Configuracion(_env_file=None)`; la variable lo sobrescribe; y el Q&A responde con el
 valor por defecto sin modelo inyectado ni red. Se comprobó que aíslan el valor: con `config.py` en `ollama` y
@@ -956,3 +961,185 @@ global del extractivo medida hoy en los 6 modos y versiones. Para `claude_code` 
 
 P15 sigue fallando en el banco aunque se conserve la URL: los hechos esperados («empleoscolombia», «trabaja con
 nosotros») solo están en la semilla. Queda para el PR del banco (A-08, punto 1).
+
+## A-10 · Banco de preguntas v2 alineado con el Gold (2026-11-10)
+
+Rama `banco-v2-gold`, desde `7d80ac6`. Resuelve el punto 1 de los PR derivados de A-08. Sin llamadas reales: pruebas
+con `FNA_ANTHROPIC_API_KEY=clave-ficticia ANTHROPIC_API_KEY=` y `uv run --no-sync`.
+
+### Versión nueva sin tocar la v1
+
+- `evaluacion/preguntas.yaml` (v1) no cambia, así que las métricas anteriores (E-01 a E-07, R-05, A-08 y A-09) siguen
+  siendo reproducibles con `--banco v1`.
+- `evaluacion/preguntas_v2.yaml` (v2) conserva los 24 ids y la proporción de 19 respondibles y 5 negativas. Cada
+  pregunta que cambia lleva `cambio_v2` con el motivo, y cada ausente lleva `dato_ausente`, con las expresiones del
+  dato que no debe estar en el Gold.
+- Banco por defecto: **v2**, en `fabrica evaluate --banco {v1,v2}` y en
+  `scripts/evaluar_agente_real.py --banco {v1,v2}`. El informe de los dos evaluadores registra `banco` en el JSON, en el
+  Markdown y en el nombre del archivo (`…_banco-v2`).
+- Siguen fijos en v1, para no regenerar `data/gold/faq_visor.json` ni cambiar las mediciones de E-05 y E-06:
+  `services/faq_visor.py`, `ServicioAsistente.evaluar_recuperacion` y `tests/unit/test_busqueda_web.py` (este último ya
+  leía `preguntas.yaml` directamente).
+
+### Revisión de las 24 preguntas contra el Gold
+
+Cada hecho de v1 se buscó en los 167 fragmentos de `data/gold/fragmentos.jsonl` con la normalización de
+`hechos_presentes`.
+
+| Id | Hallazgo en el Gold | Cambio en v2 |
+|---|---|---|
+| P02 | «651 5343» no está en ningún fragmento (solo en `data/seed/contacto.md`). `autopartes-contacto#000` publica «+57 310 211 23 08» | Hecho: `310 211 23 08` |
+| P07 | «1982» no está en ninguna variante (solo en `data/seed/quienes-somos.md`). Cerca de «ensambl» solo hay años de otros hechos. `nosotros#001` dice: «En el año 1971 … inicia la negociación con Honda Japón para comercializar sus motocicletas y posteriormente realizar su ensamblaje» | Se reformula como respondible: «¿En qué año inició Fanalca la negociación con Honda Japón?», hecho `1971` |
+| P12 | «barrera» no está; `negocios-fanalvias#000` dice «defensas viales metálicas» | `barrera` → `defensas` |
+| P15 | «empleoscolombia» y «trabaja con nosotros» no están. «portal» solo aparece como «portal de colaboradores» | Hechos: `fanalca.com/vacantes` (`autopartes-contacto#002`) y `postúlate` (`nosotros-por-que-trabajar-en-fanalca#004`) |
+| P16 | El formulario (`autopartes-contacto#001`) no pide «unidad de negocio»: pide nombre completo, empresa, correo, teléfono móvil, ciudad, país y mensaje | `unidad de negocio` → `empresa` y `ciudad` |
+| P20, P21, P22 | Sin horario («La página no publica horario de atención»), sin precios de motos y sin correos personales | Solo se agrega `dato_ausente` |
+| Resto | Cada hecho aparece en al menos un fragmento | Ninguno |
+
+**Elección para P07.** Antes de decidir se buscó cualquier año cerca de «ensambl» y cualquier «desde 19xx». Solo
+aparecieron años de otros hechos: 1958 y 1959 (carrocerías), 1969, 1971 (negociación con Honda), 1981 (Ambiental) y
+2014 (parque). El usuario eligió reformularla como respondible sobre 1971, en lugar de reclasificarla como ausente.
+Así se conservan el id, la categoría «historia» y la proporción 19/5, y la pregunta queda respondible con un dato
+publicado.
+
+**P21 conserva el criterio estricto** (frase de rechazo fija), porque es la regla de negocio de ADR-024. Una respuesta
+del tipo «no hay precios» con un dato citado sigue contando como fallo.
+
+**P12 y P16 estaban bien en A-08 aunque uno de sus hechos no esté en el Gold.** Las dos piden `minimo: 2`, y los
+demás hechos sí están publicados: en P12, «amortiguador» y «terminal»; en P16, «nombre», «teléfono» y «correo». Por
+eso una respuesta correcta acertaba sin el hecho ausente, y en A-08 no aparecieron entre los fallos. Se corrigen para
+que todos los hechos del banco sean verificables en el Gold.
+
+### Prueba del banco contra el Gold
+
+`tests/unit/test_banco_gold.py` (29 pruebas):
+- cada hecho de cada respondible de v2 aparece en al menos un fragmento del Gold;
+- ningún fragmento cumple el `dato_ausente` de una ausente de v2;
+- cada `dato_ausente` detecta un texto de ejemplo que sí trae el dato, para que una expresión que nunca coincide no pase
+  la prueba en silencio;
+- v2 conserva los ids, la proporción 19/5 y el tipo de P21;
+- toda diferencia con v1 lleva `cambio_v2`;
+- v1 conserva sus hechos originales;
+- el banco por defecto es v2, y un banco desconocido da `ValueError`.
+
+**El Gold de la prueba es el versionado** (`git show HEAD:data/gold/fragmentos.jsonl`, con timeout y `encoding="utf-8"`),
+no el archivo del disco. Si git no está instalado, el archivo no está en `HEAD` o la orden supera el timeout, las
+pruebas que lo leen se saltan con un motivo explícito, por ejemplo «Gold versionado no disponible:
+data/gold/fragmentos.jsonl no está en HEAD (…)».
+
+> **Corrección:** la primera versión de esta entrada decía «El Gold está versionado, así que en el CI corren», y
+> leía `data/gold/fragmentos.jsonl` del disco. Es incorrecto. En el CI, el paso anterior a pytest
+> (`.github/workflows/ci.yml`) ejecuta `uv run fabrica build --fuente semilla` y **reconstruye `data/gold` desde
+> `data/seed`**: 48 fragmentos (34 `semilla` y 14 `lectura_web`) frente a los 167 del Gold versionado.
+>
+> En el PR #20, la prueba falló en Ubuntu y en Windows solo en P15 («hechos sin fragmento en el Gold: ['postúlate']»):
+> - «postúlate» está en el Gold versionado (`nosotros-por-que-trabajar-en-fanalca#004`), pero no en la semilla;
+> - P02 y `fanalca.com/vacantes` pasaban solo porque la semilla también los contiene.
+>
+> Se descartó que fuera un problema de forma Unicode: la «ú» es U+00FA en NFC en el banco y en el Gold, y
+> `hechos_presentes` normaliza a NFD sin tildes. El fallo se reprodujo sin red construyendo la semilla en un directorio
+> temporal. Ni el Gold ni el workflow cambian.
+>
+> No afecta al resultado real: P15 acertó solo con `fanalca.com/vacantes` (la respuesta dice «postularte»), y la cifra
+> oficial sigue en 0,875.
+
+Mutaciones:
+- Aplicada a las respondibles de v1, la prueba falla en P02, P07, P12 y P15.
+- **No detecta P16**, porque «unidad de negocio» sí aparece en otros fragmentos del Gold (noticias de Ambiental),
+  aunque no en el formulario. La prueba exige que cada hecho exista en el corpus, no que la pregunta y el hecho estén en
+  el mismo fragmento, así que el caso de P16 se detectó en la revisión manual.
+- Con una ruta que no está en `HEAD` o con un ejecutable de git inexistente, se saltan las 22 pruebas que leen el Gold,
+  cada vez con su motivo, y pasan las que no lo leen.
+
+### Medición sin red: Q&A extractivo sobre el Gold, v1 frente a v2
+
+- Configuración: `Configuracion(_env_file=None, proveedor_llm="extractivo")`, con `FNA_PROVEEDOR_LLM=extractivo` en el
+  comando. Proveedor efectivo impreso antes de medir: `extractivo`.
+- Corpus: 167 fragmentos de 64 documentos de `data/gold/fragmentos.jsonl`.
+- Se usó `guardar=False` con la auditoría en una SQLite temporal, como en A-09: no se escribió ningún archivo en
+  `evaluacion/resultados/`.
+
+| Banco | Prompt | Modo | Exactitud respondibles | Cobertura contexto | Rechazo correcto | Fundamentadas | Exactitud global |
+|---|---|---|---|---|---|---|---|
+| v1 | v1, v2, v3 | completo | 0,263 | 0,789 | 0,8 | 0,579 | 0,375 |
+| v1 | v1, v2, v3 | selección | 0,368 | 0,842 | 0,4 | 0,789 | 0,375 |
+| v2 | v1, v2, v3 | completo | 0,263 | 0,842 | 0,8 | 0,579 | 0,375 |
+| v2 | v1, v2, v3 | selección | **0,474** | **0,947** | 0,4 | 0,789 | **0,458** |
+
+- El extractivo no usa el prompt, así que las tres versiones dan lo mismo.
+- Con v1 se reproduce el **0,375** de A-09 en los 6 casos.
+- Con v2, en selección, pasan a ser aciertos P02 y P07. En completo no cambia ningún acierto: sube la cobertura del
+  contexto (0,789 → 0,842), pero la respuesta extractiva no contiene los hechos nuevos.
+
+**Las cifras del banco v1 y del v2 no se comparan directamente**: los hechos esperados de P02, P07, P12, P15 y P16 son
+distintos.
+
+### Ejecución real con el banco v2 (2026-11-10)
+
+La ejecutó el usuario en PowerShell con su clave: `anthropic` / `claude-haiku-5-5`, prompt v2 del agente, base Gold y
+un `thread_id` por pregunta. Comando: `scripts/evaluar_agente_real.py --banco v2 --tope-usd 0.10`. Informe:
+`evaluacion/resultados/20261110T192320Z_agente_claude-haiku-5-5_banco-v2.json`, versionado con `git add -f` después de
+comprobar que no contiene el prefijo de clave, `api_key`, `secret` ni las demás cadenas vetadas. Fue la única ejecución real de este PR.
+
+| Métrica | A-08 (banco v1) | A-10 (banco v2) |
+|---|---|---|
+| Preguntas ejecutadas | 24/24 | 24/24 |
+| Exactitud de respondibles | 0,789 (15/19) | **0,895 (17/19)** |
+| Rechazo correcto | 0,8 (4/5) | 0,8 (4/5) |
+| Tasa fundamentada | 0,579 (fórmula anterior); 0,737 recalculada con la de A-09 | 0,737 (14/19, fórmula de A-09) |
+| Exactitud global | 0,792 (19/24) | **0,875 (21/24)** |
+| URL inválidas / errores | 0 / 0 | 0 / 0 |
+| Latencia media | 3298 ms | 3265 ms |
+| Consumo | 49 llamadas · 101 774 / 7057 tokens · USD 0,0137 | 50 llamadas · 104 721 / 7333 tokens · USD 0,0141 |
+| Llamadas con tarifa alta | 0 | 0 |
+
+- **Cifra oficial con el banco v2: 0,875.**
+- El costo medido (USD 0,0141) coincide con la estimación previa (unos USD 0,014) y queda lejos del tope de USD 0,10.
+- Cambios de acierto respecto de A-08 (comparados por id entre los dos JSON):
+  - P02, P07 y P15 pasan de fallo a acierto.
+  - P18 pasa de acierto a fallo.
+  - P12 y P16 aciertan en las dos ejecuciones.
+- **P15 confirma en real la corrección de citas de A-09**: la respuesta conserva `https://fanalca.com/vacantes/` y
+  acierta.
+- **La comparación con A-08 no aísla el efecto del banco.** Entre las dos ejecuciones cambiaron el banco (P02, P07 y
+  P15), el filtro de citas (A-09) y la variación propia del modelo (P18). Haiku 5.5 no admite temperatura 0
+  (ADR-028).
+
+### Diagnóstico de los fallos (sin red)
+
+Se leyeron solo las entradas P11, P18 y P21 del JSON. Las posiciones salen de `BaseConocimiento.buscar(…,
+recuperador="bm25")` sobre los 167 fragmentos del Gold, que es el recuperador por defecto de `buscar_fragmentos`, con
+`k=5`.
+
+| Id | Tipo | Causa | Evidencia |
+|---|---|---|---|
+| P11 | respondible | **Recuperación BM25**, igual que en A-08 | El agente hizo 2 búsquedas, citó Autopartes y Fanalvías, y respondió que no encuentra una unidad «Ambiental». `negocios-ambiental#000` queda en la posición 9 con la pregunta literal, en la 8 con «unidad Ambiental productos» y en la 2 con «Fanalca Ambiental». |
+| P18 | respondible | **Recuperación que depende de la consulta del modelo** | Respondió con la frase de rechazo después de 2 búsquedas. La pregunta no cambió en v2, y el hecho sí está en el Gold: `nosotros#000` («con un grupo de 12 colaboradores») y `en-who-we-are#000` (en inglés). Posiciones BM25 de `nosotros#000` en la tabla siguiente. |
+| P21 | ausente | **Criterio estricto** (ADR-024) | No inventa precios. Responde que no hay precios publicados y agrega la gama de 100 a 250 cc, citada de `negocios-honda-motocicletas#000`, en lugar de la frase fija. Es la misma conducta que en A-08, y por regla de negocio sigue contando como fallo. |
+
+Posición de `nosotros#000` con BM25 para la pregunta de P18 y tres reformulaciones razonables:
+
+| Consulta | Posición |
+|---|---|
+| «¿Con cuántos colaboradores empezó la empresa?» (literal) | 38 |
+| «colaboradores iniciales fundación Fanalca» | 36 |
+| «historia de Fanalca fundación 1958 número de empleados» | **3** |
+| «cuántos empleados tenía Fanalca al inicio» | 60 |
+
+- **BM25 es determinista; lo que varía es la consulta del modelo.** El fragmento solo entra entre los 5 primeros
+  cuando la consulta incluye términos históricos («historia», «1958»).
+- En A-08 el agente citó `nosotros#000` («La empresa inició con un grupo de 12 colaboradores»), así que esa vez alguna
+  de sus 2 búsquedas lo trajo.
+- El JSON no guarda los argumentos de cada llamada a la herramienta, así que no se puede confirmar qué consultas usó en
+  cada ejecución. Queda para el PR de recuperación.
+- Con la pregunta literal, el fragmento queda muy lejos del corte de 5. Por eso no basta con subir `k`: hace falta
+  expansión de consulta o el recuperador semántico.
+
+### Pendiente
+
+- PR de recuperación (A-08, punto 2), que cubre P11 y P18:
+  - registrar en el JSON los argumentos de cada llamada a `buscar_fragmentos`;
+  - evaluar la expansión de consulta y el recuperador semántico;
+  - medir con `evaluar_recuperacion` antes y después.
+- Decidir si `faq_visor` y `evaluar_recuperacion` pasan a v2, lo que regenera `data/gold/faq_visor.json` y obliga a
+  repetir las mediciones de E-06.

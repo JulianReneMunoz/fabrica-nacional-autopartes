@@ -32,6 +32,10 @@
   `llama3.2:3b` a la API y la solicitud fallaría. Hoy, usar `FNA_PROVEEDOR_LLM=anthropic` exige definir también
   `FNA_MODELO_LLM` con un modelo Claude (por ejemplo, `claude-haiku-5-5`). Revisar el valor por defecto de
   `modelo_llm` (o derivarlo del proveedor) en un PR aparte; aquí no se cambia.
+- **Nota (A-10, 2026-11-10):** el 0,625 de la tabla de opciones se midió sobre la **semilla** (`data/seed`), no sobre
+  el Gold (A-09 en `docs/prompts/bitacora_experimentos.md`). Con el Gold, el extractivo da 0,375 con el banco v1 y 0,458
+  con el banco v2 (`evaluacion/preguntas_v2.yaml`, selección BM25). La decisión no cambia: se basó en que el extractivo
+  funciona sin instalación, red ni costo, no en su exactitud. La cifra de la tabla se conserva como se registró.
 - **Alternativas:** `claude_code` por defecto (falla en equipos sin la CLI y consume cupo sin elegirlo);
   `anthropic` por defecto (gasta créditos sin elegirlo y requiere cambiar `modelo_llm`); mantener `ollama`
   (contradice la ADR-026 y falla en un clon nuevo).

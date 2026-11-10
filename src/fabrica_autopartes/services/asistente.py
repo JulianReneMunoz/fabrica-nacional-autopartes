@@ -254,7 +254,7 @@ class ServicioAsistente:
 
             prefijos, recuperadores = er.evaluar_base_semantica(
                 fragmentos,
-                cargar_preguntas(),
+                cargar_preguntas("v1"),  # fijo en v1: mediciones de E-05 y E-06 reproducibles
                 self.base.indice,
                 lambda d: EmbeddingsNomic(d),
                 crear_indice,
