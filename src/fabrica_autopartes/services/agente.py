@@ -261,20 +261,37 @@ def _cita(fuente: Fuente, texto: str) -> bool:
     return re.search(rf"{url}/?(?=[\s)\]>,;:!?\"']|\.(?:\s|$)|$)", texto) is not None
 
 
-_URL = re.compile(r"https?://[^\s)\]>,;\"']+")
 _ID_FRAGMENTO = re.compile(r"(?<![\w#-])[a-z0-9][\w-]*#\d{3}(?![\w#-])")
 
 
-def _retirar_citas_inventadas(texto: str, devueltas: dict[str, Fuente]) -> str:
-    """Quita del texto las URL e ids de fragmento que la herramienta no devolvió (no son citas válidas)."""
-    urls_validas = {f.url.rstrip("/") for f in devueltas.values()}
+def urls_permitidas(citadas: Sequence[Fuente], textos: dict[str, str]) -> set[str]:
+    """URL que una respuesta puede mostrar (A-09).
+
+    Son el campo ``url`` de cada fuente citada y las URL escritas en el texto de esa fuente (``textos``: id →
+    texto). Las del texto no se agregan como fuente.
+    """
+    permitidas = {sg.normalizar_url(f.url) for f in citadas}
+    for f in citadas:
+        permitidas.update(sg.urls_en(textos.get(f.fragmento_id, "")))
+    return permitidas
+
+
+def _retirar_citas_inventadas(
+    texto: str, devueltas: dict[str, Fuente], urls_en_textos: set[str] | frozenset[str] = frozenset()
+) -> str:
+    """Quita del texto las URL e ids de fragmento que no son citas válidas.
+
+    Se conserva una URL si es el campo ``url`` de una fuente devuelta o si está en ``urls_en_textos`` (las URL
+    escritas en el texto de las fuentes citadas, normalizadas); las demás se retiran.
+    """
+    urls_validas = {sg.normalizar_url(f.url) for f in devueltas.values()} | set(urls_en_textos)
 
     def _url(m: re.Match[str]) -> str:
         url = m.group(0).rstrip(".")
         sufijo = m.group(0)[len(url) :]
-        return m.group(0) if url.rstrip("/") in urls_validas else sufijo
+        return m.group(0) if sg.normalizar_url(url) in urls_validas else sufijo
 
-    texto = _URL.sub(_url, texto)
+    texto = sg.URL.sub(_url, texto)
     texto = _ID_FRAGMENTO.sub(lambda m: m.group(0) if m.group(0) in devueltas else "", texto)
     texto = re.sub(r"\(\s*\)|\[\s*\]", "", texto)  # paréntesis o corchetes que quedaron vacíos
     texto = re.sub(r"\s+([.,;:])", r"\1", texto)  # sin espacio antes de la puntuación
@@ -452,7 +469,8 @@ class ServicioAgente:
 
         Las reglas del prompt no bastan, así que el código las exige (como en el Q&A):
         - sin llamadas a la herramienta (respuesta desde el conocimiento propio) → frase de rechazo;
-        - las URL o ids citados que la herramienta no devolvió en el turno se retiran del texto;
+        - las URL o ids citados que la herramienta no devolvió en el turno se retiran del texto, salvo una URL
+          escrita en el texto de una fuente citada (A-09), que se conserva sin contar como fuente;
         - sin ninguna cita válida → frase de rechazo;
         - ``fundamentada`` compara la respuesta con los fragmentos citados (``puntaje_fundamentacion``).
         """
@@ -466,15 +484,17 @@ class ServicioAgente:
         respuesta = texto_visible(finales[-1]) if finales else ""
         if not respuesta or sg.es_rechazo(respuesta) or llamadas == 0 or not devueltas:
             return RECHAZO, [], llamadas, False
-        respuesta = _retirar_citas_inventadas(respuesta, devueltas)
+        # Fuentes citadas por su campo url o su id: el filtro nunca retira esas citas, así que el conjunto es
+        # el mismo antes y después de filtrar. Sus textos dan las URL adicionales y la fundamentación.
         citadas = [f for f in devueltas.values() if _cita(f, respuesta)]
         if not citadas:
             return RECHAZO, [], llamadas, False
-        textos = []
+        textos: dict[str, str] = {}
         for f in citadas:
             try:
-                textos.append(self.base.obtener(f.fragmento_id).texto)
+                textos[f.fragmento_id] = self.base.obtener(f.fragmento_id).texto
             except ErrorFNA:
                 continue
-        puntaje = sg.puntaje_fundamentacion(respuesta, " ".join(textos))
+        respuesta = _retirar_citas_inventadas(respuesta, devueltas, urls_permitidas(citadas, textos))
+        puntaje = sg.puntaje_fundamentacion(respuesta, " ".join(textos.values()))
         return respuesta, citadas, llamadas, puntaje >= sg.UMBRAL_FUNDAMENTACION

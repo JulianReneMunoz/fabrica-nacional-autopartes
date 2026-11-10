@@ -858,6 +858,10 @@ salida de consola de la ejecución.
   oficial.
 - Comparación con el Q&A (E-07 y R-05): `extractivo` 0,625; `claude_code` 0,792–0,833. El agente iguala el extremo
   inferior de `claude_code` con la métrica oficial.
+  - **Nota (A-09):** el 0,625 del extractivo (informes del 2026-11-04) se midió sobre la **semilla**: sus informes solo
+    citan ids de `data/seed`. Los de `claude_code` (0,792–0,833) y el del agente citan solo ids del Gold. Por eso la
+    comparación con el extractivo no es válida. Con el mismo corpus (Gold), el extractivo da **0,375** y el agente
+    **0,792**. Las cifras de arriba se conservan como se registraron.
 
 ### Qué mide «fundamentada» y por qué da 0,579
 
@@ -884,3 +888,71 @@ veracidad y penaliza el estilo de cita por URL que usa el agente.
 4. **Métrica de fundamentación.** Excluir los tokens de URL en `puntaje_fundamentacion`, igual que se excluyen los ids,
    y registrar el cambio de la métrica en la bitácora. Opcional: un prompt v3 del agente que exija la frase fija en las
    preguntas sin dato (P21).
+
+## A-09 · URL del texto de una fuente citada y fundamentación sin URL (2026-11-10)
+
+Rama `corregir-citas-fundamentacion`, desde `12d2e65`. Corrige los dos defectos de A-08 que no dependen del banco: P15 y
+la tasa fundamentada. Sin llamadas reales: pruebas con `FNA_ANTHROPIC_API_KEY=clave-ficticia ANTHROPIC_API_KEY=`.
+
+### Cambio de política de citas (agente y evaluador)
+
+Una sola regla, `services.agente.urls_permitidas`, que usan `_retirar_citas_inventadas` y
+`evaluacion_agente.urls_fuera_de_fuentes`. Se conserva una URL de la respuesta si:
+- es el campo `url` de una fuente citada, o
+- está escrita literalmente en el **texto de una fuente citada** del turno.
+
+Una URL que solo aparece en el texto de un fragmento devuelto pero no citado se retira, igual que una inventada. La URL
+del texto no se agrega como fuente ni basta como cita válida: las fuentes se siguen calculando con el campo `url` o el
+id. La expresión de URL quedó en un solo sitio (`salvaguardas.URL`, `urls_en` y `normalizar_url`); antes estaba repetida
+en el agente y en el evaluador.
+
+Pruebas (`tests/unit/test_agente.py`):
+- el caso de P15 con las cadenas exactas queda intacto, y sin la regla nueva reproduce el fallo observado;
+- una URL inventada se sigue retirando;
+- la URL del texto de un fragmento no citado se retira;
+- con el agente completo y la base semilla, se conserva el portal de empleo escrito en el texto del fragmento de
+  contacto, sin que pase a ser fuente.
+
+Mutación: sin pasar `urls_permitidas` al filtro, falla 1 prueba.
+
+### Cambio de la métrica de fundamentación
+
+`puntaje_fundamentacion` (`llm/salvaguardas.py`) quita las URL de la respuesta antes de tokenizar, como ya hacía con
+los ids entre corchetes. El contexto no cambia. Prueba: una respuesta con URL citadas puntúa igual que la misma sin
+ellas.
+
+Llamadores: el agente (`services/agente.py`) y el Q&A (`llm/cadenas.py`). Efecto medido sin red:
+
+| Medición (Gold actual, banco de 24) | Fórmula anterior | Fórmula nueva |
+|---|---|---|
+| Agente, JSON de A-08 (recálculo; el JSON no se modifica) | 0,579 (11/19) | **0,737 (14/19)**: P11, P13 y P17 pasan el umbral |
+| Q&A `extractivo` completo (v1, v2, v3) | 0,579 | 0,579 |
+| Q&A `extractivo` selección (v1, v2, v3) | 0,789 | 0,789 |
+
+El Q&A extractivo no cambia porque ninguna de sus respuestas contiene URL (comprobado en v3, completo y selección).
+La medición usó `Configuracion(_env_file=None, proveedor_llm="extractivo")` con `FNA_PROVEEDOR_LLM=extractivo` en el
+comando y mostró el proveedor efectivo antes de medir. Se hizo con `guardar=False` y la auditoría en una SQLite
+temporal, sin escribir en el repositorio. `claude_code` no se volvió a ejecutar.
+
+**Todas las métricas registradas antes de A-09 usan la fórmula anterior** (E-01 a E-07, R-05, A-08) y no se comparan
+directamente con las nuevas.
+
+### Corpus de las comparaciones con el Q&A
+
+Los ids citados en los informes guardados indican el corpus de cada medición:
+
+| Informes | Ids citados | Corpus |
+|---|---|---|
+| `extractivo`, 2026-11-04 (exactitud global 0,583 completo, 0,625 selección) | solo de la semilla | `data/seed` |
+| `claude_code`, 2026-11-05 a 2026-11-07 (0,792–0,833) | solo del Gold | Gold |
+| Agente, A-08 (0,792) | solo del Gold | Gold |
+
+La comparación válida, con el mismo corpus (Gold): **agente 0,792 frente a extractivo 0,375**, que es la exactitud
+global del extractivo medida hoy en los 6 modos y versiones. Para `claude_code` se mantiene 0,792–0,833. La A-08 y
+`modelos.md` llevan una nota con esta corrección y conservan las cifras anteriores. R-05 y ADR-027 también citan el
+0,625 de la semilla y no se tocaron en este PR.
+
+### Pendiente
+
+P15 sigue fallando en el banco aunque se conserve la URL: los hechos esperados («empleoscolombia», «trabaja con
+nosotros») solo están en la semilla. Queda para el PR del banco (A-08, punto 1).

@@ -70,6 +70,29 @@ def test_puntaje_fundamentacion() -> None:
     assert sg.puntaje_fundamentacion("Abre a las ocho de la mañana los lunes.", ctx) < 0.6
 
 
+def test_puntaje_fundamentacion_no_cuenta_las_url() -> None:
+    """Las URL citadas no son términos (A-09): con o sin ellas, el puntaje es el mismo."""
+    ctx = "La planta de ensamble está en Acopi, Yumbo. Teléfono 310 211 23 08."
+    sin_url = "La planta está en Acopi, Yumbo (). Teléfono 310 211 23 08."
+    con_url = (
+        "La planta está en Acopi, Yumbo (https://autopartesfanalca.com.co/contacto/). Teléfono 310 211 23 08."
+    )
+    assert sg.puntaje_fundamentacion(con_url, ctx) == sg.puntaje_fundamentacion(sin_url, ctx) == 1.0
+    # Con el rótulo «fuente:» del caso P15: la palabra sí cuenta (no está en el contexto), la URL no.
+    con_rotulo = "La planta está en Acopi, Yumbo (fuente: https://autopartesfanalca.com.co/contacto/)."
+    sin_rotulo_url = "La planta está en Acopi, Yumbo (fuente: )."
+    assert sg.puntaje_fundamentacion(con_rotulo, ctx) == sg.puntaje_fundamentacion(sin_rotulo_url, ctx) < 1.0
+    con_varias = "Ver https://a.co/x, https://b.co/y; [contacto#000] La planta está en Yumbo."
+    assert sg.puntaje_fundamentacion(con_varias, ctx) == sg.puntaje_fundamentacion(
+        "Ver , ; La planta está en Yumbo.", ctx
+    )
+
+
+def test_urls_en_normaliza_y_respeta_los_delimitadores() -> None:
+    texto = "Vacantes en https://fanalca.com/vacantes/, portal (https://x.co/a). Fin https://y.co/."
+    assert sg.urls_en(texto) == ["https://fanalca.com/vacantes", "https://x.co/a", "https://y.co"]
+
+
 def test_tokenizar_sin_tildes_ni_vacias() -> None:
     assert tokenizar("¿Dónde están las plantas?") == ["dond", "estan", "planta"] or "planta" in tokenizar(
         "¿Dónde están las plantas?"

@@ -13,7 +13,6 @@ acierta con ``rechazo`` o ``bloqueada``.
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
@@ -21,13 +20,15 @@ from pathlib import Path
 
 from langchain_core.messages import AIMessage, BaseMessage
 
-from fabrica_autopartes.core.excepciones import ErrorProveedorLLM
+from fabrica_autopartes.core.excepciones import ErrorFNA, ErrorProveedorLLM
 from fabrica_autopartes.domain.modelos import RespuestaAgente
+from fabrica_autopartes.knowledge.base import BaseConocimiento
+from fabrica_autopartes.llm import salvaguardas as sg
+from fabrica_autopartes.services.agente import urls_permitidas
 from fabrica_autopartes.services.asistente import ServicioAsistente
 from fabrica_autopartes.services.evaluacion import DIR_RESULTADOS, cargar_preguntas, hechos_presentes
 
 TOPE_USD_POR_DEFECTO = 0.50
-_URL = re.compile(r"https?://[^\s)\]>,;\"'`]+")
 
 
 @dataclass(frozen=True)
@@ -103,12 +104,22 @@ def preguntar_con_consumo(
 
 
 def urls_citadas(texto: str) -> list[str]:
-    return [m.group(0).rstrip(".").rstrip("/") for m in _URL.finditer(texto)]
+    return sg.urls_en(texto)
 
 
-def urls_fuera_de_fuentes(r: RespuestaAgente) -> list[str]:
-    """URL citadas en la respuesta que no corresponden a ninguna fuente devuelta (vacío = todas válidas)."""
-    validas = {f.url.rstrip("/") for f in r.fuentes}
+def urls_fuera_de_fuentes(r: RespuestaAgente, base: BaseConocimiento) -> list[str]:
+    """URL de la respuesta que no permite la regla del agente (vacío = todas válidas).
+
+    La misma regla que ``services.agente`` (A-09): campo ``url`` de una fuente citada o URL escrita en su
+    texto.
+    """
+    textos: dict[str, str] = {}
+    for f in r.fuentes:
+        try:
+            textos[f.fragmento_id] = base.obtener(f.fragmento_id).texto
+        except ErrorFNA:
+            continue
+    validas = urls_permitidas(r.fuentes, textos)
     return [u for u in urls_citadas(r.respuesta) if u not in validas]
 
 
@@ -177,7 +188,7 @@ def evaluar_agente(
             interrumpido_error = True
             break
         acumulado += consumo.costo_usd(tarifa)
-        invalidas = urls_fuera_de_fuentes(r)
+        invalidas = urls_fuera_de_fuentes(r, servicio.base)
         if p["tipo"] == "respondible":
             encontrados = hechos_presentes(r.respuesta, p["hechos"])
             acierto = len(encontrados) >= p.get("minimo", 1) and not r.rechazo and bool(r.fuentes)
