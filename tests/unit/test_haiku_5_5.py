@@ -108,7 +108,11 @@ def test_traducir_el_400_real_de_langchain_anthropic() -> None:
     assert isinstance(traducido, ErrorProveedorLLM) and traducido.estado_http == 503
     mensaje = str(traducido)
     assert "rechazó la solicitud (400)" in mensaje and "Extra inputs are not permitted" in mensaje
-    assert ID_SOLICITUD in mensaje and "ADR-028" in mensaje
+    assert (
+        ID_SOLICITUD in mensaje
+        and "conversación nueva" in mensaje
+        and "no de la clave ni de la red" in mensaje
+    )
     assert pv.MENSAJE_CREDENCIALES not in mensaje  # separado de credenciales
     assert pv.traducir_error_anthropic(ValueError("otro")) is None  # lo demás no se toca
 

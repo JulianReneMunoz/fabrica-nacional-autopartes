@@ -99,7 +99,8 @@ def traducir_error_anthropic(exc: BaseException) -> ErrorProveedorLLM | None:
         return ErrorProveedorLLM(
             f"La API de Anthropic rechazó la solicitud (400): {detalle[:300]}"
             + (f" (request_id {solicitud})" if solicitud else "")
-            + ". Revisar el modelo (FNA_MODELO_ANTHROPIC o FNA_MODELO_LLM) y sus parámetros (ADR-028)."
+            + ". Es un error de la solicitud, no de la clave ni de la red; el detalle indica la causa. Si "
+            "persiste, iniciar una conversación nueva y conservar el request_id para el diagnóstico."
         )
     return None
 
