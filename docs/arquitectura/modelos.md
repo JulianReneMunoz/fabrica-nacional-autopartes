@@ -29,6 +29,28 @@ decidir la búsqueda y otra para responder con los fragmentos).
 Con los créditos de Max (USD 100 al mes), la estimación equivale a unos 100 000 turnos con Haiku o unos 5000 con Sonnet.
 Las cifras reales se registran en la bitácora cuando se ejecute la demostración con el modelo real.
 
+## Costo medido del agente (A-08)
+
+La medición usa `usage_metadata` de cada respuesta del modelo, incluidas las que solo piden la herramienta. En Haiku
+5.5 la salida incluye los tokens de razonamiento. El cálculo (`services/evaluacion_agente.py`) aplica 0,10 / 0,50 por
+llamada y 0,50 / 2,50 si esa llamada supera los 100 000 tokens de entrada. Detalle y procedimiento en la entrada A-08
+de `docs/prompts/bitacora_experimentos.md`.
+
+| Ejecución | Llamadas al modelo | Tokens de entrada | Tokens de salida | Costo (USD) |
+|---|---|---|---|---|
+| Prueba de 3 turnos (mismo `thread_id`) | 6 | 17 852 | 605 | 0,00209 |
+| Banco de 24 preguntas | 49 | 101 774 | 7057 | 0,0137 |
+| **Total** | **55** | **119 626** | **7662** | **≈ 0,016** |
+
+Medido el 2026-11-10 con `claude-haiku-5-5`, sin ninguna llamada con tarifa alta. El costo medio fue de unos USD 0,0006
+por pregunta del banco, por debajo de los USD 0,001 por turno estimados arriba. Hubo menos entrada por llamada de la
+supuesta (unos 2000 tokens frente a 3000). El historial de un hilo largo sí la hace crecer: en la prueba de 3 turnos
+pasó de 1155 a 4809 tokens por llamada. Con los créditos de Max (USD 100 al mes), el costo medido equivale a unas
+160 000 preguntas.
+
+Calidad del mismo banco: exactitud global oficial 0,792 (ajustada como análisis: 0,875), frente a 0,625 del Q&A
+`extractivo` y 0,792–0,833 de `claude_code`. Diagnóstico de los fallos en A-08.
+
 ## Particularidades de Claude Haiku 5.5 en la API
 
 Según la guía de migración oficial ([ADR-028](adr/ADR-028-compatibilidad-claude-haiku-5-5.md)):

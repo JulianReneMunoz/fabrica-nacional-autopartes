@@ -773,3 +773,114 @@ Mutación sobre `services/agente.py`:
 - modificar `request.state` en sitio: el mutante es equivalente, porque ese cambio no llega a la memoria.
 
 Pendiente: revisar el log de la próxima prueba real.
+
+## A-08 · Validación formal del agente con Claude Haiku 5.5 (2026-11-09)
+
+Objetivo: validar el agente (`anthropic` / `claude-haiku-5-5`, prompt v2) con el modelo real y medir los tokens y el
+costo de cada turno. Rama `prueba-real-agente`.
+
+Preparación (sin red y con clave ficticia):
+- `RespuestaAgente.rechazo` (nuevo campo, `False` por defecto): marca la frase de rechazo fija. Las pruebas comprueban
+  el rechazo con los campos estructurados y no solo comparando el texto.
+- `services/evaluacion_agente.py`:
+  - toma los tokens de `usage_metadata` de cada `AIMessage` del turno, guardado en la memoria del hilo;
+  - incluye las respuestas que solo traen `tool_calls`, comprobado contra el estado crudo del checkpointer;
+  - calcula el costo con 0,10 / 0,50 por millón y la tarifa alta (0,50 / 2,50) por llamada de más de 100 000 tokens de
+    entrada;
+  - corre el banco con un `thread_id` por pregunta;
+  - se detiene al superar el tope de costo (USD 0,50) o ante el primer `ErrorProveedorLLM`
+    (`interrumpido_por_error`);
+  - retira la clave del JSON.
+- `tests/integration/test_agente_real.py` hace 3 turnos en el mismo `thread_id`:
+  - dirección y teléfono como seguimiento: llamada a la herramienta, al menos una URL citada y toda URL citada entre
+    las fuentes devueltas;
+  - P20, el horario, que no está en el corpus: `rechazo`, sin fuentes ni otras marcas.
+- `scripts/evaluar_agente_real.py` corre el banco de 24 preguntas. Exige `FNA_PRUEBAS_AGENTE_REAL=1` y aborta sin
+  llamar al modelo si la configuración no es `anthropic` / `claude-haiku-5-5`.
+- Ambos se saltan o se abortan sin la variable. La suite normal no hace llamadas reales.
+
+Costo estimado antes de ejecutar: unos USD 0,08 en total; el peor caso ronda USD 0,30.
+
+### Ejecución real (2026-11-10)
+
+Lo ejecuta el usuario en PowerShell con su clave. Resultados en `evaluacion/resultados/20261110T133238Z_agente_3_turnos.json`
+y `evaluacion/resultados/20261110T133423Z_agente_claude-haiku-5-5.json`.
+
+**Prueba de 3 turnos** (base semilla en un directorio temporal, mismo `thread_id`): 1 passed en 10,7 s.
+
+| Turno | Pregunta | Llamadas al modelo | Entrada / salida (tokens) | Costo (USD) |
+|---|---|---|---|---|
+| 1 | Dirección de la sede principal | 2 | 3397 / 176 | 0,00043 |
+| 2 | «¿Y cuál es su teléfono?» (seguimiento) | 2 | 5925 / 310 | 0,00075 |
+| 3 | Horario de atención (P20, fuera del corpus) | 2 | 8530 / 119 | 0,00091 |
+| **Total** | | **6** | **17 852 / 605** | **0,00209** |
+
+La entrada crece en cada turno porque el historial del hilo se reenvía: de 1155 tokens en la primera llamada a 4809 en
+la última. Sigue lejos del umbral de 100 000.
+
+**Banco de 24 preguntas** (base Gold del entorno del usuario, un `thread_id` por pregunta): 24/24 ejecutadas, sin
+errores, sin tope alcanzado y sin URL inválidas.
+
+| Métrica | Valor |
+|---|---|
+| Exactitud de respondibles | 0,789 (15/19) |
+| Rechazo correcto | 0,8 (4/5) |
+| Tasa fundamentada | 0,579 (11/19) |
+| Exactitud global (oficial) | **0,792** (19/24) |
+| Latencia media | 3298 ms |
+| Consumo | 49 llamadas · 101 774 / 7057 tokens · USD 0,0137 · 0 con tarifa alta |
+
+El costo medido de las dos ejecuciones suma unos USD 0,016, frente a los USD 0,08 estimados. Por turno resultaron unas
+2 llamadas de unos 2000 tokens de entrada cada una, y no los 6000 supuestos.
+
+### Diagnóstico de los fallos (sin red)
+
+Se leyeron solo las 5 entradas fallidas del JSON y se contrastaron con `data/gold` y el recuperador BM25 local.
+
+| Id | Tipo | Causa | Evidencia |
+|---|---|---|---|
+| P02 | respondible | **Banco desactualizado** | El hecho esperado, «651 5343», solo está en `data/seed/contacto.md`; ningún fragmento del Gold actual lo contiene. La respuesta da el teléfono publicado en `autopartes-contacto#000` (+57 310 211 23 08) y cita su URL. Está fundamentada (0,947). |
+| P07 | respondible | **Banco desactualizado**, no recuperación | «1982» solo está en `data/seed/quienes-somos.md`; no aparece en ningún fragmento del Gold, en ninguna variante. El rechazo es la conducta correcta para el corpus actual. Ninguna de las 3 consultas probadas trae el dato entre los 10 primeros, porque no existe. |
+| P11 | respondible | **Recuperación** | Con `bm25`, el recuperador por defecto de `buscar_fragmentos` (`ArgumentosBusqueda.recuperador`, independiente de `FNA_RECUPERADOR`), `negocios-ambiental#000` («compactadoras», «contenedores») queda en la posición 9 con la pregunta literal y en la 8 con «unidad Ambiental productos». Con `k=5` por defecto no llega al modelo. El modelo podía pedir `semantico`, pero el JSON no registra los argumentos de cada llamada, así que no se puede confirmar qué recuperador usó. Con «Fanalca Ambiental» sube al puesto 2. El agente hizo 2 búsquedas sin obtenerlo y respondió que no existe esa unidad. |
+| P15 | respondible | **Filtro de citas** y **banco desactualizado** | `autopartes-contacto#002` trae `https://fanalca.com/vacantes/` en su texto, pero su campo `url` es `https://autopartesfanalca.com.co/contacto/`. `_retirar_citas_inventadas` solo acepta los campos `url`. Reproducido sin red: «se publican en https://fanalca.com/vacantes/ (fuente: …)» queda en «se publican en (fuente: …)», igual que la respuesta observada. Además, los hechos esperados («empleoscolombia», «trabaja con nosotros») solo están en `data/seed`, así que P15 fallaría aunque se corrigiera el filtro. |
+| P21 | ausente | **Criterio del banco** o adherencia al prompt | Responde que no hay precios y agrega un dato fundamentado y citado («100 y hasta 250» cc, «450 puntos de venta» en `negocios-honda-motocicletas#000`), en lugar de la frase de rechazo fija. No inventa: incumple la forma exigida por la regla de negocio. |
+
+La respuesta original del modelo en P15 no se pudo confirmar: el log de diagnóstico de ADR-029 va al stream del
+proceso, no a un archivo. La revisión del log de A-07 (`tool_use` reparados) también sigue pendiente: hace falta la
+salida de consola de la ejecución.
+
+### Exactitud oficial y ajustada
+
+- **Oficial: 0,792** (19/24), con los criterios vigentes del banco.
+- **Ajustada, solo como análisis: 0,875** (21/24), si P02 y P21 se cuentan como aciertos: respuesta correcta y citada
+  según el corpus actual, y rechazo de contenido con un dato fundamentado.
+- Si además se cuenta P07, cuyo rechazo es correcto con el Gold actual, la exactitud sería 0,917 (22/24). No es una cifra
+  oficial.
+- Comparación con el Q&A (E-07 y R-05): `extractivo` 0,625; `claude_code` 0,792–0,833. El agente iguala el extremo
+  inferior de `claude_code` con la métrica oficial.
+
+### Qué mide «fundamentada» y por qué da 0,579
+
+`fundamentada` es `puntaje_fundamentacion(respuesta, texto de los fragmentos citados) >= 0,6`. El puntaje es la
+proporción de términos de la respuesta (tokenizada sin tildes, sin palabras vacías y con una raíz simple) que también
+aparecen en el texto de los fragmentos citados. `quitar_citas` solo retira los ids entre corchetes. Las URL citadas se
+tokenizan como términos («https», «autopartesfanalca», «contacto», …), que casi nunca están en el texto del fragmento, y
+eso baja el puntaje. Las frases propias del agente («le recomiendo», «si te refieres») también bajan el puntaje.
+
+Recalculado sin red sobre las 19 respondibles del JSON: 11/19 = **0,579**, igual que el informe. Sin los tokens de las
+URL serían 14/19 = 0,737 (P11, P13 y P17 superan el umbral). Es una métrica léxica de solapamiento: no verifica la
+veracidad y penaliza el estilo de cita por URL que usa el agente.
+
+### PR de corrección derivados (fuera de este PR)
+
+1. **Banco de evaluación alineado con el Gold actual.** Actualizar los hechos de P02 (teléfono publicado), P07 (dato
+   ausente: reclasificar o quitar) y P15 (`fanalca.com/vacantes`). Decidir si en una pregunta `ausente` un «no hay
+   precios» con un dato citado (P21) se acepta como rechazo o se exige la frase fija. Es una versión nueva del banco, con
+   las métricas anteriores conservadas.
+2. **Recuperación de P11.** Evaluar un `k` mayor por defecto, una expansión de consulta para los nombres de unidades de
+   negocio o el recuperador semántico. Medirlo con `evaluar_recuperacion` antes y después.
+3. **Filtro de citas (P15).** Aceptar en `_retirar_citas_inventadas` las URL que aparecen en el texto de un fragmento
+   devuelto, sin contarlas como fuente. Incluir una prueba con el caso reproducido.
+4. **Métrica de fundamentación.** Excluir los tokens de URL en `puntaje_fundamentacion`, igual que se excluyen los ids,
+   y registrar el cambio de la métrica en la bitácora. Opcional: un prompt v3 del agente que exija la frase fija en las
+   preguntas sin dato (P21).

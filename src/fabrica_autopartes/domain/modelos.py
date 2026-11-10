@@ -93,6 +93,8 @@ class RespuestaAgente(BaseModel):
     fundamentada: bool = False
     bloqueada: bool = False
     limite_alcanzado: bool = False
+    # La respuesta es la frase de rechazo fija: la base no tiene la información (o no hubo cita válida).
+    rechazo: bool = False
     # stop_reason «refusal»: el modelo declinó por sus filtros de seguridad (ADR-028).
     rechazada_por_seguridad: bool = False
     # stop_reason «max_tokens»: la respuesta se cortó por el límite de tokens (ADR-028).
