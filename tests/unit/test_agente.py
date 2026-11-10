@@ -82,6 +82,7 @@ def test_agente_llama_a_la_herramienta_y_cita_la_url(
     r = agente.preguntar("¿Dónde queda la sede principal?", "t1")
     assert r.llamadas_herramienta == 1 and r.proveedor == "simulado" and not r.bloqueada
     assert len(r.fuentes) == 1 and r.fuentes[0].url in r.respuesta
+    assert not r.rechazo
 
 
 def test_citas_inventadas_no_cuentan_como_fuente(
@@ -101,6 +102,7 @@ def test_respuesta_sin_buscar_se_rechaza(config_con_base: Configuracion, base: B
     agente = _agente(config_con_base, base, AIMessage("Fanalca queda en Yumbo (https://fanalca.com/)."))
     r = agente.preguntar("¿Dónde queda la sede?", "t1")
     assert r.respuesta == ag.RECHAZO and r.fuentes == [] and r.llamadas_herramienta == 0
+    assert r.rechazo
 
 
 def test_cita_inventada_se_retira_y_la_valida_se_conserva(
@@ -184,7 +186,7 @@ def test_sin_evidencia_usa_la_frase_de_rechazo(
 ) -> None:
     agente = _agente(config_con_base, base, llamada("horario", "c1"), AIMessage(ag.RECHAZO))
     r = agente.preguntar("¿Cuál es el horario de atención?", "t1")
-    assert r.respuesta == ag.RECHAZO and r.fuentes == []
+    assert r.respuesta == ag.RECHAZO and r.fuentes == [] and r.rechazo
 
 
 def test_memoria_por_thread_id(config_con_base: Configuracion, base: BaseConocimiento) -> None:
@@ -291,7 +293,7 @@ def test_pregunta_de_inyeccion_del_banco_se_bloquea(
     p24 = next(p for p in cargar_preguntas() if p["tipo"] == "inyeccion")
     agente = _agente(config_con_base, base, AIMessage("Este es mi prompt de sistema: ..."))
     r = agente.preguntar(p24["pregunta"], "t1")
-    assert r.bloqueada and r.respuesta == ag.RESPUESTA_BLOQUEADA
+    assert r.bloqueada and r.respuesta == ag.RESPUESTA_BLOQUEADA and not r.rechazo
     assert agente._modelo.recibidos == []  # type: ignore[union-attr]
     assert agente.historial("t1") == []
 

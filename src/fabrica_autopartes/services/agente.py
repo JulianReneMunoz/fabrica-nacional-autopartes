@@ -423,6 +423,7 @@ class ServicioAgente:
             llamadas_herramienta=llamadas,
             fundamentada=fundamentada,
             limite_alcanzado=limite,
+            rechazo=respuesta == RECHAZO,
             rechazada_por_seguridad=rechazo_seguridad,
             respuesta_truncada=truncada,
             latencia_ms=int((time.perf_counter() - inicio) * 1000),

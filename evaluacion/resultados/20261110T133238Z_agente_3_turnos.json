@@ -1,0 +1,95 @@
+{
+  "fecha": "2026-11-10T13:32:38+00:00",
+  "modelo": "claude-haiku-5-5",
+  "turnos": [
+    {
+      "pregunta": "¿Dónde queda la sede principal de Fanalca?",
+      "llamadas_herramienta": 1,
+      "rechazo": false,
+      "llamadas_modelo": 2,
+      "tokens_entrada": 3397,
+      "tokens_salida": 176,
+      "costo_usd": 0.000428,
+      "por_llamada": [
+        {
+          "entrada": 1155,
+          "salida": 88
+        },
+        {
+          "entrada": 2242,
+          "salida": 88
+        }
+      ]
+    },
+    {
+      "pregunta": "¿Y cuál es su teléfono?",
+      "llamadas_herramienta": 1,
+      "rechazo": false,
+      "llamadas_modelo": 2,
+      "tokens_entrada": 5925,
+      "tokens_salida": 310,
+      "costo_usd": 0.000748,
+      "por_llamada": [
+        {
+          "entrada": 2348,
+          "salida": 190
+        },
+        {
+          "entrada": 3577,
+          "salida": 120
+        }
+      ]
+    },
+    {
+      "pregunta": "¿Cuál es el horario de atención de la sede principal?",
+      "llamadas_herramienta": 1,
+      "rechazo": true,
+      "llamadas_modelo": 2,
+      "tokens_entrada": 8530,
+      "tokens_salida": 119,
+      "costo_usd": 0.000913,
+      "por_llamada": [
+        {
+          "entrada": 3721,
+          "salida": 89
+        },
+        {
+          "entrada": 4809,
+          "salida": 30
+        }
+      ]
+    }
+  ],
+  "total": {
+    "llamadas_modelo": 6,
+    "tokens_entrada": 17852,
+    "tokens_salida": 605,
+    "costo_usd": 0.002088,
+    "por_llamada": [
+      {
+        "entrada": 1155,
+        "salida": 88
+      },
+      {
+        "entrada": 2242,
+        "salida": 88
+      },
+      {
+        "entrada": 2348,
+        "salida": 190
+      },
+      {
+        "entrada": 3577,
+        "salida": 120
+      },
+      {
+        "entrada": 3721,
+        "salida": 89
+      },
+      {
+        "entrada": 4809,
+        "salida": 30
+      }
+    ]
+  }
+}
