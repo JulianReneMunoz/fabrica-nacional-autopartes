@@ -15,6 +15,7 @@ from pydantic import SecretStr
 from fabrica_autopartes.core.config import Configuracion
 from fabrica_autopartes.core.excepciones import ErrorProveedorLLM
 from fabrica_autopartes.domain.modelos import Fuente, RespuestaAgente
+from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria
 from fabrica_autopartes.services import evaluacion_agente as ea
 from fabrica_autopartes.services.asistente import ServicioAsistente
@@ -82,12 +83,30 @@ def _respuesta(texto: str, *urls: str) -> RespuestaAgente:
     )
 
 
-def test_urls_citadas_validas_e_invalidas() -> None:
+def test_urls_citadas_validas_e_invalidas(config_con_base: Configuracion) -> None:
+    base = BaseConocimiento(config_con_base.dir_gold)  # los ids «f#…» no existen: sin texto adicional
     r = _respuesta("Ver https://a.co/contacto/. Y (https://b.co/x).", "https://a.co/contacto")
     assert ea.urls_citadas(r.respuesta) == ["https://a.co/contacto", "https://b.co/x"]
-    assert ea.urls_fuera_de_fuentes(r) == ["https://b.co/x"]
+    assert ea.urls_fuera_de_fuentes(r, base) == ["https://b.co/x"]
     # No hace falta citar todas las fuentes: basta con que lo citado pertenezca a ellas.
-    assert ea.urls_fuera_de_fuentes(_respuesta("https://a.co/", "https://a.co", "https://c.co")) == []
+    assert ea.urls_fuera_de_fuentes(_respuesta("https://a.co/", "https://a.co", "https://c.co"), base) == []
+
+
+def test_url_del_texto_de_una_fuente_citada_es_valida(config_con_base: Configuracion) -> None:
+    """Misma regla que el agente (A-09): la URL escrita en el texto de una fuente citada es válida."""
+    base = BaseConocimiento(config_con_base.dir_gold)
+    portal = "https://empleoscolombia.fnservicios.com/"
+    fragmento = next(f for f in base.fragmentos if portal in f.texto)
+    fuente = Fuente(fragmento_id=fragmento.id, url=fragmento.url, titulo=fragmento.titulo)
+    r = RespuestaAgente(
+        pregunta="p",
+        respuesta=f"Portal {portal} (fuente: {fragmento.url}). Otro: https://inventada.invalido/.",
+        fuentes=[fuente],
+        thread_id="t",
+        proveedor="x",
+        modelo="x",
+    )
+    assert ea.urls_fuera_de_fuentes(r, base) == ["https://inventada.invalido"]
 
 
 # ------------------------------------------------------------ turno con consumo

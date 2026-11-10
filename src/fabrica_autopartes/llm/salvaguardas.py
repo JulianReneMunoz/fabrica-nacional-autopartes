@@ -3,7 +3,8 @@
 1. Análisis tolerante del JSON devuelto por el modelo.
 2. Verificación de citas: toda fuente citada debe existir en el contexto entregado.
 3. Verificación léxica de fundamentación: proporción de términos de la respuesta que
-   aparecen en los fragmentos citados (o en todo el contexto si no hay citas).
+   aparecen en los fragmentos citados (o en todo el contexto si no hay citas); los ids y
+   las URL citados no cuentan como términos.
 4. Detección de intentos de inyección en la pregunta del usuario.
 """
 
@@ -23,6 +24,22 @@ _INYECCION = re.compile(
     re.I,
 )
 UMBRAL_FUNDAMENTACION = 0.6
+# URL en texto libre: termina en un espacio, cierre de paréntesis o corchete, comillas, coma o punto y coma.
+URL = re.compile(r"https?://[^\s)\]>,;\"'`]+")
+
+
+def normalizar_url(url: str) -> str:
+    """Sin el punto final de la frase ni la barra final (``https://x.co/a/.`` → ``https://x.co/a``)."""
+    return url.rstrip(".").rstrip("/")
+
+
+def urls_en(texto: str) -> list[str]:
+    """URL presentes en ``texto``, normalizadas con ``normalizar_url`` y en orden de aparición."""
+    return [normalizar_url(m.group(0)) for m in URL.finditer(texto)]
+
+
+def quitar_urls(texto: str) -> str:
+    return URL.sub(" ", texto)
 
 
 def analizar_json(texto: str) -> dict[str, Any] | None:
@@ -62,7 +79,12 @@ def es_rechazo(texto: str) -> bool:
 
 
 def puntaje_fundamentacion(respuesta: str, contexto: str) -> float:
-    terminos = set(tokenizar(quitar_citas(respuesta)))
+    """Proporción de términos de la respuesta presentes en ``contexto``.
+
+    Los ids entre corchetes y las URL de la respuesta no cuentan como términos (A-09): son citas, no
+    contenido.
+    """
+    terminos = set(tokenizar(quitar_urls(quitar_citas(respuesta))))
     if not terminos:
         return 0.0
     vocab = set(tokenizar(contexto))

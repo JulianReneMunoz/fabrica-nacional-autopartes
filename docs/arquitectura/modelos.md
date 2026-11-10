@@ -51,6 +51,10 @@ pasó de 1155 a 4809 tokens por llamada. Con los créditos de Max (USD 100 al me
 Calidad del mismo banco: exactitud global oficial 0,792 (ajustada como análisis: 0,875), frente a 0,625 del Q&A
 `extractivo` y 0,792–0,833 de `claude_code`. Diagnóstico de los fallos en A-08.
 
+> **Nota (A-09):** el 0,625 del extractivo se midió sobre la semilla (`data/seed`), no sobre el Gold. Con el mismo
+> corpus que el agente y `claude_code` (Gold), el extractivo da **0,375**, frente a **0,792** del agente. La cifra
+> anterior se conserva como se registró.
+
 ## Particularidades de Claude Haiku 5.5 en la API
 
 Según la guía de migración oficial ([ADR-028](adr/ADR-028-compatibilidad-claude-haiku-5-5.md)):

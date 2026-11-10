@@ -19,6 +19,7 @@ from langchain_core.messages import AnyMessage, HumanMessage
 
 from fabrica_autopartes.core.config import Configuracion
 from fabrica_autopartes.domain.modelos import RespuestaAgente
+from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.llm.proveedores import verificar_proveedor_agente
 from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria
 from fabrica_autopartes.services.asistente import ServicioAsistente
@@ -63,12 +64,13 @@ def servicio_real(config_con_base: Configuracion) -> ServicioAsistente:
     return ServicioAsistente(config, RepositorioAuditoria(config.url_base_datos))
 
 
-def _comprobar_respuesta_citada(r: RespuestaAgente, turno: str) -> None:
-    """Busca, cita al menos una URL y toda URL citada pertenece a las fuentes devueltas."""
+def _comprobar_respuesta_citada(r: RespuestaAgente, turno: str, base: BaseConocimiento) -> None:
+    """Busca, cita al menos una URL y toda URL citada es el campo url de una fuente citada o está en su texto
+    (regla de A-09)."""
     assert r.llamadas_herramienta >= 1, f"{turno}: debe consultar la herramienta"
     assert not r.rechazo and r.fuentes, f"{turno}: debe responder con al menos una fuente"
     assert urls_citadas(r.respuesta), f"{turno}: debe citar al menos una URL"
-    assert urls_fuera_de_fuentes(r) == [], f"{turno}: URL citadas que no son fuentes devueltas"
+    assert urls_fuera_de_fuentes(r, base) == [], f"{turno}: URL citadas que no permite la regla de citas"
 
 
 def _registrar(consumos: list[tuple[str, RespuestaAgente, ConsumoTurno]]) -> None:
@@ -124,10 +126,10 @@ def test_agente_real_tres_turnos_cita_recuerda_y_rechaza(
 
     try:
         primera = "¿Dónde queda la sede principal de Fanalca?"
-        _comprobar_respuesta_citada(turno(primera), "turno 1")
+        _comprobar_respuesta_citada(turno(primera), "turno 1", servicio_real.base)
 
         llamadas_previas = len(enviados)
-        _comprobar_respuesta_citada(turno("¿Y cuál es su teléfono?"), "turno 2")
+        _comprobar_respuesta_citada(turno("¿Y cuál es su teléfono?"), "turno 2", servicio_real.base)
         humanos = [m.content for m in enviados[llamadas_previas] if isinstance(m, HumanMessage)]
         assert primera in humanos, "el modelo debe recibir la primera pregunta del hilo (memoria)"
 

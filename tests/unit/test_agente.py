@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from fabrica_autopartes.core.config import Configuracion
 from fabrica_autopartes.core.excepciones import ErrorProveedorLLM
+from fabrica_autopartes.domain.modelos import Fuente
 from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.llm import proveedores as pv
 from fabrica_autopartes.services import agente as ag
@@ -119,6 +120,82 @@ def test_cita_inventada_se_retira_y_la_valida_se_conserva(
     assert "inventada.invalido" not in r.respuesta and "falso#001" not in r.respuesta
     assert len(r.fuentes) == 1 and r.fuentes[0].url in r.respuesta
     assert r.fundamentada  # la respuesta coincide con el texto del fragmento citado
+
+
+#: Caso reproducido de P15 (A-08): la URL de vacantes está en el texto del fragmento, no en su campo url.
+_FUENTE_P15 = Fuente(
+    fragmento_id="autopartes-contacto#002",
+    url="https://autopartesfanalca.com.co/contacto/",
+    titulo="Autopartes Fanalca — Contacto",
+)
+_TEXTO_P15 = (
+    "## Otros enlaces\nEl sitio enlaza las vacantes del grupo en https://fanalca.com/vacantes/, el portal de "
+    "colaboradores y la política de tratamiento de datos (aviso de privacidad)."
+)
+_RESPUESTA_P15 = (
+    "Las vacantes del grupo Fanalca se publican en https://fanalca.com/vacantes/ "
+    "(fuente: https://autopartesfanalca.com.co/contacto/)."
+)
+
+
+def test_p15_url_del_texto_de_la_fuente_citada_se_conserva() -> None:
+    devueltas = {_FUENTE_P15.fragmento_id: _FUENTE_P15}
+    permitidas = ag.urls_permitidas([_FUENTE_P15], {_FUENTE_P15.fragmento_id: _TEXTO_P15})
+    assert "https://fanalca.com/vacantes" in permitidas
+    assert ag._retirar_citas_inventadas(_RESPUESTA_P15, devueltas, permitidas) == _RESPUESTA_P15
+    # Sin la regla de A-09 se reproduce el fallo observado.
+    assert ag._retirar_citas_inventadas(_RESPUESTA_P15, devueltas) == (
+        "Las vacantes del grupo Fanalca se publican en (fuente: https://autopartesfanalca.com.co/contacto/)."
+    )
+
+
+def test_url_inventada_se_sigue_retirando_aunque_haya_urls_en_el_texto() -> None:
+    devueltas = {_FUENTE_P15.fragmento_id: _FUENTE_P15}
+    permitidas = ag.urls_permitidas([_FUENTE_P15], {_FUENTE_P15.fragmento_id: _TEXTO_P15})
+    texto = _RESPUESTA_P15 + " Más en https://ejemplo.invalido/empleos/."
+    filtrado = ag._retirar_citas_inventadas(texto, devueltas, permitidas)
+    assert "ejemplo.invalido" not in filtrado and "https://fanalca.com/vacantes/" in filtrado
+
+
+def test_url_del_texto_de_un_fragmento_no_citado_se_retira() -> None:
+    """Regla única (A-09): solo cuentan los textos de las fuentes citadas, no los de cualquier fragmento
+    devuelto."""
+    otra = Fuente(fragmento_id="inicio#000", url="https://fanalca.com/", titulo="Inicio")
+    devueltas = {_FUENTE_P15.fragmento_id: _FUENTE_P15, otra.fragmento_id: otra}
+    textos = {_FUENTE_P15.fragmento_id: "Sin enlaces.", otra.fragmento_id: _TEXTO_P15}
+    permitidas = ag.urls_permitidas([_FUENTE_P15], textos)  # «otra» se devolvió, pero no se citó
+    filtrado = ag._retirar_citas_inventadas(_RESPUESTA_P15, devueltas, permitidas)
+    assert "fanalca.com/vacantes" not in filtrado
+
+
+def test_agente_conserva_la_url_del_texto_sin_agregarla_como_fuente(
+    config_con_base: Configuracion, base: BaseConocimiento
+) -> None:
+    """Agente completo con la base semilla.
+
+    El fragmento de contacto trae en su texto la URL del portal de empleo: la respuesta la conserva, retira la
+    inventada y la fuente sigue siendo solo el fragmento citado.
+    """
+    portal = "https://empleoscolombia.fnservicios.com/"
+    citada: list[str] = []
+
+    def respuesta(mensajes: list) -> AIMessage:
+        herramienta = next(m for m in reversed(mensajes) if isinstance(m, ToolMessage))
+        objetivo = next(f for f in herramienta.artifact if portal in base.obtener(f["fragmento_id"]).texto)
+        citada.append(objetivo["url"])
+        return AIMessage(
+            f"Las vacantes se publican en el portal {portal} (fuente: {objetivo['url']}). "
+            "También en https://inventada.invalido/empleos/."
+        )
+
+    agente = _agente(
+        config_con_base, base, llamada("vacantes portal Trabaja con nosotros", "c1", k=10), respuesta
+    )
+    r = agente.preguntar("¿Cómo se aplica a una vacante?", "t1")
+    assert portal in r.respuesta and "inventada.invalido" not in r.respuesta
+    # Fuentes: solo los fragmentos de la URL citada (puede haber varios de la misma página); el portal no.
+    assert r.fuentes and {f.url for f in r.fuentes} == set(citada)
+    assert not r.rechazo
 
 
 def test_fundamentada_falsa_si_el_texto_no_coincide_con_la_fuente(

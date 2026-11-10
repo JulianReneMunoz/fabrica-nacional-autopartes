@@ -34,6 +34,11 @@
      Consecuencia deliberada: una pregunta sobre la conversación misma («¿cuál fue mi pregunta anterior?») no
      consulta la base y recibe la frase de rechazo. La memoria sirve para resolver seguimientos que sí exigen buscar
      («¿y cuál es su teléfono?» después de preguntar por Fanalca), no para responder desde el historial.
+     **Nota (A-09, 2026-11-10):** se conserva también una URL escrita literalmente en el texto de una fuente
+     citada del turno (por ejemplo, `https://fanalca.com/vacantes/` dentro de `autopartes-contacto#002`). Esa URL
+     no se agrega como fuente ni basta por sí sola como cita válida. Si aparece solo en el texto de un fragmento
+     devuelto pero no citado, se retira. El evaluador del banco (`services/evaluacion_agente.py`) aplica la misma
+     regla. Desde A-09, `puntaje_fundamentacion` no cuenta como términos las URL de la respuesta.
   4. **Memoria:** `InMemorySaver` con `thread_id` (1 a 64 caracteres `[A-Za-z0-9_-]`). Un middleware
      (`wrap_model_call`) aplica `trim_messages` (estrategia `last`, `start_on="human"`, límite
      `FNA_AGENTE_LIMITE_HISTORIAL_TOKENS`, 3000 por defecto) solo a lo que se envía al modelo; el estado guardado queda
