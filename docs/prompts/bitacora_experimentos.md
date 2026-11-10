@@ -735,3 +735,41 @@ guion del modelo simulado y la v1.
 
 Pendiente: la prueba real tras el merge dirá si Haiku 5.5 obedece la v2 y, con el log, si el recorte de 3000 tokens
 interviene.
+
+## A-07 · `tool_use` sin `tool_result` en el historial del agente (2026-11-09)
+
+Prueba real del usuario en Streamlit (Claude Haiku 5.5, mismo hilo): un turno hizo 2 llamadas a
+`buscar_fragmentos` y respondió bien. En el turno siguiente la API devolvió un 400, «tool_use ids were found
+without tool_result blocks immediately after: toolu_01SctqjrSKm1bpSnwu5AQEWM» (request_id
+`req_011Cgst3PyeLQyKaCDQiTRo7`).
+
+Diagnóstico sin red (ADR-030): los flujos normales no lo reproducen. El único mecanismo reproducido dentro del
+agente es un `AIMessage` con un bloque `tool_use` en `content` que no está ni en `tool_calls` ni en
+`invalid_tool_calls`. Las llamadas en `invalid_tool_calls` las responde LangChain 1.4.9 antes del middleware
+(`_patch_invalid_tool_calls`). Una primera versión del diagnóstico incluyó ese caso: era un error, porque se había
+comprobado solo formateando los mensajes. La prueba con el agente completo lo corrigió. **La causa exacta del 400
+real sigue sin confirmar.** La reparación (a) lo evita en cualquier caso y el log (d) la confirmará en la próxima
+prueba real.
+
+Cambios (opciones (a) y (d), aprobadas):
+- (a) Un `ToolMessage` sintético, con `status="error"` y «No usar como fuente», solo en la copia enviada al modelo.
+  No se guarda en la memoria ni cuenta como llamada, fragmento ni fuente.
+- (d) En el log local, un WARNING con el id de cada `tool_use` reparado y, por cada respuesta del modelo,
+  `stop_reason`, ids de `tool_use`, `tool_calls` e `invalid_tool_calls`.
+- El texto del 400 en `traducir_error_anthropic` ya no remite a la ADR-028.
+
+Pruebas (`tests/unit/test_agente_historial_herramientas.py`, sin red y con clave ficticia), todas con bloques de
+razonamiento firmados, como los de Haiku 5.5:
+- el historial con el `tool_use` huérfano da el 400 en el formato de la API y la reparación lo evita;
+- las llamadas paralelas y secuenciales completas no cambian;
+- con el agente completo, el turno 2 se envía reparado, la memoria no guarda el sintético, el turno cuenta 1
+  llamada con fuentes y el log registra el id reparado y la forma de cada respuesta;
+- una llamada en `invalid_tool_calls` recibe solo el `tool_result` de LangChain, sin sintético ni WARNING.
+
+Mutación sobre `services/agente.py`:
+- quitar la reparación del middleware: falla 1 prueba;
+- quitar el WARNING: falla 1 prueba;
+- devolver el sintético en `ModelResponse.result`, con lo que queda en la memoria: falla 1 prueba;
+- modificar `request.state` en sitio: el mutante es equivalente, porque ese cambio no llega a la memoria.
+
+Pendiente: revisar el log de la próxima prueba real.

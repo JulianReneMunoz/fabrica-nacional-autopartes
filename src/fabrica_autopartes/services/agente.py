@@ -141,16 +141,86 @@ class RecorteHistorial(AgentMiddleware):
     def wrap_model_call(
         self, request: ModelRequest, handler: Callable[[ModelRequest], ModelResponse]
     ) -> ModelResponse:
-        enviados = recortar_historial(request.messages, self.limite_tokens)
+        hilo = _thread_id_actual()
+        # ADR-030: la reparación vive solo en la copia enviada; el estado guardado no cambia.
+        enviados, reparados = reparar_resultados_de_herramientas(
+            recortar_historial(request.messages, self.limite_tokens)
+        )
+        for id_ in reparados:
+            _log.warning("Agente · tool_use sin tool_result reparado · thread=%s · id=%s", hilo, id_)
         # Diagnóstico (ADR-029), solo en el log local: hilo, mensajes y tokens aproximados enviados al modelo.
         _log.info(
             "Agente · llamada al modelo · thread=%s · mensajes=%d de %d · tokens≈%d",
-            _thread_id_actual(),
+            hilo,
             len(enviados),
             len(request.messages),
             count_tokens_approximately(enviados),
         )
-        return handler(request.override(messages=enviados))
+        respuesta = handler(request.override(messages=enviados))
+        for mensaje in respuesta.result:  # Diagnóstico (ADR-030): forma de cada respuesta del modelo.
+            if isinstance(mensaje, AIMessage):
+                _log.info(
+                    "Agente · respuesta del modelo · thread=%s · stop_reason=%s · tool_use=%s · "
+                    "tool_calls=%s · invalid_tool_calls=%s",
+                    hilo,
+                    _stop_reason(mensaje),
+                    _ids_tool_use_en_contenido(mensaje),
+                    [c["id"] for c in mensaje.tool_calls],
+                    [c.get("id") for c in mensaje.invalid_tool_calls],
+                )
+        return respuesta
+
+
+RESULTADO_SINTETICO = "Sin resultado: esta llamada a la herramienta no se ejecutó. No usar como fuente."
+
+
+def _ids_tool_use_en_contenido(mensaje: AIMessage) -> list[str]:
+    """Ids de los bloques ``tool_use`` del contenido (los que la API exige emparejar con un tool_result)."""
+    if not isinstance(mensaje.content, list):
+        return []
+    return [
+        str(b["id"])
+        for b in mensaje.content
+        if isinstance(b, dict) and b.get("type") == "tool_use" and b.get("id")
+    ]
+
+
+def _ids_de_llamadas(mensaje: AIMessage) -> list[str]:
+    """Ids de todas las llamadas: bloques ``tool_use``, ``tool_calls`` e ``invalid_tool_calls``."""
+    ids = _ids_tool_use_en_contenido(mensaje)
+    ids += [str(c["id"]) for c in mensaje.tool_calls if c.get("id")]
+    ids += [str(c["id"]) for c in mensaje.invalid_tool_calls if c.get("id")]
+    return list(dict.fromkeys(ids))
+
+
+def reparar_resultados_de_herramientas(
+    mensajes: Sequence[AnyMessage],
+) -> tuple[list[AnyMessage], list[str]]:
+    """Copia para enviar al modelo en la que cada llamada tiene su resultado inmediatamente después.
+
+    La API de Anthropic rechaza con un 400 un ``tool_use`` sin ``tool_result`` en el mensaje siguiente. Si
+    un ``AIMessage`` del historial tiene una llamada sin su ``ToolMessage`` a continuación (por ejemplo, un
+    bloque ``tool_use`` en ``content`` que no está en ``tool_calls`` ni en ``invalid_tool_calls``; las
+    ``invalid_tool_calls`` ya las responde LangChain), se inserta un ``ToolMessage`` sintético solo en esta
+    copia (ADR-030). No se guarda en la memoria ni cuenta como llamada, fragmento ni
+    fuente del turno. Devuelve los mensajes y los ids reparados.
+    """
+    salida: list[AnyMessage] = []
+    reparados: list[str] = []
+    for i, mensaje in enumerate(mensajes):
+        salida.append(mensaje)
+        if not isinstance(mensaje, AIMessage):
+            continue
+        siguientes: set[str] = set()
+        j = i + 1
+        while j < len(mensajes) and isinstance(mensajes[j], ToolMessage):
+            siguientes.add(str(cast(ToolMessage, mensajes[j]).tool_call_id))
+            j += 1
+        for id_ in _ids_de_llamadas(mensaje):
+            if id_ not in siguientes:
+                salida.append(ToolMessage(RESULTADO_SINTETICO, tool_call_id=id_, status="error"))
+                reparados.append(id_)
+    return salida, reparados
 
 
 def _thread_id_actual() -> str:
