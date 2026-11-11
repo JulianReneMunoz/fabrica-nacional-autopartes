@@ -100,7 +100,8 @@ def test_herramienta_sin_semantico_vuelve_a_bm25_con_aviso(
     assert [f["fragmento_id"] for f in fuentes] == esperado
     assert {f["recuperador"] for f in fuentes} == {"bm25"} and "<fragmento" in texto
     avisos = [r for r in caplog.records if "ADR-031" in r.getMessage()]
-    assert len(avisos) == 1 and "falta el extra" in avisos[0].getMessage()  # una sola vez por proceso
+    # Una sola vez por base: el motivo se guarda en la instancia de BaseConocimiento.
+    assert len(avisos) == 1 and "falta el extra" in avisos[0].getMessage()
 
 
 def test_herramienta_hibrida_usa_el_semantico_inyectado(base: BaseConocimiento) -> None:
@@ -123,6 +124,17 @@ def test_herramienta_hibrida_usa_el_semantico_inyectado(base: BaseConocimiento) 
 def test_agente_usa_el_recuperador_configurado(
     config_con_base: Configuracion, base: BaseConocimiento
 ) -> None:
+    from fabrica_autopartes.knowledge.recuperacion import Resultado
+
+    ultimo = base.fragmentos[-1]
+
+    class SemanticoFalso:
+        def buscar(self, consulta: str, k: int = 5) -> list[Resultado]:
+            return [Resultado(ultimo, 0.9)][:k]
+
+    # Con el semántico disponible, «bm25» en el artefacto prueba que se respetó la configuración y no que
+    # hubo una vuelta a bm25 por falta del semántico.
+    base.usar_recuperador_semantico(SemanticoFalso())
     config = config_con_base.model_copy(update={"agente_recuperador": "bm25"})
     agente = _agente(config, base, llamada("sede principal", "c1"), responder_citando_primera_url())
     r = agente.preguntar("¿Dónde queda la sede principal?", "t-rec")

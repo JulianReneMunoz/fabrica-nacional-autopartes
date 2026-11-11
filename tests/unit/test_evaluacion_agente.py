@@ -231,8 +231,10 @@ def test_el_informe_registra_las_busquedas_sin_cambiar_la_respuesta(config_con_b
     pregunta = [
         {"id": "X1", "tipo": "respondible", "pregunta": "¿Dónde queda la sede?", "hechos": ["calle 13"]}
     ]
-    informe = ea.evaluar_agente(_servicio(config_con_base, *guion()), pregunta, guardar=False)
-    directa = _servicio(config_con_base, *guion()).preguntar_agente("¿Dónde queda la sede?", "t-directa")
+    # Fijado aquí para no depender de FNA_AGENTE_RECUPERADOR en el entorno local.
+    config = config_con_base.model_copy(update={"agente_recuperador": "hibrido"})
+    informe = ea.evaluar_agente(_servicio(config, *guion()), pregunta, guardar=False)
+    directa = _servicio(config, *guion()).preguntar_agente("¿Dónde queda la sede?", "t-directa")
     d = informe["detalle"][0]
     assert informe["recuperador_configurado"] == "hibrido"
     assert d["busquedas"] == [

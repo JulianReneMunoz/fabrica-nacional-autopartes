@@ -55,6 +55,10 @@ def main(argv: list[str] | None = None) -> int:
     if not estado.disponible:
         print(f"Proveedor del agente no disponible: {estado.mensaje}", file=sys.stderr)
         return 3
+    # Recuperador de buscar_fragmentos (ADR-031): sin el semántico, la herramienta vuelve a bm25.
+    disponible, motivo = servicio.base.disponibilidad_semantica()
+    semantico = "disponible" if disponible else f"no disponible ({motivo}): se usará bm25"
+    print(f"Recuperador del agente: {config.agente_recuperador} · semántico {semantico}")
     informe = evaluar_agente(servicio, tope_usd=args.tope_usd, banco=args.banco)
     m, c = informe["metricas"], informe["consumo"]
     print(f"Agente {informe['proveedor']} / {informe['modelo']} · banco {informe['banco']}")
