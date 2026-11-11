@@ -1255,9 +1255,83 @@ Rango del primer fragmento relevante. Se omiten las 9 preguntas que salen en el 
 - Ninguna prueba descarga modelos ni lee `data/vectores`. El semántico se sustituye por recuperadores falsos.
 - Suite completa: 511 aprobadas y 1 saltada (la del agente real).
 
+### Ejecución real con `hibrido` (2026-11-11)
+
+La ejecutó el usuario en PowerShell con su clave: `anthropic` / `claude-haiku-5-5`, prompt v2 del agente, banco v2 y
+`FNA_AGENTE_RECUPERADOR=hibrido` con el semántico disponible. Comando: `scripts/evaluar_agente_real.py --banco v2
+--tope-usd 0.10`. Informe: `evaluacion/resultados/20261111T011717Z_agente_claude-haiku-5-5_banco-v2.json`,
+versionado con `git add -f` después de comprobar que no contiene el prefijo de clave, `api_key`, `secret` ni las
+demás cadenas vetadas. Fue la única ejecución real de este PR.
+
+| Métrica | A-10 (`bm25`) | A-11 (`hibrido`) |
+|---|---|---|
+| Preguntas ejecutadas | 24/24 | 24/24 |
+| Exactitud de respondibles | 0,895 (17/19) | 0,895 (17/19) |
+| Rechazo correcto | 0,8 (4/5) | 0,8 (4/5) |
+| Tasa fundamentada | 0,737 | **0,789** |
+| Exactitud global | 0,875 (21/24) | **0,875 (21/24)** |
+| URL inválidas / errores | 0 / 0 | 0 / 0 |
+| Latencia media | 3265 ms | **2895 ms** (−11 %) |
+| Llamadas al modelo | 50 | **46** |
+| Llamadas a `buscar_fragmentos` | 27 (4 preguntas con 2 o más) | **24** (1 pregunta con 2) |
+| Tokens de entrada / salida | 104 721 / 7333 | **87 339 / 5756** |
+| Costo | USD 0,0141 | **USD 0,0116** (−18 %) |
+| Llamadas con tarifa alta | 0 | 0 |
+
+- La latencia media incluye la carga del semántico en la primera búsqueda del proceso, porque el script no precarga:
+  P01 tardó 15 751 ms. Sin P01, la media es de 2336 ms y la mediana de las 24 preguntas es de 2280 ms.
+- El costo medido (USD 0,0116) quedó por debajo de la estimación (unos USD 0,015). La estimación suponía el mismo
+  número de búsquedas, pero el agente hizo menos llamadas: con el fragmento correcto más arriba, casi nunca repite
+  la búsqueda.
+- Cambios de acierto respecto de A-10, comparados por id entre los dos JSON:
+  - **P11 y P21 pasan a acierto.**
+  - **P08 y P20 pasan a fallo.**
+  - **P18 sigue fallando.**
+
+### Trazabilidad observada
+
+Las 24 búsquedas del informe tienen `recuperador_solicitado: null` y `recuperador_usado: hibrido`: el modelo no
+intentó elegir el recuperador y no hubo ninguna vuelta a `bm25`. Todas usaron `k=5`. En 23, el modelo escribió `k`
+de forma explícita; en P22 lo omitió (`k_por_defecto: true`).
+
+### Diagnóstico de los fallos (sin red; se leyeron solo esas entradas y sus `busquedas`)
+
+| Id | Tipo | Causa | Evidencia |
+|---|---|---|---|
+| P08 | respondible | **Pregunta de lista con una sola búsqueda** | Una búsqueda («unidades de negocio de Fanalca», k=5); en A-10 fueron 2. Nombra Autopartes y Tubos con fuente, y dice que los fragmentos «no los enumeran completos». Encuentra 2 hechos (`autopartes`, `tubos`) de los 3 que pide el mínimo. |
+| P18 | respondible | **Límite documentado** | Una búsqueda («Fanalca número de colaboradores con que inició la empresa») y la frase de rechazo. `nosotros#000` no llega a los 5 primeros, como se midió sin red. |
+| P20 | ausente | **Criterio estricto** | No inventa horario: responde que no consta y da la dirección y el teléfono citados de `autopartes-contacto#000`, en lugar de la frase fija. |
+
+**P20 y P21 alternan entre ejecuciones por el criterio estricto.**
+- En A-10, P20 dio la frase fija y P21 respondió «no hay precios» con un dato citado.
+- En A-11 ocurre al revés.
+- En ninguna de las dos se inventó un dato. La variación es de forma, no de recuperación.
+
+**P11 se resuelve con el híbrido:** con una sola búsqueda, la única fuente citada es `negocios-ambiental#000`, y
+la respuesta incluye «compactadoras» y «contenedores».
+
+### Conclusión
+
+**Se mantiene `hibrido`** como recuperador por defecto del agente:
+- misma exactitud global (0,875) y la misma en respondibles (0,895);
+- P11 resuelto;
+- costo un 18 % menor (USD 0,0141 → 0,0116), menos llamadas y latencia un 11 % menor;
+- tasa fundamentada mayor (0,737 → 0,789).
+
+P08 y P20 no se atribuyen al recuperador:
+- P08 depende de cuántas búsquedas hace el modelo en una pregunta de lista;
+- P20 depende del criterio estricto de las ausentes.
+
 ### Pendiente
 
-- Ejecutar el banco v2 real con `hibrido` (a cargo del usuario).
-  - Costo estimado sobre A-10 (USD 0,0141): unos USD 0,015, por el +4 % de tokens que devuelve la herramienta; el
-    peor caso ronda USD 0,03.
-  - La primera pregunta paga además la carga del semántico (unos 22 s de latencia, sin costo de API).
+- **Calificar las ausentes también con `dato_ausente`** (propuesta; no implementada).
+  - Además del criterio estricto (frase fija, ADR-024), registrar en el informe una métrica paralela,
+    `ausentes_sin_dato_inventado`: acierto si la respuesta no contiene ningún patrón `dato_ausente` de la pregunta
+    del banco v2 (horas en P20, precios en P21, correos personales en P22).
+  - La exactitud oficial seguiría siendo la estricta. La nueva métrica separaría «inventó el dato» (grave) de «no
+    usó la frase fija» (forma), y explicaría la alternancia de P20 y P21.
+  - Requiere pruebas con respuestas simuladas de los dos tipos y una entrada en la bitácora con la métrica
+    recalculada sobre los informes de A-10 y A-11.
+- **P08:** evaluar si el prompt (versión v3, sin borrar v2) debe pedir más de una búsqueda en las preguntas de
+  lista. Medirlo sin red con el agente simulado antes de una ejecución real.
+- **P18:** límite de vocabulario, sin cambios.
