@@ -43,6 +43,16 @@ def obtener_servicio() -> ServicioAsistente:
 servicio = obtener_servicio()
 base = servicio.base
 
+
+@st.cache_resource
+def _precargar_recuperador_agente() -> bool:
+    """Una sola vez por proceso de Streamlit: carga el semántico del agente en segundo plano (ADR-031)."""
+    servicio.precargar_recuperador_agente(en_segundo_plano=True)
+    return True
+
+
+_precargar_recuperador_agente()
+
 # ----------------------------------------------------------------- barra lateral
 with st.sidebar:
     st.header("⚙️ Configuración")

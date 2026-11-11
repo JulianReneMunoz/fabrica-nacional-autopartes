@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -13,8 +15,10 @@ from fabrica_autopartes.core.excepciones import (
     ErrorRecursoNoEncontrado,
 )
 from fabrica_autopartes.domain.modelos import EstadisticasBase, Fragmento
-from fabrica_autopartes.knowledge.recuperacion import IndiceBM25, Recuperador, Resultado
+from fabrica_autopartes.knowledge.recuperacion import IndiceBM25, Recuperador, RecuperadorHibrido, Resultado
 from fabrica_autopartes.pipelines.texto import tokens_aprox
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -44,6 +48,8 @@ class BaseConocimiento:
         self._fragmentos: list[Fragmento] | None = None
         self._indice: IndiceBM25 | None = None
         self._semantico: Recuperador | None = None
+        self._lock_semantico = threading.Lock()
+        self._motivo_sin_semantico: str | None = None  # motivo de la última vuelta a bm25 (ADR-031)
 
     # ------------------------------------------------------------ carga
     @property
@@ -67,22 +73,62 @@ class BaseConocimiento:
         return self._indice
 
     def recuperador(self, nombre: str | None = None) -> Recuperador:
-        """Recuperador ``bm25`` (por defecto) o ``semantico`` (Chroma + nomic, ADR-023)."""
+        """Recuperador ``bm25`` (por defecto), ``semantico`` (Chroma + nomic, ADR-023) o ``hibrido`` (RRF,
+        ADR-031). Los dos últimos lanzan ``ErrorRecuperadorNoDisponible`` si el semántico no está listo."""
         nombre = nombre or self.recuperador_por_defecto
         if nombre == "bm25":
             return self.indice
+        if nombre == "hibrido":
+            return RecuperadorHibrido(self.indice, self._cargar_semantico())
         if nombre != "semantico":
-            raise ErrorConfiguracion(f"Recuperador desconocido: '{nombre}' (bm25 o semantico)")
-        if self._semantico is None:
-            from fabrica_autopartes.knowledge import semantica
+            raise ErrorConfiguracion(f"Recuperador desconocido: '{nombre}' (bm25, semantico o hibrido)")
+        return self._cargar_semantico()
 
-            disponible, motivo = semantica.disponibilidad(self.dir_vectores)
-            if not disponible:
-                raise ErrorRecuperadorNoDisponible(motivo)
-            self._semantico = semantica.IndiceChroma(
-                self.dir_vectores, semantica.EmbeddingsNomic(self.dispositivo_embeddings), self.fragmentos
-            )
-        return self._semantico
+    def _cargar_semantico(self) -> Recuperador:
+        """Carga el modelo y el índice una sola vez por instancia (unos 20 s); el lock evita cargas dobles
+        cuando la precarga en segundo plano y una consulta llegan a la vez."""
+        with self._lock_semantico:
+            if self._semantico is None:
+                from fabrica_autopartes.knowledge import semantica
+
+                disponible, motivo = semantica.disponibilidad(self.dir_vectores)
+                if not disponible:
+                    raise ErrorRecuperadorNoDisponible(motivo)
+                self._semantico = semantica.IndiceChroma(
+                    self.dir_vectores, semantica.EmbeddingsNomic(self.dispositivo_embeddings), self.fragmentos
+                )
+            return self._semantico
+
+    def buscar_con_respaldo(self, consulta: str, k: int, recuperador: str) -> tuple[list[Resultado], str]:
+        """Busca con ``recuperador`` y, si el semántico no está disponible, vuelve a ``bm25`` (ADR-031).
+
+        Devuelve los resultados y el recuperador realmente usado. La vuelta se registra con un aviso la
+        primera vez y el motivo se recuerda, para no volver a comprobar la disponibilidad en cada consulta.
+        """
+        if recuperador != "bm25" and self._motivo_sin_semantico is None:
+            try:
+                return self.recuperador(recuperador).buscar(consulta, k), recuperador
+            except ErrorRecuperadorNoDisponible as exc:
+                self._motivo_sin_semantico = exc.motivo
+                _log.warning(
+                    "Recuperador '%s' no disponible (%s): se usa bm25 (ADR-031).", recuperador, exc.motivo
+                )
+        return self.indice.buscar(consulta, k), "bm25"
+
+    def precargar_semantico(self) -> tuple[bool, str]:
+        """Carga el semántico por adelantado (arranque de la API o de Streamlit). Nunca lanza: devuelve
+        ``(True, "")`` o ``(False, motivo)``, y en ese caso las búsquedas vuelven a bm25."""
+        try:
+            self._cargar_semantico()
+        except ErrorRecuperadorNoDisponible as exc:
+            self._motivo_sin_semantico = exc.motivo
+            _log.warning("Precarga del recuperador semántico omitida (%s): se usará bm25.", exc.motivo)
+            return False, exc.motivo
+        except Exception as exc:  # el arranque no debe caer por un fallo del modelo o de Chroma
+            self._motivo_sin_semantico = f"error al cargar el modelo: {type(exc).__name__}"
+            _log.warning("Precarga del recuperador semántico fallida: %s", exc)
+            return False, self._motivo_sin_semantico
+        return True, ""
 
     def disponibilidad_semantica(self) -> tuple[bool, str]:
         """Disponibilidad del recuperador semántico sin cargar el modelo (para la API y la interfaz)."""
@@ -95,11 +141,13 @@ class BaseConocimiento:
     def usar_recuperador_semantico(self, recuperador: Recuperador) -> None:
         """Inyecta un recuperador semántico (pruebas o índice ya construido)."""
         self._semantico = recuperador
+        self._motivo_sin_semantico = None
 
     def recargar(self) -> None:
         self._fragmentos = None
         self._indice = None
         self._semantico = None
+        self._motivo_sin_semantico = None
 
     def exigir_contenido(self) -> None:
         if not self.fragmentos:

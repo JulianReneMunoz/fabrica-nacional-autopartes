@@ -166,6 +166,88 @@ def test_banco_con_criterios_estructurados_y_json_sin_secretos(
     assert json.loads(texto)["banco"] == "v2" and Path(informe["archivo"]).name.endswith("_banco-v2.json")
 
 
+# ---------------------------------------------------------------- trazabilidad (A-11)
+def test_busquedas_de_mensajes_toma_los_argumentos_de_cada_llamada() -> None:
+    from langchain_core.messages import ToolMessage
+
+    mensajes = [
+        HumanMessage("¿Qué productos fabrica la unidad Ambiental?"),
+        AIMessage(
+            "",
+            tool_calls=[
+                {"name": "buscar_fragmentos", "args": {"consulta": "unidad Ambiental", "k": 8}, "id": "a"},
+                {"name": "buscar_fragmentos", "args": {"consulta": "compactadoras"}, "id": "b"},
+            ],
+        ),
+        ToolMessage(
+            "<fragmento …>", tool_call_id="a", artifact=[{"fragmento_id": "x", "recuperador": "hibrido"}]
+        ),
+        ToolMessage("Sin fragmentos para la consulta.", tool_call_id="b", artifact=[]),
+        AIMessage(
+            "",
+            tool_calls=[
+                {
+                    "name": "buscar_fragmentos",
+                    "args": {"consulta": "Fanalca Ambiental", "k": 3, "recuperador": "bm25"},
+                    "id": "c",
+                },
+                {"name": "otra_herramienta", "args": {"x": 1}, "id": "d"},
+            ],
+        ),
+        ToolMessage(
+            "<fragmento …>", tool_call_id="c", artifact=[{"fragmento_id": "y", "recuperador": "bm25"}]
+        ),
+        AIMessage("Respuesta final"),
+    ]
+    assert ea.busquedas_de_mensajes(mensajes) == [
+        {
+            "consulta": "unidad Ambiental",
+            "k": 8,
+            "k_por_defecto": False,
+            "recuperador_solicitado": None,
+            "recuperador_usado": "hibrido",
+        },
+        {
+            "consulta": "compactadoras",
+            "k": 5,
+            "k_por_defecto": True,
+            "recuperador_solicitado": None,
+            "recuperador_usado": None,
+        },
+        {
+            "consulta": "Fanalca Ambiental",
+            "k": 3,
+            "k_por_defecto": False,
+            "recuperador_solicitado": "bm25",  # el modelo lo envió; la herramienta lo ignora (ADR-031)
+            "recuperador_usado": "bm25",
+        },
+    ]
+
+
+def test_el_informe_registra_las_busquedas_sin_cambiar_la_respuesta(config_con_base: Configuracion) -> None:
+    def guion() -> tuple[object, ...]:
+        return (_con_uso(llamada("sede principal", "c1", k=2), 3000, 100), _cita_con_uso(4000, 300))
+
+    pregunta = [
+        {"id": "X1", "tipo": "respondible", "pregunta": "¿Dónde queda la sede?", "hechos": ["calle 13"]}
+    ]
+    informe = ea.evaluar_agente(_servicio(config_con_base, *guion()), pregunta, guardar=False)
+    directa = _servicio(config_con_base, *guion()).preguntar_agente("¿Dónde queda la sede?", "t-directa")
+    d = informe["detalle"][0]
+    assert informe["recuperador_configurado"] == "hibrido"
+    assert d["busquedas"] == [
+        {
+            "consulta": "sede principal",
+            "k": 2,
+            "k_por_defecto": False,
+            "recuperador_solicitado": None,
+            "recuperador_usado": "bm25",  # sin semántico en el directorio de prueba
+        }
+    ]
+    # La trazabilidad no cambia lo que responde el agente.
+    assert d["respuesta"] == directa.respuesta and d["fuentes"] == [f.fragmento_id for f in directa.fuentes]
+
+
 def test_evaluar_agente_rechaza_banco_desconocido(config_con_base: Configuracion) -> None:
     servicio = _servicio(config_con_base)
     with pytest.raises(ValueError, match="Banco desconocido"):

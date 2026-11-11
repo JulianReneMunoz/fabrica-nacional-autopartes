@@ -6,6 +6,7 @@ no se dupliquen entre interfaces.
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
@@ -182,6 +183,22 @@ class ServicioAsistente:
 
             self._agente = ServicioAgente(self.config, self.base, self._modelo_agente)
         return self._agente
+
+    def precargar_recuperador_agente(self, en_segundo_plano: bool = True) -> threading.Thread | None:
+        """Carga el semántico al arrancar la API o Streamlit si el agente lo usa (ADR-031).
+
+        Con ``FNA_AGENTE_RECUPERADOR=bm25`` no hace nada. En segundo plano no bloquea el arranque; si el
+        semántico no está disponible, se registra un aviso y la herramienta vuelve a bm25. La carga ocurre
+        una sola vez por proceso porque la base guarda el recuperador cargado.
+        """
+        if self.config.agente_recuperador == "bm25":
+            return None
+        if not en_segundo_plano:
+            self.base.precargar_semantico()
+            return None
+        hilo = threading.Thread(target=self.base.precargar_semantico, name="precarga-semantico", daemon=True)
+        hilo.start()
+        return hilo
 
     def preguntar_agente(self, pregunta: str, thread_id: str, canal: str = "api") -> RespuestaAgente:
         r = self.agente.preguntar(pregunta, thread_id)

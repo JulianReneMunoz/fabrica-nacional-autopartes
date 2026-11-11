@@ -33,6 +33,9 @@ services:
       # Agente: proveedor y modelo, sin valores secretos (la clave viene de .env).
       FNA_PROVEEDOR_AGENTE: ${FNA_PROVEEDOR_AGENTE:-anthropic}
       FNA_MODELO_ANTHROPIC: ${FNA_MODELO_ANTHROPIC:-claude-haiku-5-5}
+      # Recuperador de buscar_fragmentos (ADR-031). La imagen no instala el extra semántico: bm25 por
+      # defecto. Con hibrido o semantico sin el extra, el agente vuelve a bm25 con un aviso en el log.
+      FNA_AGENTE_RECUPERADOR: ${FNA_AGENTE_RECUPERADOR:-bm25}
     env_file: [{ path: .env, required: false }]
     ports: ["8000:8000"]
     volumes: ["datos:/app/data"]

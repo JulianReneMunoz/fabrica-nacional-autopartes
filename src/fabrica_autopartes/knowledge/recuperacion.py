@@ -214,3 +214,39 @@ class IndiceBM25:
                 puntajes.append((s, i))
         puntajes.sort(reverse=True)
         return [Resultado(self.fragmentos[i], round(s, 4)) for s, i in puntajes[:k]]
+
+
+# Fusión por rangos recíprocos (RRF, ADR-031): C=60 es el valor habitual de la literatura; cada recuperador
+# aporta sus ``PROFUNDIDAD_HIBRIDO`` primeros resultados.
+CONSTANTE_RRF = 60
+PROFUNDIDAD_HIBRIDO = 20
+
+
+class RecuperadorHibrido:
+    """BM25 y semántico fusionados por RRF: puntaje = Σ 1 / (``constante`` + rango) en cada recuperador.
+
+    Solo usa los rangos, no los puntajes (BM25 y la similitud coseno no están en la misma escala). Los
+    empates se ordenan por id para que el resultado sea determinista.
+    """
+
+    def __init__(
+        self,
+        lexico: Recuperador,
+        semantico: Recuperador,
+        constante: int = CONSTANTE_RRF,
+        profundidad: int = PROFUNDIDAD_HIBRIDO,
+    ) -> None:
+        self.lexico, self.semantico = lexico, semantico
+        self.constante, self.profundidad = constante, profundidad
+
+    def buscar(self, consulta: str, k: int = 5) -> list[Resultado]:
+        if k <= 0:
+            return []
+        puntajes: dict[str, float] = {}
+        fragmentos: dict[str, Fragmento] = {}
+        for recuperador in (self.lexico, self.semantico):
+            for rango, r in enumerate(recuperador.buscar(consulta, self.profundidad), 1):
+                puntajes[r.fragmento.id] = puntajes.get(r.fragmento.id, 0.0) + 1 / (self.constante + rango)
+                fragmentos[r.fragmento.id] = r.fragmento
+        orden = sorted(puntajes, key=lambda i: (-puntajes[i], i))[:k]
+        return [Resultado(fragmentos[i], round(puntajes[i], 6)) for i in orden]

@@ -5,6 +5,10 @@ Documentación interactiva: http://127.0.0.1:8000/docs (Swagger) y /redoc.
 
 from __future__ import annotations
 
+import threading
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +16,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from fabrica_autopartes import __version__
+from fabrica_autopartes.api.dependencias import obtener_servicio
 from fabrica_autopartes.api.routes import agente, base, faq_visor, motos, operacion, simulador, tareas
 from fabrica_autopartes.core.config import RAIZ_PROYECTO
 from fabrica_autopartes.core.excepciones import ErrorFNA
@@ -31,9 +36,33 @@ API del sistema de conocimiento de **Fábrica Nacional de Autopartes (Fanalca)**
 """
 
 
+def _precargar_en_segundo_plano(app: FastAPI) -> None:
+    """Precarga del recuperador semántico del agente (ADR-031) sin bloquear el arranque.
+
+    Todo ocurre en un hilo, incluida la obtención del servicio: un fallo (base de datos, modelo, índice)
+    solo deja un aviso en el log y las búsquedas vuelven a bm25.
+    """
+
+    def _tarea() -> None:
+        try:
+            servicio = app.dependency_overrides.get(obtener_servicio, obtener_servicio)()
+            servicio.precargar_recuperador_agente(en_segundo_plano=False)
+        except Exception as exc:
+            log.warning("Precarga del recuperador del agente omitida: %s", exc)
+
+    threading.Thread(target=_tarea, name="precarga-recuperador-agente", daemon=True).start()
+
+
+@asynccontextmanager
+async def _ciclo_de_vida(app: FastAPI) -> AsyncIterator[None]:
+    _precargar_en_segundo_plano(app)
+    yield
+
+
 def crear_app() -> FastAPI:
     configurar_registro()
     app = FastAPI(
+        lifespan=_ciclo_de_vida,
         title="Fanalca — Base de Conocimiento y Q&A",
         version=__version__,
         description=DESCRIPCION,
