@@ -18,13 +18,13 @@ from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
-from langchain_core.messages import AIMessage, BaseMessage
+from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 
 from fabrica_autopartes.core.excepciones import ErrorFNA, ErrorProveedorLLM
 from fabrica_autopartes.domain.modelos import RespuestaAgente
 from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.llm import salvaguardas as sg
-from fabrica_autopartes.services.agente import urls_permitidas
+from fabrica_autopartes.services.agente import K_POR_DEFECTO, urls_permitidas
 from fabrica_autopartes.services.asistente import ServicioAsistente
 from fabrica_autopartes.services.evaluacion import (
     BANCO_POR_DEFECTO,
@@ -100,6 +100,39 @@ def consumo_de_mensajes(mensajes: Sequence[BaseMessage]) -> ConsumoTurno:
     return ConsumoTurno(llamadas)
 
 
+def busquedas_de_mensajes(mensajes: Sequence[BaseMessage]) -> list[dict]:
+    """Una entrada por cada llamada a ``buscar_fragmentos`` en los ``AIMessage`` del turno (A-11).
+
+    ``consulta`` y ``k`` son los argumentos que escribió el modelo; si omitió ``k`` se registra el valor por
+    defecto con ``k_por_defecto: True``. ``recuperador_solicitado`` es lo que el modelo haya enviado (la
+    herramienta ya no lo acepta como argumento y lo ignora; ADR-031). ``recuperador_usado`` sale del
+    artefacto del ``ToolMessage`` correspondiente (``None`` si la búsqueda no devolvió fragmentos).
+    """
+    usados: dict[str, str | None] = {}
+    for m in mensajes:
+        if isinstance(m, ToolMessage) and isinstance(m.artifact, list) and m.artifact:
+            primero = m.artifact[0]
+            usados[str(m.tool_call_id)] = primero.get("recuperador") if isinstance(primero, dict) else None
+    busquedas: list[dict] = []
+    for m in mensajes:
+        if not isinstance(m, AIMessage):
+            continue
+        for llamada in m.tool_calls:
+            if llamada.get("name") != "buscar_fragmentos":
+                continue
+            args = llamada.get("args") or {}
+            busquedas.append(
+                {
+                    "consulta": args.get("consulta"),
+                    "k": args.get("k", K_POR_DEFECTO),
+                    "k_por_defecto": "k" not in args,
+                    "recuperador_solicitado": args.get("recuperador"),
+                    "recuperador_usado": usados.get(str(llamada.get("id"))),
+                }
+            )
+    return busquedas
+
+
 def preguntar_con_consumo(
     servicio: ServicioAsistente, pregunta: str, thread_id: str, canal: str = "evaluacion"
 ) -> tuple[RespuestaAgente, ConsumoTurno]:
@@ -147,6 +180,7 @@ class ResultadoAgente:
     urls_invalidas: list[str] = field(default_factory=list)
     latencia_ms: int = 0
     consumo: dict = field(default_factory=dict)
+    busquedas: list[dict] = field(default_factory=list)
     error: str | None = None
 
 
@@ -185,11 +219,17 @@ def evaluar_agente(
         try:
             r, consumo = preguntar_con_consumo(servicio, p["pregunta"], thread_id)
         except ErrorProveedorLLM as exc:
-            consumo = consumo_de_mensajes(servicio.agente.historial(thread_id))  # lo gastado antes del error
+            historial = servicio.agente.historial(thread_id)
+            consumo = consumo_de_mensajes(historial)  # lo gastado antes del error
             acumulado += consumo.costo_usd(tarifa)
             resultados.append(
                 ResultadoAgente(
-                    p["id"], p["tipo"], p["pregunta"], consumo=consumo.resumen(tarifa), error=str(exc)[:500]
+                    p["id"],
+                    p["tipo"],
+                    p["pregunta"],
+                    consumo=consumo.resumen(tarifa),
+                    busquedas=busquedas_de_mensajes(historial),
+                    error=str(exc)[:500],
                 )
             )
             # Credenciales, saldo o solicitud inválida se repetirían en cada pregunta: se detiene el banco.
@@ -222,6 +262,8 @@ def evaluar_agente(
                 urls_invalidas=invalidas,
                 latencia_ms=r.latencia_ms,
                 consumo=consumo.resumen(tarifa),
+                # Un hilo por pregunta: todo el historial del hilo es este turno.
+                busquedas=busquedas_de_mensajes(servicio.agente.historial(thread_id)),
             )
         )
 
@@ -235,6 +277,7 @@ def evaluar_agente(
     informe = {
         "fecha": datetime.now(UTC).isoformat(timespec="seconds"),
         "banco": banco,
+        "recuperador_configurado": servicio.config.agente_recuperador,
         "proveedor": servicio.agente.proveedor,
         "modelo": servicio.agente.modelo,
         "tarifa_usd_por_millon": asdict(tarifa),

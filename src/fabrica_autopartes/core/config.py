@@ -20,6 +20,7 @@ RAIZ_PROYECTO = Path(__file__).resolve().parents[3]
 Proveedor = Literal["ollama", "openai", "anthropic", "claude_code", "extractivo"]
 ModoContexto = Literal["auto", "completo", "seleccion"]
 Recuperador = Literal["bm25", "semantico"]
+RecuperadorAgente = Literal["hibrido", "bm25", "semantico"]
 DispositivoEmbeddings = Literal["auto", "cpu", "cuda"]
 ProveedorAgente = Literal["ollama", "anthropic"]
 
@@ -140,6 +141,9 @@ class Configuracion(BaseSettings):
     # valor del ejemplo de la guía de migración oficial. Es un tope, no un gasto.
     agente_max_tokens: int = Field(default=16000, ge=64, le=32000)
     agente_max_iteraciones: int = Field(default=6, ge=1, le=20)
+    # Recuperador de buscar_fragmentos, fijo por configuración (el modelo no lo elige; ADR-031). Con
+    # hibrido o semantico, si falta el extra, el modelo o el índice, la herramienta vuelve a bm25 con aviso.
+    agente_recuperador: RecuperadorAgente = "hibrido"
     agente_limite_historial_tokens: int = Field(default=3000, ge=200, le=100_000)
     agente_timeout_s: float = Field(default=60.0, gt=0, le=600)
     # Tope de conversaciones en memoria (vive en el proceso): al superarlo se descarta la menos usada.

@@ -17,7 +17,7 @@ import time
 from collections import OrderedDict
 from collections.abc import Callable, Sequence
 from html import escape
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 from langchain.agents import create_agent
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
@@ -30,7 +30,7 @@ from langgraph.errors import GraphRecursionError
 from pydantic import BaseModel, Field
 
 from fabrica_autopartes.core.config import Configuracion
-from fabrica_autopartes.core.excepciones import ErrorFNA, ErrorProveedorLLM, ErrorRecuperadorNoDisponible
+from fabrica_autopartes.core.excepciones import ErrorFNA, ErrorProveedorLLM
 from fabrica_autopartes.domain.modelos import Fuente, RespuestaAgente
 from fabrica_autopartes.knowledge.base import BaseConocimiento
 from fabrica_autopartes.llm import salvaguardas as sg
@@ -66,26 +66,36 @@ _MODULOS_DE_RED = ("httpx", "httpcore", "requests", "anthropic", "ollama")
 
 
 # ---------------------------------------------------------------- herramienta
+K_POR_DEFECTO = 5
+
+
 class ArgumentosBusqueda(BaseModel):
-    """Argumentos de ``buscar_fragmentos`` (los valida Pydantic antes de ejecutar la búsqueda)."""
+    """Argumentos de ``buscar_fragmentos`` (los valida Pydantic antes de ejecutar la búsqueda).
+
+    El recuperador no es un argumento: lo fija ``FNA_AGENTE_RECUPERADOR`` (ADR-031). Un ``recuperador``
+    enviado por el modelo se ignora, igual que cualquier otro campo desconocido.
+    """
 
     consulta: str = Field(..., min_length=1, max_length=300, description="Texto a buscar en la base")
-    k: int = Field(default=5, ge=1, le=10, description="Número de fragmentos (1 a 10)")
-    recuperador: Literal["bm25", "semantico"] = Field(
-        default="bm25", description="bm25 (léxico, por defecto) o semantico (nomic + Chroma)"
-    )
+    k: int = Field(default=K_POR_DEFECTO, ge=1, le=10, description="Número de fragmentos (1 a 10)")
 
 
-def crear_herramienta_busqueda(base: BaseConocimiento) -> BaseTool:
-    def buscar_fragmentos(consulta: str, k: int = 5, recuperador: str = "bm25") -> tuple[str, list[dict]]:
-        try:
-            resultados = base.buscar(consulta, k, recuperador)
-        except ErrorRecuperadorNoDisponible as exc:
-            return f"Recuperador semántico no disponible ({exc.motivo}); usar recuperador='bm25'.", []
+def crear_herramienta_busqueda(base: BaseConocimiento, recuperador: str = "hibrido") -> BaseTool:
+    """Herramienta del agente. Con ``hibrido`` o ``semantico`` vuelve a bm25 si el semántico no está
+    disponible (ADR-031); cada fuente del artefacto registra el recuperador usado."""
+
+    def buscar_fragmentos(consulta: str, k: int = K_POR_DEFECTO) -> tuple[str, list[dict]]:
+        resultados, usado = base.buscar_con_respaldo(consulta, k, recuperador)
         if not resultados:
             return "Sin fragmentos para la consulta.", []
+        # «recuperador» es trazabilidad para el evaluador; Fuente lo ignora al construir la respuesta.
         fuentes = [
-            {"fragmento_id": r.fragmento.id, "titulo": r.fragmento.titulo, "url": r.fragmento.url}
+            {
+                "fragmento_id": r.fragmento.id,
+                "titulo": r.fragmento.titulo,
+                "url": r.fragmento.url,
+                "recuperador": usado,
+            }
             for r in resultados
         ]
         # Atributos y texto escapados: comillas o «</fragmento>» no rompen el límite de los datos.
@@ -343,7 +353,7 @@ class ServicioAgente:
                 self._modelo = crear_modelo_agente(self.config)
             self._agente = create_agent(
                 self._modelo,
-                tools=[crear_herramienta_busqueda(self.base)],
+                tools=[crear_herramienta_busqueda(self.base, self.config.agente_recuperador)],
                 system_prompt=self._prompt.sistema.format(empresa=self.config.empresa_nombre),
                 checkpointer=self.memoria,
                 middleware=[RecorteHistorial(self.config.agente_limite_historial_tokens)],
@@ -478,7 +488,11 @@ class ServicioAgente:
         for m in mensajes:
             if isinstance(m, ToolMessage) and isinstance(m.artifact, list):
                 for f in m.artifact:
-                    devueltas.setdefault(f["fragmento_id"], Fuente(**f))
+                    # Solo los campos de Fuente: «recuperador» es trazabilidad del artefacto (ADR-031).
+                    devueltas.setdefault(
+                        f["fragmento_id"],
+                        Fuente(fragmento_id=f["fragmento_id"], titulo=f["titulo"], url=f["url"]),
+                    )
         llamadas = sum(len(m.tool_calls) for m in mensajes if isinstance(m, AIMessage))
         finales = [m for m in mensajes if isinstance(m, AIMessage) and not m.tool_calls]
         respuesta = texto_visible(finales[-1]) if finales else ""

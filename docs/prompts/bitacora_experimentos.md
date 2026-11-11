@@ -1143,3 +1143,195 @@ Posición de `nosotros#000` con BM25 para la pregunta de P18 y tres reformulacio
   - medir con `evaluar_recuperacion` antes y después.
 - Decidir si `faq_visor` y `evaluar_recuperacion` pasan a v2, lo que regenera `data/gold/faq_visor.json` y obliga a
   repetir las mediciones de E-06.
+
+## A-11 · Recuperación del agente: híbrido RRF fijo por configuración y trazabilidad de búsquedas (2026-11-10)
+
+Rama `recuperacion-agente`, desde `544959c`. Decisión en
+[ADR-031](../arquitectura/adr/ADR-031-recuperador-hibrido-agente.md). Sin llamadas reales: pruebas con
+`FNA_ANTHROPIC_API_KEY=clave-ficticia ANTHROPIC_API_KEY= FNA_PROVEEDOR_LLM=extractivo` y `uv run --no-sync`.
+
+### Trazabilidad de las búsquedas
+
+`services/evaluacion_agente.py` registra en cada pregunta del informe `busquedas`, una entrada por cada llamada a
+`buscar_fragmentos`, tomada de los `tool_calls` de los `AIMessage` del turno:
+- `consulta` y `k`;
+- `k_por_defecto`: `True` si el modelo omitió `k`;
+- `recuperador_solicitado`: lo que el modelo haya enviado, que la herramienta ignora;
+- `recuperador_usado`: tomado del artefacto del `ToolMessage`.
+
+El informe también registra `recuperador_configurado`. La respuesta del agente no cambia: una prueba compara el
+detalle del banco con una pregunta directa al mismo agente simulado.
+
+### Mediciones sin red
+
+- Configuración: `Configuracion(_env_file=None, proveedor_llm="extractivo")`, con `FNA_PROVEEDOR_LLM=extractivo` en
+  el comando. Proveedor efectivo impreso: `extractivo`.
+- Corpus: Gold de 167 fragmentos, con ids comprobados contra `git show HEAD:data/gold/fragmentos.jsonl`.
+- Semántico: nomic con el índice de `data/vectores/`, cargado desde la caché local con `HF_HUB_OFFLINE=1`.
+- Banco v2, con la pregunta literal de las 19 respondibles.
+- Relevancia con el criterio de E-06 (fragmento con al menos `minimo` de los hechos): 18 evaluadas, porque P08 no
+  tiene fragmento relevante.
+- Tokens: el texto real que devuelve la herramienta, con su envoltura XML, medido con
+  `count_tokens_approximately`.
+- Ningún archivo se escribió en `evaluacion/resultados/`.
+
+| Opción | hit@1 | hit@3 | hit@5 | hit@8 | MRR@10 | P11 (`negocios-ambiental#000`) | P18 (`nosotros#000`) | Tokens/llamada k=5 (media/máx) | Tokens/llamada k=8 (media/máx) | ms/consulta |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `bm25` (anterior) | 0,667 | 0,833 | 0,944 | 0,944 | 0,754 | 9 | 38 | 840 / 1150 | 1389 / 2109 | 0,2 |
+| `bm25`, título y encabezado ×2 | 0,667 | 0,833 | 0,944 | 0,944 | 0,757 | 4 | 38 | 921 / 1552 | 1452 / 2109 | 0,1 |
+| `bm25`, título y encabezado ×3 | 0,667 | 0,778 | 0,944 | 0,944 | 0,752 | 4 | 38 | 930 / 1513 | 1468 / 2109 | 0,1 |
+| `semantico` | 0,778 | 0,833 | 0,889 | 0,889 | 0,810 | 2 | 35 | 943 / 1493 | 1459 / 2193 | 26,3 |
+| **`hibrido` (RRF, C=60, profundidad 20)** | **0,778** | **0,889** | **0,944** | 0,944 | **0,838** | **1** | fuera del top 20 | 873 / 1395 | 1453 / 2218 | 24,4 |
+
+La primera carga del semántico tardó 22,6 s.
+
+Rango del primer fragmento relevante. Se omiten las 9 preguntas que salen en el puesto 1 en todas las opciones
+(P05, P06, P07, P09, P10, P12, P13, P14, P16 y P17):
+
+| Id | `bm25` | título ×2 | título ×3 | `semantico` | `hibrido` |
+|---|---|---|---|---|---|
+| P01 | 1 | 1 | 1 | fuera del top 10 | 4 |
+| P02 | 3 | 3 | 3 | 3 | 3 |
+| P03 | 2 | 2 | 2 | 4 | 1 |
+| P04 | 1 | 1 | 1 | 1 | 2 |
+| P11 | 5 | 4 | 4 | 1 | 1 |
+| P15 | 5 | 5 | 5 | 1 | 1 |
+| P18 | — | — | — | — | — |
+| P19 | 3 | 3 | 4 | 1 | 1 |
+
+### Lectura de los datos
+
+- **El hit@5 del híbrido es igual al de `bm25` (0,944).** La mejora está en el orden: hit@1 +0,111, hit@3 +0,056 y
+  MRR@10 +0,084.
+  - Ninguna pregunta sale de los 5 primeros: P01 baja al puesto 4 y P04 al 2.
+  - P03, P11, P15 y P19 suben al puesto 1.
+- **En el banco, la ganancia esperada es sobre todo P11.** `negocios-ambiental#000`, la ficha de la unidad, pasa del
+  puesto 9 al 1.
+  - Con `bm25` ya había un fragmento relevante por criterio en el puesto 5 (una noticia con «compactadoras»), y aun
+    así el agente respondió en A-10 que la unidad no existe.
+  - Las demás respondibles que hoy aciertan ya tenían su fragmento relevante dentro de los 5 primeros.
+- **P18 es un límite documentado.** Ninguna opción pone `nosotros#000` entre los 20 primeros con la pregunta
+  literal: la pregunta y el fragmento casi no comparten vocabulario. No se agrega una expansión de consulta
+  específica, que sería ajustar el banco a la medida.
+- **k=8 no mejora nada:** hit@8 es igual a hit@5 en todas las opciones, y añade unos 550 tokens por llamada (+65 %).
+- **Dar más peso al título y al encabezado** solo sube P11 al puesto 4, y cambiaría también el índice del Q&A.
+- **Limitación del criterio de relevancia (igual que en E-06):** los hechos numéricos cortos pueden coincidir por
+  azar. Por eso se informa también la posición del fragmento correcto de P11 y P18.
+
+### Decisión (ADR-031)
+
+1. `buscar_fragmentos` usa el recuperador **`hibrido`** por defecto, con **k=5**.
+2. El recuperador lo **fija `FNA_AGENTE_RECUPERADOR`** (`hibrido`, `bm25` o `semantico`) y **no es un argumento del
+   modelo**: la herramienta solo expone `consulta` y `k`. La justificación está en el ADR-031: sobre las 18
+   respondibles evaluadas, cualquier recuperador solo pierde posiciones frente al híbrido.
+3. **Vuelta explícita a `bm25`** sin el semántico, con un aviso en el log y el recuperador usado en el artefacto.
+4. **El semántico se carga una sola vez por proceso.** La API y Streamlit lo precargan al arrancar, en segundo
+   plano y sin bloquear el arranque.
+5. **Prompt v2 sin cambios.**
+6. **`docker-compose.yml`** define `FNA_AGENTE_RECUPERADOR` con **`bm25`** por defecto, porque la imagen no instala
+   el extra semántico.
+   - Con `hibrido` en Docker, la vuelta a `bm25` con aviso está cubierta por
+     `test_herramienta_sin_semantico_vuelve_a_bm25_con_aviso`, que simula la falta del extra.
+   - No se levantó ningún contenedor. Solo se validó la sintaxis con `docker compose config --quiet`.
+
+### Pruebas (sin red y sin modelos)
+
+- `tests/unit/test_recuperacion_hibrida.py`:
+  - orden RRF, empates por id, sin duplicados y respeto de k;
+  - vuelta a `bm25` y nombre de recuperador desconocido;
+  - precarga sin excepciones;
+  - una sola carga con 4 hilos a la vez;
+  - valor por defecto y variable `FNA_AGENTE_RECUPERADOR`;
+  - precarga del servicio según el recuperador;
+  - el arranque de la API precarga, y no cae si la precarga falla.
+- `tests/unit/test_agente.py`:
+  - la herramienta solo expone `consulta` y `k`, e ignora un `recuperador` enviado por el modelo;
+  - vuelve a `bm25` con un solo aviso por base;
+  - usa el semántico inyectado;
+  - el agente respeta `bm25` configurado aunque haya semántico disponible.
+- `tests/unit/test_evaluacion_agente.py`:
+  - `busquedas_de_mensajes` con argumentos completos, k omitido, recuperador solicitado y búsqueda sin fragmentos;
+  - el informe del banco registra las búsquedas sin cambiar la respuesta.
+- Ninguna prueba descarga modelos ni lee `data/vectores`. El semántico se sustituye por recuperadores falsos.
+- Suite completa: 511 aprobadas y 1 saltada (la del agente real).
+
+### Ejecución real con `hibrido` (2026-11-11)
+
+La ejecutó el usuario en PowerShell con su clave: `anthropic` / `claude-haiku-5-5`, prompt v2 del agente, banco v2 y
+`FNA_AGENTE_RECUPERADOR=hibrido` con el semántico disponible. Comando: `scripts/evaluar_agente_real.py --banco v2
+--tope-usd 0.10`. Informe: `evaluacion/resultados/20261111T011717Z_agente_claude-haiku-5-5_banco-v2.json`,
+versionado con `git add -f` después de comprobar que no contiene el prefijo de clave, `api_key`, `secret` ni las
+demás cadenas vetadas. Fue la única ejecución real de este PR.
+
+| Métrica | A-10 (`bm25`) | A-11 (`hibrido`) |
+|---|---|---|
+| Preguntas ejecutadas | 24/24 | 24/24 |
+| Exactitud de respondibles | 0,895 (17/19) | 0,895 (17/19) |
+| Rechazo correcto | 0,8 (4/5) | 0,8 (4/5) |
+| Tasa fundamentada | 0,737 | **0,789** |
+| Exactitud global | 0,875 (21/24) | **0,875 (21/24)** |
+| URL inválidas / errores | 0 / 0 | 0 / 0 |
+| Latencia media | 3265 ms | **2895 ms** (−11 %) |
+| Llamadas al modelo | 50 | **46** |
+| Llamadas a `buscar_fragmentos` | 27 (4 preguntas con 2 o más) | **24** (1 pregunta con 2) |
+| Tokens de entrada / salida | 104 721 / 7333 | **87 339 / 5756** |
+| Costo | USD 0,0141 | **USD 0,0116** (−18 %) |
+| Llamadas con tarifa alta | 0 | 0 |
+
+- La latencia media incluye la carga del semántico en la primera búsqueda del proceso, porque el script no precarga:
+  P01 tardó 15 751 ms. Sin P01, la media es de 2336 ms y la mediana de las 24 preguntas es de 2280 ms.
+- El costo medido (USD 0,0116) quedó por debajo de la estimación (unos USD 0,015). La estimación suponía el mismo
+  número de búsquedas, pero el agente hizo menos llamadas: con el fragmento correcto más arriba, casi nunca repite
+  la búsqueda.
+- Cambios de acierto respecto de A-10, comparados por id entre los dos JSON:
+  - **P11 y P21 pasan a acierto.**
+  - **P08 y P20 pasan a fallo.**
+  - **P18 sigue fallando.**
+
+### Trazabilidad observada
+
+Las 24 búsquedas del informe tienen `recuperador_solicitado: null` y `recuperador_usado: hibrido`: el modelo no
+intentó elegir el recuperador y no hubo ninguna vuelta a `bm25`. Todas usaron `k=5`. En 23, el modelo escribió `k`
+de forma explícita; en P22 lo omitió (`k_por_defecto: true`).
+
+### Diagnóstico de los fallos (sin red; se leyeron solo esas entradas y sus `busquedas`)
+
+| Id | Tipo | Causa | Evidencia |
+|---|---|---|---|
+| P08 | respondible | **Pregunta de lista con una sola búsqueda** | Una búsqueda («unidades de negocio de Fanalca», k=5); en A-10 fueron 2. Nombra Autopartes y Tubos con fuente, y dice que los fragmentos «no los enumeran completos». Encuentra 2 hechos (`autopartes`, `tubos`) de los 3 que pide el mínimo. |
+| P18 | respondible | **Límite documentado** | Una búsqueda («Fanalca número de colaboradores con que inició la empresa») y la frase de rechazo. `nosotros#000` no llega a los 5 primeros, como se midió sin red. |
+| P20 | ausente | **Criterio estricto** | No inventa horario: responde que no consta y da la dirección y el teléfono citados de `autopartes-contacto#000`, en lugar de la frase fija. |
+
+**P20 y P21 alternan entre ejecuciones por el criterio estricto.**
+- En A-10, P20 dio la frase fija y P21 respondió «no hay precios» con un dato citado.
+- En A-11 ocurre al revés.
+- En ninguna de las dos se inventó un dato. La variación es de forma, no de recuperación.
+
+**P11 se resuelve con el híbrido:** con una sola búsqueda, la única fuente citada es `negocios-ambiental#000`, y
+la respuesta incluye «compactadoras» y «contenedores».
+
+### Conclusión
+
+**Se mantiene `hibrido`** como recuperador por defecto del agente:
+- misma exactitud global (0,875) y la misma en respondibles (0,895);
+- P11 resuelto;
+- costo un 18 % menor (USD 0,0141 → 0,0116), menos llamadas y latencia un 11 % menor;
+- tasa fundamentada mayor (0,737 → 0,789).
+
+P08 y P20 no se atribuyen al recuperador:
+- P08 depende de cuántas búsquedas hace el modelo en una pregunta de lista;
+- P20 depende del criterio estricto de las ausentes.
+
+### Pendiente
+
+- **Calificar las ausentes también con `dato_ausente`** (propuesta; no implementada).
+  - Además del criterio estricto (frase fija, ADR-024), registrar en el informe una métrica paralela,
+    `ausentes_sin_dato_inventado`: acierto si la respuesta no contiene ningún patrón `dato_ausente` de la pregunta
+    del banco v2 (horas en P20, precios en P21, correos personales en P22).
+  - La exactitud oficial seguiría siendo la estricta. La nueva métrica separaría «inventó el dato» (grave) de «no
+    usó la frase fija» (forma), y explicaría la alternancia de P20 y P21.
+  - Requiere pruebas con respuestas simuladas de los dos tipos y una entrada en la bitácora con la métrica
+    recalculada sobre los informes de A-10 y A-11.
+- **P08:** evaluar si el prompt (versión v3, sin borrar v2) debe pedir más de una búsqueda en las preguntas de
+  lista. Medirlo sin red con el agente simulado antes de una ejecución real.
+- **P18:** límite de vocabulario, sin cambios.
