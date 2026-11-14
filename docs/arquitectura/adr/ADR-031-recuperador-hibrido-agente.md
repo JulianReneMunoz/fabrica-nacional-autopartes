@@ -74,6 +74,11 @@
   - El Q&A (`FNA_RECUPERADOR`, ADR-023), el MCP y la evaluación de recuperación no cambian.
   - Las cifras del agente anteriores a este ADR (A-08 y A-10) se obtuvieron con `bm25` por defecto. Se reproducen
     con `FNA_AGENTE_RECUPERADOR=bm25`.
+  - **Cliente de Chroma único por ruta (corrección posterior):** el hilo `precarga-semantico` y `disponibilidad()`
+    creaban a la vez dos `chromadb.PersistentClient` sobre la misma ruta, y Chroma 1.5.9 no lo admite («Could not
+    connect to tenant default_tenant»). `semantica.obtener_cliente()` crea un solo cliente por ruta bajo un lock,
+    y `disponibilidad()` ya no lanza: si el índice no abre, devuelve el motivo y el Q&A sigue con `bm25`.
+    `semantica.liberar_cliente()` cierra el cliente antes de borrar una carpeta de vectores temporal.
 - **Alternativas descartadas:**
   - **`semantico` por defecto:** peor hit@5 (0,889); pierde P01.
   - **k=8:** sin ganancia en hit y con unos 550 tokens más por llamada.

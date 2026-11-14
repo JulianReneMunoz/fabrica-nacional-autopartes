@@ -12,6 +12,7 @@ instalación base (y CI) funcione sin el extra.
 from __future__ import annotations
 
 import logging
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +36,39 @@ COLECCION = "fragmentos_nomic_v15"
 
 _log = logging.getLogger(__name__)
 
+_CLIENTES: dict[str, Any] = {}
+_LOCK_CLIENTES = threading.Lock()
+
+
+def obtener_cliente(directorio: Path) -> Any:
+    """Cliente de Chroma único por ruta en el proceso. Chroma 1.5.9 no admite crear clientes concurrentes
+    sobre la misma ruta: la precarga en segundo plano y ``disponibilidad()`` competían (ADR-031).
+
+    Si la construcción falla, no se guarda nada y un intento posterior vuelve a probar.
+    """
+    clave = str(directorio.resolve())
+    with _LOCK_CLIENTES:
+        if clave not in _CLIENTES:
+            import chromadb
+            from chromadb.config import Settings
+
+            _CLIENTES[clave] = chromadb.PersistentClient(
+                path=clave, settings=Settings(anonymized_telemetry=False)
+            )
+        return _CLIENTES[clave]
+
+
+def liberar_cliente(directorio: Path) -> None:
+    """Quita de la caché el cliente de ``directorio`` y lo cierra (libera el SQLite antes de borrarla)."""
+    with _LOCK_CLIENTES:
+        cliente = _CLIENTES.pop(str(directorio.resolve()), None)
+    if cliente is None:
+        return
+    try:
+        cliente.close()
+    except Exception as exc:  # cerrar es una cortesía: un fallo no debe impedir el borrado
+        _log.debug("No se pudo cerrar el cliente de Chroma en %s: %s", directorio, exc)
+
 
 def extra_instalado() -> bool:
     """Indica si están instalados los paquetes del extra semántico."""
@@ -57,10 +91,7 @@ def indice_construido(directorio: Path) -> bool:
     """Indica si ``directorio`` contiene la colección de Chroma (sin cargar el modelo)."""
     if not (directorio / "chroma.sqlite3").exists():
         return False
-    import chromadb
-    from chromadb.config import Settings
-
-    cliente = chromadb.PersistentClient(path=str(directorio), settings=Settings(anonymized_telemetry=False))
+    cliente = obtener_cliente(directorio)
     return any(c.name == COLECCION for c in cliente.list_collections())
 
 
@@ -70,7 +101,12 @@ def disponibilidad(directorio: Path) -> tuple[bool, str]:
         return False, "falta el extra semantica-cpu o semantica-gpu (torch, sentence-transformers, chromadb)"
     if not modelo_en_cache():
         return False, f"el modelo {MODELO_NOMIC} no está en la caché de Hugging Face"
-    if not indice_construido(directorio):
+    try:
+        construido = indice_construido(directorio)
+    except Exception as exc:  # la interfaz no debe caer: sin índice abrible se sigue con bm25
+        _log.warning("No se pudo abrir el índice vectorial en %s: %s", directorio, exc)
+        return False, f"no se pudo abrir el índice vectorial: {type(exc).__name__}"
+    if not construido:
         return False, f"no existe el índice vectorial en {directorio.name}/"
     return True, ""
 
@@ -134,16 +170,11 @@ class IndiceChroma:
     """
 
     def __init__(self, directorio: Path, funcion: FuncionEmbeddings, fragmentos: list[Fragmento]) -> None:
-        import chromadb
-        from chromadb.config import Settings
-
         self.directorio = directorio
         self.funcion = funcion
         self._por_id = {f.id: f for f in fragmentos}
         directorio.mkdir(parents=True, exist_ok=True)
-        self._cliente = chromadb.PersistentClient(
-            path=str(directorio), settings=Settings(anonymized_telemetry=False)
-        )
+        self._cliente = obtener_cliente(directorio)
 
     def indexar(self, fragmentos: list[Fragmento]) -> int:
         """Reconstruye la colección completa a partir de los fragmentos Gold."""

@@ -248,10 +248,16 @@ class ServicioAsistente:
     ) -> list[str]:
         """Experimento de prefijos y comparación BM25 frente a semántico; guarda resultados en evaluacion/."""
         import tempfile
+        from contextlib import ExitStack
         from pathlib import Path
 
         from fabrica_autopartes.knowledge.embeddings import FuncionEmbeddings, dispositivos_disponibles
-        from fabrica_autopartes.knowledge.semantica import EmbeddingsNomic, IndiceChroma, info_entorno
+        from fabrica_autopartes.knowledge.semantica import (
+            EmbeddingsNomic,
+            IndiceChroma,
+            info_entorno,
+            liberar_cliente,
+        )
         from fabrica_autopartes.services import evaluacion_recuperacion as er
         from fabrica_autopartes.services.evaluacion import cargar_preguntas
 
@@ -259,7 +265,11 @@ class ServicioAsistente:
         fragmentos = self.base.fragmentos
         dispositivos = dispositivos_disponibles(dispositivos)
         # Chroma mantiene abierto su SQLite en Windows: la carpeta temporal se borra sin exigirlo.
-        with tempfile.TemporaryDirectory(prefix="fna-vectores-", ignore_cleanup_errors=True) as tmp:
+        # ExitStack sale antes que la carpeta temporal: los clientes en caché se cierran antes del borrado.
+        with (
+            tempfile.TemporaryDirectory(prefix="fna-vectores-", ignore_cleanup_errors=True) as tmp,
+            ExitStack() as liberar,
+        ):
             mediciones = iter(range(1, 10_000))
 
             def crear_indice(funcion: FuncionEmbeddings, principal: bool) -> IndiceChroma:
@@ -267,6 +277,7 @@ class ServicioAsistente:
                 if principal:
                     return IndiceChroma(self.config.dir_vectores, funcion, fragmentos)
                 directorio = Path(tmp) / f"medicion_{next(mediciones)}"
+                liberar.callback(liberar_cliente, directorio)
                 return IndiceChroma(directorio, funcion, fragmentos)
 
             prefijos, recuperadores = er.evaluar_base_semantica(

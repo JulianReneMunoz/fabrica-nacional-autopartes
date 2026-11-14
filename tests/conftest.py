@@ -4,6 +4,8 @@ construida desde la semilla del repositorio y servicio con el modelo extractivo.
 from __future__ import annotations
 
 import shutil
+import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -56,3 +58,13 @@ def _sin_cache_de_flags_claude() -> None:
     from fabrica_autopartes.llm import claude_code
 
     claude_code._CLI_VERIFICADAS.clear()
+
+
+@pytest.fixture(autouse=True)
+def _sin_clientes_chroma_entre_pruebas() -> Iterator[None]:
+    """Cierra y olvida los clientes de Chroma en caché tras cada prueba (SQLite abiertos en Windows)."""
+    yield
+    semantica = sys.modules.get("fabrica_autopartes.knowledge.semantica")
+    if semantica is not None:
+        for clave in list(semantica._CLIENTES):
+            semantica.liberar_cliente(Path(clave))

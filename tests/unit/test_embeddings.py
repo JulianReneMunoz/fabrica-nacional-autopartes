@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+import sys
+import threading
+import time
+import types
+from pathlib import Path
+from typing import Any
+
 import numpy as np
 import pytest
 
@@ -148,3 +156,81 @@ def test_disponibilidad_sin_indice(config_con_base: Configuracion, monkeypatch: 
     assert not disponible and "índice vectorial" in motivo
     monkeypatch.setattr(semantica, "modelo_en_cache", lambda: False)
     assert "caché" in semantica.disponibilidad(config_con_base.dir_datos / "vectores")[1]
+
+
+def _chromadb_falso(monkeypatch: pytest.MonkeyPatch, cliente: type) -> None:
+    """Registra ``chromadb`` y ``chromadb.config`` falsos: no se abre ningún SQLite ni se usa la red."""
+    modulo = types.ModuleType("chromadb")
+    config = types.ModuleType("chromadb.config")
+
+    class Settings:
+        def __init__(self, **kwargs: Any) -> None:
+            self.kwargs = kwargs
+
+    config.Settings = Settings  # type: ignore[attr-defined]
+    modulo.PersistentClient = cliente  # type: ignore[attr-defined]
+    modulo.config = config  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "chromadb", modulo)
+    monkeypatch.setitem(sys.modules, "chromadb.config", config)
+
+
+def test_disponibilidad_falla_al_abrir_indice(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    from fabrica_autopartes.knowledge import semantica
+
+    intentos: list[str] = []
+
+    class ClienteQueFalla:
+        def __init__(self, path: str, settings: Any) -> None:
+            intentos.append(path)
+            raise ValueError("Could not connect to tenant default_tenant")
+
+    _chromadb_falso(monkeypatch, ClienteQueFalla)
+    monkeypatch.setattr(semantica, "_CLIENTES", {})
+    monkeypatch.setattr(semantica, "extra_instalado", lambda: True)
+    monkeypatch.setattr(semantica, "modelo_en_cache", lambda: True)
+    (tmp_path / "chroma.sqlite3").touch()
+    with caplog.at_level(logging.WARNING, logger=semantica.__name__):
+        resultado = semantica.disponibilidad(tmp_path)
+    assert resultado == (False, "no se pudo abrir el índice vectorial: ValueError")
+    assert "tenant" in caplog.text
+    assert semantica._CLIENTES == {}  # el fallo no queda en caché: un intento posterior vuelve a probar
+    semantica.disponibilidad(tmp_path)
+    assert len(intentos) == 2
+
+
+def test_obtener_cliente_semantica_un_solo_cliente_con_hilos(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from fabrica_autopartes.knowledge import semantica
+
+    construcciones: list[str] = []
+
+    class ClienteContado:
+        def __init__(self, path: str, settings: Any) -> None:
+            construcciones.append(path)
+            time.sleep(0.05)  # ensancha la ventana de la carrera
+
+        def close(self) -> None:
+            pass
+
+    _chromadb_falso(monkeypatch, ClienteContado)
+    monkeypatch.setattr(semantica, "_CLIENTES", {})
+    hilos_n = 8
+    barrera = threading.Barrier(hilos_n)
+    obtenidos: list[Any] = []
+
+    def obtener() -> None:
+        barrera.wait()
+        obtenidos.append(semantica.obtener_cliente(tmp_path))
+
+    hilos = [threading.Thread(target=obtener) for _ in range(hilos_n)]
+    for hilo in hilos:
+        hilo.start()
+    for hilo in hilos:
+        hilo.join(timeout=5)
+    assert len(construcciones) == 1 and len(obtenidos) == hilos_n
+    assert all(c is obtenidos[0] for c in obtenidos)
+    semantica.liberar_cliente(tmp_path)
+    assert semantica._CLIENTES == {}
