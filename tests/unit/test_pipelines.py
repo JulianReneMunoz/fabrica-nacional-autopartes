@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import pytest
 import yaml
 
 from fabrica_autopartes.domain.modelos import DocumentoLimpio, Fragmento
@@ -12,10 +13,13 @@ from fabrica_autopartes.pipelines.calidad import validar_fragmentos
 from fabrica_autopartes.pipelines.fragmentacion import fragmentar_documento
 from fabrica_autopartes.pipelines.gold import construir_gold, documento_a_markdown
 from fabrica_autopartes.pipelines.texto import (
+    MARCA_PERFIL,
     anonimizar_correos,
+    anonimizar_datos_personales,
     contiene_datos_personales,
     hash_texto,
     normalizar,
+    omitir_autopresentaciones,
     similitud_jaccard,
     tokens_aprox,
 )
@@ -46,6 +50,56 @@ def test_anonimizar_correos_conserva_corporativos() -> None:
     limpio = anonimizar_correos(texto)
     assert "[correo omitido]" in limpio and "fanalcambiental@fanalca.com" in limpio
     assert contiene_datos_personales(texto) and not contiene_datos_personales(limpio)
+
+
+@pytest.mark.parametrize(
+    ("texto", "marca", "dato"),
+    [
+        ("mi cédula es 1.234.567.890", "[documento omitido]", "1.234.567.890"),
+        ("CC 12345678", "[documento omitido]", "12345678"),
+        ("NIT 900.123.456-7", "[documento omitido]", "900.123.456-7"),
+        ("llamar al +57 300 123 4567", "[teléfono omitido]", "300 123 4567"),
+        ("fijo 601 234 5678", "[teléfono omitido]", "601 234 5678"),
+        ("escribir a juan@gmail.com", "[correo omitido]", "juan@gmail.com"),
+    ],
+)
+def test_anonimizar_datos_personales_oculta(texto: str, marca: str, dato: str) -> None:
+    limpio = anonimizar_datos_personales(texto)
+    assert marca in limpio
+    assert dato not in limpio
+
+
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "$ 2.192.000",
+        "$2.192.000",
+        "2.192.000 COP",
+        "2192000 pesos",
+        "escribir a ventas@fanalca.com",
+        "CB 160F de 2026 con 4 unidades y versión 3.5",
+    ],
+)
+def test_anonimizar_datos_personales_conserva(texto: str) -> None:
+    assert anonimizar_datos_personales(texto) == texto
+
+
+@pytest.mark.parametrize(
+    ("texto", "esperado"),
+    [
+        ("me llamo Ana Gómez y trabajo en Empresa X", f"{MARCA_PERFIL} y {MARCA_PERFIL}"),
+        ("Hola, soy Ana Gómez de Empresa X, ¿qué hace Fanalca?", f"Hola, {MARCA_PERFIL}, ¿qué hace Fanalca?"),
+        ("Mi nombre es ana gómez. ¿Dónde está la sede?", f"{MARCA_PERFIL}. ¿Dónde está la sede?"),
+        ("Mi empresa es Empresa X y quiero una cotización", f"{MARCA_PERFIL} y quiero una cotización"),
+    ],
+)
+def test_omitir_autopresentaciones(texto: str, esperado: str) -> None:
+    assert omitir_autopresentaciones(texto) == esperado
+
+
+def test_soy_sin_nombre_propio_no_se_omite() -> None:
+    texto = "soy cliente de Fanalca, ¿qué productos tienen?"
+    assert omitir_autopresentaciones(texto) == texto
 
 
 def test_inferir_seccion() -> None:

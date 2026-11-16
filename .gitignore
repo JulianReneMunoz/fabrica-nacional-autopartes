@@ -15,6 +15,18 @@ htmlcov/
 # Datos locales y bases de auditoría
 data/app.db
 data/*.db
+# Memorias y checkpointers SQLite de los agentes (contienen datos de usuarios; Ley 1581 de 2012)
+data/*.sqlite
+data/*.sqlite-wal
+data/*.sqlite-shm
+data/*.sqlite-journal
+# Mallas de relieve de IGNIS derivadas de mockups con un vehículo y emblema reales: no se publican
+web/public/models/ignis_transformable.glb
+web/public/assets/ignis_transformable.glb
+web/public/assets/ignis_*_static.obj
+data/mallas_demostrativas/
+# Mockups de referencia (renders con un vehículo y emblema reales): solo uso local, no se publican
+data/referencias_mockups/
 evaluacion/resultados/*.json
 !evaluacion/resultados/.gitkeep
 
