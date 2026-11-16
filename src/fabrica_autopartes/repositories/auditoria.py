@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import sqlite3
+import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import create_engine, func, select
@@ -25,8 +29,6 @@ class RepositorioAuditoria:
     def __init__(self, url: str, crear_esquema: bool = True) -> None:
         conexion = {"check_same_thread": False} if url.startswith("sqlite") else {}
         if url.startswith("sqlite:///"):
-            from pathlib import Path
-
             Path(url.removeprefix("sqlite:///")).parent.mkdir(parents=True, exist_ok=True)
         self.motor: Engine = create_engine(url, connect_args=conexion, future=True)
         self._sesiones = sessionmaker(self.motor, expire_on_commit=False)
@@ -142,3 +144,85 @@ class RepositorioAuditoria:
                     .limit(limite)
                 )
             )
+
+
+# --- Memoria del agente IGNIS (tabla SQLite propia por hilo; SqliteSaver y Store llegan en #28 y #29) ---
+class RepositorioMemoriaIgnis:
+    """Tablas SQLite propias: turnos por hilo (thread_id) y pares clave-valor por namespace."""
+
+    def __init__(self, db_path: Path) -> None:
+        self.db_path = db_path
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        # Una conexión por operación (válida desde cualquier hilo) y un lock para las escrituras: evita que
+        # dos turnos simultáneos del mismo hilo calculen el mismo número de turno.
+        self._lock_escritura = threading.Lock()
+        self._inicializar_tablas()
+
+    @contextmanager
+    def _conectar(self) -> Iterator[sqlite3.Connection]:
+        """Abre, confirma y cierra la conexión (``with sqlite3.connect`` no la cierra)."""
+        conn = sqlite3.connect(self.db_path, timeout=10)
+        try:
+            with conn:
+                yield conn
+        finally:
+            conn.close()
+
+    def _inicializar_tablas(self) -> None:
+        with self._lock_escritura, self._conectar() as conn:
+            conn.execute(
+                """CREATE TABLE IF NOT EXISTS checkpoints_hilos (
+                    thread_id TEXT,
+                    turno INTEGER,
+                    rol TEXT,
+                    contenido TEXT,
+                    metadatos TEXT,
+                    PRIMARY KEY (thread_id, turno)
+                )"""
+            )
+            conn.execute(
+                """CREATE TABLE IF NOT EXISTS store_largo_plazo (
+                    namespace TEXT,
+                    clave TEXT,
+                    valor TEXT,
+                    PRIMARY KEY (namespace, clave)
+                )"""
+            )
+
+    def guardar_turno(
+        self, thread_id: str, rol: str, contenido: str, metadatos: dict[str, Any] | None = None
+    ) -> None:
+        with self._lock_escritura, self._conectar() as conn:
+            cur = conn.execute(
+                "SELECT COALESCE(MAX(turno), 0) + 1 FROM checkpoints_hilos WHERE thread_id = ?", (thread_id,)
+            )
+            sig_turno = cur.fetchone()[0]
+            conn.execute(
+                "INSERT INTO checkpoints_hilos VALUES (?, ?, ?, ?, ?)",
+                (thread_id, sig_turno, rol, contenido, json.dumps(metadatos or {}, ensure_ascii=False)),
+            )
+
+    def obtener_historial_recortado(self, thread_id: str, max_turnos: int = 8) -> list[dict[str, str]]:
+        """Devuelve los últimos N turnos del hilo con un LIMIT de SQL."""
+        with self._conectar() as conn:
+            filas = conn.execute(
+                "SELECT rol, contenido FROM checkpoints_hilos WHERE thread_id = ? "
+                "ORDER BY turno DESC LIMIT ?",
+                (thread_id, max_turnos),
+            ).fetchall()
+        return [{"role": r, "content": c} for r, c in reversed(filas)]
+
+    def guardar_en_store(self, namespace: str, clave: str, valor: str) -> None:
+        with self._lock_escritura, self._conectar() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO store_largo_plazo VALUES (?, ?, ?)",
+                (namespace, clave, valor),
+            )
+
+    def buscar_en_store(self, namespace: str) -> dict[str, str]:
+        with self._conectar() as conn:
+            filas = conn.execute(
+                "SELECT clave, valor FROM store_largo_plazo WHERE namespace = ?",
+                (namespace,),
+            ).fetchall()
+        return {k: v for k, v in filas}

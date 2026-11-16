@@ -10,7 +10,7 @@ import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
@@ -32,8 +32,9 @@ from fabrica_autopartes.llm.proveedores import traducir_error_anthropic
 from fabrica_autopartes.llm.salvaguardas import es_rechazo as es_rechazo
 from fabrica_autopartes.pipelines.bronze import AlmacenBronze
 from fabrica_autopartes.pipelines.orquestador import ResultadoConstruccion, construir_base
-from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria
+from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria, RepositorioMemoriaIgnis
 from fabrica_autopartes.scraping.rastreador import Rastreador, ResultadoRastreo
+from fabrica_autopartes.services.agente_ignis_m2 import AgenteIgnisM2
 from fabrica_autopartes.services.busqueda_web import ServicioBusquedaWeb
 
 if TYPE_CHECKING:  # importación perezosa en tiempo de ejecución: langchain.agents solo se carga si se usa
@@ -84,6 +85,8 @@ class ServicioAsistente:
         self._modelo_inyectado = modelo_llm  # usado por pruebas
         self._modelo_agente = modelo_agente  # modelo simulado en pruebas (ADR-024)
         self._agente: ServicioAgente | None = None
+        self._ignis: AgenteIgnisM2 | None = None
+        self._lock_ignis = threading.Lock()
         self._busqueda_web = ServicioBusquedaWeb(
             self.config.dir_datos / "revision" / "hallazgos_web.jsonl", buscador=buscador_web
         )
@@ -222,6 +225,16 @@ class ServicioAsistente:
         from fabrica_autopartes.llm.proveedores import verificar_proveedor_agente
 
         return verificar_proveedor_agente(self.config, consultar=consultar)
+
+    # ------------------------------------------------------------ agente IGNIS
+    def responder_ignis(self, mensaje: str, thread_id: str) -> dict[str, Any]:
+        """Turno del agente IGNIS (Módulo 2). El agente se construye en el primer uso, nunca al importar."""
+        if self._ignis is None:
+            with self._lock_ignis:
+                if self._ignis is None:
+                    memoria = RepositorioMemoriaIgnis(self.config.dir_datos / "ignis_memoria_m2.sqlite")
+                    self._ignis = AgenteIgnisM2(self.base, memoria)
+        return self._ignis.ejecutar_turno(mensaje, thread_id)
 
     # ------------------------------------------------------- base semántica
     def disponibilidad_semantica(self) -> tuple[bool, str]:

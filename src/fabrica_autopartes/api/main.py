@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 
 from fabrica_autopartes import __version__
 from fabrica_autopartes.api.dependencias import obtener_servicio
+from fabrica_autopartes.api.ignis_routes import router_ignis
 from fabrica_autopartes.api.routes import agente, base, faq_visor, motos, operacion, simulador, tareas
 from fabrica_autopartes.core.config import RAIZ_PROYECTO
 from fabrica_autopartes.core.excepciones import ErrorFNA
@@ -103,6 +104,7 @@ def crear_app() -> FastAPI:
     app.include_router(simulador.router)
     app.include_router(motos.router)
     app.include_router(faq_visor.router)
+    app.include_router(router_ignis)
 
     # Versión 2.0: modelos GLB generados y frontend 3D compilado (si existen).
     dir_modelos = RAIZ_PROYECTO / "web" / "public" / "modelos"
