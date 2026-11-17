@@ -20,8 +20,8 @@ services:
 
   api:
     build: { context: ., dockerfile: infra/docker/Dockerfile }
-    # Un solo worker: la memoria del agente (InMemorySaver) vive en el proceso; con varios workers, cada uno tendría
-    # la suya y un mismo thread_id vería historiales distintos (ADR-024).
+    # Un solo worker: el historial (SqliteSaver) y las preferencias (Store) se guardan en data/*.sqlite y sobreviven
+    # al reinicio, pero el tope de hilos del agente vive en el proceso (ADR-024, ADR-033).
     command:
       - sh
       - -c

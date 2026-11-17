@@ -27,7 +27,10 @@ Especificación vigente: `docs/arquitectura/` (ADR y `moto_honda.md`), `docs/req
   física, generación GLB) solo depende de la biblioteca estándar, Pydantic, numpy y trimesh.
 - Las interfaces solo llaman a `services.asistente.ServicioAsistente`; no acceden a la base
   relacional ni a `llm.cadenas` directamente.
-- El acceso a SQL pasa exclusivamente por `repositories/auditoria.py`.
+- El acceso a SQL pasa exclusivamente por `repositories/` (ADR-033): `auditoria.py` (auditoría y
+  memoria por hilo de IGNIS) y `memoria_agente.py` (checkpointer SqliteSaver y Store de LangGraph).
+  Ningún otro paquete importa `sqlite3`, `sqlalchemy`, `langgraph.checkpoint.sqlite` ni
+  `langgraph.store.sqlite`.
 - Los prompts viven en `src/fabrica_autopartes/llm/prompts/*.yaml`, versionados (v1, v2, v3).
   Un prompt nuevo es una versión nueva; no se modifica una versión ya evaluada.
 

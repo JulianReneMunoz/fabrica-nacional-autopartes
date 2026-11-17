@@ -39,7 +39,7 @@ The system SHALL NOT guardar nombres, empresas, correos, teléfonos ni documento
 
 #### Scenario: Tres preferencias guardadas
 - **WHEN** se ejecuta el caso 2A
-- **THEN** la ruta es `memoria_store` (etiqueta «Memoria») y el Store del usuario contiene `area_interes` = «compras de repuestos», `formato_respuesta` = «breve» y `linea_producto` = «motocicletas»
+- **THEN** la ruta es `memoria_store` (etiqueta «Memoria») y el Store del usuario contiene `area_laboral` = «compras de repuestos», `formato_respuesta` = «breve» y `linea_producto` = «motocicletas»
 - **AND** la respuesta confirma las preferencias guardadas sin repetir datos personales
 
 #### Scenario: Autopresentación con nombre
