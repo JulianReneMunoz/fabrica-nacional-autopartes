@@ -212,6 +212,25 @@ class RepositorioMemoriaIgnis:
             ).fetchall()
         return [{"role": r, "content": c} for r, c in reversed(filas)]
 
+    def obtener_historial(self, thread_id: str, limite: int = 200) -> list[dict[str, Any]]:
+        """Historial completo del hilo, del más antiguo al más reciente, con los metadatos de cada turno
+        (ruta y citas de las respuestas). Se usa para reabrir un hilo en la interfaz."""
+        with self._conectar() as conn:
+            filas = conn.execute(
+                "SELECT rol, contenido, metadatos FROM checkpoints_hilos WHERE thread_id = ? "
+                "ORDER BY turno ASC LIMIT ?",
+                (thread_id, limite),
+            ).fetchall()
+        return [{"role": r, "content": c, "metadatos": json.loads(m or "{}")} for r, c, m in filas]
+
+    def tiene_historial(self, thread_id: str) -> bool:
+        """Verdadero si el hilo ya tiene turnos guardados (por ejemplo, hilos anteriores a las sesiones)."""
+        with self._conectar() as conn:
+            fila = conn.execute(
+                "SELECT 1 FROM checkpoints_hilos WHERE thread_id = ? LIMIT 1", (thread_id,)
+            ).fetchone()
+        return fila is not None
+
     def guardar_en_store(self, namespace: str, clave: str, valor: str) -> None:
         with self._lock_escritura, self._conectar() as conn:
             conn.execute(

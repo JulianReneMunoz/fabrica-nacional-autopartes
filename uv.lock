@@ -828,6 +828,7 @@ source = { editable = "." }
 dependencies = [
     { name = "alembic" },
     { name = "beautifulsoup4" },
+    { name = "cryptography" },
     { name = "fastapi" },
     { name = "langchain" },
     { name = "langchain-anthropic" },
@@ -899,6 +900,7 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.12" },
     { name = "chromadb", marker = "extra == 'semantica-cpu'", specifier = "==1.5.9" },
     { name = "chromadb", marker = "extra == 'semantica-gpu'", specifier = "==1.5.9" },
+    { name = "cryptography", specifier = ">=50.0.2" },
     { name = "einops", marker = "extra == 'semantica-cpu'", specifier = "==0.8.2" },
     { name = "einops", marker = "extra == 'semantica-gpu'", specifier = "==0.8.2" },
     { name = "fastapi", specifier = ">=0.115" },

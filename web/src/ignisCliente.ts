@@ -199,6 +199,26 @@ export function crearLectorSSE(alEvento: (e: EventoConversacion) => void) {
 
 class SinStream extends Error {}
 
+/**
+ * Rechazo de sesión del stream (ADR-033): 401 sin sesión o vencida, 403 hilo ajeno, 503 sin IGNIS_SECRETO_SESION.
+ * No cae al respaldo Q&A: la vista muestra el mensaje y, con 401, vuelve a la pantalla de entrada.
+ */
+export class ErrorSesionIgnis extends Error {
+  constructor(
+    readonly estado: 401 | 403 | 503,
+    mensaje: string,
+  ) {
+    super(mensaje);
+    this.name = "ErrorSesionIgnis";
+  }
+}
+
+const MENSAJE_SESION: Record<401 | 403 | 503, string> = {
+  401: "La sesión expiró: vuelve a entrar con tu alias.",
+  403: "Este hilo no pertenece a tu sesión. Abre uno nuevo o elige uno de «Mi sesión».",
+  503: "Las sesiones no están configuradas en el servidor (falta IGNIS_SECRETO_SESION).",
+};
+
 /** Envía la consulta y emite eventos. Devuelve el origen usado (SSE o respaldo). */
 export async function conversar(
   mensaje: string,
@@ -209,10 +229,14 @@ export async function conversar(
   try {
     const r = await fetch(`${BASE}/ignis/stream`, {
       method: "POST",
+      credentials: "same-origin",
       headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
       body: JSON.stringify({ mensaje, thread_id: threadId }),
       signal: senal,
     });
+    if (r.status === 401 || r.status === 403 || r.status === 503) {
+      throw new ErrorSesionIgnis(r.status, MENSAJE_SESION[r.status]);
+    }
     if (!r.ok || !r.body) throw new SinStream(`HTTP ${r.status}`);
     const lector = crearLectorSSE(alEvento);
     const reader = r.body.getReader();

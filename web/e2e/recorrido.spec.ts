@@ -51,7 +51,13 @@ function vigilarConsola(page: Page): string[] {
   return errores;
 }
 
+/** Pestañas con implementación propia (sin estado vacío). */
+const IMPLEMENTADAS = new Set(["atencion", "sesion"]);
+
 test.beforeEach(async ({ page }) => {
+  // Sesión real (ADR-033): page.request comparte las cookies con el contexto del navegador.
+  const entrada = await page.request.post("/api/v1/sesiones", { data: { alias: "e2e-01" } });
+  expect(entrada.status()).toBe(201);
   await page.route("**/api/v1/ignis/stream", (r) =>
     r.fulfill({ status: 200, contentType: "text/event-stream", body: 'data: {"tipo":"metadatos","ruta_router":"directo","citas":[]}\n\ndata: {"tipo":"oracion","texto":"Hola."}\n\ndata: {"tipo":"fin"}\n\ndata: [DONE]\n\n' }),
   );
@@ -66,7 +72,7 @@ test("todas las pestañas abren sin errores en la consola", async ({ page }) => 
     await page.goto(`/app/#/${id}`);
     await expect(page.locator("main h1")).toHaveText(id === "atencion" ? "Atención al cliente — IGNIS" : etiqueta);
     await expect(nav.locator('a[aria-current="page"]')).toHaveText(etiqueta);
-    if (id !== "atencion") await expect(page.getByText(/No disponible todavía \(/)).toBeVisible();
+    if (!IMPLEMENTADAS.has(id)) await expect(page.getByText(/No disponible todavía \(/)).toBeVisible();
   }
   expect(errores).toEqual([]);
 });
@@ -101,4 +107,36 @@ test("por debajo de 1023 px la barra lateral se vuelve un menú", async ({ page 
   await nav.getByRole("link", { name: "Panel" }).click();
   await expect(page).toHaveURL(/#\/panel$/);
   await expect(nav).toBeHidden();
+});
+
+test("sin sesión se muestra la pantalla de entrada y entrar con un alias abre la aplicación", async ({ page }) => {
+  await page.context().clearCookies();
+  await page.goto("/app/#/atencion");
+  await expect(page.getByRole("heading", { name: "Entrar a IGNIS" })).toBeVisible();
+  await page.getByLabel("Alias").fill("ana-gomez");
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await expect(page.getByRole("alert")).toContainText("Alias no válido");
+  await page.getByLabel("Alias").fill("e2e-02");
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await expect(page.locator("main h1")).toHaveText("Atención al cliente — IGNIS");
+  await expect(page.locator(".ig-usuario")).toContainText("e2e-02");
+});
+
+test("«Mi sesión» lista el hilo y «Reabrir» carga su historial; «Cerrar sesión» vuelve a la entrada", async ({ page }) => {
+  await page.unroute("**/api/v1/ignis/stream"); // respuesta real del backend para que el hilo tenga historial
+  await page.goto("/app/#/atencion");
+  await page.getByLabel("Mensaje para IGNIS").fill("Hola, buenas tardes.");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".ignis-insignia.ruta").last()).toContainText("Directo");
+
+  await page.goto("/app/#/sesion");
+  const fila = page.locator("tbody tr").first();
+  await expect(fila).toContainText("Hola, buenas tardes.");
+  await fila.getByRole("button", { name: /Reabrir/ }).click();
+  await expect(page).toHaveURL(/#\/atencion$/);
+  await expect(page.locator(".ignis-nota").first()).toContainText("Hilo reabierto");
+  await expect(page.locator(".ignis-burbuja.usuario").first()).toContainText("Hola, buenas tardes.");
+
+  await page.getByRole("button", { name: "Cerrar sesión" }).first().click();
+  await expect(page.getByRole("heading", { name: "Entrar a IGNIS" })).toBeVisible();
 });

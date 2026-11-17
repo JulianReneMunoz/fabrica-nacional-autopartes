@@ -9,8 +9,17 @@
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import { crearAmplitud, pulsarAmplitud } from "./escanerIgnis";
 import { CASOS_VALIDACION } from "./ignisCasos";
-import { conversar, etiquetaRuta, type AdjuntoIgnis, type CitaIgnis, type EventoConversacion } from "./ignisCliente";
+import {
+  conversar,
+  ErrorSesionIgnis,
+  etiquetaRuta,
+  normalizarCita,
+  type AdjuntoIgnis,
+  type CitaIgnis,
+  type EventoConversacion,
+} from "./ignisCliente";
 import { useIgnis } from "./ignisContexto";
+import { ErrorSesion, mensajesHilo, type MensajeHiloDTO } from "./ignisSesion";
 import { Icono, type NombreIcono } from "./IgnisIconos";
 import {
   DURACION_ENTREGA_MS,
@@ -47,12 +56,25 @@ interface Mensaje {
   pendiente?: boolean;
 }
 
-/** Recursos de la columna E. Se habilitan solo si el archivo existe (HEAD). */
-/** Recursos ilustrativos del proyecto: se marcan `demostrativo` (no son datos de Fanalca). */
+/**
+ * Recursos de la columna E. Se habilitan solo si el archivo existe (HEAD). Son ilustrativos del proyecto: se
+ * marcan `demostrativo` (no son datos de Fanalca).
+ */
 const RECURSOS = [
   { id: "plano", titulo: "Plano técnico 2D", detalle: "PNG · plano ilustrativo", url: `${import.meta.env.BASE_URL}assets/blueprint_2d.png`, icono: "plano" as NombreIcono, borde: "rojo", accion: "Descargar plano 2D" },
   { id: "modelo", titulo: "Modelo 3D del auto", detalle: "GLB · ignis_auto", url: `${import.meta.env.BASE_URL}models/ignis_auto.glb`, icono: "cubo" as NombreIcono, borde: "naranja", accion: "Descargar modelo 3D" },
 ];
+
+/** Turno guardado en el servidor → mensaje de la conversación (ruta y citas incluidas). */
+function mensajeDesdeHistorial(m: MensajeHiloDTO, id: number): Mensaje {
+  return {
+    id,
+    rol: m.rol === "user" ? "usuario" : "ignis",
+    texto: m.contenido,
+    ruta: m.ruta ?? undefined,
+    citas: m.citas.map(normalizarCita).filter((c): c is CitaIgnis => c !== null),
+  };
+}
 
 const SALUDO: Mensaje = { id: 0, rol: "ignis", texto: "Hola, soy IGNIS. Escríbeme o pulsa el micrófono para empezar." };
 
@@ -109,7 +131,7 @@ class LimiteEscena extends Component<{ children: ReactNode }, { fallo: boolean }
 }
 
 export default function IgnisAtencionView() {
-  const { hilo, nuevoHilo, reportarSse } = useIgnis();
+  const { hilo, nuevoHilo, reportarSse, aperturas, sesionVencida } = useIgnis();
   const [estado, despachar] = useReducer(transicionarEstadoIgnis, "auto" as EstadoAvatarIgnis);
   const [mensajes, setMensajes] = useState<Mensaje[]>([SALUDO]);
   const [entrada, setEntrada] = useState("");
@@ -142,7 +164,11 @@ export default function IgnisAtencionView() {
   const silenciarRef = useRef(silenciar);
   silenciarRef.current = silenciar;
   const entregaPendiente = useRef(false);
-  const hiloVisto = useRef(hilo);
+  // Hilo y apertura cuyo historial ya se muestra (null al montar: se carga el historial del hilo activo).
+  const hiloVisto = useRef<string | null>(null);
+  const aperturaVista = useRef(aperturas);
+  // Envíos hechos en esta vista: la carga del historial no pisa una conversación que ya empezó.
+  const envios = useRef(0);
   const reconocimiento = useRef<ReconocimientoVoz | null>(null);
   const microfono = useRef<MicrofonoIgnis | null>(null);
   const finMensajes = useRef<HTMLDivElement>(null);
@@ -224,10 +250,39 @@ export default function IgnisAtencionView() {
     setAdjuntosSesion([]);
   }, []);
 
-  // «Nuevo hilo» del encabezado global: la conversación visible empieza de cero.
+  // Hilo activo nuevo («Nuevo hilo»), el más reciente al entrar o uno reabierto desde «Mi sesión»: se muestra su
+  // historial guardado en el servidor (vacío en un hilo nuevo).
   useEffect(() => {
-    if (hilo !== hiloVisto.current) reiniciarConversacion(hilo, "Hilo nuevo");
-  }, [hilo, reiniciarConversacion]);
+    if (!hilo) return;
+    if (hilo === hiloVisto.current && aperturas === aperturaVista.current) return;
+    hiloVisto.current = hilo;
+    aperturaVista.current = aperturas;
+    let vivo = true;
+    setAdjuntosSesion([]);
+    setMensajes([{ id: idMensaje.current++, rol: "sistema", texto: `Cargando el hilo (${hilo})…` }]);
+    // Si el usuario envía un mensaje antes de que llegue el historial, el historial no pisa la conversación.
+    const enviosAlCargar = envios.current;
+    mensajesHilo(hilo)
+      .then((lista) => {
+        if (!vivo || envios.current !== enviosAlCargar) return;
+        if (lista.length === 0) {
+          setMensajes([SALUDO, { id: idMensaje.current++, rol: "sistema", texto: `Hilo nuevo (${hilo})` }]);
+          return;
+        }
+        setMensajes([
+          { id: idMensaje.current++, rol: "sistema", texto: `Hilo reabierto (${hilo})` },
+          ...lista.map((m) => mensajeDesdeHistorial(m, idMensaje.current++)),
+        ]);
+      })
+      .catch((e: unknown) => {
+        if (!vivo || envios.current !== enviosAlCargar) return;
+        if (e instanceof ErrorSesion && e.estado === 401) sesionVencida();
+        setMensajes([{ id: idMensaje.current++, rol: "sistema", texto: e instanceof Error ? e.message : String(e) }]);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [hilo, aperturas, sesionVencida]);
 
   const actualizar = useCallback((id: number, cambio: (m: Mensaje) => Mensaje) => {
     setMensajes((lista) => lista.map((m) => (m.id === id ? cambio(m) : m)));
@@ -237,10 +292,27 @@ export default function IgnisAtencionView() {
     async (texto: string, opciones: { porVoz?: boolean; hiloNuevo?: boolean } = {}) => {
       const consulta = texto.trim().slice(0, MAX_MENSAJE);
       if (!consulta || esperandoRef.current) return;
-      let hiloActual = hilo;
-      if (opciones.hiloNuevo) {
-        hiloActual = nuevoHilo();
-        reiniciarConversacion(hiloActual, "Hilo nuevo para probar la memoria de largo plazo");
+      // El hilo activo lo prepara el contexto al entrar; mientras tanto no se envía (evita crear dos hilos).
+      if (!hilo && !opciones.hiloNuevo) {
+        setAviso("Preparando la sesión… vuelve a intentarlo en un momento.");
+        return;
+      }
+      esperandoRef.current = true;
+      envios.current += 1;
+      setEsperando(true);
+      // El hilo lo crea el servidor y lo liga al usuario de la sesión (caso 2B: hilo nuevo).
+      let hiloActual = hilo ?? "";
+      try {
+        if (opciones.hiloNuevo) {
+          hiloActual = await nuevoHilo();
+          reiniciarConversacion(hiloActual, "Hilo nuevo para probar la memoria de largo plazo");
+        }
+      } catch (e) {
+        esperandoRef.current = false;
+        setEsperando(false);
+        if (e instanceof ErrorSesion && e.estado === 401) sesionVencida();
+        setAviso(e instanceof Error ? e.message : String(e));
+        return;
       }
       voz.current?.detener();
       window.clearTimeout(temporizadorTeclado.current);
@@ -256,8 +328,6 @@ export default function IgnisAtencionView() {
         { id: idUsuario, rol: "usuario", texto: consulta, porVoz: opciones.porVoz },
         { id: idRespuesta, rol: "ignis", texto: "", pendiente: true },
       ]);
-      esperandoRef.current = true;
-      setEsperando(true);
       despachar({ type: "ENVIAR_CONSULTA" });
 
       let pendienteVoz = "";
@@ -297,14 +367,20 @@ export default function IgnisAtencionView() {
       try {
         const origen = await conversar(consulta, hiloActual, alEvento);
         reportarSse(origen === "sse" ? "en_linea" : "respaldo");
-      } catch {
-        reportarSse("sin_conexion");
-        actualizar(idRespuesta, (m) => ({
-          ...m,
-          texto: "No fue posible conectar con el backend. Verifica que FastAPI esté en ejecución y vuelve a intentarlo.",
-          error: true,
-          pendiente: false,
-        }));
+      } catch (e) {
+        if (e instanceof ErrorSesionIgnis) {
+          // 401, 403 o 503: rechazo de sesión, no falta de conexión; no se usa el respaldo Q&A.
+          actualizar(idRespuesta, (m) => ({ ...m, texto: e.message, error: true, pendiente: false }));
+          if (e.estado === 401) sesionVencida();
+        } else {
+          reportarSse("sin_conexion");
+          actualizar(idRespuesta, (m) => ({
+            ...m,
+            texto: "No fue posible conectar con el backend. Verifica que FastAPI esté en ejecución y vuelve a intentarlo.",
+            error: true,
+            pendiente: false,
+          }));
+        }
       } finally {
         esperandoRef.current = false;
         setEsperando(false);
@@ -312,7 +388,7 @@ export default function IgnisAtencionView() {
         if (!voz.current?.hablando) cerrarTurno();
       }
     },
-    [actualizar, cerrarTurno, hilo, nuevoHilo, reiniciarConversacion, reportarSse],
+    [actualizar, cerrarTurno, hilo, nuevoHilo, reiniciarConversacion, reportarSse, sesionVencida],
   );
 
   const alTeclear = (valor: string) => {
@@ -683,7 +759,7 @@ export default function IgnisAtencionView() {
               >
                 <Icono nombre="mic" tamano={18} />
               </button>
-              <button type="submit" className="ignis-btn primario" disabled={esperando || !entrada.trim()}>
+              <button type="submit" className="ignis-btn primario" disabled={esperando || !hilo || !entrada.trim()}>
                 <Icono nombre="enviar" tamano={16} /> Enviar
               </button>
             </form>

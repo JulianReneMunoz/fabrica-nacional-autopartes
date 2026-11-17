@@ -34,12 +34,15 @@ from fabrica_autopartes.pipelines.bronze import AlmacenBronze
 from fabrica_autopartes.pipelines.orquestador import ResultadoConstruccion, construir_base
 from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria, RepositorioMemoriaIgnis
 from fabrica_autopartes.repositories.memoria_agente import cerrar_store, crear_store
+from fabrica_autopartes.repositories.sesiones import Hilo, RepositorioSesiones
 from fabrica_autopartes.scraping.rastreador import Rastreador, ResultadoRastreo
-
-# Reexportado para la API: usuario provisional de IGNIS hasta las sesiones (TODO PR b, #44 del plan).
-from fabrica_autopartes.services.agente_ignis_m2 import USUARIO_DEMO as USUARIO_DEMO
 from fabrica_autopartes.services.agente_ignis_m2 import AgenteIgnisM2
 from fabrica_autopartes.services.busqueda_web import ServicioBusquedaWeb
+from fabrica_autopartes.services.sesiones import ServicioSesiones
+
+# Reexportado para la API: las interfaces solo importan de ``services.asistente``.
+from fabrica_autopartes.services.sesiones import SesionUsuario as SesionUsuario
+from fabrica_autopartes.services.sesiones import sesiones_configuradas as sesiones_configuradas
 
 if TYPE_CHECKING:  # importación perezosa en tiempo de ejecución: langchain.agents solo se carga si se usa
     from fabrica_autopartes.llm.proveedores import EstadoProveedor
@@ -90,6 +93,8 @@ class ServicioAsistente:
         self._modelo_agente = modelo_agente  # modelo simulado en pruebas (ADR-024)
         self._agente: ServicioAgente | None = None
         self._ignis: AgenteIgnisM2 | None = None
+        self._memoria_ignis: RepositorioMemoriaIgnis | None = None
+        self._sesiones: ServicioSesiones | None = None
         self._lock_ignis = threading.Lock()
         self._busqueda_web = ServicioBusquedaWeb(
             self.config.dir_datos / "revision" / "hallazgos_web.jsonl", buscador=buscador_web
@@ -231,19 +236,66 @@ class ServicioAsistente:
         return verificar_proveedor_agente(self.config, consultar=consultar)
 
     # ------------------------------------------------------------ agente IGNIS
-    def responder_ignis(self, mensaje: str, thread_id: str, user_id: str = USUARIO_DEMO) -> dict[str, Any]:
-        """Turno del agente IGNIS (Módulo 2). El agente se construye en el primer uso, nunca al importar.
+    def _memoria(self) -> RepositorioMemoriaIgnis:
+        """Historial por hilo de IGNIS, compartido por el agente y las sesiones (se crea en el primer uso)."""
+        if self._memoria_ignis is None:
+            with self._lock_ignis:
+                if self._memoria_ignis is None:
+                    self._memoria_ignis = RepositorioMemoriaIgnis(
+                        self.config.dir_datos / "ignis_memoria_m2.sqlite"
+                    )
+        return self._memoria_ignis
 
-        ``user_id`` es el usuario seudónimo dueño del namespace ``("preferencias", user_id)`` del Store.
-        TODO(PR b, #44 del plan): la API pasará el ``user_id`` de la sesión; hoy usa ``USUARIO_DEMO``.
+    def responder_ignis(self, mensaje: str, thread_id: str, user_id: str) -> dict[str, Any]:
+        """Turno del agente IGNIS (Módulo 2) para el usuario seudónimo de la sesión (ADR-033).
+
+        Comprueba que el hilo sea del usuario (o nuevo y sin historial), ejecuta el turno y actualiza el
+        título, los turnos y la última ruta del hilo. El agente se construye en el primer uso, nunca al
+        importar.
         """
+        self.sesiones.reclamar_hilo(thread_id, user_id)
         if self._ignis is None:
+            memoria = self._memoria()
             with self._lock_ignis:
                 if self._ignis is None:
-                    memoria = RepositorioMemoriaIgnis(self.config.dir_datos / "ignis_memoria_m2.sqlite")
                     # Store persistente de largo plazo (ADR-033): sobrevive al reinicio del backend.
                     self._ignis = AgenteIgnisM2(self.base, memoria, crear_store(self.config.ruta_store))
-        return self._ignis.ejecutar_turno(mensaje, thread_id, user_id)
+        resultado = self._ignis.ejecutar_turno(mensaje, thread_id, user_id)
+        self.sesiones.registrar_turno(thread_id, user_id, mensaje, str(resultado.get("ruta_router", "")))
+        return resultado
+
+    # ------------------------------------------------------------ sesiones (ADR-033)
+    @property
+    def sesiones(self) -> ServicioSesiones:
+        """Sesiones por usuario seudónimo. Sin ``IGNIS_SECRETO_SESION`` sus operaciones lanzan 503."""
+        if self._sesiones is None:
+            memoria = self._memoria()
+            with self._lock_ignis:
+                if self._sesiones is None:
+                    self._sesiones = ServicioSesiones(
+                        self.config, RepositorioSesiones(self.config.ruta_sesiones), memoria
+                    )
+        return self._sesiones
+
+    def crear_sesion(self, alias: str) -> tuple[SesionUsuario, str]:
+        """Valida el alias y devuelve la sesión y el token cifrado de la cookie (el alias no se guarda)."""
+        return self.sesiones.crear_sesion(alias)
+
+    def sesion_activa(self, token: str | None) -> tuple[SesionUsuario, str]:
+        """Sesión de la cookie y token renovado (8 h deslizantes); ``ErrorSinSesion`` si no es válida."""
+        return self.sesiones.sesion_activa(token)
+
+    def reclamar_hilo(self, thread_id: str, user_id: str) -> None:
+        self.sesiones.reclamar_hilo(thread_id, user_id)
+
+    def hilos(self, user_id: str) -> list[Hilo]:
+        return self.sesiones.hilos(user_id)
+
+    def nuevo_hilo(self, user_id: str) -> str:
+        return self.sesiones.nuevo_hilo(user_id)
+
+    def mensajes_hilo(self, thread_id: str, user_id: str) -> list[dict[str, Any]]:
+        return self.sesiones.mensajes(thread_id, user_id)
 
     def cerrar(self) -> None:
         """Cierra las conexiones de memoria persistente (checkpointer del agente y Store de IGNIS)."""

@@ -8,6 +8,13 @@ import { defineConfig } from "@playwright/test";
 const ejecutable = process.env.CHROME_PATH;
 const BASE = process.env.FNA_URL ?? "http://127.0.0.1:8000";
 
+/**
+ * Secreto de sesiones SOLO para las pruebas e2e (ADR-033): se pasa al uvicorn que levanta Playwright. Nunca va en
+ * .env.example ni como valor por defecto en el código. Si ya hay un servidor en el puerto (reuseExistingServer),
+ * ese servidor debe tener su propio IGNIS_SECRETO_SESION.
+ */
+const SECRETO_SESION_E2E = "secreto-e2e-de-sesiones-ignis-solo-pruebas-0123456789";
+
 export default defineConfig({
   testDir: "e2e",
   timeout: 90_000,
@@ -28,5 +35,6 @@ export default defineConfig({
     url: `${BASE}/salud`,
     reuseExistingServer: true,
     timeout: 120_000,
+    env: { ...(process.env as Record<string, string>), IGNIS_SECRETO_SESION: SECRETO_SESION_E2E },
   },
 });

@@ -3,7 +3,7 @@
 // Uso: npm run build && npx vite preview --port 4173   (en otra terminal)   y luego   node scripts/capturar_ignis.mjs
 // Variables: IGNIS_URL (por omisión http://127.0.0.1:4173/app/), IGNIS_SALIDA (carpeta de salida),
 //            IGNIS_POSTER=1 también guarda el póster estático del auto en public/assets/ignis_auto_poster.jpg.
-// El backend se simula con rutas de Playwright (salud, SSE y TTS): las capturas no dependen de FastAPI ni de la red.
+// El backend se simula con rutas de Playwright (salud, sesiones, SSE y TTS): no depende de FastAPI ni de la red.
 import { chromium } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 
@@ -50,8 +50,27 @@ const navegador = await chromium.launch({
   args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--no-proxy-server", "--autoplay-policy=no-user-gesture-required"],
 });
 
-async function abrir(ancho, alto) {
+// Sesión simulada (ADR-033): usuario de ejemplo, un hilo con historial y respuestas de los endpoints de sesión.
+const SESION = { alias: "compras-01", user_id_corto: "a1b2c3d4" };
+const HILOS = [
+  { thread_id: "hilo-captura", titulo: "¿Qué dice el corpus sobre la unidad de autopartes?", turnos: 1, ultima_ruta: "rag_documental", creado: "2026-11-17T09:00:00+00:00", actualizado: "2026-11-17T09:05:00+00:00" },
+  { thread_id: "hilo-anterior", titulo: "¿Qué preferencias tengo guardadas?", turnos: 2, ultima_ruta: "memoria_store", creado: "2026-11-16T15:00:00+00:00", actualizado: "2026-11-16T15:10:00+00:00" },
+];
+const json = (r, datos, status = 200) => r.fulfill({ status, contentType: "application/json", body: JSON.stringify(datos) });
+
+async function abrir(ancho, alto, { conSesion = true } = {}) {
   const pagina = await navegador.newPage({ viewport: { width: ancho, height: alto } });
+  await pagina.route("**/api/v1/sesiones**", (r) => {
+    const url = new URL(r.request().url());
+    const metodo = r.request().method();
+    if (url.pathname.endsWith("/sesiones") && metodo === "POST") return json(r, SESION, 201);
+    if (!conSesion) return json(r, { codigo: "sin_sesion", mensaje: "Sesión no válida o vencida." }, 401);
+    if (url.pathname.endsWith("/yo")) return json(r, SESION);
+    if (url.pathname.endsWith("/yo/hilos") && metodo === "POST") return json(r, { thread_id: "hilo-nuevo" }, 201);
+    if (url.pathname.endsWith("/yo/hilos")) return json(r, HILOS);
+    if (url.pathname.endsWith("/mensajes")) return json(r, []);
+    return json(r, {}, 204);
+  });
   await pagina.route("**/salud", (r) => r.fulfill({ status: 200, contentType: "application/json", body: '{"estado":"ok"}' }));
   await pagina.route("**/api/v1/ignis/stream", (r) => r.fulfill({ status: 200, contentType: "text/event-stream", body: SSE }));
   await pagina.route("**/api/v1/tts", (r) => r.fulfill({ status: 200, contentType: "audio/wav", body: WAV }));
@@ -70,7 +89,14 @@ async function enviar(pagina, texto) {
 }
 
 for (const [ancho, alto] of [[1600, 900], [1366, 768], [900, 800]]) {
-  // Todas las pestañas.
+  // Pantalla de entrada (sin sesión).
+  const entrada = await abrir(ancho, alto, { conSesion: false });
+  await entrada.goto(`${BASE}#/atencion`);
+  await entrada.waitForSelector("#ig-alias", { timeout: 15_000 });
+  await entrada.screenshot({ path: `${SALIDA}/entrada_${ancho}.png` });
+  await entrada.close();
+
+  // Todas las pestañas (con sesión; «Mi sesión» lista dos hilos de ejemplo).
   const pagina = await abrir(ancho, alto);
   for (const id of PESTANAS) {
     await pagina.goto(`${BASE}#/${id}`);

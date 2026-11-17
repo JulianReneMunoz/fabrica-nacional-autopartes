@@ -18,11 +18,20 @@ from fastapi.staticfiles import StaticFiles
 from fabrica_autopartes import __version__
 from fabrica_autopartes.api.dependencias import obtener_servicio
 from fabrica_autopartes.api.ignis_routes import router_ignis
-from fabrica_autopartes.api.routes import agente, base, faq_visor, motos, operacion, simulador, tareas
-from fabrica_autopartes.core.config import RAIZ_PROYECTO
-from fabrica_autopartes.core.excepciones import ErrorFNA
+from fabrica_autopartes.api.routes import (
+    agente,
+    base,
+    faq_visor,
+    motos,
+    operacion,
+    sesiones,
+    simulador,
+    tareas,
+)
+from fabrica_autopartes.core.config import RAIZ_PROYECTO, obtener_configuracion
+from fabrica_autopartes.core.excepciones import MENSAJE_SIN_SECRETO_SESION, ErrorFNA
 from fabrica_autopartes.core.registro import configurar_registro, obtener_registro
-from fabrica_autopartes.services.asistente import servicio_por_defecto
+from fabrica_autopartes.services.asistente import servicio_por_defecto, sesiones_configuradas
 
 log = obtener_registro(__name__)
 
@@ -71,8 +80,20 @@ def _cerrar_servicio(app: FastAPI) -> None:
         log.warning("Cierre de la memoria persistente omitido: %s", exc)
 
 
+def _avisar_si_faltan_sesiones(app: FastAPI) -> None:
+    """Sin ``IGNIS_SECRETO_SESION`` la API arranca igual, pero las sesiones y /ignis/stream responden 503."""
+    try:
+        proveedor = app.dependency_overrides.get(obtener_servicio)
+        config = proveedor().config if proveedor is not None else obtener_configuracion()
+        if not sesiones_configuradas(config):
+            log.error(MENSAJE_SIN_SECRETO_SESION + " Las rutas de sesión y /ignis/stream responderán 503.")
+    except Exception as exc:
+        log.warning("No se pudo comprobar la configuración de sesiones: %s", exc)
+
+
 @asynccontextmanager
 async def _ciclo_de_vida(app: FastAPI) -> AsyncIterator[None]:
+    _avisar_si_faltan_sesiones(app)
     _precargar_en_segundo_plano(app)
     try:
         yield
@@ -117,6 +138,7 @@ def crear_app() -> FastAPI:
     async def _manejar_valor(_: Request, exc: ValueError) -> JSONResponse:
         return JSONResponse(status_code=422, content={"codigo": "valor_invalido", "mensaje": str(exc)})
 
+    app.include_router(sesiones.router)
     app.include_router(operacion.router)
     app.include_router(base.router)
     app.include_router(tareas.router)

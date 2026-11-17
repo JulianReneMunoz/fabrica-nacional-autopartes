@@ -34,10 +34,6 @@ from fabrica_autopartes.services.preferencias import (
 
 RAIZ_REPO = Path(__file__).resolve().parents[3]
 
-# TODO(PR b, #44 del plan): reemplazar por el ``user_id`` seudónimo de la sesión (HMAC del alias). Mientras no
-# haya sesiones, todas las consultas de /ignis/stream comparten este usuario de demostración.
-USUARIO_DEMO = "demo"
-
 # Ruta memoria_store: orden de recordar que no trae preferencias del vocabulario cerrado.
 AVISO_LEY_1581 = (
     "IGNIS no guarda nombres, empresas ni datos de contacto (Ley 1581 de 2012); solo recuerda "
@@ -309,7 +305,9 @@ class AgenteIgnisM2:
             respuesta += " No se guardan nombres, empresas ni datos de contacto (Ley 1581 de 2012)."
         return respuesta
 
-    def ejecutar_turno(self, mensaje: str, thread_id: str, user_id: str = USUARIO_DEMO) -> dict[str, Any]:
+    def ejecutar_turno(self, mensaje: str, thread_id: str, user_id: str) -> dict[str, Any]:
+        """Turno de IGNIS. ``user_id`` es el usuario seudónimo de la sesión (ADR-033): no tiene valor por
+        defecto para que ningún llamador comparta preferencias por omisión."""
         # Salvaguarda de entrada directa
         if detectar_inyeccion(mensaje):
             respuesta = (

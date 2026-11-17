@@ -1,8 +1,9 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import App from "../App";
+import App, { PESTANAS_IMPLEMENTADAS } from "../App";
 import { GRUPOS, PESTANAS_PIE, resolverRuta, TODAS_LAS_PESTANAS } from "../ignisRutas";
+import { crearFetchSimulado, MENSAJE_SIN_SECRETO, type OpcionesSimulador } from "./simuladorApi";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -48,27 +49,32 @@ describe("aplicación (jsdom)", () => {
     window.location.hash = "";
   });
 
-  async function montar(hash: string, fetchSimulado: typeof fetch) {
-    vi.stubGlobal("fetch", fetchSimulado);
+  async function esperar() {
+    // Espera a que resuelvan los imports diferidos (React.lazy), la sesión y la primera consulta de salud.
+    for (let i = 0; i < 25; i++) {
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 20));
+      });
+      if (!contenedor.querySelector("[aria-busy='true']") && !contenedor.textContent?.includes("preparando…")) break;
+    }
+  }
+
+  async function montar(hash: string, opciones: OpcionesSimulador = { salud: "caida" }) {
+    const simulado = crearFetchSimulado(opciones);
+    vi.stubGlobal("fetch", simulado.fetchSimulado);
     window.history.replaceState(null, "", `/${hash}`);
     raiz = createRoot(contenedor);
     await act(async () => {
       raiz.render(<App />);
     });
-    // Espera a que resuelvan los imports diferidos (React.lazy) y la primera consulta de salud.
-    for (let i = 0; i < 20 && contenedor.querySelector("[aria-busy='true']"); i++) {
-      await act(async () => {
-        await new Promise((r) => setTimeout(r, 20));
-      });
-    }
+    await esperar();
+    return simulado;
   }
 
-  const apiCaida = (() => Promise.reject(new TypeError("Failed to fetch"))) as unknown as typeof fetch;
-
-  it.each(TODAS_LAS_PESTANAS.filter((p) => p.id !== "atencion").map((p) => [p.id, p] as const))(
+  it.each(TODAS_LAS_PESTANAS.filter((p) => !PESTANAS_IMPLEMENTADAS.includes(p.id)).map((p) => [p.id, p] as const))(
     "la pestaña %s muestra su estado vacío con el PR y no inventa datos",
     async (_id, p) => {
-      await montar(`#/${p.id}`, apiCaida);
+      await montar(`#/${p.id}`);
       expect(contenedor.querySelector("h1")?.textContent).toBe(p.etiqueta);
       expect(contenedor.textContent).toContain(`No disponible todavía (${p.pr})`);
       const activo = contenedor.querySelector('nav a[aria-current="page"]');
@@ -77,32 +83,47 @@ describe("aplicación (jsdom)", () => {
   );
 
   it("con el backend caído el encabezado lo dice y la app sigue navegable", async () => {
-    await montar("#/corpus", apiCaida);
+    await montar("#/corpus");
     const chips = Array.from(contenedor.querySelectorAll(".ig-chip-servicio")).map((c) => c.textContent);
     expect(chips).toEqual(["APIsin conexión", "SSEsin uso aún", "Qdrantno disponible todavía (#34)"]);
     expect(contenedor.querySelector(".ig-chip-servicio")?.getAttribute("role")).toBe("status");
   });
 
-  it("con la API en línea el chip lo refleja y el hilo se muestra con «Nuevo hilo»", async () => {
-    const enLinea = (async () => new Response(JSON.stringify({ estado: "ok" }), { status: 200 })) as typeof fetch;
-    await montar("#/kanban", enLinea);
+  it("el encabezado muestra el usuario de la sesión y el hilo creado en el servidor, con «Nuevo hilo»", async () => {
+    const { llamadas } = await montar("#/kanban", { salud: "ok" });
     expect(contenedor.querySelector(".ig-chip-servicio.en_linea")?.textContent).toContain("API");
+    expect(contenedor.querySelector(".ig-usuario")?.textContent).toContain("compras-01");
+    expect(contenedor.querySelector(".ig-usuario code")?.textContent).toBe("a1b2c3d4");
     const hilo = contenedor.querySelector(".ig-hilo code")?.textContent ?? "";
-    expect(hilo).toMatch(/^hilo-[a-z0-9]+$/);
+    expect(hilo).toBe("hilo-prueba-1");
     const boton = Array.from(contenedor.querySelectorAll("button")).find((b) => b.textContent?.includes("Nuevo hilo"));
     await act(async () => boton?.click());
-    expect(contenedor.querySelector(".ig-hilo code")?.textContent).not.toBe(hilo);
+    await esperar();
+    expect(contenedor.querySelector(".ig-hilo code")?.textContent).toBe("hilo-prueba-2");
+    expect(llamadas.filter((l) => l.metodo === "POST" && l.url === "/api/v1/sesiones/yo/hilos")).toHaveLength(2);
+  });
+
+  it("sin sesión muestra la pantalla de entrada y no la aplicación", async () => {
+    await montar("#/atencion", { sesion: "ninguna" });
+    expect(contenedor.querySelector("h1")?.textContent).toBe("Entrar a IGNIS");
+    expect(contenedor.querySelector("nav")).toBeNull();
+    expect(contenedor.textContent).toContain("Ley 1581");
+  });
+
+  it("sin IGNIS_SECRETO_SESION la pantalla de entrada muestra el mensaje claro del servidor", async () => {
+    await montar("#/atencion", { sesion: "sin_secreto" });
+    expect(contenedor.querySelector("[role='alert']")?.textContent).toBe(MENSAJE_SIN_SECRETO);
   });
 
   it("una ruta vieja del M1 abre Atención y reescribe el hash", async () => {
-    await montar("#/maquina/prensa", apiCaida);
+    await montar("#/maquina/prensa");
     expect(window.location.hash).toBe("#/atencion");
     expect(contenedor.querySelector('nav a[aria-current="page"]')?.textContent).toBe("Atención — IGNIS");
     expect(contenedor.textContent).toContain("Atención al cliente — IGNIS");
   });
 
   it("la barra lateral se expande con etiquetas y se recorre con las flechas", async () => {
-    await montar("#/faq", apiCaida);
+    await montar("#/faq");
     const alternar = contenedor.querySelector<HTMLButtonElement>(".ig-nav-alternar")!;
     expect(alternar.getAttribute("aria-expanded")).toBe("false");
     await act(async () => alternar.click());

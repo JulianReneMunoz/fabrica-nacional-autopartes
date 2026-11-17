@@ -16,6 +16,7 @@ from fabrica_autopartes.services.asistente import ServicioAsistente
 
 DIR_FIXTURES = Path(__file__).parent / "fixtures"
 DOMINIO_PRUEBA = "https://ejemplo-fna.test"
+SECRETO_SESION_PRUEBA = "secreto-de-prueba-de-sesiones-ignis-0123456789"
 
 
 @pytest.fixture
@@ -32,6 +33,8 @@ def config(tmp_path: Path) -> Configuracion:
         dominios_permitidos=["ejemplo-fna.test"],
         urls_semilla=[f"{DOMINIO_PRUEBA}/"],
         api_clave_admin="clave-de-prueba",
+        # Secreto de sesiones SOLO para pruebas (ADR-033): nunca va en .env.example ni como valor por defecto.
+        secreto_sesion=SECRETO_SESION_PRUEBA,
     )
 
 

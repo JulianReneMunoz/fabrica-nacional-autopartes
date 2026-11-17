@@ -226,18 +226,20 @@ def _texto_sse(cliente: TestClient, mensaje: str, hilo: str) -> str:
 
 
 def test_api_y_reinicio_del_servicio_conservan_las_preferencias(config_con_base: Configuracion) -> None:
-    """Por la API (usuario provisional «demo»): 2A en un hilo, 2B en otro, y 2B otra vez con un servicio nuevo
-    sobre el mismo directorio de datos."""
+    """Por la API con una sesión real: 2A en un hilo, 2B en otro, y 2B otra vez con un servicio nuevo sobre el
+    mismo directorio de datos."""
     servicio = _servicio(config_con_base)
     app = crear_app()
     app.dependency_overrides[obtener_servicio] = lambda: servicio
     with TestClient(app) as cliente:  # el lifespan cierra la memoria al salir
+        assert cliente.post("/api/v1/sesiones", json={"alias": "compras-01"}).status_code == 201
         assert _contiene_2a(_texto_sse(cliente, CASO_2A, "hilo-a"))
         assert _contiene_2a(_texto_sse(cliente, CASO_2B, "hilo-b"))
+        user_id = servicio.sesiones.user_id_de("compras-01")
 
     reiniciado = _servicio(config_con_base)
     try:
-        r = reiniciado.responder_ignis(CASO_2B, "hilo-c")
+        r = reiniciado.responder_ignis(CASO_2B, "hilo-c", user_id)
         assert _contiene_2a(r["respuesta"])
     finally:
         reiniciado.cerrar()

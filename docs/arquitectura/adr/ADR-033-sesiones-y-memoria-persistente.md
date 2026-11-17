@@ -43,13 +43,36 @@
      Secure configurable y desactivado en localhost, 8 h deslizantes). El alias solo viaja en esa cookie: no se
      guarda en la base, los logs, la auditoría ni el Store. Sin `IGNIS_SECRETO_SESION` las sesiones fallan con un
      mensaje claro; no hay secreto por defecto en el código.
+  9. **Implementación de las sesiones (PR de sesiones, #44 del plan):**
+     - Sin `IGNIS_SECRETO_SESION` (o con menos de 32 caracteres) la API arranca, registra el error al iniciar y
+       las rutas de sesión y `/ignis/stream` responden 503 con ese mensaje; la pantalla de entrada lo muestra.
+     - `/ignis/stream` exige la cookie (401 sin ella) y toma el `user_id` de la cookie; se elimina `USUARIO_DEMO`.
+       El `thread_id` es obligatorio en la petición.
+     - **Propiedad de los hilos:** un hilo de otro usuario responde 403. Un `thread_id` sin dueño que ya tiene
+       historial (por ejemplo, hilos del usuario `demo` anteriores a las sesiones) también responde 403: solo se
+       asignan hilos nuevos y sin historial.
+     - **Alias válido:** de 3 a 32 letras (con tildes y ñ), números y guiones. Se rechazan correos, teléfonos,
+       documentos, alias de solo números y la forma nombre-apellido («ana-gomez»), aunque también caigan alias
+       inventados como «rojo-veloz».
+     - CORS mantiene `allow_credentials=False` y orígenes explícitos: el frontend siempre llama desde el mismo
+       origen (proxy de Vite o `/app` servido por FastAPI). `POST /sesiones` solo acepta `application/json`,
+       lo que, junto con `SameSite=Lax`, evita el login CSRF desde un formulario externo.
+- **Limitaciones (sesiones):**
+  - **La cookie no se puede revocar desde el servidor.** Cerrar sesión la borra del navegador, pero una copia
+    robada sigue siendo válida hasta su vencimiento (8 h desde la última petición).
+  - Quien entra con el mismo alias obtiene el mismo `user_id` y ve los mismos hilos y preferencias (demo sin
+    contraseña).
+  - Un alias de una sola palabra puede ser un nombre de pila («ana»); no se puede distinguir de un alias
+    inventado.
+  - Si el usuario escribe su alias dentro de un mensaje, la anonimización no lo reconoce como dato personal.
 - **Consecuencias:**
   - El historial del agente con LLM y las preferencias sobreviven al reinicio; los archivos `data/*.sqlite` están
     ignorados por git porque pueden contener mensajes de usuarios.
   - Se mantiene un solo worker en Docker Compose: el tope de hilos vive en el proceso.
   - En Windows hay que cerrar las conexiones antes de borrar los archivos (`cerrar()` del servicio y fixtures de
     las pruebas).
-  - Hasta el PR de sesiones, todas las consultas de IGNIS comparten las preferencias del usuario `demo`.
+  - Desde el PR de sesiones, cada usuario seudónimo tiene sus hilos y sus preferencias; el usuario provisional
+    `demo` del PR de memoria deja de existir y sus hilos no se reasignan.
 - **Alternativas descartadas:**
   - **Envolver el motor de reglas de IGNIS en un grafo con `SqliteSaver` ya en este PR:** el bloque 3 lo
     reemplaza por `create_agent`; sería trabajo descartable.

@@ -60,3 +60,44 @@ class ErrorRecuperadorNoDisponible(ErrorFNA):
     def __init__(self, motivo: str) -> None:
         super().__init__(f"Recuperador semántico no disponible: {motivo}. {self.INSTRUCCION}")
         self.motivo = motivo
+
+
+# --- Sesiones (ADR-033). Los mensajes son genéricos: nunca incluyen el alias ni el user_id. --------------
+MENSAJE_SIN_SECRETO_SESION = "Las sesiones requieren IGNIS_SECRETO_SESION en .env (32 caracteres o más)."
+
+
+class ErrorSesionesNoConfiguradas(ErrorFNA):
+    """Falta ``IGNIS_SECRETO_SESION`` o es demasiado corto: no hay secreto por defecto en el código."""
+
+    codigo = "sesiones_no_configuradas"
+    estado_http = 503
+
+    def __init__(self) -> None:
+        super().__init__(MENSAJE_SIN_SECRETO_SESION)
+
+
+class ErrorAliasInvalido(ErrorFNA):
+    codigo = "alias_invalido"
+    estado_http = 422
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Alias no válido: usa de 3 a 32 letras, números o guiones, "
+            "sin nombre completo, correo ni teléfono."
+        )
+
+
+class ErrorSinSesion(ErrorFNA):
+    codigo = "sin_sesion"
+    estado_http = 401
+
+    def __init__(self) -> None:
+        super().__init__("Sesión no válida o vencida: vuelve a entrar con tu alias.")
+
+
+class ErrorHiloAjeno(ErrorFNA):
+    codigo = "hilo_ajeno"
+    estado_http = 403
+
+    def __init__(self) -> None:
+        super().__init__("El hilo no pertenece a esta sesión.")
