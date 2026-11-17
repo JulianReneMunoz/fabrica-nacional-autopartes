@@ -1,0 +1,10 @@
+# Todos los archivos de texto en UTF-8 (evita el mojibake «Ã³», «ðŸ…» al guardar desde Windows).
+root = false
+
+[*]
+charset = utf-8
+insert_final_newline = true
+
+[*.{ts,tsx,css,json,md,mjs}]
+indent_style = space
+indent_size = 2

@@ -1,58 +1,104 @@
-import { expect, test } from "@playwright/test";
-import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Graba el recorrido automático (< 30 s) de cada máquina como video MP4 para la presentación.
- * Se capturan los fotogramas con el screencast de Chrome (CDP) y se codifican con el ffmpeg del
- * sistema (H.264, preset veryfast). Requiere ffmpeg en el PATH (winget install Gyan.FFmpeg).
+ * Recorrido de IGNIS v2 (criterio de aceptación 3): todas las pestañas de la barra lateral abren sin errores en la
+ * consola y las rutas retiradas del M1 redirigen a Atención. Corre contra FastAPI (webServer de playwright.config)
+ * o contra `vite preview` con FNA_URL; el SSE y el TTS se simulan para no depender de un proveedor LLM.
  */
-const DESTINO = resolve("../docs/videos");
+const PESTANAS = [
+  ["atencion", "Atención — IGNIS"],
+  ["faq", "Preguntas frecuentes"],
+  ["qa", "Consulta puntual Q&A"],
+  ["proceso-datos", "Proceso de datos"],
+  ["corpus", "Corpus"],
+  ["base", "Base de conocimiento — Qdrant"],
+  ["agente", "Agente y memoria"],
+  ["herramientas", "Herramientas LangChain"],
+  ["router", "Router"],
+  ["prompts", "Prompts"],
+  ["configuracion", "Configuración de agentes"],
+  ["rayos-x", "Rayos-X y validación"],
+  ["seguridad", "Seguridad RAG"],
+  ["auditoria", "Auditoría"],
+  ["panel", "Panel"],
+  ["evaluacion", "Evaluación"],
+  ["mlflow", "Experimentos MLflow"],
+  ["kanban", "Tablero Kanban"],
+  ["arquitectura", "Arquitectura y API"],
+  ["sesion", "Mi sesión"],
+  ["ajustes", "Ajustes"],
+] as const;
 
-for (const id of ["freno", "prensa", "linea", "moto_honda"]) {
-  test(`recorrido automático: ${id}`, async ({ page }, info) => {
-    const cdp = await page.context().newCDPSession(page);
-    const fotogramas: { datos: string; t: number }[] = [];
-    cdp.on("Page.screencastFrame", async (f) => {
-      fotogramas.push({ datos: f.data, t: f.metadata.timestamp ?? Date.now() / 1000 });
-      await cdp.send("Page.screencastFrameAck", { sessionId: f.sessionId }).catch(() => undefined);
-    });
-    await page.goto(`/app/#/maquina/${id}?tour=1`);
-    await cdp.send("Page.startScreencast", { format: "jpeg", quality: 85, maxWidth: 1280, maxHeight: 800, everyNthFrame: 1 });
-    await page.waitForFunction(() => window.__tour?.estado === "corriendo", null, { timeout: 20_000 });
-    const t0 = Date.now();
-    await page.waitForFunction(() => window.__tour?.estado === "terminado", null, { timeout: 40_000 });
-    const duracion = (Date.now() - t0) / 1000;
-    await cdp.send("Page.stopScreencast");
-    expect(duracion).toBeLessThan(30.5);
-    // Se descartan los fotogramas de carga previos al tour: se conserva solo la ventana final de 29,4 s
-    // medida con las marcas de tiempo del propio screencast (independiente del reloj del proceso).
-    const tFinal = fotogramas[fotogramas.length - 1].t;
-    const util = fotogramas.filter((f) => f.t >= tFinal - 29.4);
-    fotogramas.splice(0, fotogramas.length, ...util);
-    expect(fotogramas.length).toBeGreaterThan(20);
+const RUTAS_VIEJAS = ["#/", "#/biblioteca", "#/prensa", "#/linea", "#/moto", "#/explorador", "#/maquina/freno", "#/maquina/moto_honda", "#/robot", "#/simulador"];
 
-    // Lista concat de ffmpeg con la duración real de cada fotograma (respeta el ritmo del recorrido).
-    const tmp = mkdtempSync(join(tmpdir(), "recorrido-"));
-    const lineas: string[] = [];
-    fotogramas.forEach((f, i) => {
-      const nombre = join(tmp, `f${String(i).padStart(5, "0")}.jpg`);
-      writeFileSync(nombre, Buffer.from(f.datos, "base64"));
-      const dur = i + 1 < fotogramas.length ? Math.max(fotogramas[i + 1].t - f.t, 0.01) : 0.5;
-      lineas.push(`file '${nombre.replace(/\\/g, "/")}'`, `duration ${dur.toFixed(3)}`);
-    });
-    lineas.push(`file '${join(tmp, `f${String(fotogramas.length - 1).padStart(5, "0")}.jpg`).replace(/\\/g, "/")}'`);
-    writeFileSync(join(tmp, "lista.txt"), lineas.join("\n"));
-    mkdirSync(DESTINO, { recursive: true });
-    const salida = join(DESTINO, `recorrido_${id}.mp4`);
-    execFileSync("ffmpeg", [
-      "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", join(tmp, "lista.txt"),
-      "-vf", "fps=30,scale=trunc(iw/2)*2:trunc(ih/2)*2", "-t", "29.95", "-c:v", "libx264", "-preset", "veryfast",
-      "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", salida,
-    ]);
-    rmSync(tmp, { recursive: true, force: true });
-    info.annotations.push({ type: "video", description: `docs/videos/recorrido_${id}.mp4 (${duracion.toFixed(1)} s, ${fotogramas.length} fotogramas)` });
-  });
+/** WAV PCM de 16 bits en silencio (0,3 s) para simular /tts sin errores de red en la consola. */
+function wavSilencio(segundos = 0.3, tasa = 8000): Buffer {
+  const n = Math.round(segundos * tasa);
+  const b = Buffer.alloc(44 + n * 2);
+  b.write("RIFF", 0); b.writeUInt32LE(36 + n * 2, 4); b.write("WAVE", 8); b.write("fmt ", 12);
+  b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22); b.writeUInt32LE(tasa, 24);
+  b.writeUInt32LE(tasa * 2, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write("data", 36); b.writeUInt32LE(n * 2, 40);
+  return b;
 }
+
+/** Errores de consola y excepciones de la página; se ignoran los avisos de WebGL del renderizador por software. */
+function vigilarConsola(page: Page): string[] {
+  const errores: string[] = [];
+  page.on("console", (m) => {
+    if (m.type() === "error" && !/GPU stall|WebGL|swiftshader|favicon/i.test(m.text())) errores.push(m.text());
+  });
+  page.on("pageerror", (e) => errores.push(e.message));
+  return errores;
+}
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/v1/ignis/stream", (r) =>
+    r.fulfill({ status: 200, contentType: "text/event-stream", body: 'data: {"tipo":"metadatos","ruta_router":"directo","citas":[]}\n\ndata: {"tipo":"oracion","texto":"Hola."}\n\ndata: {"tipo":"fin"}\n\ndata: [DONE]\n\n' }),
+  );
+  await page.route("**/api/v1/tts", (r) => r.fulfill({ status: 200, contentType: "audio/wav", body: wavSilencio() }));
+});
+
+test("todas las pestañas abren sin errores en la consola", async ({ page }) => {
+  const errores = vigilarConsola(page);
+  await page.goto("/app/#/atencion");
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  for (const [id, etiqueta] of PESTANAS) {
+    await page.goto(`/app/#/${id}`);
+    await expect(page.locator("main h1")).toHaveText(id === "atencion" ? "Atención al cliente — IGNIS" : etiqueta);
+    await expect(nav.locator('a[aria-current="page"]')).toHaveText(etiqueta);
+    if (id !== "atencion") await expect(page.getByText(/No disponible todavía \(/)).toBeVisible();
+  }
+  expect(errores).toEqual([]);
+});
+
+test("las rutas retiradas del M1 redirigen a Atención", async ({ page }) => {
+  for (const ruta of RUTAS_VIEJAS) {
+    await page.goto(`/app/${ruta}`);
+    await expect(page).toHaveURL(/#\/atencion$/);
+    await expect(page.locator("main h1")).toHaveText("Atención al cliente — IGNIS");
+  }
+});
+
+test("Atención carga el auto GLB y responde un mensaje", async ({ page }) => {
+  const errores = vigilarConsola(page);
+  await page.goto("/app/#/atencion");
+  await expect(page.locator("[data-modelo='cargado']")).toBeVisible({ timeout: 30_000 });
+  await page.getByLabel("Mensaje para IGNIS").fill("Hola");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".ignis-burbuja.ignis").last()).toContainText("Hola.");
+  await expect(page.locator(".ignis-insignia.ruta").last()).toContainText("Directo");
+  await expect(page.locator(".ignis-chip-estado")).toHaveText("En reposo", { timeout: 8000 });
+  expect(errores).toEqual([]);
+});
+
+test("por debajo de 1023 px la barra lateral se vuelve un menú", async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 800 });
+  await page.goto("/app/#/corpus");
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  await expect(nav).toBeHidden();
+  await page.getByRole("button", { name: "Abrir menú" }).click();
+  await expect(nav).toBeVisible();
+  await nav.getByRole("link", { name: "Panel" }).click();
+  await expect(page).toHaveURL(/#\/panel$/);
+  await expect(nav).toBeHidden();
+});

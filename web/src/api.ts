@@ -1,189 +1,69 @@
-/** Cliente de la API FastAPI (/api/v1). Todas las rutas son relativas al mismo origen. */
+/**
+ * Cliente de la API FastAPI del M1 (/api/v1) para las pestañas Corpus, Proceso de datos, Auditoría, FAQ y Q&A.
+ * Todas las rutas son relativas al mismo origen. Los tipos reflejan los modelos Pydantic del backend
+ * (`api/esquemas.py` y `domain/modelos.py`). El simulador, las máquinas y las motos ya no se usan en el frontend.
+ */
 
-import type { CampoFichaApi, EntradaMoto } from "./modelos/moto";
-
-export const ENSAMBLAJE = "freno_disco";
-export const ENSAMBLAJE_MOTO = "moto_honda";
 const BASE = "/api/v1";
 
-export interface DatoEmpresa {
-  texto: string;
-  url: string;
-  fragmento_id: string;
-  origen: string;
-}
-export interface Parametro {
-  nombre: string;
-  valor: number;
-  unidad: string;
-  procedencia: string;
-  fuente: string | null;
-}
-export interface Maquina {
-  id: string;
-  pregunta: string;
-  una_linea: string;
-  relacion: string;
-  ruta: string;
-  idea_principal: string;
-  datos_empresa: DatoEmpresa[];
-  parametros: Parametro[];
-}
-export interface Pieza {
-  id: string;
-  nombre: string;
-  tipo: string;
-  descripcion: string;
-  funcion: string;
-  material: string | null;
-  subconjunto: string;
-  dimensiones_m: Record<string, number>;
-  relacionadas: string[];
-  retirar_antes: string[];
-  metadatos: Record<string, string>;
-  referencia_documental: string;
-}
-export interface NodoJerarquia {
-  id: string;
-  nombre: string;
-  tipo: string;
-  hijos: NodoJerarquia[];
-}
-export interface Lectura {
-  posicion: number[];
-  rotacion_grados: number[];
-}
-export interface RespuestaPieza {
-  pieza_id: string;
-  pregunta: string;
-  intencion: string;
-  respuesta_modelo: string;
-  documentado: { fragmento_id: string; texto: string; url: string; origen: string }[];
-  advertencia: string;
-}
-export interface ArticulacionApi {
-  id: string;
-  tipo: string;
-  padre: string | null;
-  hijo: string;
-  eje: number[];
-  origen: number[];
-  maestra: string | null;
-  relacion: number | null;
-}
-export interface EnsamblajeApi {
-  id: string;
-  parametros: Record<string, number>;
-}
-export interface Animacion {
-  duracion_por_pieza_s: number;
-  solape: number;
-  orden_desmontaje: string[];
-  orden_reensamblaje: string[];
-}
-/** Sistema funcional del ensamblaje (vista «explorador», fase 14): texto de la definición del ensamblaje. */
-export interface SistemaApi {
-  id: string;
-  nombre: string;
-  funcion: string;
-  piezas: string[];
-}
-export interface ResumenEnsamblaje {
-  id: string;
-  nombre: string;
-  advertencia: string;
-  piezas: number;
-  articulaciones: number;
-}
-
-async function pedir<T>(ruta: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(BASE + ruta, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-  });
-  if (!r.ok) {
-    let detalle = r.statusText;
-    try {
-      const j = await r.json();
-      detalle = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
-    } catch {
-      /* respuesta sin JSON */
-    }
-    throw new Error(`HTTP ${r.status}: ${detalle}`);
-  }
-  return (await r.json()) as T;
-}
-
-/* ---------- motocicleta de referencia con fichas Honda (ADR-017) ---------- */
-export interface FuenteFichaApi {
-  id: string;
-  descripcion: string;
-  url: string | null;
-  fecha_consulta: string | null;
-  estado_acceso: string | null;
-}
-export interface SupuestoApi {
-  clave: string;
-  valor: number | number[] | string;
-  unidad: string;
-  descripcion: string;
-  etiqueta: string;
-}
-export interface FichaMotoApi {
-  id: string;
-  nombre: string;
-  categoria: string;
-  versiones: string[];
-  grupos: Record<string, Record<string, CampoFichaApi>>;
-  por_version: Record<string, Record<string, CampoFichaApi>>;
-  pendientes_de_confirmar: { campo: string; detalle: string }[];
-  fuentes: FuenteFichaApi[];
-  supuestos: SupuestoApi[];
-  ensamblaje_id: string;
-  titulo_biblioteca: string;
-}
-export interface RespuestaModeloApi {
-  id: string;
-  pregunta: string;
-  respuesta: string;
-  campos: string[];
-  fuentes: string[];
-  estado: "publicado" | "no_publicado" | "supuesto";
-}
-export interface CalculoMotoApi {
-  resultado: { velocidad_kmh: number; estado_motor: string; radio_llanta_m: number; relacion_total: number | null; rpm_efectivas: number };
-  ficha_aplicada: { modelo: string; version: string; aplicados: Record<string, string>; conservados_genericos: string[] } | null;
-}
-export interface ItemFaqVisor {
-  id: string;
-  categoria: string;
-  pregunta: string;
-  respuesta: string;
-  rechazo: boolean;
-  fundamentada: boolean;
-  confianza: string;
-  fuentes: { fragmento_id: string; url: string }[];
-}
-export interface FaqVisor {
-  generado: string;
-  proveedor: string;
-  modelo: string;
-  version_prompt: string;
-  advertencia: string;
+/* ---------------------------------------------------------------- tipos */
+export interface Pagina<T> {
+  elementos: T[];
   total: number;
-  items: ItemFaqVisor[];
+  pagina: number;
+  tamano: number;
 }
+
+export interface Fragmento {
+  id: string;
+  documento_id: string;
+  url: string;
+  titulo: string;
+  seccion: string;
+  encabezado: string;
+  idioma: string;
+  texto: string;
+  tokens_aprox: number;
+  orden: number;
+  origen: "scraping" | "semilla" | "lectura_web";
+}
+
+export interface FragmentoBuscado {
+  fragmento: Fragmento;
+  puntaje: number | null;
+}
+
+export interface EstadisticasBase {
+  documentos: number;
+  fragmentos: number;
+  tokens_aprox: number;
+  secciones: Record<string, number>;
+  origenes: Record<string, number>;
+  urls: string[];
+  generado_en: string | null;
+}
+
+export interface Fuente {
+  fragmento_id: string;
+  titulo: string;
+  url: string;
+}
+
 export interface RespuestaQa {
   pregunta: string;
   respuesta: string;
-  fuentes: { fragmento_id: string; titulo: string; url: string }[];
+  fuentes: Fuente[];
   fundamentada: boolean;
-  confianza: string;
+  confianza: "alta" | "media" | "baja" | "ninguna";
+  version_prompt: string;
   proveedor: string;
   modelo: string;
+  modo_contexto: string;
+  recuperador: "bm25" | "semantico" | "no_aplica";
+  latencia_ms: number;
 }
 
-/** Búsqueda web complementaria (fase 9, ADR-019): fuera de la base verificada. */
+/** Búsqueda web complementaria (ADR-019): fuera de la base verificada. */
 export interface RespuestaWebApi {
   pregunta: string;
   respuesta: string;
@@ -196,38 +76,164 @@ export interface RespuestaWebApi {
   latencia_ms: number;
 }
 
-const enviar = (cuerpo: unknown): RequestInit => ({ method: "POST", body: JSON.stringify(cuerpo) });
-
-/** Cliente del simulador para un ensamblaje (el freno sigue con `freno_disco` exactamente igual). */
-export function crearApi(ensamblaje: string) {
-  const e = `/simulador/ensamblajes/${ensamblaje}`;
-  return {
-    maquinas: () => pedir<Maquina[]>("/maquinas"),
-    maquina: (id: string) => pedir<Maquina>(`/maquinas/${id}`),
-    resumen: () => pedir<ResumenEnsamblaje[]>("/simulador/ensamblajes"),
-    piezas: () => pedir<Pieza[]>(`${e}/piezas`),
-    jerarquia: () => pedir<NodoJerarquia>(`${e}/jerarquia`),
-    sistemas: () => pedir<SistemaApi[]>(`${e}/sistemas`),
-    articulaciones: () => pedir<ArticulacionApi[]>(`${e}/articulaciones`),
-    ensamblaje: () => pedir<EnsamblajeApi>(`${e}`),
-    despiece: (factor: number) => pedir<Record<string, number[]>>(`${e}/despiece?factor=${factor}`),
-    animacion: () => pedir<Animacion>(`${e}/animacion`),
-    cinematica: (valores: Record<string, number>) => pedir<Record<string, Lectura>>(`${e}/cinematica`, enviar({ valores })),
-    preguntar: (pieza_id: string, pregunta: string) => pedir<RespuestaPieza>(`${e}/preguntar`, enviar({ pieza_id, pregunta })),
-    guardarEstado: (nombre: string, estado: Record<string, unknown>) =>
-      pedir<{ id: number }>(`${e}/estados`, enviar({ nombre, estado })),
-    evento: (tipo: string, pieza_id: string | null, detalle: Record<string, unknown> = {}) =>
-      pedir<unknown>(`${e}/eventos`, enviar({ tipo, pieza_id, detalle })).catch(() => undefined),
-    /* Fichas Honda, FAQ del visor y Q&A (no dependen del ensamblaje). */
-    fichaMoto: (id: string) => pedir<FichaMotoApi>(`/motos/${id}`),
-    faqModelo: (id: string) => pedir<RespuestaModeloApi[]>(`/motos/${id}/faq`),
-    calculoMoto: (id: string, entrada: EntradaMoto, conFicha: boolean) =>
-      pedir<CalculoMotoApi>(`/motos/${id}/calculo?con_ficha=${conFicha}`, enviar(entrada)),
-    faqVisor: () => pedir<FaqVisor>("/faq-visor"),
-    qa: (pregunta: string) => pedir<RespuestaQa>("/tareas/qa", enviar({ pregunta })),
-    qaWeb: (pregunta: string) => pedir<RespuestaWebApi>("/tareas/qa-web", enviar({ pregunta })),
-  };
+export interface ItemFaq {
+  pregunta: string;
+  respuesta: string;
+  fuentes: string[];
 }
 
-export const api = crearApi(ENSAMBLAJE);
-export const apiMoto = crearApi(ENSAMBLAJE_MOTO);
+export interface ResultadoFaq {
+  items: ItemFaq[];
+  version_prompt: string;
+  proveedor: string;
+  modelo: string;
+  latencia_ms: number;
+  advertencias: string[];
+}
+
+export interface ResultadoResumen {
+  resumen: string;
+  enfoque: string;
+  version_prompt: string;
+  proveedor: string;
+  modelo: string;
+  latencia_ms: number;
+}
+
+export interface RespuestaAgente {
+  pregunta: string;
+  respuesta: string;
+  fuentes: Fuente[];
+  thread_id: string;
+  proveedor: string;
+  modelo: string;
+  version_prompt: string;
+  llamadas_herramienta: number;
+  fundamentada: boolean;
+  bloqueada: boolean;
+  limite_alcanzado: boolean;
+  rechazo: boolean;
+}
+
+export interface ItemFaqVisor {
+  id: string;
+  categoria: string;
+  pregunta: string;
+  respuesta: string;
+  rechazo: boolean;
+  fundamentada: boolean;
+  confianza: string;
+  fuentes: { fragmento_id: string; url: string }[];
+}
+
+export interface FaqVisor {
+  generado: string;
+  proveedor: string;
+  modelo: string;
+  version_prompt: string;
+  advertencia: string;
+  total: number;
+  items: ItemFaqVisor[];
+}
+
+export interface Interaccion {
+  id: number;
+  fecha: string | null;
+  tarea: string;
+  canal: string;
+  entrada: string;
+  salida: string;
+  proveedor: string;
+  modelo: string;
+  version_prompt: string;
+  modo_contexto: string;
+  fuentes: unknown[];
+  fundamentada: boolean | null;
+  latencia_ms: number;
+}
+
+export interface Ejecucion {
+  id: number;
+  inicio: string | null;
+  fin: string | null;
+  etapa: string;
+  estado: string;
+  detalle: Record<string, unknown>;
+}
+
+export interface Salud {
+  estado: string;
+  version: string;
+  fragmentos: number;
+  proveedor_llm: string;
+  modelo_llm: string;
+}
+
+/** Opciones comunes de las tareas LLM del M1 (`OpcionesLLM`). */
+export interface OpcionesLlm {
+  proveedor?: string;
+  modelo?: string;
+  version_prompt?: string;
+}
+
+/* ---------------------------------------------------------------- transporte */
+/** Error de la API con el código HTTP; el mensaje que ve el usuario lo arma cada pestaña. */
+export class ErrorApi extends Error {
+  constructor(
+    readonly estado: number,
+    mensaje: string,
+  ) {
+    super(mensaje);
+    this.name = "ErrorApi";
+  }
+}
+
+async function pedir<T>(ruta: string, init?: RequestInit): Promise<T> {
+  const r = await fetch(ruta.startsWith("/salud") ? ruta : BASE + ruta, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+  });
+  if (!r.ok) {
+    let detalle = r.statusText;
+    try {
+      const j = await r.json();
+      detalle = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
+    } catch {
+      /* respuesta sin JSON */
+    }
+    throw new ErrorApi(r.status, `HTTP ${r.status}: ${detalle}`);
+  }
+  return (await r.json()) as T;
+}
+
+const enviar = (cuerpo: unknown): RequestInit => ({ method: "POST", body: JSON.stringify(cuerpo) });
+
+function consulta(parametros: Record<string, string | number | undefined | null>): string {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(parametros)) if (v !== undefined && v !== null && v !== "") p.set(k, String(v));
+  const s = p.toString();
+  return s ? `?${s}` : "";
+}
+
+/* ---------------------------------------------------------------- endpoints */
+export const api = {
+  salud: () => pedir<Salud>("/salud"),
+  /* Corpus Gold */
+  estadisticasBase: () => pedir<EstadisticasBase>("/base/estadisticas"),
+  fragmentos: (f: { q?: string; seccion?: string; pagina?: number; tamano?: number } = {}) =>
+    pedir<Pagina<FragmentoBuscado>>(`/base/fragmentos${consulta(f)}`),
+  fragmento: (id: string) => pedir<Fragmento>(`/base/fragmentos/${encodeURIComponent(id)}`),
+  /* Auditoría y proceso de datos */
+  interacciones: (f: { pagina?: number; tamano?: number; tarea?: "qa" | "faq" | "resumen" } = {}) =>
+    pedir<Pagina<Interaccion>>(`/auditoria/interacciones${consulta(f)}`),
+  ejecuciones: () => pedir<Ejecucion[]>("/pipeline/ejecuciones"),
+  /* Tareas LLM del M1 */
+  qa: (pregunta: string, opciones: OpcionesLlm & { modo_contexto?: string; recuperador?: "bm25" | "semantico" } = {}) =>
+    pedir<RespuestaQa>("/tareas/qa", enviar({ pregunta, ...opciones })),
+  qaWeb: (pregunta: string) => pedir<RespuestaWebApi>("/tareas/qa-web", enviar({ pregunta })),
+  faq: (n_preguntas = 8, opciones: OpcionesLlm = {}) => pedir<ResultadoFaq>("/tareas/faq", enviar({ n_preguntas, ...opciones })),
+  resumen: (enfoque?: string, opciones: OpcionesLlm = {}) => pedir<ResultadoResumen>("/tareas/resumen", enviar({ enfoque, ...opciones })),
+  /* Agente con memoria y FAQ precalculada */
+  agente: (pregunta: string, thread_id: string) => pedir<RespuestaAgente>("/agente", enviar({ pregunta, thread_id })),
+  faqVisor: () => pedir<FaqVisor>("/faq-visor"),
+};
