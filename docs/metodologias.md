@@ -32,7 +32,7 @@ configuración local no versionada. Resumen en el [README](../README.md#metodolo
 | Medallion Architecture (arquitectura medallón: capas Bronze/Silver/Gold, bronce/plata/oro) | Aplicada | [ADR-002](arquitectura/adr/ADR-002-medallion-archivos.md), [`pipelines/`](../src/fabrica_autopartes/pipelines/) | Separar dato crudo, limpio y listo para el LLM, con trazabilidad | Desarrollo: F09 a F11, `ingeniero-datos` (sonnet); aplicación: sin LLM |
 | Responsible Web Scraping (extracción web responsable: robots.txt, pausas, User-Agent identificable) | Aplicada | [`scraping/`](../src/fabrica_autopartes/scraping/), [ADR-015](arquitectura/adr/ADR-015-proteccion-antibots.md), [`test_rastreo.py`](../tests/integration/test_rastreo.py) | Extraer solo lo permitido y sin eludir protecciones | Desarrollo: F09, `ingeniero-datos` (sonnet); aplicación: sin LLM |
 | Prompt Engineering (ingeniería de instrucciones) versionado, con evaluación v1–v3 | Aplicada | [`llm/prompts/`](../src/fabrica_autopartes/llm/prompts/), [bitácora](prompts/bitacora_experimentos.md), [`evaluacion/resultados/`](../evaluacion/resultados/) | Comparar técnicas con el mismo banco de 24 preguntas (v1 y v2) | Desarrollo: F12 y F13, `ingeniero-llm` (sonnet); aplicación: `claude_code`/`sonnet` en el Q&A (v1–v3) y `claude-haiku-5-5` en el agente (`agente.yaml` v1 y v2); `extractivo` como línea base y en pruebas |
-| Método Anatomy (máquinas interactivas para explicar mecanismos) | Aplicada | [`fna-maquinas-anatomia`](../skills/fna-maquinas-anatomia/SKILL.md), [`plantilla/`](../web/src/componentes/plantilla/) | Una pregunta y una relación medible por máquina | Desarrollo: F21, `ingeniero-3d-frontend` (sonnet) |
+| Método Anatomy (máquinas interactivas para explicar mecanismos) | Aplicada | [`fna-maquinas-anatomia`](../skills/fna-maquinas-anatomia/SKILL.md), `web/src/componentes/plantilla/` (retirada del frontend en IGNIS v2; queda en el historial de git) | Una pregunta y una relación medible por máquina | Desarrollo: F21, `ingeniero-3d-frontend` (sonnet) |
 | ADR, Architecture Decision Record (registro de decisión de arquitectura) | Aplicada | [`arquitectura/adr/`](arquitectura/adr/) (31) | Dejar el porqué de cada decisión estructural | Desarrollo: F08, `revisor-calidad` (opus), y fases técnicas |
 | Revisión de skills con SkillSpector (escáner de seguridad para skills de agentes) | Aplicada | [bitácora](prompts/bitacora_experimentos.md) S-01 a S-10, [`fna-seguridad`](../skills/fna-seguridad/SKILL.md) | Ninguna skill o herramienta de terceros se instala sin escaneo ni análisis manual | Escáner con `--no-llm`; análisis manual en la sesión principal |
 | Independent Critical Review (revisión crítica independiente) | Aplicada | [bitácora](prompts/bitacora_experimentos.md) E-04 (hallazgo H-03); fases F06, F08, F14, F15 y F22 | Un revisor que no edita código contrasta cada entrega con `AGENTS.md` | Desarrollo: `revisor-calidad` (opus) |
@@ -189,8 +189,9 @@ línea base extractiva. Los resultados están en `evaluacion/resultados/`, y los
 <summary><b>Método Anatomy</b></summary>
 
 Cada máquina (freno, prensa, línea y motocicleta) responde una pregunta con una relación medible, con 2 a 4 controles,
-cifras junto a las piezas, recorrido de menos de 30 s y modo experimento. La plantilla común está en
-`web/src/componentes/plantilla/`.
+cifras junto a las piezas, recorrido de menos de 30 s y modo experimento. La plantilla común estaba en
+`web/src/componentes/plantilla/`; IGNIS v2 la retiró del frontend junto con la biblioteca de máquinas (consultable en el
+historial de git).
 </details>
 
 <details>
