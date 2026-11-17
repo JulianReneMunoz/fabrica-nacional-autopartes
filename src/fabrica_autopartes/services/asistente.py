@@ -33,7 +33,11 @@ from fabrica_autopartes.llm.salvaguardas import es_rechazo as es_rechazo
 from fabrica_autopartes.pipelines.bronze import AlmacenBronze
 from fabrica_autopartes.pipelines.orquestador import ResultadoConstruccion, construir_base
 from fabrica_autopartes.repositories.auditoria import RepositorioAuditoria, RepositorioMemoriaIgnis
+from fabrica_autopartes.repositories.memoria_agente import cerrar_store, crear_store
 from fabrica_autopartes.scraping.rastreador import Rastreador, ResultadoRastreo
+
+# Reexportado para la API: usuario provisional de IGNIS hasta las sesiones (TODO PR b, #44 del plan).
+from fabrica_autopartes.services.agente_ignis_m2 import USUARIO_DEMO as USUARIO_DEMO
 from fabrica_autopartes.services.agente_ignis_m2 import AgenteIgnisM2
 from fabrica_autopartes.services.busqueda_web import ServicioBusquedaWeb
 
@@ -227,14 +231,26 @@ class ServicioAsistente:
         return verificar_proveedor_agente(self.config, consultar=consultar)
 
     # ------------------------------------------------------------ agente IGNIS
-    def responder_ignis(self, mensaje: str, thread_id: str) -> dict[str, Any]:
-        """Turno del agente IGNIS (Módulo 2). El agente se construye en el primer uso, nunca al importar."""
+    def responder_ignis(self, mensaje: str, thread_id: str, user_id: str = USUARIO_DEMO) -> dict[str, Any]:
+        """Turno del agente IGNIS (Módulo 2). El agente se construye en el primer uso, nunca al importar.
+
+        ``user_id`` es el usuario seudónimo dueño del namespace ``("preferencias", user_id)`` del Store.
+        TODO(PR b, #44 del plan): la API pasará el ``user_id`` de la sesión; hoy usa ``USUARIO_DEMO``.
+        """
         if self._ignis is None:
             with self._lock_ignis:
                 if self._ignis is None:
                     memoria = RepositorioMemoriaIgnis(self.config.dir_datos / "ignis_memoria_m2.sqlite")
-                    self._ignis = AgenteIgnisM2(self.base, memoria)
-        return self._ignis.ejecutar_turno(mensaje, thread_id)
+                    # Store persistente de largo plazo (ADR-033): sobrevive al reinicio del backend.
+                    self._ignis = AgenteIgnisM2(self.base, memoria, crear_store(self.config.ruta_store))
+        return self._ignis.ejecutar_turno(mensaje, thread_id, user_id)
+
+    def cerrar(self) -> None:
+        """Cierra las conexiones de memoria persistente (checkpointer del agente y Store de IGNIS)."""
+        if self._agente is not None:
+            self._agente.cerrar()
+        if self._ignis is not None and self._ignis.store is not None:
+            cerrar_store(self._ignis.store)
 
     # ------------------------------------------------------- base semántica
     def disponibilidad_semantica(self) -> tuple[bool, str]:

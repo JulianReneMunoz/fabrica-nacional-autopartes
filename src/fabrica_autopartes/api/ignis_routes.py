@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 
 from fabrica_autopartes.api.dependencias import obtener_servicio
 from fabrica_autopartes.core.registro import obtener_registro
-from fabrica_autopartes.services.asistente import ServicioAsistente
+from fabrica_autopartes.services.asistente import USUARIO_DEMO, ServicioAsistente
 
 log = obtener_registro(__name__)
 router_ignis = APIRouter(prefix="/api/v1", tags=["ignis-m2"])
@@ -84,8 +84,9 @@ async def stream_ignis_chat(
     """
     try:
         # El turno es síncrono (SQLite y BM25): se ejecuta fuera del bucle de eventos.
+        # TODO(PR b, #44 del plan): usar el user_id seudónimo de la cookie de sesión en lugar de USUARIO_DEMO.
         resultado: dict[str, Any] | None = await run_in_threadpool(
-            servicio.responder_ignis, req.mensaje, req.thread_id
+            servicio.responder_ignis, req.mensaje, req.thread_id, USUARIO_DEMO
         )
     except Exception:
         log.exception("Fallo del agente IGNIS en el hilo %s", req.thread_id)

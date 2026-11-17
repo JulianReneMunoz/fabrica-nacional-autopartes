@@ -1,9 +1,11 @@
-"""Agente con memoria (ADR-024): ``create_agent`` + herramienta tipada + ``InMemorySaver`` + recorte.
+"""Agente con memoria (ADR-024, ADR-033): ``create_agent`` + herramienta tipada + ``SqliteSaver`` + recorte.
 
 - Herramienta ``buscar_fragmentos`` (argumentos validados con Pydantic) sobre la base Gold, con BM25 o el
   recuperador semántico; devuelve los fragmentos con id, URL y título para citar la fuente.
-- Memoria por conversación: ``InMemorySaver`` con ``thread_id``. Vive en el proceso: se pierde al reiniciar,
-  no se comparte entre workers y crece con cada ``thread_id`` (límites en la ADR-024).
+- Memoria por conversación: ``SqliteSaver`` con ``thread_id`` en ``Configuracion.ruta_checkpoints``
+  (``repositories/memoria_agente.py``). El historial de un hilo sobrevive al reinicio del proceso (R03);
+  el tope ``FNA_AGENTE_MAX_HILOS`` cuenta los hilos usados desde el arranque y borra del archivo los más
+  antiguos.
 - Recorte del historial con ``trim_messages`` antes de cada llamada al modelo: solo cambia lo que se envía;
   el estado guardado no se toca. Nunca empieza con un resultado de herramienta huérfano.
 - Las preguntas con patrones de inyección se bloquean antes de llamar al modelo (como en el Q&A).
@@ -25,7 +27,6 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, AnyMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.messages.utils import count_tokens_approximately, trim_messages
 from langchain_core.tools import BaseTool, StructuredTool
-from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.errors import GraphRecursionError
 from pydantic import BaseModel, Field
 
@@ -43,6 +44,7 @@ from fabrica_autopartes.llm.proveedores import (
     modelo_del_agente,
     traducir_error_anthropic,
 )
+from fabrica_autopartes.repositories.memoria_agente import cerrar_checkpointer, crear_checkpointer
 
 VERSION_PROMPT_AGENTE = "v2"  # búsqueda en cada turno y reformulación de seguimientos (ADR-029)
 _log = logging.getLogger(__name__)
@@ -332,7 +334,9 @@ class ServicioAgente:
         self.base = base
         self._modelo = modelo
         self._inyectado = modelo is not None
-        self.memoria = InMemorySaver()
+        # Checkpointer persistente (ADR-033): el historial de cada hilo queda en SQLite y sobrevive al
+        # reinicio del proceso.
+        self.memoria = crear_checkpointer(config.ruta_checkpoints)
         # Hilos del menos al más usado: al superar FNA_AGENTE_MAX_HILOS se descarta el más antiguo.
         self._hilos: OrderedDict[str, None] = OrderedDict()
         self._agente: Any = None
@@ -367,6 +371,10 @@ class ServicioAgente:
         while len(self._hilos) > self.config.agente_max_hilos:
             antiguo, _ = self._hilos.popitem(last=False)
             self.memoria.delete_thread(antiguo)
+
+    def cerrar(self) -> None:
+        """Cierra la conexión del checkpointer (libera el archivo; el historial ya está guardado)."""
+        cerrar_checkpointer(self.memoria)
 
     @property
     def hilos_en_memoria(self) -> int:

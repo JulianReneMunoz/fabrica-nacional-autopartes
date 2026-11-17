@@ -8,6 +8,7 @@ import sqlite3
 import subprocess
 import sys
 import threading
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -24,8 +25,11 @@ from fabrica_autopartes.knowledge.recuperacion import Resultado
 from fabrica_autopartes.llm.extractivo import RECHAZO
 from fabrica_autopartes.pipelines.texto import MARCA_PERFIL
 from fabrica_autopartes.repositories.auditoria import RepositorioMemoriaIgnis
+from fabrica_autopartes.repositories.memoria_agente import cerrar_store, crear_store
 from fabrica_autopartes.services.agente_ignis_m2 import (
     ADJUNTOS,
+    AVISO_DATO_PERSONAL,
+    USUARIO_DEMO,
     AgenteIgnisM2,
     neutralizar_fragmento_rag,
     sanitizar_fragmento_rag,
@@ -62,8 +66,28 @@ class BaseSimulada:
         return [Resultado(fragmento=f, puntaje=1.0) for f in self.fragmentos[:k]]
 
 
+# Agentes creados en la prueba en curso: el fixture ``_cerrar_stores`` cierra sus Store al terminar, también
+# los de las pruebas que usan el agente sin pasar por el cliente (libera los archivos SQLite en Windows).
+_AGENTES_ABIERTOS: list[AgenteIgnisM2] = []
+
+
+@pytest.fixture(autouse=True)
+def _cerrar_stores() -> Iterator[None]:
+    yield
+    while _AGENTES_ABIERTOS:
+        store = _AGENTES_ABIERTOS.pop().store
+        if store is not None:
+            cerrar_store(store)
+
+
 def _agente(tmp_path: Path, base: Any) -> AgenteIgnisM2:
-    return AgenteIgnisM2(base=base, memoria=RepositorioMemoriaIgnis(tmp_path / "memoria.sqlite"))
+    agente = AgenteIgnisM2(
+        base=base,
+        memoria=RepositorioMemoriaIgnis(tmp_path / "memoria.sqlite"),
+        store=crear_store(tmp_path / "store.sqlite"),
+    )
+    _AGENTES_ABIERTOS.append(agente)
+    return agente
 
 
 class _ServicioSimulado:
@@ -72,8 +96,13 @@ class _ServicioSimulado:
     def __init__(self, agente: AgenteIgnisM2) -> None:
         self._agente = agente
 
-    def responder_ignis(self, mensaje: str, thread_id: str) -> dict[str, Any]:
-        return self._agente.ejecutar_turno(mensaje, thread_id)
+    def responder_ignis(self, mensaje: str, thread_id: str, user_id: str = USUARIO_DEMO) -> dict[str, Any]:
+        return self._agente.ejecutar_turno(mensaje, thread_id, user_id)
+
+    def cerrar(self) -> None:
+        """El lifespan de la API cierra el servicio al apagar: se cierra el Store del agente."""
+        if self._agente.store is not None:
+            cerrar_store(self._agente.store)
 
 
 def _cliente(agente: AgenteIgnisM2) -> TestClient:
@@ -300,10 +329,14 @@ def test_servicio_construye_el_agente_en_el_primer_uso(servicio: ServicioAsisten
     assert servicio._ignis is None
     app = crear_app()
     app.dependency_overrides[obtener_servicio] = lambda: servicio
-    meta = _metadatos(_consultar(TestClient(app), "Qué dice el documento de autopartes de Fanalca"))
-    assert meta["ruta_router"] == "rag_documental"
-    assert servicio._ignis is not None
-    assert (servicio.config.dir_datos / "ignis_memoria_m2.sqlite").is_file()
+    try:
+        meta = _metadatos(_consultar(TestClient(app), "Qué dice el documento de autopartes de Fanalca"))
+        assert meta["ruta_router"] == "rag_documental"
+        assert servicio._ignis is not None
+        assert (servicio.config.dir_datos / "ignis_memoria_m2.sqlite").is_file()
+        assert servicio.config.ruta_store.is_file()
+    finally:
+        servicio.cerrar()
 
 
 # ------------------------------------------------------------------ Ley 1581 y reglas de negocio
@@ -326,11 +359,15 @@ def test_mensaje_del_usuario_se_guarda_anonimizado(tmp_path: Path) -> None:
 
 def test_no_guarda_nombre_ni_empresa(tmp_path: Path) -> None:
     agente = _agente(tmp_path, BaseSimulada([]))
-    agente.ejecutar_turno("Me llamo Julián y trabajo en Fanalca", "hilo-perfil")
+    agente.ejecutar_turno("Me llamo Ana y trabajo en Empresa X. Recuérdalo.", "hilo-perfil")
     resultado = agente.ejecutar_turno("¿Cómo me llamo?", "hilo-perfil")
-    assert resultado["ruta_router"] == "memoria_store"
-    assert "Julián" not in resultado["respuesta"]
-    assert "perfil_store" not in resultado
+    # La pregunta por un dato personal responde el aviso fijo, sin búsqueda ni citas.
+    assert resultado["ruta_router"] == "directo"
+    assert resultado["respuesta"] == AVISO_DATO_PERSONAL
+    assert resultado["citas"] == []
+    assert "Ana" not in resultado["respuesta"] and "Empresa X" not in resultado["respuesta"]
+    assert agente.store is not None
+    assert agente.store.search(("preferencias", USUARIO_DEMO)) == []
     assert agente.memoria.buscar_en_store("fanalca:perfiles_clientes") == {}
 
 
@@ -358,7 +395,9 @@ def _contenido_persistido(agente: AgenteIgnisM2) -> str:
 @pytest.mark.parametrize(
     ("mensaje", "ruta"),
     [
-        ("me llamo Ana Gómez y trabajo en Empresa X", "memoria_store"),
+        # Sin orden explícita de recordar, la autopresentación no desvía la pregunta a la memoria.
+        ("me llamo Ana Gómez y trabajo en Empresa X", "rag_documental"),
+        ("me llamo Ana Gómez y trabajo en Empresa X. Recuérdalo.", "memoria_store"),
         ("Hola, soy Ana Gómez de Empresa X, ¿qué hace Fanalca?", "rag_documental"),
     ],
 )
@@ -372,11 +411,14 @@ def test_autopresentaciones_no_se_persisten_en_ninguna_ruta(tmp_path: Path, mens
         assert dato not in persistido
         assert dato not in resultado["respuesta"]
     assert MARCA_PERFIL in persistido
+    # Ninguna ruta guarda la autopresentación en el Store de largo plazo.
+    assert agente.store is not None
+    assert agente.store.search(("preferencias", USUARIO_DEMO)) == []
 
 
 def test_memoria_store_guarda_solo_el_marcador(tmp_path: Path) -> None:
     agente = _agente(tmp_path, BaseSimulada([]))
-    agente.ejecutar_turno("Mi nombre es Ana y mi empresa es Empresa X", "hilo-marcador")
+    agente.ejecutar_turno("Mi nombre es Ana y mi empresa es Empresa X. Recuérdalo.", "hilo-marcador")
     usuario = agente.memoria.obtener_historial_recortado("hilo-marcador")[0]
     assert usuario == {"role": "user", "content": MARCA_PERFIL}
 

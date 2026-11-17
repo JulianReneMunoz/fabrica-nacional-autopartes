@@ -22,6 +22,7 @@ from fabrica_autopartes.api.routes import agente, base, faq_visor, motos, operac
 from fabrica_autopartes.core.config import RAIZ_PROYECTO
 from fabrica_autopartes.core.excepciones import ErrorFNA
 from fabrica_autopartes.core.registro import configurar_registro, obtener_registro
+from fabrica_autopartes.services.asistente import servicio_por_defecto
 
 log = obtener_registro(__name__)
 
@@ -54,10 +55,29 @@ def _precargar_en_segundo_plano(app: FastAPI) -> None:
     threading.Thread(target=_tarea, name="precarga-recuperador-agente", daemon=True).start()
 
 
+def _cerrar_servicio(app: FastAPI) -> None:
+    """Cierra la memoria persistente (checkpointer y Store, ADR-033) al apagar la API.
+
+    Solo cierra un servicio que ya exista: si nadie lo pidió durante la vida de la app, no se construye
+    para cerrarlo. Un fallo al cerrar solo deja un aviso en el log.
+    """
+    try:
+        proveedor = app.dependency_overrides.get(obtener_servicio)
+        if proveedor is not None:
+            proveedor().cerrar()
+        elif servicio_por_defecto.cache_info().currsize:
+            servicio_por_defecto().cerrar()
+    except Exception as exc:
+        log.warning("Cierre de la memoria persistente omitido: %s", exc)
+
+
 @asynccontextmanager
 async def _ciclo_de_vida(app: FastAPI) -> AsyncIterator[None]:
     _precargar_en_segundo_plano(app)
-    yield
+    try:
+        yield
+    finally:
+        _cerrar_servicio(app)
 
 
 def crear_app() -> FastAPI:

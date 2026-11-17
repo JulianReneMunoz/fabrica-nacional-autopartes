@@ -179,6 +179,16 @@ class Configuracion(BaseSettings):
         return self.dir_gold / "fragmentos.jsonl"
 
     @property
+    def ruta_checkpoints(self) -> Path:
+        """Checkpointer SqliteSaver del agente: historial por ``thread_id`` (ADR-033, R03)."""
+        return self.dir_datos / "agente_checkpoints.sqlite"
+
+    @property
+    def ruta_store(self) -> Path:
+        """Store de largo plazo con namespace ``("preferencias", user_id)`` (ADR-033, R05)."""
+        return self.dir_datos / "ignis_store.sqlite"
+
+    @property
     def dir_vectores(self) -> Path:
         return self.dir_datos / "vectores"
 

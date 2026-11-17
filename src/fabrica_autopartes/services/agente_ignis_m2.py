@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
+from langgraph.store.base import BaseStore
 from pydantic import BaseModel, Field
 
 from fabrica_autopartes.domain.modelos import Fragmento
@@ -21,8 +22,34 @@ from fabrica_autopartes.pipelines.texto import (
     omitir_autopresentaciones,
 )
 from fabrica_autopartes.repositories.auditoria import RepositorioMemoriaIgnis
+from fabrica_autopartes.services.preferencias import (
+    consultar_preferencias,
+    decidir_memoria,
+    descarta_datos_personales,
+    describir_preferencias,
+    extraer_preferencias,
+    guardar_preferencias,
+    pregunta_dato_personal,
+)
 
 RAIZ_REPO = Path(__file__).resolve().parents[3]
+
+# TODO(PR b, #44 del plan): reemplazar por el ``user_id`` seudónimo de la sesión (HMAC del alias). Mientras no
+# haya sesiones, todas las consultas de /ignis/stream comparten este usuario de demostración.
+USUARIO_DEMO = "demo"
+
+# Ruta memoria_store: orden de recordar que no trae preferencias del vocabulario cerrado.
+AVISO_LEY_1581 = (
+    "IGNIS no guarda nombres, empresas ni datos de contacto (Ley 1581 de 2012); solo recuerda "
+    "preferencias de una lista cerrada: área laboral, formato de respuesta y línea de producto."
+)
+
+# Ruta directo: preguntas por datos personales del propio usuario («¿Cómo me llamo?»).
+AVISO_DATO_PERSONAL = (
+    "Esa es información personal, y por cuidar tu privacidad no la guardo ni la consulto. Yo solo te doy "
+    "información de Fanalca: sus negocios, las motocicletas Honda, las autopartes y su trabajo en "
+    "sostenibilidad. ¿Te ayudo con algo de eso?"
+)
 
 # Adjuntos fijos servidos como estáticos del visor (web/public → web/dist, montado en /app). Son recursos
 # ilustrativos generados por scripts/generar_assets_ignis.py: se marcan con origen «demostrativo».
@@ -148,23 +175,27 @@ def decidir_ruta_router(mensaje: str) -> DecisionRouter:
             justificacion="Saludo o cortesía trivial; respuesta directa sin invocar RAG ni tools.",
         )
 
-    # 2. Hechos personales / Memoria de largo plazo ("Me llamo...", "¿Dónde trabajo?")
-    if any(
-        k in texto
-        for k in [
-            "me llamo",
-            "mi nombre es",
-            "trabajo en",
-            "dónde trabajo",
-            "donde trabajo",
-            "cómo me llamo",
-            "como me llamo",
-        ]
-    ):
+    # 1b. Preguntas por datos personales del propio usuario («¿Cómo me llamo?»): no se guardan (Ley 1581),
+    # así que se responde el aviso sin buscar en el corpus.
+    if pregunta_dato_personal(mensaje):
+        return DecisionRouter(
+            ruta="directo",
+            score_confianza=0.97,
+            justificacion="Pregunta por un dato personal que IGNIS no guarda (Ley 1581); aviso sin RAG.",
+        )
+
+    # 2. Memoria de largo plazo: solo con una orden explícita que traiga algo que guardar (o una
+    # autopresentación, para explicar la Ley 1581) o con la consulta «¿qué preferencias tengo?».
+    # «Prefiero» o «me interesa» por sí solos no desvían la pregunta.
+    if modo := decidir_memoria(mensaje):
         return DecisionRouter(
             ruta="memoria_store",
             score_confianza=0.95,
-            justificacion="Gestión o recuperación de perfil en Store de largo plazo.",
+            justificacion=(
+                "Orden explícita de recordar preferencias en el Store de largo plazo."
+                if modo == "guardar"
+                else "Consulta de las preferencias del usuario en el Store de largo plazo (search)."
+            ),
         )
 
     tiene_estructurado = any(
@@ -249,14 +280,36 @@ class AgenteIgnisM2:
     """Turno de IGNIS. No guarda nombres, empresas ni datos de contacto (Ley 1581 de 2012): los mensajes del
     usuario se registran sin autopresentaciones (nombre, empresa) ni correos, teléfonos o documentos."""
 
-    def __init__(self, base: BaseConocimiento, memoria: RepositorioMemoriaIgnis) -> None:
+    def __init__(
+        self, base: BaseConocimiento, memoria: RepositorioMemoriaIgnis, store: BaseStore | None = None
+    ) -> None:
         self.kb = base
         self.memoria = memoria
+        # Store de largo plazo (ADR-033): preferencias por usuario en el namespace ("preferencias", user_id).
+        self.store = store
 
     def _buscar_fragmentos(self, consulta: str, k: int) -> list[Fragmento]:
         return [r.fragmento for r in self.kb.buscar(consulta, k=k)]
 
-    def ejecutar_turno(self, mensaje: str, thread_id: str) -> dict[str, Any]:
+    def _turno_memoria(self, mensaje: str, user_id: str) -> str:
+        """Guarda o consulta preferencias del usuario; nunca guarda texto libre ni datos personales."""
+        if self.store is None:
+            return "La memoria de largo plazo no está disponible en este momento."
+        if decidir_memoria(mensaje) == "consultar":
+            guardadas = consultar_preferencias(self.store, user_id)
+            if not guardadas:
+                return "No hay preferencias guardadas para este usuario."
+            return f"Preferencias guardadas: {describir_preferencias(guardadas)}."
+        prefs = extraer_preferencias(mensaje)
+        if not prefs:
+            return f"No se guardó ninguna preferencia. {AVISO_LEY_1581}"
+        guardar_preferencias(self.store, user_id, prefs)
+        respuesta = f"Preferencias guardadas para próximas conversaciones: {describir_preferencias(prefs)}."
+        if descarta_datos_personales(mensaje):
+            respuesta += " No se guardan nombres, empresas ni datos de contacto (Ley 1581 de 2012)."
+        return respuesta
+
+    def ejecutar_turno(self, mensaje: str, thread_id: str, user_id: str = USUARIO_DEMO) -> dict[str, Any]:
         # Salvaguarda de entrada directa
         if detectar_inyeccion(mensaje):
             respuesta = (
@@ -273,14 +326,15 @@ class AgenteIgnisM2:
                 "bloqueada": True,
             }
 
-        historial = self.memoria.obtener_historial_recortado(thread_id)
         decision = decidir_ruta_router(mensaje)
 
         citas: list[dict[str, str]] = []
         archivos: list[dict[str, str]] = []
         blindaje_indirecto = False
 
-        if decision.ruta == "directo":
+        if decision.ruta == "directo" and pregunta_dato_personal(mensaje):
+            respuesta = AVISO_DATO_PERSONAL
+        elif decision.ruta == "directo":
             respuesta = (
                 "Hola. Soy IGNIS, la unidad de atención de Fábrica Nacional de Autopartes (Fanalca). "
                 "¿Deseas consultar el corpus documental, las fichas técnicas o descargar el plano 2D "
@@ -288,11 +342,7 @@ class AgenteIgnisM2:
             )
 
         elif decision.ruta == "memoria_store":
-            respuesta = (
-                "IGNIS no guarda nombres, empresas ni datos de contacto (Ley 1581 de 2012); los mensajes "
-                "se registran sin autopresentaciones, correos, teléfonos ni documentos. "
-                f"Turnos registrados en este hilo: {len(historial)}."
-            )
+            respuesta = self._turno_memoria(mensaje, user_id)
 
         elif decision.ruta == "herramienta_estructurada":
             tipo: Literal["ficha_moto", "estadisticas_corpus"] = (
@@ -350,7 +400,7 @@ class AgenteIgnisM2:
         # Ley 1581: solo se limpia el mensaje del usuario; la respuesta sale del corpus y las herramientas.
         # En la ruta de perfil se guarda solo el marcador; en las demás se omiten autopresentaciones,
         # correos, teléfonos y documentos.
-        if decision.ruta == "memoria_store":
+        if decision.ruta == "memoria_store" and decidir_memoria(mensaje) == "guardar":
             mensaje_guardado = MARCA_PERFIL
         else:
             mensaje_guardado = anonimizar_datos_personales(omitir_autopresentaciones(mensaje))
