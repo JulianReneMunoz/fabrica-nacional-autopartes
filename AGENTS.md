@@ -28,9 +28,9 @@ Especificación vigente: `docs/arquitectura/` (ADR y `moto_honda.md`), `docs/req
 - Las interfaces solo llaman a `services.asistente.ServicioAsistente`; no acceden a la base
   relacional ni a `llm.cadenas` directamente.
 - El acceso a SQL pasa exclusivamente por `repositories/` (ADR-033): `auditoria.py` (auditoría y
-  memoria por hilo de IGNIS) y `memoria_agente.py` (checkpointer SqliteSaver y Store de LangGraph).
-  Ningún otro paquete importa `sqlite3`, `sqlalchemy`, `langgraph.checkpoint.sqlite` ni
-  `langgraph.store.sqlite`.
+  memoria por hilo de IGNIS), `memoria_agente.py` (checkpointer SqliteSaver y Store de LangGraph) y
+  `sesiones.py` (usuarios seudónimos e hilos). Ningún otro paquete importa `sqlite3`, `sqlalchemy`,
+  `langgraph.checkpoint.sqlite` ni `langgraph.store.sqlite`.
 - Los prompts viven en `src/fabrica_autopartes/llm/prompts/*.yaml`, versionados (v1, v2, v3).
   Un prompt nuevo es una versión nueva; no se modifica una versión ya evaluada.
 
@@ -41,6 +41,10 @@ Especificación vigente: `docs/arquitectura/` (ADR y `moto_honda.md`), `docs/req
 - El scraping respeta robots.txt, `Crawl-delay`, User-Agent identificable, pausa mínima de 2 s
   y dominios permitidos. Prohibido eludir CAPTCHAs, autenticación o bloqueos.
 - No se almacenan datos personales (Ley 1581 de 2012): los correos no corporativos se anonimizan.
+- Las sesiones usan un `user_id` seudónimo (HMAC-SHA256 del alias con `IGNIS_SECRETO_SESION`). El
+  alias solo viaja en la cookie cifrada del propio usuario: no se guarda en la base, los logs, la
+  auditoría ni el Store. Sin `IGNIS_SECRETO_SESION` las sesiones fallan con un mensaje claro; no hay
+  secreto por defecto en el código.
 
 ## Restricciones de la versión 2.0
 - Sin notebooks, sin JupyterLab y sin Anaconda/Conda: solo módulos Python, CLI, API y pruebas.

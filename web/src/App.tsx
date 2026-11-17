@@ -9,16 +9,23 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState, type Keyboard
 import { ProveedorIgnis, useIgnis, type EstadoServicio } from "./ignisContexto";
 import { Icono } from "./IgnisIconos";
 import { GRUPOS, hashDe, pestanaPorId, PESTANAS_PIE, resolverRuta, type IdPestana, type Pestana } from "./ignisRutas";
+import { ErrorSesion } from "./ignisSesion";
 import "./ignis.css";
 
 // El canvas 3D (three.js) solo se descarga y se monta en Atención; al salir de la pestaña se desmonta.
 const IgnisAtencionView = lazy(() => import("./IgnisAtencionView"));
 const PestanaPendiente = lazy(() => import("./PestanaPendiente"));
+const PestanaSesion = lazy(() => import("./PestanaSesion"));
+const PantallaEntrada = lazy(() => import("./PantallaEntrada"));
 
 /** Pestañas que ya tienen implementación propia; el resto muestra su estado vacío con el PR que la trae. */
 const IMPLEMENTADAS: Partial<Record<IdPestana, () => ReactNode>> = {
   atencion: () => <IgnisAtencionView />,
+  sesion: () => <PestanaSesion />,
 };
+
+/** Pestañas sin estado vacío: las que ya tienen implementación propia. */
+export const PESTANAS_IMPLEMENTADAS = Object.keys(IMPLEMENTADAS) as IdPestana[];
 
 function useRuta(): IdPestana {
   const leer = () => {
@@ -38,7 +45,7 @@ function useRuta(): IdPestana {
 /* ------------------------------------------------------------------ barra lateral */
 function EnlaceNav({ p, activa, alNavegar }: { p: Pestana; activa: boolean; alNavegar: () => void }) {
   return (
-    <a className={`ig-nav-item${activa ? " activo" : ""}`} href={hashDe(p.id)} aria-current={activa ? "page" : undefined} onClick={alNavegar}>
+    <a className={`ig-nav-item${activa ? " activo" : ""}`} href={hashDe(p.id)} aria-current={activa ? "page" : undefined} aria-label={p.etiqueta} onClick={alNavegar}>
       <Icono nombre={p.icono} />
       <span className="ig-nav-etiqueta">{p.etiqueta}</span>
     </a>
@@ -57,6 +64,7 @@ function moverFoco(e: KeyboardEvent<HTMLElement>) {
 }
 
 function BarraLateral({ activa, expandida, alternar, menuAbierto, cerrarMenu }: { activa: IdPestana; expandida: boolean; alternar: () => void; menuAbierto: boolean; cerrarMenu: () => void }) {
+  const { cerrarSesion } = useIgnis();
   return (
     <nav
       id="ig-navegacion"
@@ -84,15 +92,23 @@ function BarraLateral({ activa, expandida, alternar, menuAbierto, cerrarMenu }: 
         {PESTANAS_PIE.map((p) => (
           <EnlaceNav key={p.id} p={p} activa={p.id === activa} alNavegar={cerrarMenu} />
         ))}
-        <a className="ig-nav-item" href="/docs" target="_blank" rel="noreferrer">
+        <a className="ig-nav-item" href="/docs" target="_blank" rel="noreferrer" aria-label="Ayuda (API)">
           <Icono nombre="ayuda" />
           <span className="ig-nav-etiqueta">Ayuda (API)</span>
         </a>
-        {/* Sin sesiones todavía (#44): el enlace lleva a «Mi sesión», que explica el estado. */}
-        <a className="ig-nav-item" href={hashDe("sesion")} onClick={cerrarMenu}>
+        {/* Borra la cookie de sesión del navegador y vuelve a la pantalla de entrada (ADR-033). */}
+        <button
+          type="button"
+          className="ig-nav-item ig-nav-boton"
+          aria-label="Cerrar sesión"
+          onClick={() => {
+            cerrarMenu();
+            void cerrarSesion();
+          }}
+        >
           <Icono nombre="salir" />
           <span className="ig-nav-etiqueta">Cerrar sesión</span>
-        </a>
+        </button>
       </div>
     </nav>
   );
@@ -120,7 +136,12 @@ function ChipServicio({ nombre, estado, detalle }: { nombre: string; estado: Est
 }
 
 function EncabezadoGlobal({ menuAbierto, alternarMenu }: { menuAbierto: boolean; alternarMenu: () => void }) {
-  const { hilo, nuevoHilo, api, sse } = useIgnis();
+  const { sesion, hilo, nuevoHilo, sesionVencida, api, sse } = useIgnis();
+  const usuario = sesion.estado === "activa" ? sesion : null;
+  const crearHilo = () =>
+    void nuevoHilo().catch((e: unknown) => {
+      if (e instanceof ErrorSesion && e.estado === 401) sesionVencida();
+    });
   return (
     <header className="ig-encabezado">
       <button className="ig-boton-menu" onClick={alternarMenu} aria-expanded={menuAbierto} aria-controls="ig-navegacion">
@@ -132,13 +153,21 @@ function EncabezadoGlobal({ menuAbierto, alternarMenu }: { menuAbierto: boolean;
         <span className="ig-marca-sub"> · Fanalca · TAAML 2026-2S</span>
       </span>
       <div className="ig-encabezado-datos">
-        <span className="ig-campo" title="Las sesiones de usuario llegan con el PR #44">
-          <Icono nombre="usuario" tamano={16} /> <span className="ig-vacio">Sin sesión (#44)</span>
+        <span className="ig-campo ig-usuario" title="Usuario seudónimo de la sesión (el alias no se guarda en el servidor)">
+          <Icono nombre="usuario" tamano={16} />
+          {usuario ? (
+            <>
+              <span className="ig-alias">{usuario.alias}</span>
+              <code>{usuario.userIdCorto}</code>
+            </>
+          ) : (
+            <span className="ig-vacio">sin sesión</span>
+          )}
         </span>
         <span className="ig-campo ig-hilo">
           <Icono nombre="historial" tamano={16} />
-          <code title={`thread_id: ${hilo}`}>{hilo}</code>
-          <button className="ignis-btn" onClick={() => nuevoHilo()}>
+          <code title={`thread_id: ${hilo ?? "preparando…"}`}>{hilo ?? "preparando…"}</code>
+          <button className="ignis-btn" onClick={crearHilo}>
             <Icono nombre="mas" tamano={14} /> Nuevo hilo
           </button>
         </span>
@@ -199,10 +228,24 @@ function Shell() {
   );
 }
 
+/** Sin sesión, la pantalla de entrada; con sesión, la aplicación (ADR-033). */
+function Raiz() {
+  const { sesion } = useIgnis();
+  if (sesion.estado === "comprobando") return <EsqueletoPestana />;
+  if (sesion.estado === "sin_sesion") {
+    return (
+      <Suspense fallback={<EsqueletoPestana />}>
+        <PantallaEntrada aviso={sesion.aviso} />
+      </Suspense>
+    );
+  }
+  return <Shell />;
+}
+
 export default function App() {
   return (
     <ProveedorIgnis>
-      <Shell />
+      <Raiz />
     </ProveedorIgnis>
   );
 }

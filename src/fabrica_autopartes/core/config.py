@@ -154,6 +154,17 @@ class Configuracion(BaseSettings):
     api_clave_admin: SecretStr | None = None
     mcp_permitir_llm: bool = False
 
+    # --- Sesiones por usuario seudónimo (ADR-033) ----------------------------
+    # Secreto de las sesiones: se lee SOLO de IGNIS_SECRETO_SESION (sin el prefijo FNA_) y no tiene valor por
+    # defecto. Sin él (o con menos de 32 caracteres), las rutas de sesión y /ignis/stream responden 503.
+    secreto_sesion: SecretStr | None = Field(
+        default=None, validation_alias=AliasChoices("IGNIS_SECRETO_SESION", "secreto_sesion")
+    )
+    # Atributo Secure de la cookie: desactivado por defecto para poder usar http://localhost.
+    cookie_segura: bool = False
+    # Duración deslizante de la sesión: cada petición autenticada renueva la cookie.
+    minutos_sesion: int = Field(default=480, ge=5, le=24 * 60)
+
     @property
     def dir_bronze(self) -> Path:
         return self.dir_datos / "bronze"
@@ -182,6 +193,11 @@ class Configuracion(BaseSettings):
     def ruta_checkpoints(self) -> Path:
         """Checkpointer SqliteSaver del agente: historial por ``thread_id`` (ADR-033, R03)."""
         return self.dir_datos / "agente_checkpoints.sqlite"
+
+    @property
+    def ruta_sesiones(self) -> Path:
+        """Usuarios seudónimos e hilos de cada usuario (ADR-033). No guarda alias."""
+        return self.dir_datos / "ignis_sesiones.sqlite"
 
     @property
     def ruta_store(self) -> Path:

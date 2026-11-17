@@ -78,6 +78,37 @@ Todo el estudio es procedural: no se descargan HDRI ni texturas externas.
   deja una mancha blanca en el capó y en el piso.
 
 ## Pendiente para los PR siguientes
-- Sesiones de usuario (#44): alias en el encabezado, cookie httpOnly, hilos por usuario; el `thread_id` deja localStorage.
 - Configuración por usuario (#38b): proveedor, modelo y modo de contexto en cada petición y en el encabezado.
 - Qdrant (#34): chip de estado real.
+
+---
+
+# IGNIS v2 — PR de sesiones por usuario seudónimo (#44 del plan, ADR-033)
+
+## Qué cambia en el frontend
+| Archivo | Cambio |
+|---|---|
+| `src/ignisSesion.ts` (nuevo) | Cliente de `/api/v1/sesiones` (entrar, sesión actual, hilos, mensajes, cerrar) y `validarAlias` con la misma regla del backend |
+| `src/PantallaEntrada.tsx` (nuevo) | Entrada con alias, aviso de la Ley 1581 y el mensaje claro del servidor si falta `IGNIS_SECRETO_SESION` |
+| `src/PestanaSesion.tsx` (nuevo) | «Mi sesión»: alias, usuario seudónimo recortado, hilos con «Reabrir», «Nuevo hilo» y «Cerrar sesión»; estados de carga, error y vacío |
+| `src/ignisContexto.tsx` | Sesión y hilo desde el servidor (el más reciente o uno nuevo al entrar); sin almacenamiento en el navegador |
+| `src/App.tsx` | Sin sesión, la pantalla de entrada; encabezado con alias y usuario seudónimo; «Cerrar sesión» como botón; `aria-label` en los ítems de la barra lateral (en la barra contraída la etiqueta es un tooltip oculto y no daba nombre accesible) |
+| `src/IgnisAtencionView.tsx` | Al abrir o reabrir un hilo se carga su historial con ruta y citas; el envío espera a que el hilo esté listo y la carga del historial no pisa una conversación ya empezada |
+| `src/ignisCliente.ts` | 401, 403 y 503 del stream lanzan `ErrorSesionIgnis` y no caen al respaldo Q&A |
+| `src/ignisCasos.ts` | Casos 2A y 2B con los textos del OpenSpec `casos-validacion-ignis` (#27) |
+| `src/ignis.css` | Entrada, «Mi sesión», tabla de hilos y `.ig-nav-boton` |
+| `playwright.config.ts`, `e2e/recorrido.spec.ts` | Secreto de sesiones solo para e2e en `webServer.env`; inicio de sesión al empezar; pruebas de entrada, reabrir hilo y cerrar sesión |
+| `scripts/capturar_ignis.mjs` | Simula los endpoints de sesión; captura también la pantalla de entrada |
+
+## Pruebas
+- Vitest (98): navegación con sesión simulada, pantalla de entrada (validación y 503), «Mi sesión» (lista, reabrir, cerrar), 401/403/503 sin respaldo, nada en el almacenamiento del navegador y la prueba de términos prohibidos ampliada.
+- Playwright (6) contra FastAPI con sesión real.
+- Capturas: `docs/capturas/ignis_v2/entrada_1366.png` y `mi_sesion_1366.png`.
+
+## Limitaciones conocidas
+- Demo sin contraseña: el mismo alias entra a la misma cuenta (mismo usuario seudónimo, mismos hilos y preferencias).
+- La cookie no se puede revocar antes de que caduque (8 h): cerrar sesión la borra del navegador, pero una copia
+  robada sigue siendo válida hasta su vencimiento.
+- Los hilos «demo» antiguos sin dueño no se reasignan: responden 403.
+
+Detalle en [ADR-033](../docs/arquitectura/adr/ADR-033-sesiones-y-memoria-persistente.md).

@@ -96,6 +96,17 @@ code { font-family: var(--ig-mono); }
 .ig-nav-grupo:first-child { border-top: 0; padding-top: 0; }
 .ig-nav-titulo { display: none; padding: 4px 10px 2px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #8a909b; }
 .ig-nav-pie { display: flex; flex-direction: column; gap: 2px; padding-top: 6px; border-top: 1px solid var(--ig-borde); }
+/* «Cerrar sesión» es un botón con la apariencia de los enlaces. Va antes de .ig-nav-item para que el color y el
+   ancho de .ig-nav-item (misma especificidad) prevalezcan y el botón se vea igual que los enlaces. */
+.ig-nav-boton {
+  background: none;
+  border: 0;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
 .ig-nav-item {
   position: relative;
   display: flex;
@@ -111,7 +122,10 @@ code { font-family: var(--ig-mono); }
   white-space: nowrap;
 }
 .ig-nav-item > svg { flex: none; }
-.ig-nav-item:hover { background: #1f2229; color: var(--ig-texto); }
+.ig-nav-item:hover,
+.ig-nav-boton:hover { background: #1f2229; color: var(--ig-texto); }
+.ig-nav-item:focus-visible,
+.ig-nav-boton:focus-visible { outline: 2px solid var(--ig-acento-brillo); outline-offset: 2px; border-radius: 10px; }
 .ig-nav-item.activo { background: #23262d; color: var(--ig-texto); }
 .ig-nav-item.activo > svg { color: var(--ig-acento-brillo); }
 .ig-nav-item.activo::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--ig-acento); }
@@ -196,6 +210,43 @@ code { font-family: var(--ig-mono); }
 .ig-esqueleto-linea.ancha { height: 26px; width: 55%; }
 .ig-esqueleto-bloque { height: 220px; }
 @keyframes ig-brillo { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* ---------------------------------------------------------------- sesiones (ADR-033) */
+.ig-entrada { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; background: var(--ig-bg); }
+.ig-entrada-tarjeta {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 28px;
+  border-radius: 12px;
+  background: var(--ig-tarjeta);
+  border: 1px solid var(--ig-borde);
+}
+.ig-entrada-icono { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 12px; background: #23262d; color: var(--ig-acento-brillo); }
+.ig-entrada-tarjeta h1 { margin: 4px 0 0; font-size: 22px; font-weight: 500; }
+.ig-entrada-texto { margin: 0; color: var(--ig-texto-2); }
+.ig-entrada-tarjeta label { margin-top: 6px; font-size: 14px; }
+.ig-entrada-tarjeta small { color: var(--ig-texto-2); font-size: 12px; }
+.ig-entrada-error { min-height: 1.4em; margin: 0; font-size: 13px; color: #ffb3b3; }
+.ig-entrada-tarjeta .ignis-btn.primario { padding: 10px 14px; font-size: 14px; }
+.ig-alias { color: var(--ig-texto); }
+.ig-usuario code { font-size: 12px; color: var(--ig-texto-2); }
+.ig-sesion-datos { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; padding: 16px 20px; border-radius: 12px; background: var(--ig-tarjeta); border: 1px solid var(--ig-borde); }
+.ig-sesion-datos strong { font-weight: 500; }
+.ig-sesion-etiqueta { display: block; font-size: 12px; color: var(--ig-texto-2); }
+.ig-sesion-acciones { display: flex; gap: 8px; margin-left: auto; }
+.ig-sesion-subtitulo { margin: 24px 0 12px; font-size: 16px; font-weight: 500; }
+.ig-tabla-contenedor { overflow-x: auto; border-radius: 12px; border: 1px solid var(--ig-borde); }
+.ig-tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ig-tabla th,
+.ig-tabla td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--ig-borde); vertical-align: middle; }
+.ig-tabla th { font-weight: 500; color: var(--ig-texto-2); background: #15171c; }
+.ig-tabla tr:last-child td { border-bottom: 0; }
+.ig-tabla tr[aria-current="true"] td { background: rgba(229, 56, 59, 0.08); }
+.ig-tabla .numero { font-family: var(--ig-mono); text-align: right; }
+.ig-hilo-titulo { display: block; }
+.ig-hilo-id { display: block; font-size: 11px; color: var(--ig-texto-2); }
 
 /* ================================================================ Atención — IGNIS */
 .ignis-app {

@@ -390,6 +390,9 @@ y Archify (evaluada y descartada); motivos en [el detalle](docs/metodologias.md#
 - Sin datos personales (Ley 1581 de 2012): los correos no corporativos se anonimizan en Silver.
 - Cada dato de empresa en el visor cita su URL y su origen (`scraping`, `lectura_web` o `semilla`).
 - Cifras demostrativas y supuestos didácticos siempre marcados; sin procedimientos de reparación ni de seguridad.
+- Sesiones de IGNIS por usuario seudónimo ([ADR-033](docs/arquitectura/adr/ADR-033-sesiones-y-memoria-persistente.md)):
+  el `user_id` es un HMAC del alias y el alias solo viaja en la cookie cifrada del propio usuario; no se guarda en la
+  base, los logs, la auditoría ni el Store. Requiere `IGNIS_SECRETO_SESION` en `.env` (ver `.env.example`).
 
 ## Limitaciones y hoja de ruta
 **Limitaciones**
@@ -401,6 +404,13 @@ y Archify (evaluada y descartada); motivos en [el detalle](docs/metodologias.md#
 - La moto es genérica y esquemática; el embrague no se modela.
 - Rendimiento del visor medido con renderizado por software (SwiftShader), no con GPU real.
 - El sitio de Autopartes Fanalca responde con un desafío anti-bots: sus datos entran por lectura web documentada.
+- Sesiones de IGNIS ([ADR-033](docs/arquitectura/adr/ADR-033-sesiones-y-memoria-persistente.md)): demo académica
+  **sin contraseña**.
+  - Quien entra con el mismo alias obtiene el mismo usuario seudónimo y ve los mismos hilos y preferencias.
+  - **La cookie no se puede revocar desde el servidor:** cerrar sesión la borra del navegador, pero una copia
+    robada sigue siendo válida hasta su vencimiento (8 h desde la última petición).
+  - Si el alias se escribe dentro de un mensaje, la anonimización no lo reconoce como dato personal; un alias de
+    una sola palabra puede ser un nombre de pila y no se puede distinguir de uno inventado.
 
 **Hoja de ruta**
 - Flujo de revisión de `data/revision/hallazgos_web.jsonl` para incorporar a la base solo los datos aprobados.

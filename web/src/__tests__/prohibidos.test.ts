@@ -2,10 +2,18 @@ import { describe, expect, it } from "vitest";
 
 /**
  * Criterio de aceptación 4: nada en web/ referencia Streamlit, Gradio (Anuncio 006), el robot retirado ni sus
- * estados de transformación. Se revisan las fuentes, las pruebas e2e, los scripts y el HTML de entrada.
+ * estados de transformación. Además, la sesión no se guarda en el almacenamiento del navegador: vive en la cookie
+ * httpOnly cifrada (ADR-033). Se revisan las fuentes, las pruebas e2e, los scripts y el HTML de entrada.
  * Los términos se arman por partes para que este archivo no se detecte a sí mismo.
  */
-const PROHIBIDOS = [["stream", "lit"], ["gra", "dio"], ["ignis", "_robot"], ["transfor", "mando"], ["robot", "_reposo"]].map((p) => p.join(""));
+const PROHIBIDOS = [
+  ["stream", "lit"],
+  ["gra", "dio"],
+  ["ignis", "_robot"],
+  ["transfor", "mando"],
+  ["robot", "_reposo"],
+  ["local", "storage"],
+].map((p) => p.join(""));
 
 const archivos = {
   ...import.meta.glob(["../**/*.{ts,tsx,css}", "!./prohibidos.test.ts"], { query: "?raw", import: "default", eager: true }),
