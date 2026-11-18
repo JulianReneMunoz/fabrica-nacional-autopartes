@@ -112,3 +112,32 @@ Todo el estudio es procedural: no se descargan HDRI ni texturas externas.
 - Los hilos «demo» antiguos sin dueño no se reasignan: responden 403.
 
 Detalle en [ADR-033](../docs/arquitectura/adr/ADR-033-sesiones-y-memoria-persistente.md).
+
+---
+
+# IGNIS v2 — PR de voz neuronal con Piper (fix/voz-ignis)
+
+## Decisiones aplicadas
+- Piper corre dentro del proceso de la API, sin red; el repositorio no lo redistribuye (`LICENCIAS_TERCEROS.md`).
+- `/tts` exige sesión (401 sin cookie); en el visor, un 401 pasa al respaldo del navegador sin romper el turno.
+- `playbackRate` fijo en 1.0: la velocidad la da el servidor con `FNA_VOZ_LENGTH_SCALE`, sin alterar el tono.
+- Una síntesis a la vez (semáforo de 1). Sin control de ritmo en la interfaz, la petición no lleva campo `ritmo`.
+
+## Qué cambia
+| Archivo | Cambio |
+|---|---|
+| `src/ignisVoz.ts` | Sin cadena de robotización (paso banda, oscilador de 40 Hz, WaveShaper y eco): fuente → analizador → ganancia → salida, con `playbackRate` 1.0 |
+| `src/ignisVoz.ts` | Respaldo `speechSynthesis` ante 401, 503 o fallo de red, con `elegirVoz` (Microsoft Sabina, Microsoft Dalia, Paulina, Google español de Estados Unidos; después otra local es-MX, es-US, es-419 o es-CO; es-ES solo como último recurso, con aviso único), `pitch` 1.0 y `rate` 0,95 |
+| `src/ignisVoz.ts` | LED del escáner: un pulso por `onboundary`; si no llega ninguno en 400 ms, pulsos a 4 Hz mientras habla |
+| `src/ignisVoz.ts` | `textoParaVoz` (`cortarJson` + `limpiarParaVoz`): lo que se lee no lleva [ids], URL, JSON, nombres de archivo, markdown, «1)» ni «\|»; el texto visible del chat no cambia |
+| `src/IgnisAtencionView.tsx` | El aviso de la voz de respaldo en español de España se muestra en la zona de avisos |
+| Backend | `services/voz.py` (Piper con carga perezosa única y semáforo), `/tts` con `sesion_requerida` y 503 sin modelo, `scripts/descargar_voz.py` con verificación de tamaño y MD5, `FNA_VOZ_*` en la configuración |
+
+## Pruebas
+- Vitest: `voz.test.ts` (cadena directa y `playbackRate` 1.0, respaldo con 503 y 401, `elegirVoz`, aviso único, pulsos de 4 Hz) y `textoParaVoz.test.ts` (respuestas reales de las rutas herramienta estructurada, mixto y rag_documental; texto visible intacto).
+- pytest: `tests/integration/test_tts.py` (WAV válido, 401, 600 caracteres, 503, 500 genérico, carga única, semáforo, `FNA_VOZ_DIR` vacío y modelo real si está descargado).
+- e2e y `scripts/capturar_ignis.mjs` siguen simulando `/tts` con un WAV válido.
+
+## Limitaciones conocidas
+- La primera síntesis tarda unos segundos (carga del modelo); las siguientes, cerca de 0,2 s por oración en CPU.
+- `textoParaVoz` es un parche hasta el PR de respuestas naturales: al quitar archivos o URL una frase puede quedar incompleta, y el fin de un JSON truncado se detecta por heurística.

@@ -3,12 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-import io
 import json
-import math
 import re
-import struct
-import wave
 from collections.abc import AsyncIterator
 from typing import Annotated, Any
 
@@ -19,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from fabrica_autopartes.api.dependencias import obtener_servicio
 from fabrica_autopartes.api.routes.sesiones import PATRON_THREAD_ID, poner_cookie, sesion_requerida
+from fabrica_autopartes.core.excepciones import ErrorFNA
 from fabrica_autopartes.core.registro import obtener_registro
 from fabrica_autopartes.services.asistente import ServicioAsistente, SesionUsuario
 
@@ -35,37 +32,6 @@ class SolicitudChatIgnis(BaseModel):
 
 class SolicitudTTS(BaseModel):
     texto: str = Field(..., min_length=1, max_length=600)
-
-
-def _generar_wav_formantes_vocoder(texto: str, sample_rate: int = 22050) -> bytes:
-    """Genera una onda WAV vocalizada con envolvente silábica para Web Audio y AnalyserNode, sin red."""
-    palabras = re.findall(r"\w+", texto)
-    duracion = max(1.2, min(6.5, len(palabras) * 0.28))
-    total_samples = int(sample_rate * duracion)
-    buf = io.BytesIO()
-
-    with wave.open(buf, "wb") as wav_file:
-        wav_file.setnchannels(1)
-        wav_file.setsampwidth(2)
-        wav_file.setframerate(sample_rate)
-
-        frames = bytearray()
-        for i in range(total_samples):
-            t = i / sample_rate
-            # Modulación silábica para que el escáner LED oscile con naturalidad al hablar
-            envolvente = max(0.0, math.sin(2.0 * math.pi * 3.8 * t)) ** 0.6
-            f0 = 115.0 + 15.0 * math.sin(2.0 * math.pi * 1.7 * t)
-            senal = (
-                0.55 * math.sin(2.0 * math.pi * f0 * t)
-                + 0.30 * math.sin(2.0 * math.pi * (f0 * 2.0) * t)
-                + 0.15 * math.sin(2.0 * math.pi * 880.0 * t)
-            ) * envolvente
-            muestra = int(max(-32767, min(32767, senal * 18000)))
-            frames.extend(struct.pack("<h", muestra))
-
-        wav_file.writeframes(bytes(frames))
-
-    return buf.getvalue()
 
 
 def _evento(datos: dict[str, Any]) -> str:
@@ -141,8 +107,25 @@ async def stream_ignis_chat(
 
 
 @router_ignis.post("/tts")
-async def sintetizar_voz_ignis(req: SolicitudTTS) -> Response:
-    """Endpoint POST /api/v1/tts que retorna audio WAV para la cadena robotizada de Web Audio."""
-    # La síntesis es un bucle de Python (hasta ~143 000 muestras): fuera del bucle de eventos.
-    wav_bytes = await run_in_threadpool(_generar_wav_formantes_vocoder, req.texto)
+async def sintetizar_voz_ignis(
+    req: SolicitudTTS,
+    sesion: Annotated[SesionUsuario, Depends(sesion_requerida)],
+    servicio: Annotated[ServicioAsistente, Depends(obtener_servicio)],
+) -> Response:
+    """Voz de IGNIS: WAV de Piper (voz neuronal, sin red) para una oración de hasta 600 caracteres.
+
+    Exige la sesión (401 sin cookie). Sin los archivos de la voz responde 503 «Falta la voz: ejecuta
+    scripts/descargar_voz.py» y el frontend usa la voz del navegador. Otros fallos: 500 genérico (el detalle
+    va solo al log).
+    """
+    # Piper usa CPU durante cientos de milisegundos: fuera del bucle de eventos (una síntesis a la vez).
+    try:
+        wav_bytes = await run_in_threadpool(servicio.sintetizar_voz, req.texto)
+    except ErrorFNA:
+        raise
+    except Exception:
+        log.exception("Fallo de la síntesis de voz")
+        return Response(
+            status_code=500, content="La voz no está disponible en este momento.", media_type="text/plain"
+        )
     return Response(content=wav_bytes, media_type="audio/wav")
