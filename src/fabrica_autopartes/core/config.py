@@ -12,7 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import AliasChoices, Field, SecretStr
+from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 RAIZ_PROYECTO = Path(__file__).resolve().parents[3]
@@ -165,6 +165,23 @@ class Configuracion(BaseSettings):
     # Duración deslizante de la sesión: cada petición autenticada renueva la cookie.
     minutos_sesion: int = Field(default=480, ge=5, le=24 * 60)
 
+    # --- Voz de IGNIS: Piper en el servidor, sin red (LICENCIAS_TERCEROS.md) ----------------------------
+    # Voz por defecto: es_MX-claude-high (femenina, Apache-2.0). Alternativa: es_MX-ald-medium (masculina,
+    # Unlicense). Los archivos se descargan con scripts/descargar_voz.py y no se versionan.
+    voz_modelo: str = Field(
+        default="es_MX-claude-high", pattern=r"^[a-z]{2,3}_[A-Z]{2}-[a-z0-9_]+-(x_low|low|medium|high)$"
+    )
+    # Carpeta de las voces; sin valor, ``dir_datos/voces``.
+    voz_dir: Path | None = None
+    # Duración de los fonemas: 1.0 es la velocidad del modelo; 1.1 da una voz algo más pausada.
+    voz_length_scale: float = Field(default=1.1, ge=0.5, le=2.0)
+
+    @field_validator("voz_dir", mode="before")
+    @classmethod
+    def _voz_dir_vacio_es_por_defecto(cls, valor: object) -> object:
+        """``FNA_VOZ_DIR=`` vacío (como en ``.env.example``) usa ``dir_datos/voces``, no la carpeta actual."""
+        return None if isinstance(valor, str) and not valor.strip() else valor
+
     @property
     def dir_bronze(self) -> Path:
         return self.dir_datos / "bronze"
@@ -193,6 +210,20 @@ class Configuracion(BaseSettings):
     def ruta_checkpoints(self) -> Path:
         """Checkpointer SqliteSaver del agente: historial por ``thread_id`` (ADR-033, R03)."""
         return self.dir_datos / "agente_checkpoints.sqlite"
+
+    @property
+    def dir_voces(self) -> Path:
+        return self.voz_dir or self.dir_datos / "voces"
+
+    @property
+    def ruta_voz_onnx(self) -> Path:
+        """Modelo ONNX de la voz configurada (``<dir_voces>/<voz_modelo>.onnx``)."""
+        return self.dir_voces / f"{self.voz_modelo}.onnx"
+
+    @property
+    def ruta_voz_json(self) -> Path:
+        """Configuración de la voz que Piper lee junto al modelo (``.onnx.json``)."""
+        return self.dir_voces / f"{self.voz_modelo}.onnx.json"
 
     @property
     def ruta_sesiones(self) -> Path:

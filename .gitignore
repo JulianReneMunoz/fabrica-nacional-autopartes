@@ -71,3 +71,5 @@ graphify-out/
 
 # Índice vectorial Chroma (se regenera con `fabrica indexar-vectores`; ADR-023)
 data/vectores/
+# Voces de Piper (scripts/descargar_voz.py): modelos de ~63 MB, se descargan con verificación de integridad
+data/voces/

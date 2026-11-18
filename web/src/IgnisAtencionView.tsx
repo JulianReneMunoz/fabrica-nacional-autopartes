@@ -192,6 +192,8 @@ export default function IgnisAtencionView() {
   if (voz.current === null) {
     voz.current = new VozIgnis({
       amplitud: amplitud.current,
+      // Voz de respaldo en español de España (sin voz del servidor ni voz latinoamericana): aviso único.
+      alAviso: (mensaje) => setAviso(mensaje),
       alIniciar: () => {
         window.clearTimeout(temporizadorSub.current);
         // Silenciada, la cola solo recorre las oraciones para los subtítulos: el estado queda en «respondiendo».

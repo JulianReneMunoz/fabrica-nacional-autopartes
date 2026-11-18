@@ -43,6 +43,7 @@ from fabrica_autopartes.services.sesiones import ServicioSesiones
 # Reexportado para la API: las interfaces solo importan de ``services.asistente``.
 from fabrica_autopartes.services.sesiones import SesionUsuario as SesionUsuario
 from fabrica_autopartes.services.sesiones import sesiones_configuradas as sesiones_configuradas
+from fabrica_autopartes.services.voz import ServicioVoz
 
 if TYPE_CHECKING:  # importación perezosa en tiempo de ejecución: langchain.agents solo se carga si se usa
     from fabrica_autopartes.llm.proveedores import EstadoProveedor
@@ -95,6 +96,7 @@ class ServicioAsistente:
         self._ignis: AgenteIgnisM2 | None = None
         self._memoria_ignis: RepositorioMemoriaIgnis | None = None
         self._sesiones: ServicioSesiones | None = None
+        self._voz: ServicioVoz | None = None
         self._lock_ignis = threading.Lock()
         self._busqueda_web = ServicioBusquedaWeb(
             self.config.dir_datos / "revision" / "hallazgos_web.jsonl", buscador=buscador_web
@@ -296,6 +298,20 @@ class ServicioAsistente:
 
     def mensajes_hilo(self, thread_id: str, user_id: str) -> list[dict[str, Any]]:
         return self.sesiones.mensajes(thread_id, user_id)
+
+    # ------------------------------------------------------------ voz (Piper)
+    @property
+    def voz(self) -> ServicioVoz:
+        """Voz de IGNIS; el modelo se carga en la primera síntesis, nunca al importar."""
+        if self._voz is None:
+            with self._lock_ignis:
+                if self._voz is None:
+                    self._voz = ServicioVoz(self.config)
+        return self._voz
+
+    def sintetizar_voz(self, texto: str) -> bytes:
+        """WAV de Piper para ``texto``; ``ErrorVozNoDisponible`` (503) si falta el modelo."""
+        return self.voz.sintetizar(texto)
 
     def cerrar(self) -> None:
         """Cierra las conexiones de memoria persistente (checkpointer del agente y Store de IGNIS)."""

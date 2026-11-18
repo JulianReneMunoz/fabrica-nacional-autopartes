@@ -101,3 +101,14 @@ class ErrorHiloAjeno(ErrorFNA):
 
     def __init__(self) -> None:
         super().__init__("El hilo no pertenece a esta sesión.")
+
+
+# --- Voz de IGNIS (Piper) ----------------------------------------------------------------------------
+class ErrorVozNoDisponible(ErrorFNA):
+    """Faltan los archivos de la voz de Piper: el frontend usa la voz del navegador como respaldo."""
+
+    codigo = "voz_no_disponible"
+    estado_http = 503
+
+    def __init__(self) -> None:
+        super().__init__("Falta la voz: ejecuta scripts/descargar_voz.py")

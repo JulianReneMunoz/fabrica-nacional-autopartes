@@ -201,6 +201,17 @@ en el proceso) y Streamlit. El agente usa Claude Haiku 5.5 y la clave llega solo
 En Compose el Q&A usa extractivo por defecto (sin LLM), igual que fuera de Docker (ADR-027); para anthropic, defina
 `FNA_PROVEEDOR_LLM` en `.env` (y `FNA_MODELO_LLM` con un modelo Claude).
 
+**Voz de IGNIS (Piper, sin red).** `POST /api/v1/tts` sintetiza en el servidor con Piper y una voz neuronal
+femenina en español de México (`es_MX-claude-high`). El modelo (unos 63 MB) no se versiona; se descarga una vez a
+`data/voces/`, con verificación de tamaño y MD5:
+```powershell
+uv run python scripts/descargar_voz.py
+```
+Para la voz masculina (`es_MX-ald-medium`): `uv run python scripts/descargar_voz.py --voz es_MX-ald-medium` y
+`FNA_VOZ_MODELO=es_MX-ald-medium` en `.env`. La velocidad se ajusta con `FNA_VOZ_LENGTH_SCALE` (1.1 por defecto;
+más alto, más pausado). Sin el modelo, `/tts` responde 503 y el visor lee con la voz del navegador. Licencias de
+Piper y de las voces en [`LICENCIAS_TERCEROS.md`](LICENCIAS_TERCEROS.md).
+
 La base Gold (`data/gold`) está versionada y lista para usarse. El HTML crudo de Bronze (`data/bronze/html/`) no se
 versiona por ser contenido de terceros; se regenera con `uv run fabrica pipeline` (accede a la red y respeta
 `robots.txt`), y después `uv run fabrica build` reconstruye Silver y Gold. Sin red, `uv run fabrica build --fuente
@@ -411,6 +422,10 @@ y Archify (evaluada y descartada); motivos en [el detalle](docs/metodologias.md#
     robada sigue siendo válida hasta su vencimiento (8 h desde la última petición).
   - Si el alias se escribe dentro de un mensaje, la anonimización no lo reconoce como dato personal; un alias de
     una sola palabra puede ser un nombre de pila y no se puede distinguir de uno inventado.
+- Voz de IGNIS: la primera síntesis tarda unos segundos porque carga el modelo de Piper; después, cerca de 0,2 s
+  por oración en CPU. Las síntesis se atienden de a una. Mientras las respuestas del motor de reglas incluyan
+  identificadores, URL o JSON, el visor los omite al leer en voz alta (`textoParaVoz`), lo que puede dejar
+  frases incompletas.
 
 **Hoja de ruta**
 - Flujo de revisión de `data/revision/hallazgos_web.jsonl` para incorporar a la base solo los datos aprobados.
@@ -464,4 +479,5 @@ en verde y squash merge; no se hacen commits directos en `main`. Pasos y comando
 
 ## Licencia
 Código bajo licencia MIT ([`LICENSE`](LICENSE)). El contenido del corpus es propiedad de Fanalca y se cita con su
-fuente; el modelo 3D lo genera el propio proyecto. Las dependencias conservan sus licencias (`uv tree`, `npm ls`).
+fuente; el modelo 3D lo genera el propio proyecto. Las dependencias conservan sus licencias (`uv tree`, `npm ls`);
+Piper (GPL-3.0) y las voces tienen su nota en [`LICENCIAS_TERCEROS.md`](LICENCIAS_TERCEROS.md).
