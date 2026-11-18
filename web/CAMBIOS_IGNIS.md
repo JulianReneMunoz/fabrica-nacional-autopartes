@@ -141,3 +141,40 @@ Detalle en [ADR-033](../docs/arquitectura/adr/ADR-033-sesiones-y-memoria-persist
 ## Limitaciones conocidas
 - La primera síntesis tarda unos segundos (carga del modelo); las siguientes, cerca de 0,2 s por oración en CPU.
 - `textoParaVoz` es un parche hasta el PR de respuestas naturales: al quitar archivos o URL una frase puede quedar incompleta, y el fin de un JSON truncado se detecta por heurística.
+
+---
+
+# IGNIS v2 — PR de respuestas naturales y contenido de Fanalca (fix/ignis-respuestas-naturales)
+
+## Decisiones aplicadas
+- El texto de la respuesta es para el cliente; la evidencia técnica (citas, `fuentes_datos`, ruta, puntaje, blindaje y moderación) viaja en `metadatos`. AGENTS.md y el OpenSpec `casos-validacion-ignis` (casos 1, 3 y 6) se ajustaron antes del código.
+- Sin precios, cotizaciones ni catálogo de repuestos: se retiró el PDF de cotización (`web/public/assets/resumen_cotizacion.pdf`) y su generación.
+- Exclusiones de documentos y preferencia por el español solo en IGNIS: el buscador común del M1 no cambia.
+
+## Qué cambia en el backend
+| Archivo | Cambio |
+|---|---|
+| `services/moderacion.py` + `config/moderacion.yaml` | Moderación antes del router con 11 categorías: insulto, groserías, frustración, datos de terceros, insulto con datos de terceros, amenaza, odio o discriminación, acoso, manipulación, crisis personal y la pausa tras tres bloqueos seguidos; en una crisis personal da la Línea 192, opción 4, de salud mental, y el 123; en el historial y la auditoría se guarda la categoría, no el texto, y el hilo se titula «[mensaje moderado: …]» |
+| `services/ficha_fanalca.py` + `data/catalogo/ficha_fanalca.json` | Ficha corporativa (propósito, pilares, valores, historia, 6 negocios, plantas y contacto) con fragmento, URL y evidencia literal por dato, verificada contra el corpus y sin nombres de personas; nuevo `tipo_consulta="ficha_empresa"` |
+| `services/redactor_ignis.py` | Redactor extractivo: oraciones completas y pertinentes, ficha de la moto con valores exactos (lo no publicado se dice), estadísticas y procedencia en `fuentes_datos` |
+| `services/cortesia.py` | Saludos que devuelven el del cliente, cortesía, fuera de tema y textos de memoria fijos y deterministas |
+| `pipelines/sinonimos.py` + `config/ignis_exclusiones.yaml` | Sinónimos de búsqueda (misión y visión → propósito superior, pilares y valores) y documentos excluidos, solo en IGNIS |
+| `pipelines/texto.py` | `pulir_respuesta` (filtro de salida sin `[id]`, URL, JSON, archivos, markdown ni jerga) y `limpiar_texto_scrapeado` (sin menús, cookies ni metadatos del blog) |
+| `services/agente_ignis_m2.py`, `services/asistente.py`, `api/ignis_routes.py` | Moderación antes del router, ficha y textos fijos en el router, `pulir_respuesta` sobre el cuerpo y textos fijos después, sin cotización; título del hilo moderado; `fuentes_datos`, `categoria_moderacion` y `normativa` en los metadatos del SSE |
+
+## Qué cambia en el frontend
+| Archivo | Cambio |
+|---|---|
+| `src/ignisCliente.ts` | `fuentes_datos` (URL validadas con `new URL`, solo `http(s)`; elementos que no son objetos se descartan), `categoria_moderacion` y `normativa` en los metadatos; `etiquetaModeracion` |
+| `src/IgnisAtencionView.tsx` | Ficha «Fuente de los datos» junto a la respuesta (nunca en el texto ni en la voz); insignia de moderación y norma de datos; en una crisis personal solo se muestra el mensaje, sin insignias ni ruta; `rel="noopener noreferrer"` en los enlaces; el resumen exportado incluye las fuentes de datos |
+| `src/ignis.css` | `.ignis-fuentes-datos` y `.ignis-fuente-datos` |
+
+## Pruebas
+- Vitest: lectura de los campos nuevos (URL inválidas y elementos que no son objetos se descartan) y Atención con un SSE simulado: fuente visible, voz sin archivo ni URL, moderación y crisis.
+- pytest: batería de las 20 preguntas de la fase 0 (`tests/integration/test_bateria_ignis.py`, con `tests/fixtures/ignis_bateria.json` y las respuestas antes y después).
+- `textoParaVoz` y sus pruebas no cambian (segunda defensa de la voz).
+- Resultado: pytest 846 pasan (1 omitida, la del modelo real); Vitest 128 pasan en 9 archivos; Playwright 6 de 6; batería de la fase 0, 20 de 20.
+
+## Limitaciones conocidas
+- Sin LLM, la respuesta documental es extractiva: puede elegir una oración que comparte el tema con la pregunta pero no la responde, o un rótulo largo del sitio (por ejemplo, «Explora las principales estrategias de sostenibilidad.» en la comparación mixta).
+- La guía de estilo para el LLM (`llm/estilo_ignis.py`, constante `ESTILO_RESPUESTA_IGNIS`) queda para el PR de herramientas LangChain y LLM, que la inyectará con `dynamic_prompt`; este PR solo cubre el motor de reglas.

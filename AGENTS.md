@@ -53,7 +53,9 @@ Especificación vigente: `docs/arquitectura/` (ADR y `moto_honda.md`), `docs/req
 - No generar procedimientos de reparación ni de seguridad crítica.
 - El backend valida identificadores, límites y valores finitos enviados por el cliente.
 - Todo dato de empresa mostrado en el visor cita su URL y su origen (`scraping`, `lectura_web`,
-  `semilla`); los parámetros sin fuente se marcan `demostrativo`.
+  `semilla`) en `metadatos.citas` o `metadatos.fuentes_datos`, y la interfaz los muestra junto a la
+  respuesta; el texto de la respuesta no lleva URL ni identificadores. Los parámetros sin fuente se marcan
+  `demostrativo`.
 
 ## Seguridad
 - Prohibido escribir secretos en el código, en `.mcp.json` o en commits.

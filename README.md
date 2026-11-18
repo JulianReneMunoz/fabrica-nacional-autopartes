@@ -178,6 +178,7 @@ comunidades; los nodos más conectados son `ServicioAsistente`, `MaquinaMoto`, `
 | Q&A con citas | Respuesta solo con el contexto, citas por `id` de fragmento, frase de rechazo fija y bloqueo de inyección |
 | Resumen y FAQ | Prompts versionados v1, v2 y v3 con laboratorio de comparación en Streamlit |
 | Agente con memoria | Pestaña «🤖 Agente» en Streamlit (además de `fabrica agente` y `POST /api/v1/agente`): chat con historial por sesión, botón «Nueva conversación», fuentes como enlaces y Claude Haiku 5.5 por defecto; sin clave, aviso y chat desactivado ([ADR-026](docs/arquitectura/adr/ADR-026-haiku-proveedor-principal-agente.md)) |
+| IGNIS (Atención) | Respuestas en oraciones completas para el cliente, sin identificadores, URL ni JSON; las fuentes (citas y `fuentes_datos`) se muestran junto a la respuesta, nunca en el texto ni en la voz. Ficha corporativa con la fuente de cada dato (`data/catalogo/ficha_fanalca.json`): propósito, valores, historia, 6 negocios, plantas y contacto. Moderación antes del router; ante una crisis personal, la Línea 192, opción 4, de salud mental, y el 123. Sin precios, cotizaciones ni catálogo de repuestos |
 | Biblioteca de máquinas 3D | Freno de disco, prensa, línea de ensamble y motocicleta; método Anatomy (una pregunta, una relación medible) |
 | Explorador de la motocicleta | Diez sistemas, 79 piezas con su función, ficha con fuente y estado, pregunta sobre cada pieza (`#/explorador`) |
 | Fichas técnicas | Cada campo `publicado`, `no_publicado` o `supuesto`; lo no publicado se muestra como tal |
@@ -399,7 +400,11 @@ y Archify (evaluada y descartada); motivos en [el detalle](docs/metodologias.md#
 - Scraping responsable: `robots.txt` y `Crawl-delay`, User-Agent identificable (`FNA-KB/1.0 (+URL del repositorio)`),
   pausa mínima de 2 s y dominios permitidos; no se eluden CAPTCHAs ni bloqueos ([ADR-015](docs/arquitectura/adr/ADR-015-proteccion-antibots.md)).
 - Sin datos personales (Ley 1581 de 2012): los correos no corporativos se anonimizan en Silver.
-- Cada dato de empresa en el visor cita su URL y su origen (`scraping`, `lectura_web` o `semilla`).
+- Cada dato de empresa en el visor cita su URL y su origen (`scraping`, `lectura_web` o `semilla`) en
+  `metadatos.citas` o `metadatos.fuentes_datos`, y el visor lo muestra junto a la respuesta; el texto de la
+  respuesta no lleva URL ni identificadores.
+- Moderación de IGNIS: un mensaje bloqueado se guarda en el historial, en la auditoría y en el título del hilo con
+  su categoría («[mensaje moderado: …]»), nunca con su texto.
 - Cifras demostrativas y supuestos didácticos siempre marcados; sin procedimientos de reparación ni de seguridad.
 - Sesiones de IGNIS por usuario seudónimo ([ADR-033](docs/arquitectura/adr/ADR-033-sesiones-y-memoria-persistente.md)):
   el `user_id` es un HMAC del alias y el alias solo viaja en la cookie cifrada del propio usuario; no se guarda en la
@@ -423,9 +428,10 @@ y Archify (evaluada y descartada); motivos en [el detalle](docs/metodologias.md#
   - Si el alias se escribe dentro de un mensaje, la anonimización no lo reconoce como dato personal; un alias de
     una sola palabra puede ser un nombre de pila y no se puede distinguir de uno inventado.
 - Voz de IGNIS: la primera síntesis tarda unos segundos porque carga el modelo de Piper; después, cerca de 0,2 s
-  por oración en CPU. Las síntesis se atienden de a una. Mientras las respuestas del motor de reglas incluyan
-  identificadores, URL o JSON, el visor los omite al leer en voz alta (`textoParaVoz`), lo que puede dejar
-  frases incompletas.
+  por oración en CPU. Las síntesis se atienden de a una. El servidor ya entrega el texto limpio
+  (`pulir_respuesta`); `textoParaVoz` queda como segunda defensa en el visor.
+- IGNIS sin LLM responde de forma extractiva: puede elegir una oración que comparte el tema con la pregunta pero
+  no la responde. La moderación es por reglas (léxico en `config/moderacion.yaml`), sin clasificador.
 
 **Hoja de ruta**
 - Flujo de revisión de `data/revision/hallazgos_web.jsonl` para incorporar a la base solo los datos aprobados.

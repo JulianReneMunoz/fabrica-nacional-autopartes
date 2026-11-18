@@ -1,6 +1,7 @@
 """Recursos descargables de IGNIS.
 
-- ``--solo-recursos``: cotización PDF de ejemplo y plano 2D ilustrativo (matplotlib), publicables.
+- ``--solo-recursos``: plano 2D ilustrativo (matplotlib), publicable. IGNIS no ofrece cotizaciones: el PDF
+  de cotización de ejemplo se retiró.
 - Sin opciones: mallas de relieve demostrativas (mapa de alturas por luminancia de los mockups de
   data/referencias_mockups/) en data/mallas_demostrativas/. Ambas carpetas están ignoradas por git y fuera
   de web/public: no son un diseño industrial y no se publican.
@@ -114,73 +115,6 @@ def exportar_mallas_relieve_demostrativas() -> Path:
 
     total_caras = len(malla_auto.faces) + len(malla_robot.faces)
     print(f"Mallas demostrativas en {destino} ({total_caras:,} triángulos); no se publican.")
-    return destino
-
-
-# --- Resumen de cotización (PDF vectorial de ejemplo) -------------------------------------------------
-LEYENDA_COTIZACION = "Documento de ejemplo con valores ilustrativos, no es una oferta comercial"
-ITEMS_COTIZACION: list[tuple[str, int, int]] = [
-    # (descripción, cantidad, valor unitario en COP) — valores ilustrativos
-    ("Pastillas de freno de disco delanteras", 4, 85_000),
-    ("Disco de freno ventilado", 2, 210_000),
-    ("Cáliper de freno de un pistón", 2, 340_000),
-    ("Kit de embrague completo", 1, 465_000),
-    ("Filtro de aceite", 6, 18_500),
-    ("Bujía de encendido", 8, 22_000),
-]
-
-
-def _formato_cop(valor: int) -> str:
-    return "$ " + f"{valor:,}".replace(",", ".")
-
-
-def generar_resumen_cotizacion_pdf(destino: Path) -> Path:
-    """Genera el PDF de ejemplo con matplotlib (dependencia ya declarada) en ``destino``."""
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    from matplotlib.backends.backend_pdf import PdfPages
-
-    filas = [
-        [desc, str(cant), _formato_cop(unit), _formato_cop(cant * unit)]
-        for desc, cant, unit in ITEMS_COTIZACION
-    ]
-    total = sum(cant * unit for _, cant, unit in ITEMS_COTIZACION)
-
-    destino.parent.mkdir(parents=True, exist_ok=True)
-    metadatos = {"Title": "Resumen de cotización", "Author": "Proyecto FNA", "CreationDate": None}
-    with PdfPages(destino, metadata=metadatos) as pdf:
-        fig = plt.figure(figsize=(8.27, 11.69))  # A4 vertical
-        fig.text(0.08, 0.93, "Fanalca / TAAML 2026-2S — Resumen de cotización", fontsize=16, weight="bold")
-        fig.text(0.08, 0.905, LEYENDA_COTIZACION, fontsize=10.5, color="#b3261e", style="italic")
-        eje = fig.add_axes((0.08, 0.45, 0.84, 0.42))
-        eje.axis("off")
-        tabla = eje.table(
-            cellText=[*filas, ["Total", "", "", _formato_cop(total)]],
-            colLabels=["Ítem", "Cantidad", "Valor unitario (COP)", "Subtotal (COP)"],
-            colWidths=[0.46, 0.12, 0.21, 0.21],
-            cellLoc="right",
-            loc="upper center",
-        )
-        tabla.auto_set_font_size(False)
-        tabla.set_fontsize(9.5)
-        tabla.scale(1, 1.6)
-        for (fila, col), celda in tabla.get_celld().items():
-            if col == 0:
-                celda.set_text_props(ha="left")
-            if fila == 0 or fila == len(filas) + 1:
-                celda.set_text_props(weight="bold")
-                celda.set_facecolor("#f1f3f6")
-        fig.text(
-            0.08,
-            0.06,
-            "Valores en pesos colombianos (COP). " + LEYENDA_COTIZACION + ".",
-            fontsize=8,
-            color="#555",
-        )
-        pdf.savefig(fig)
-        plt.close(fig)
     return destino
 
 
@@ -391,12 +325,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--solo-recursos",
         action="store_true",
-        help="Genera solo el PDF de cotización y el plano 2D PNG en web/public/assets/ (sin modelos 3D).",
+        help="Genera solo el plano 2D PNG en web/public/assets/ (sin modelos 3D).",
     )
     args = parser.parse_args()
     if args.solo_recursos:
         dir_assets = Path(__file__).resolve().parent.parent / "web" / "public" / "assets"
-        print(f"Cotización generada: {generar_resumen_cotizacion_pdf(dir_assets / 'resumen_cotizacion.pdf')}")
         print(f"Plano 2D generado: {generar_plano_2d_png(dir_assets / 'blueprint_2d.png')}")
     else:
         exportar_mallas_relieve_demostrativas()

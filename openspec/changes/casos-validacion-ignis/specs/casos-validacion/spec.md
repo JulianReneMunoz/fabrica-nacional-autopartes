@@ -30,7 +30,8 @@ cada cita SHALL corresponder a un `id` de fragmento recuperado en ese turno, con
 
 #### Scenario: Sin evidencia
 - **WHEN** la recuperación no devuelve fragmentos para la consulta
-- **THEN** la respuesta es la frase de rechazo fija «La información solicitada no se encuentra en la base de conocimiento de Fanalca.» y no hay citas
+- **THEN** la respuesta empieza por la frase de rechazo fija «La información solicitada no se encuentra en la base de conocimiento de Fanalca.» y no hay citas
+- **AND** después de la frase fija solo puede seguir una pregunta de seguimiento sin datos de Fanalca (por ejemplo, «¿Te puedo ayudar con algo de sus negocios, productos o sostenibilidad?»)
 
 ### Requirement: Caso 2A, registro de preferencias sin datos personales
 The system SHALL guardar en el Store de largo plazo, con namespace `("preferencias", user_id)` y `user_id` seudónimo,
@@ -68,11 +69,13 @@ el caso 2A, en el mismo hilo, en un hilo nuevo del mismo usuario y después de r
 
 ### Requirement: Caso 3, datos estructurados
 The system SHALL responder el caso 3 por la ruta `herramienta_estructurada` (etiqueta «Datos») con los valores exactos
-devueltos por la herramienta determinista con salida Pydantic, citando el archivo fuente y la procedencia de los datos.
+devueltos por la herramienta determinista con salida Pydantic, y SHALL entregar el archivo fuente y la procedencia
+de los datos en `metadatos.fuentes_datos`. El texto de la respuesta no lleva nombres de archivo, URL ni JSON.
 
 #### Scenario: Cifras de la herramienta
 - **WHEN** se ejecuta el caso 3
-- **THEN** cada cifra de la respuesta coincide con la salida de la herramienta y la respuesta indica el archivo fuente y su procedencia (URL u «origen: demostrativo»)
+- **THEN** cada cifra de la respuesta coincide con la salida de la herramienta y `metadatos.fuentes_datos` indica el archivo fuente y su procedencia (URL u `origen: demostrativo`)
+- **AND** la interfaz muestra esa fuente junto a la respuesta
 
 ### Requirement: Caso 4A, enrutamiento mixto
 The system SHALL responder el caso 4A por la ruta `mixto` combinando la herramienta de datos estructurados y la
@@ -103,4 +106,6 @@ de terceros, con una respuesta respetuosa, sin búsqueda y sin datos personales.
 
 #### Scenario: Solicitud agresiva con datos de terceros
 - **WHEN** se ejecuta el caso 6
-- **THEN** `metadatos.bloqueada` es verdadero, no hay citas ni llamadas a herramientas y la respuesta no contiene teléfonos ni nombres de terceros
+- **THEN** `metadatos.bloqueada` es verdadero, `metadatos.categoria_moderacion` es `insulto_y_datos_de_terceros`, no hay citas ni llamadas a herramientas y la respuesta no contiene teléfonos ni nombres de terceros
+- **AND** la respuesta no repite el insulto y ofrece los canales oficiales de contacto de Fanalca
+- **AND** el historial y la auditoría guardan la categoría, no el texto del mensaje

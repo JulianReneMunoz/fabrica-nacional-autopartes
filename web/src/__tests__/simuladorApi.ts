@@ -13,6 +13,13 @@ export interface OpcionesSimulador {
   mensajes?: Record<string, MensajeHiloDTO[]>;
   /** Respuesta de `/ignis/stream` (por defecto, 200 sin cuerpo útil). */
   stream?: number;
+  /** Cuerpo SSE de `/ignis/stream` (eventos `data: {…}`); sin él, el cuerpo va vacío. */
+  cuerpoStream?: string;
+}
+
+/** Cuerpo SSE a partir de eventos: cada uno como `data: <json>` y el cierre `data: [DONE]`. */
+export function cuerpoSSE(eventos: Record<string, unknown>[]): string {
+  return [...eventos.map((e) => `data: ${JSON.stringify(e)}`), "data: [DONE]"].join("\n\n") + "\n\n";
 }
 
 export interface Llamada {
@@ -63,7 +70,11 @@ export function crearFetchSimulado(opciones: OpcionesSimulador = {}) {
       const m = /^\/api\/v1\/sesiones\/yo\/hilos\/([^/]+)\/mensajes$/.exec(url);
       if (m) return json(opciones.mensajes?.[decodeURIComponent(m[1])] ?? []);
     }
-    if (url.endsWith("/ignis/stream")) return new Response("", { status: opciones.stream ?? 200 });
+    if (url.endsWith("/ignis/stream"))
+      return new Response(opciones.cuerpoStream ?? "", {
+        status: opciones.stream ?? 200,
+        headers: { "Content-Type": "text/event-stream" },
+      });
     throw new TypeError("Failed to fetch");
   }) as typeof fetch;
 

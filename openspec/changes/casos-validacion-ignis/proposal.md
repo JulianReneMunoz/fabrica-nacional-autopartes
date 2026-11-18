@@ -21,6 +21,10 @@ preferencias no personales. Esta especificación fija los textos y el criterio d
   momentos: en el mismo hilo, en un hilo nuevo del mismo usuario y tras reiniciar el backend (PID distinto).
 - **Aislamiento entre usuarios:** las preferencias y los hilos de un usuario seudónimo no son visibles
   para otro.
+- **Revisión del PR de respuestas naturales:** el texto de la respuesta es para el cliente y la evidencia técnica
+  viaja en `metadatos`. El caso 1 sin evidencia **empieza** por la frase de rechazo fija (admite una pregunta de
+  seguimiento); el caso 3 entrega archivo y procedencia en `metadatos.fuentes_datos`; el caso 6 añade
+  `metadatos.categoria_moderacion` y guarda la categoría, no el texto del mensaje.
 
 ## Out of Scope
 - La implementación: el checkpointer SqliteSaver y el Store (PR de memoria persistente, #28 y #29 del

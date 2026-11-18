@@ -437,6 +437,22 @@ code { font-family: var(--ig-mono); }
   white-space: nowrap;
 }
 a.ignis-cita:hover { background: #343944; text-decoration: underline; }
+/* Fuente de los datos estructurados (archivo, origen y URL): junto a la respuesta, nunca en el texto ni en la voz. */
+.ignis-fuentes-datos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.ignis-fuente-datos {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #2a2e36;
+  color: #dfe3ea;
+}
+.ignis-fuente-datos a { color: #ffc58f; }
+.ignis-fuente-datos a:hover { text-decoration: underline; }
 /* Origen del dato (scraping, lectura_web, semilla o demostrativo), obligatorio junto a citas y adjuntos. */
 .ignis-origen { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 6px; font-family: var(--ig-mono); font-size: 10.5px; font-weight: 400; line-height: 1.6; color: #c9ced8; background: rgba(255, 255, 255, 0.08); vertical-align: 1px; white-space: nowrap; }
 .ignis-adjunto-linea {

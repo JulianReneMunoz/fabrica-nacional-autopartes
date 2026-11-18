@@ -184,10 +184,39 @@ def test_dos_usuarios_no_ven_hilos_mensajes_ni_preferencias_del_otro(servicio: S
 
     # Preferencias: cada usuario ve solo las suyas (caso 2B en un hilo nuevo).
     hilo_beto = beto.post("/api/v1/sesiones/yo/hilos").json()["thread_id"]
-    assert "No hay preferencias guardadas" in _texto_sse(_stream(beto, CASO_2B, hilo_beto))
+    assert "Todavía no tengo preferencias tuyas guardadas" in _texto_sse(_stream(beto, CASO_2B, hilo_beto))
     otro_hilo_ana = ana.post("/api/v1/sesiones/yo/hilos").json()["thread_id"]
     texto = _texto_sse(_stream(ana, CASO_2B, otro_hilo_ana))
     assert all(v in texto for v in ("compras de repuestos", "breve", "motocicletas"))
+
+
+@pytest.mark.parametrize(
+    ("mensaje", "categoria"),
+    [("Voy a quemar la sede", "amenaza_violencia"), ("me quiero matar", "crisis_personal")],
+)
+def test_hilo_moderado_se_titula_con_la_marca_y_no_guarda_el_texto(
+    servicio: ServicioAsistente, mensaje: str, categoria: str
+) -> None:
+    """Un hilo que empieza con un mensaje bloqueado se titula «[mensaje moderado: …]»; el texto del cliente no
+    queda ni en el título ni en el historial."""
+    cliente = TestClient(_app(servicio))
+    _entrar(cliente, ALIAS_A)
+    hilo = cliente.post("/api/v1/sesiones/yo/hilos").json()["thread_id"]
+    r = _stream(cliente, mensaje, hilo)
+    assert r.status_code == 200
+    meta = next(
+        json.loads(linea.removeprefix("data: "))
+        for linea in r.text.splitlines()
+        if linea.startswith("data: {") and '"metadatos"' in linea
+    )
+    assert meta["bloqueada"] is True and meta["categoria_moderacion"] == categoria
+
+    (fila,) = cliente.get("/api/v1/sesiones/yo/hilos").json()
+    assert fila["titulo"] == f"[mensaje moderado: {categoria}]"
+    mensajes = cliente.get(f"/api/v1/sesiones/yo/hilos/{hilo}/mensajes").json()
+    assert mensajes[0]["contenido"] == f"[mensaje moderado: {categoria}]"
+    historial = json.dumps([fila, mensajes], ensure_ascii=False).lower()
+    assert mensaje.lower() not in historial
 
 
 def test_mensajes_del_hilo_con_ruta_y_citas(servicio: ServicioAsistente) -> None:

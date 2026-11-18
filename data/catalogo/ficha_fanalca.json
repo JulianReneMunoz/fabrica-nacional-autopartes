@@ -1,0 +1,302 @@
+{
+  "version_esquema": 1,
+  "nota": "Ficha construida a mano a partir de data/gold/fragmentos.jsonl, sin nuevo scraping. Cada dato cita el fragmento, la URL y una evidencia literal del texto (si tiene varios tramos, van separados por « … » y cada uno es literal); lo que no aparece en el corpus no se incluye. Sin nombres de personas.",
+  "presentacion": {
+    "texto": "una compañía colombiana diversa, emprendedora y líder en los sectores en los que participa",
+    "fuentes": [
+      {
+        "fragmento_id": "nosotros#002",
+        "url": "https://fanalca.com/nosotros/",
+        "titulo": "Comprometidos con el desarrollo sostenible",
+        "origen": "scraping",
+        "evidencia": "Orgullo Colombiano … Hoy Fanalca se consolida como una compañía diversa, emprendedora y líder en los sectores en los cuales tiene participación."
+      }
+    ]
+  },
+  "proposito": {
+    "texto": "Nuestra prioridad las personas, nuestro compromiso el bienestar y el progreso sostenible",
+    "fuentes": [
+      {
+        "fragmento_id": "nosotros-por-que-trabajar-en-fanalca#001",
+        "url": "https://fanalca.com/nosotros/por-que-trabajar-en-fanalca/",
+        "titulo": "Por qué trabajar en Fanalca",
+        "origen": "scraping",
+        "evidencia": "Nuestra prioridad las personas, nuestro compromiso el bienestar y el progreso sostenible"
+      }
+    ]
+  },
+  "pilares": {
+    "elementos": [
+      "Bienestar y desarrollo de colaboradores y sus familias",
+      "Compromiso social y ambiental",
+      "Creación de valor: Emprendimiento y progreso económico"
+    ],
+    "fuentes": [
+      {
+        "fragmento_id": "nosotros-por-que-trabajar-en-fanalca#002",
+        "url": "https://fanalca.com/nosotros/por-que-trabajar-en-fanalca/",
+        "titulo": "Por qué trabajar en Fanalca",
+        "origen": "scraping",
+        "evidencia": "Creación de valor: Emprendimiento y progreso económico"
+      }
+    ]
+  },
+  "valores": {
+    "elementos": [
+      "Estamos comprometidos con los resultados",
+      "Actuamos con respeto",
+      "Somos humanos y actuamos solidariamente"
+    ],
+    "fuentes": [
+      {
+        "fragmento_id": "nosotros-por-que-trabajar-en-fanalca#003",
+        "url": "https://fanalca.com/nosotros/por-que-trabajar-en-fanalca/",
+        "titulo": "Por qué trabajar en Fanalca",
+        "origen": "scraping",
+        "evidencia": "Somos humanos y actuamos solidariamente"
+      }
+    ]
+  },
+  "historia": {
+    "fundacion": "31 de mayo de 1958",
+    "fundadores": "las familias Losada y Herrera",
+    "nombre_original": "Fábrica Nacional de Carrocerías",
+    "hitos": [
+      {
+        "texto": "empezaron con un grupo de 12 colaboradores",
+        "con_la_fundacion": true,
+        "fuente": {
+          "fragmento_id": "nosotros#000",
+          "url": "https://fanalca.com/nosotros/",
+          "titulo": "Comprometidos con el desarrollo sostenible",
+          "origen": "scraping",
+          "evidencia": "con un grupo de 12 colaboradores"
+        }
+      },
+      {
+        "texto": "En 1959 fundaron Super Bus Medellín y Super Bus Bogotá para ensamblar carrocerías",
+        "fuente": {
+          "fragmento_id": "nosotros#000",
+          "url": "https://fanalca.com/nosotros/",
+          "titulo": "Comprometidos con el desarrollo sostenible",
+          "origen": "scraping",
+          "evidencia": "En 1959, … fundaron Super Bus Medellín y Super Bus Bogotá para ensamblar carrocerías."
+        }
+      },
+      {
+        "texto": "con el tiempo lograron ensamblar el 100 % del bus en Colombia",
+        "fuente": {
+          "fragmento_id": "nosotros#000",
+          "url": "https://fanalca.com/nosotros/",
+          "titulo": "Comprometidos con el desarrollo sostenible",
+          "origen": "scraping",
+          "evidencia": "se logró ensamblar el 100% del bus en Colombia"
+        }
+      },
+      {
+        "texto": "en 1969 se diversificaron con autopartes",
+        "fuente": {
+          "fragmento_id": "nosotros#000",
+          "url": "https://fanalca.com/nosotros/",
+          "titulo": "Comprometidos con el desarrollo sostenible",
+          "origen": "scraping",
+          "evidencia": "En 1969, … se inicia un período de diversificación con autopartes."
+        }
+      },
+      {
+        "texto": "en 1971 iniciaron la negociación con Honda Japón para comercializar sus motocicletas",
+        "fuente": {
+          "fragmento_id": "nosotros#001",
+          "url": "https://fanalca.com/nosotros/",
+          "titulo": "Comprometidos con el desarrollo sostenible",
+          "origen": "scraping",
+          "evidencia": "En el año 1971, … inicia la negociación con Honda Japón para comercializar sus motocicletas"
+        }
+      },
+      {
+        "texto": "años después consiguieron la autorización para comercializar automóviles Honda en Colombia",
+        "fuente": {
+          "fragmento_id": "nosotros#001",
+          "url": "https://fanalca.com/nosotros/",
+          "titulo": "Comprometidos con el desarrollo sostenible",
+          "origen": "scraping",
+          "evidencia": "Años después, … se consigue la autorización para comercializar automóviles Honda en Colombia."
+        }
+      }
+    ],
+    "fuentes": [
+      {
+        "fragmento_id": "inicio#000",
+        "url": "https://fanalca.com/",
+        "titulo": "Un camino imparable ensamblado en Colombia",
+        "origen": "scraping",
+        "evidencia": "El 31 de mayo de 1958 se constituyó, entre las familias Losada y Herrera, la Fábrica Nacional de Carrocerías"
+      }
+    ]
+  },
+  "negocios": [
+    {
+      "id": "honda_motocicletas",
+      "nombre": "Honda Motocicletas",
+      "descripcion": "Es la única planta de producción nacional con licencia para fabricar y ensamblar motocicletas Honda; comercializa motos de 100 y hasta 250 centímetros cúbicos, repuestos y accesorios.",
+      "plantas": [{"lugar": "Acopi, Yumbo", "departamento": "Valle del Cauca"}],
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-honda-motocicletas#000",
+          "url": "https://fanalca.com/negocios/honda-motocicletas/",
+          "titulo": "Honda motocicletas",
+          "origen": "scraping",
+          "evidencia": "Nuestra planta de ensamble está ubicada en Acopi, Yumbo, Valle del Cauca."
+        }
+      ]
+    },
+    {
+      "id": "honda_autos",
+      "nombre": "Honda Autos",
+      "descripcion": "Fanalca importa y comercializa vehículos Honda en Colombia desde la década de 1990.",
+      "plantas": [],
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-holda-autos#000",
+          "url": "https://fanalca.com/negocios/holda-autos/",
+          "titulo": "Honda Automóviles",
+          "origen": "scraping",
+          "evidencia": "Fanalca inició la importación y comercialización de vehículos Honda en la década de 1990"
+        }
+      ]
+    },
+    {
+      "id": "tubos_perfiles",
+      "nombre": "Tubos y perfiles de acero",
+      "descripcion": "Fabrica y comercializa tubos de acero y perfiles abiertos para la construcción.",
+      "plantas": [
+        {"lugar": "Acopi, Yumbo", "departamento": "Valle del Cauca"},
+        {"lugar": "Guachené", "departamento": "Cauca"}
+      ],
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-tubos-y-perfiles-de-acero#000",
+          "url": "https://fanalca.com/negocios/tubos-y-perfiles-de-acero/",
+          "titulo": "Tubos y perfiles de acero",
+          "origen": "scraping",
+          "evidencia": "Contamos con plantas de producción en Acopi, Yumbo (Valle del Cauca) y Guachené (Cauca)"
+        }
+      ]
+    },
+    {
+      "id": "autopartes",
+      "nombre": "Autopartes",
+      "descripcion": "Fabrica partes metálicas para automóviles y vehículos comerciales, y exporta a Ecuador, Brasil y Estados Unidos.",
+      "plantas": [
+        {"lugar": "Acopi, Yumbo", "departamento": "Valle del Cauca"},
+        {"lugar": "Bogotá", "departamento": "Cundinamarca"},
+        {"lugar": "Medellín", "departamento": "Antioquia"}
+      ],
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-autopartes#000",
+          "url": "https://fanalca.com/negocios/autopartes/",
+          "titulo": "Autopartes",
+          "origen": "scraping",
+          "evidencia": "Contamos con plantas de producción en Acopi, Yumbo (Valle del Cauca), Bogotá (Cundinamarca) y Medellín (Antioquia)."
+        },
+        {
+          "fragmento_id": "autopartes-inicio#000",
+          "url": "https://autopartesfanalca.com.co/",
+          "titulo": "Autopartes Fanalca — Inicio",
+          "origen": "lectura_web",
+          "evidencia": "Exporta a Ecuador, Brasil y Estados Unidos."
+        }
+      ]
+    },
+    {
+      "id": "ambiental",
+      "nombre": "Ambiental",
+      "descripcion": "Fabrica equipos para la recolección de residuos sólidos desde 1981, como cajas compactadoras de basura y contenedores de acero.",
+      "plantas": [],
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-ambiental#000",
+          "url": "https://fanalca.com/negocios/ambiental/",
+          "titulo": "Ambiental",
+          "origen": "scraping",
+          "evidencia": "Fabricamos equipos para recolección de residuos sólidos desde el año 1981"
+        }
+      ]
+    },
+    {
+      "id": "fanalvias",
+      "nombre": "Fanalvías",
+      "descripcion": "Fabrica defensas viales metálicas de carretera y comercializa elementos de seguridad vial.",
+      "plantas": [{"lugar": "Acopi, Yumbo", "departamento": "Valle del Cauca"}],
+      "fuentes": [
+        {
+          "fragmento_id": "negocios-fanalvias#000",
+          "url": "https://fanalca.com/negocios/fanalvias/",
+          "titulo": "Fanalvías",
+          "origen": "scraping",
+          "evidencia": "Fabricamos defensas viales metálicas de carretera"
+        }
+      ]
+    }
+  ],
+  "contacto": {
+    "direccion": "Calle 13 # 31A - 80, Acopi, Yumbo (Valle del Cauca)",
+    "canales": [
+      {
+        "canal": "la línea de Honda motos",
+        "valor": "602 347 22 25",
+        "fuente": {
+          "fragmento_id": "inicio#001",
+          "url": "https://fanalca.com/",
+          "titulo": "Un camino imparable ensamblado en Colombia",
+          "origen": "scraping",
+          "evidencia": "Honda motos (602 347 22 25)"
+        }
+      },
+      {
+        "canal": "la línea de Honda autos",
+        "valor": "+57 310 233 02 37",
+        "fuente": {
+          "fragmento_id": "inicio#002",
+          "url": "https://fanalca.com/",
+          "titulo": "Un camino imparable ensamblado en Colombia",
+          "origen": "scraping",
+          "evidencia": "Honda autos (+57 310 233 02 37)"
+        }
+      },
+      {
+        "canal": "el teléfono de Autopartes Fanalca",
+        "valor": "+57 310 211 23 08",
+        "fuente": {
+          "fragmento_id": "autopartes-contacto#000",
+          "url": "https://autopartesfanalca.com.co/contacto/",
+          "titulo": "Autopartes Fanalca — Contacto",
+          "origen": "lectura_web",
+          "evidencia": "El teléfono de contacto es +57 310 211 23 08"
+        }
+      },
+      {
+        "canal": "el correo de Autopartes Fanalca",
+        "valor": "info@autopartesfanalca.com.co",
+        "fuente": {
+          "fragmento_id": "autopartes-contacto#000",
+          "url": "https://autopartesfanalca.com.co/contacto/",
+          "titulo": "Autopartes Fanalca — Contacto",
+          "origen": "lectura_web",
+          "evidencia": "el correo es info@autopartesfanalca.com.co"
+        }
+      }
+    ],
+    "fuentes": [
+      {
+        "fragmento_id": "contacto-sitio#000",
+        "url": "https://fanalca.com/",
+        "titulo": "Datos de contacto del sitio fanalca.com (pie de página)",
+        "origen": "scraping",
+        "evidencia": "Calle 13 # 31A - 80, Acopi Yumbo."
+      }
+    ]
+  },
+  "no_publicado": ["NIT", "horario de atención", "precios", "cotizaciones", "inventario de repuestos"]
+}

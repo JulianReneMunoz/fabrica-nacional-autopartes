@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { avanzarAmplitud, crearAmplitud, leerAmplitud, modoDesdeConversacion, pulsarAmplitud } from "../escanerIgnis";
 import { CASOS_VALIDACION } from "../ignisCasos";
-import { crearLectorSSE, etiquetaRuta, interpretarEvento, normalizarOrigen, urlAdjuntoPermitida, type EventoConversacion } from "../ignisCliente";
+import {
+  crearLectorSSE,
+  etiquetaModeracion,
+  etiquetaRuta,
+  interpretarEvento,
+  normalizarOrigen,
+  urlAdjuntoPermitida,
+  type EventoConversacion,
+} from "../ignisCliente";
 import { distanciaEncuadre, limitesZoom, posicionEncuadre } from "../ignisEncuadre";
 import { ESTADOS_IGNIS, ETIQUETA_ESTADO, transicionarEstadoIgnis, type EstadoAvatarIgnis, type EventoIgnis } from "../ignisStateMachine";
 import { extraerOraciones } from "../ignisVoz";
@@ -175,6 +183,45 @@ describe("cliente SSE", () => {
     expect(meta).toMatchObject({ datos: { adjuntos: [{ origen: "demostrativo" }] } });
     expect(normalizarOrigen("lectura_web")).toBe("lectura_web");
     expect(normalizarOrigen("inventado")).toBe("demostrativo");
+  });
+
+  it("lee fuentes_datos, categoria_moderacion y normativa; descarta fuentes sin archivo y URL inválidas", () => {
+    const meta = interpretarEvento(null, {
+      tipo: "metadatos",
+      fuentes_datos: [
+        {
+          archivo: "data/catalogo/ficha_fanalca.json",
+          descripcion: "Ficha corporativa de Fanalca",
+          origen: "lectura_web, scraping",
+          urls: ["https://fanalca.com/", "javascript:alert(1)", "no es una url", "/relativa", 7],
+        },
+        { archivo: "", descripcion: "Sin archivo", origen: "scraping", urls: [] },
+        null,
+        "texto suelto",
+        42,
+        { archivo: "data/catalogo/motos_honda.yaml", origen: "inventado" },
+      ],
+      categoria_moderacion: "datos_de_terceros",
+      normativa: "Ley 1581 de 2012",
+    });
+    expect(meta).toEqual({
+      tipo: "metadatos",
+      datos: expect.objectContaining({
+        fuentes_datos: [
+          {
+            archivo: "data/catalogo/ficha_fanalca.json",
+            descripcion: "Ficha corporativa de Fanalca",
+            origen: "lectura_web, scraping",
+            urls: ["https://fanalca.com/"],
+          },
+          { archivo: "data/catalogo/motos_honda.yaml", descripcion: "data/catalogo/motos_honda.yaml", origen: "demostrativo", urls: [] },
+        ],
+        categoria_moderacion: "datos_de_terceros",
+        normativa: "Ley 1581 de 2012",
+      }),
+    });
+    expect(etiquetaModeracion("amenaza_violencia")).toBe("Amenaza");
+    expect(etiquetaModeracion("nueva")).toBe("nueva");
   });
 
   it("no interpreta etiquetas dentro del texto como adjuntos", () => {
