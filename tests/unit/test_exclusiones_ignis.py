@@ -8,10 +8,12 @@ from __future__ import annotations
 import json
 import re
 
+import pytest
 import yaml
 
 from fabrica_autopartes.core.config import RAIZ_PROYECTO
 
+pytestmark = pytest.mark.gold_versionado
 FRAGMENTOS = RAIZ_PROYECTO / "data" / "gold" / "fragmentos.jsonl"
 EXCLUSIONES = RAIZ_PROYECTO / "config" / "ignis_exclusiones.yaml"
 _METADATOS_BLOG = re.compile(r"(autor|publicaci[oó]n|categor[ií]a) de la entrada", re.IGNORECASE)

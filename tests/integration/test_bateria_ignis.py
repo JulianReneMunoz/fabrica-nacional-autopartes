@@ -3,6 +3,10 @@
 Las preguntas y las palabras clave esperadas viven en ``tests/fixtures/ignis_bateria.json``; las respuestas
 de referencia, antes y después de este cambio, en ``ignis_respuestas_antes.json`` e
 ``ignis_respuestas_despues.json``.
+
+La forma, la ruta, el bloqueo y la ausencia de cotización se comprueban siempre. Las palabras clave de las
+rutas que leen el corpus (BM25 y métricas de data/gold) solo se comprueban con el Gold versionado: el CI
+reconstruye data/gold con la base de demostración antes de pytest.
 """
 
 from __future__ import annotations
@@ -28,6 +32,8 @@ PROHIBIDO = re.compile(
     r"|cotizaci[oó]n de ejemplo|Autor de la entrada"
 )
 MAX_PALABRAS = 120
+RUTAS_DEL_CORPUS = {"rag_documental", "mixto"}
+DEL_CORPUS = [i for i, p in enumerate(BATERIA) if p["ruta"] in RUTAS_DEL_CORPUS]
 
 
 @pytest.fixture(scope="module")
@@ -60,8 +66,17 @@ def test_cada_respuesta_es_para_el_cliente(respuestas: list[dict[str, Any]], ind
     assert not PROHIBIDO.search(texto), PROHIBIDO.search(texto)
     assert texto.rstrip()[-1] in ".?!"
     assert len(texto.split()) <= MAX_PALABRAS
-    for clave in pregunta["claves"]:
-        assert clave in texto, (clave, texto)
+    if pregunta["ruta"] not in RUTAS_DEL_CORPUS:
+        for clave in pregunta["claves"]:
+            assert clave in texto, (clave, texto)
     assert resultado["ruta_router"] == pregunta["ruta"]
     assert resultado["bloqueada"] is (pregunta["categoria"] == "agresiva")
     assert all(a["tipo"] != "cotizacion" for a in resultado["archivos_adjuntos"])
+
+
+@pytest.mark.gold_versionado
+@pytest.mark.parametrize("indice", DEL_CORPUS, ids=[BATERIA[i]["pregunta"][:40] for i in DEL_CORPUS])
+def test_claves_de_contenido_del_corpus(respuestas: list[dict[str, Any]], indice: int) -> None:
+    texto = respuestas[indice]["respuesta"]
+    for clave in BATERIA[indice]["claves"]:
+        assert clave in texto, (clave, texto)

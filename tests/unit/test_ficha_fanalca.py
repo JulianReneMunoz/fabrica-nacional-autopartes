@@ -23,6 +23,7 @@ def _normalizar(texto: str) -> str:
     return " ".join(texto.replace("**", " ").split())
 
 
+@pytest.mark.gold_versionado
 def test_cada_dato_tiene_una_fuente_presente_en_el_corpus() -> None:
     corpus = {}
     for linea in FRAGMENTOS.read_text(encoding="utf-8").splitlines():
