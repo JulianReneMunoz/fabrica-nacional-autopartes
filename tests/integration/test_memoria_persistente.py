@@ -28,6 +28,11 @@ from fabrica_autopartes.repositories.memoria_agente import cerrar_store, crear_s
 from fabrica_autopartes.services import agente as ag
 from fabrica_autopartes.services.agente_ignis_m2 import AVISO_DATO_PERSONAL, AgenteIgnisM2
 from fabrica_autopartes.services.asistente import ServicioAsistente
+from fabrica_autopartes.services.cortesia import (
+    AUTOPRESENTACION_SIN_PREFERENCIAS,
+    AVISO_PRIVACIDAD,
+    SIN_PREFERENCIAS,
+)
 from tests.simulados import ModeloSimulado
 
 CASO_2A = (
@@ -95,7 +100,7 @@ def test_caso_2b_en_el_mismo_hilo_y_en_un_hilo_nuevo(agente: AgenteIgnisM2) -> N
 def test_caso_2b_otro_usuario_no_ve_las_preferencias(agente: AgenteIgnisM2) -> None:
     agente.ejecutar_turno(CASO_2A, "h1", "u1")
     r = agente.ejecutar_turno(CASO_2B, "h9", "u2")
-    assert r["respuesta"] == "No hay preferencias guardadas para este usuario."
+    assert r["respuesta"] == SIN_PREFERENCIAS
     assert not any(valor in r["respuesta"] for valor in VALORES_2A)
 
 
@@ -151,7 +156,9 @@ def test_caso_2b_tras_reiniciar_el_backend_con_otro_pid(tmp_path: Path) -> None:
 def test_autopresentacion_con_orden_no_guarda_nada_y_lo_explica(agente: AgenteIgnisM2) -> None:
     r = agente.ejecutar_turno("Me llamo Ana y trabajo en Empresa X. Recuérdalo.", "h1", "u1")
     assert r["ruta_router"] == "memoria_store"
-    assert "Ley 1581" in r["respuesta"]
+    # El texto se lee en voz alta: explica la privacidad sin el número de la ley, que va en los metadatos.
+    assert r["respuesta"] == AUTOPRESENTACION_SIN_PREFERENCIAS
+    assert r["normativa"] == "Ley 1581 de 2012"
     assert "Ana" not in r["respuesta"] and "Empresa X" not in r["respuesta"]
     assert agente.store is not None
     assert agente.store.search(("preferencias", "u1")) == []
@@ -159,8 +166,9 @@ def test_autopresentacion_con_orden_no_guarda_nada_y_lo_explica(agente: AgenteIg
 
 def test_nombre_descartado_junto_a_un_area_valida_se_avisa(agente: AgenteIgnisM2) -> None:
     r = agente.ejecutar_turno("Me llamo Ana y trabajo en ventas. Recuérdalo.", "h1", "u1")
-    assert "área laboral: ventas" in r["respuesta"]
-    assert "No se guardan nombres, empresas ni datos de contacto" in r["respuesta"]
+    assert "área laboral, ventas" in r["respuesta"]
+    assert AVISO_PRIVACIDAD in r["respuesta"]
+    assert r["normativa"] == "Ley 1581 de 2012"
     assert "Ana" not in r["respuesta"]
 
 
@@ -202,7 +210,8 @@ def test_preguntas_sobre_fanalca_siguen_por_rag(agente: AgenteIgnisM2, mensaje: 
 def test_el_saludo_sigue_respondiendo_el_saludo(agente: AgenteIgnisM2) -> None:
     r = agente.ejecutar_turno("Hola", "h1", "u1")
     assert r["ruta_router"] == "directo"
-    assert r["respuesta"].startswith("Hola. Soy IGNIS")
+    assert r["respuesta"].startswith("¡Hola!")
+    assert "IGNIS" in r["respuesta"] and "cotiza" not in r["respuesta"].lower()
     assert r["respuesta"] != AVISO_DATO_PERSONAL
 
 

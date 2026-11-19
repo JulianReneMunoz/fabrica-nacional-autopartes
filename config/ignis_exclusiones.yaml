@@ -1,0 +1,19 @@
+# Documentos del corpus que IGNIS no usa como evidencia (solo IGNIS: el buscador común del M1 no cambia, para que
+# las métricas del informe sigan reproduciéndose). Los archivos del corpus NO se borran: data/gold queda intacto.
+# Se excluye por documento_id (todos sus fragmentos). Cada entrada documenta el motivo.
+version: 1
+documentos:
+  - id: negocio-honda-motos
+    motivo: Listado del blog sin contenido; solo trae «Autor de la entrada…» con nombres de personas (Ley 1581).
+  - id: negocio-honda-autos
+    motivo: Listado del blog sin contenido; solo trae «Autor de la entrada…» con nombres de personas (Ley 1581).
+  - id: negocio-tuberia-y-perfiles-de-acero
+    motivo: Listado del blog sin contenido; solo trae «Autor de la entrada…» con nombres de personas (Ley 1581).
+  - id: negocio-fanalca
+    motivo: Listado del blog sin contenido; solo trae «Autor de la entrada…» con nombres de personas (Ley 1581).
+  - id: negocio-renting-total
+    motivo: Listado del blog sin contenido; solo trae «Autor de la entrada…» con nombres de personas (Ley 1581).
+  - id: negocio-supermotos
+    motivo: Listado del blog sin contenido; solo trae «Autor de la entrada…» con nombres de personas (Ley 1581).
+  - id: en-negocio-steel-pipes-and-profiles
+    motivo: Texto fuera de tema (contingencia del covid-19) y en inglés.

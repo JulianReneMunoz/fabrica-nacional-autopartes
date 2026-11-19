@@ -84,9 +84,15 @@ async def stream_ignis_chat(
             "citas": resultado["citas"],
             "archivos_adjuntos": resultado["archivos_adjuntos"],
             "justificacion_router": resultado.get("justificacion_router", ""),
+            # Procedencia de los datos estructurados (archivo, origen y URL): va aparte, nunca en el texto.
+            "fuentes_datos": resultado.get("fuentes_datos", []),
         }
         if "score_router" in resultado:
             meta["score_router"] = resultado["score_router"]
+        # Campos que solo aparecen cuando aplican: categoría de la moderación y norma de datos personales.
+        for campo in ("categoria_moderacion", "normativa"):
+            if resultado.get(campo):
+                meta[campo] = resultado[campo]
         yield _evento(meta)
 
         texto: str = resultado["respuesta"]

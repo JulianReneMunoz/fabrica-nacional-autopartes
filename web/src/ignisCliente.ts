@@ -32,6 +32,18 @@ export interface AdjuntoIgnis {
   tamano_kb?: number;
 }
 
+/**
+ * Procedencia de un dato estructurado (ficha de la moto, ficha corporativa o estadísticas): va en los metadatos y se
+ * muestra junto a la respuesta; nunca entra en el texto que lee la voz.
+ */
+export interface FuenteDatosIgnis {
+  archivo: string;
+  descripcion: string;
+  /** Uno o varios orígenes («scraping, lectura_web») o «demostrativo». */
+  origen: string;
+  urls: string[];
+}
+
 export interface MetadatosIgnis {
   ruta_router?: string;
   score_router?: number;
@@ -40,6 +52,50 @@ export interface MetadatosIgnis {
   citas?: CitaIgnis[];
   /** Compatibilidad: algunos backends envían los adjuntos dentro de los metadatos («archivos_adjuntos»). */
   adjuntos?: AdjuntoIgnis[];
+  fuentes_datos?: FuenteDatosIgnis[];
+  /** Categoría de la moderación cuando el turno se bloqueó (caso 6). */
+  categoria_moderacion?: string;
+  /** Norma de datos personales que aplicó el turno («Ley 1581 de 2012»); la voz no la lee. */
+  normativa?: string;
+}
+
+/** URL http(s) bien formada; cualquier otra (javascript:, relativa, mal escrita) se descarta. */
+function urlExterna(valor: unknown): string | null {
+  if (typeof valor !== "string") return null;
+  try {
+    const url = new URL(valor);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+export function normalizarFuenteDatos(d: Record<string, unknown>): FuenteDatosIgnis | null {
+  const archivo = typeof d.archivo === "string" ? d.archivo.trim() : "";
+  if (!archivo) return null;
+  const origenes = String(d.origen ?? "")
+    .split(",")
+    .map((o) => normalizarOrigen(o.trim()));
+  const urls = Array.isArray(d.urls) ? d.urls.map(urlExterna).filter((u): u is string => u !== null) : [];
+  return { archivo, descripcion: String(d.descripcion ?? archivo), origen: [...new Set(origenes)].join(", "), urls };
+}
+
+const ETIQUETA_MODERACION: Record<string, string> = {
+  insulto_a_ignis: "Insulto",
+  groserias_repetidas: "Groserías",
+  frustracion_con_servicio: "Frustración",
+  datos_de_terceros: "Datos de terceros",
+  insulto_y_datos_de_terceros: "Insulto y datos de terceros",
+  amenaza_violencia: "Amenaza",
+  odio_discriminacion: "Odio o discriminación",
+  acoso_sexual: "Acoso",
+  manipulacion: "Manipulación",
+  crisis_personal: "Crisis personal",
+  pausa: "Pausa",
+};
+
+export function etiquetaModeracion(categoria: string): string {
+  return ETIQUETA_MODERACION[categoria] ?? categoria;
 }
 
 export type EventoConversacion =
@@ -133,6 +189,14 @@ export function interpretarEvento(nombre: string | null, datos: unknown): Evento
                 .map((a) => crearAdjunto(a, a.tipo_archivo ?? a.tipo))
                 .filter((a): a is AdjuntoIgnis => a !== null)
             : undefined,
+          fuentes_datos: Array.isArray(d.fuentes_datos)
+            ? (d.fuentes_datos as unknown[])
+                .filter((f): f is Record<string, unknown> => typeof f === "object" && f !== null)
+                .map(normalizarFuenteDatos)
+                .filter((f): f is FuenteDatosIgnis => f !== null)
+            : undefined,
+          categoria_moderacion: typeof d.categoria_moderacion === "string" ? d.categoria_moderacion : undefined,
+          normativa: typeof d.normativa === "string" ? d.normativa : undefined,
         },
       };
     }

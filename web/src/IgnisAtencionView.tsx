@@ -12,11 +12,13 @@ import { CASOS_VALIDACION } from "./ignisCasos";
 import {
   conversar,
   ErrorSesionIgnis,
+  etiquetaModeracion,
   etiquetaRuta,
   normalizarCita,
   type AdjuntoIgnis,
   type CitaIgnis,
   type EventoConversacion,
+  type FuenteDatosIgnis,
 } from "./ignisCliente";
 import { useIgnis } from "./ignisContexto";
 import { ErrorSesion, mensajesHilo, type MensajeHiloDTO } from "./ignisSesion";
@@ -52,9 +54,16 @@ interface Mensaje {
   blindaje?: boolean;
   bloqueada?: boolean;
   adjuntos?: AdjuntoIgnis[];
+  /** Procedencia de los datos estructurados: se muestra junto a la respuesta, nunca en el texto ni en la voz. */
+  fuentesDatos?: FuenteDatosIgnis[];
+  categoriaModeracion?: string;
+  normativa?: string;
   error?: boolean;
   pendiente?: boolean;
 }
+
+/** En una crisis personal solo se muestra el mensaje de ayuda: sin insignias de moderación. */
+const SIN_INSIGNIA_DE_MODERACION = new Set(["crisis_personal"]);
 
 /**
  * Recursos de la columna E. Se habilitan solo si el archivo existe (HEAD). Son ilustrativos del proyecto: se
@@ -353,6 +362,9 @@ export default function IgnisAtencionView() {
             score: e.datos.score_router ?? m.score,
             blindaje: e.datos.blindaje_activado || m.blindaje,
             bloqueada: e.datos.bloqueada || m.bloqueada,
+            fuentesDatos: e.datos.fuentes_datos ?? m.fuentesDatos,
+            categoriaModeracion: e.datos.categoria_moderacion ?? m.categoriaModeracion,
+            normativa: e.datos.normativa ?? m.normativa,
           }));
         } else if (e.tipo === "adjunto") {
           entregaPendiente.current = true;
@@ -447,6 +459,8 @@ export default function IgnisAtencionView() {
       lineas.push(`**${m.rol === "usuario" ? "Usuario" : "IGNIS"}:** ${m.texto}`);
       if (m.ruta) lineas.push(`- Ruta del router: ${etiquetaRuta(m.ruta)}`);
       for (const c of m.citas ?? []) lineas.push(`- Fuente: ${c.titulo}${c.url ? ` — ${c.url}` : ` (${c.id})`} · origen: ${c.origen}`);
+      for (const f of m.fuentesDatos ?? [])
+        lineas.push(`- Fuente de datos: ${f.descripcion} (${f.archivo})${f.urls.length ? ` — ${f.urls.join(", ")}` : ""} · origen: ${f.origen}`);
       for (const a of m.adjuntos ?? []) lineas.push(`- Adjunto: ${a.titulo} · origen: ${a.origen}`);
       lineas.push("");
     }
@@ -639,9 +653,9 @@ export default function IgnisAtencionView() {
                           {m.texto}
                         </p>
                       )}
-                      {m.ruta || m.blindaje || m.bloqueada ? (
+                      {m.ruta || m.blindaje || m.bloqueada || m.normativa ? (
                         <div className="ignis-metadatos" aria-label="Metadatos de la respuesta">
-                          {m.ruta ? (
+                          {m.ruta && !SIN_INSIGNIA_DE_MODERACION.has(m.categoriaModeracion ?? "") ? (
                             <span className="ignis-insignia ruta" title={`Ruta del router: ${m.ruta}`}>
                               <Icono nombre="ruta" tamano={13} /> {etiquetaRuta(m.ruta)}
                             </span>
@@ -657,14 +671,26 @@ export default function IgnisAtencionView() {
                               <Icono nombre="escudo" tamano={13} /> Blindaje activado
                             </span>
                           ) : null}
-                          {m.bloqueada ? <span className="ignis-insignia bloqueada">Solicitud bloqueada</span> : null}
+                          {m.bloqueada && !SIN_INSIGNIA_DE_MODERACION.has(m.categoriaModeracion ?? "") ? (
+                            <span className="ignis-insignia bloqueada">Solicitud bloqueada</span>
+                          ) : null}
+                          {m.categoriaModeracion && !SIN_INSIGNIA_DE_MODERACION.has(m.categoriaModeracion) ? (
+                            <span className="ignis-insignia bloqueada" title="Categoría de la moderación">
+                              Moderación: {etiquetaModeracion(m.categoriaModeracion)}
+                            </span>
+                          ) : null}
+                          {m.normativa ? (
+                            <span className="ignis-dato" title="Norma de protección de datos aplicada">
+                              {m.normativa}
+                            </span>
+                          ) : null}
                         </div>
                       ) : null}
                       {m.citas && m.citas.length > 0 ? (
                         <div className="ignis-citas">
                           {m.citas.map((c) =>
                             c.url ? (
-                              <a key={c.id} className="ignis-cita" href={c.url} target="_blank" rel="noreferrer" title={`${c.titulo} — ${c.url} (origen: ${c.origen})`}>
+                              <a key={c.id} className="ignis-cita" href={c.url} target="_blank" rel="noopener noreferrer" title={`${c.titulo} — ${c.url} (origen: ${c.origen})`}>
                                 {c.titulo} <span className="ignis-origen">{c.origen}</span>
                               </a>
                             ) : (
@@ -673,6 +699,21 @@ export default function IgnisAtencionView() {
                               </span>
                             ),
                           )}
+                        </div>
+                      ) : null}
+                      {m.fuentesDatos && m.fuentesDatos.length > 0 ? (
+                        <div className="ignis-fuentes-datos" aria-label="Fuente de los datos">
+                          {m.fuentesDatos.map((f) => (
+                            <span key={f.archivo} className="ignis-fuente-datos" title={`${f.descripcion} (${f.archivo})`}>
+                              <Icono nombre="datos" tamano={13} /> {f.descripcion} · {f.archivo}
+                              <span className="ignis-origen">{f.origen}</span>
+                              {f.urls.map((u) => (
+                                <a key={u} href={u} target="_blank" rel="noopener noreferrer">
+                                  {new URL(u).hostname}
+                                </a>
+                              ))}
+                            </span>
+                          ))}
                         </div>
                       ) : null}
                       {m.adjuntos?.map((a) => (

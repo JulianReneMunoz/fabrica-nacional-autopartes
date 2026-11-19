@@ -263,7 +263,10 @@ class ServicioAsistente:
                     # Store persistente de largo plazo (ADR-033): sobrevive al reinicio del backend.
                     self._ignis = AgenteIgnisM2(self.base, memoria, crear_store(self.config.ruta_store))
         resultado = self._ignis.ejecutar_turno(mensaje, thread_id, user_id)
-        self.sesiones.registrar_turno(thread_id, user_id, mensaje, str(resultado.get("ruta_router", "")))
+        # Un mensaje bloqueado por la moderación titula el hilo con su marca («[mensaje moderado: …]»), nunca
+        # con el texto del cliente.
+        titulo = str(resultado.get("mensaje_registrado") or mensaje)
+        self.sesiones.registrar_turno(thread_id, user_id, titulo, str(resultado.get("ruta_router", "")))
         return resultado
 
     # ------------------------------------------------------------ sesiones (ADR-033)

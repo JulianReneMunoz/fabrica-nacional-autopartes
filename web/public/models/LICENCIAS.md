@@ -1,6 +1,5 @@
 # Licencias de Modelos 3D — IGNIS
 
-- `../assets/resumen_cotizacion.pdf`: Recurso propio generado por `scripts/generar_assets_ignis.py --solo-recursos` (matplotlib). Documento de ejemplo con valores ilustrativos, no es una oferta comercial. Licencia MIT.
 - `../assets/blueprint_2d.png`: Recurso propio generado por `scripts/generar_assets_ignis.py --solo-recursos` (matplotlib). Plano ilustrativo. Licencia MIT.
 - `../assets/ignis_auto_poster.jpg`: captura del propio `ignis_auto.glb` en el estudio de la aplicación, generada con `scripts/capturar_ignis.mjs` (`IGNIS_POSTER=1`). Se muestra cuando no hay WebGL o el modelo no carga. Misma licencia que el modelo.
 
