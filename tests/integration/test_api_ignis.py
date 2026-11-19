@@ -471,3 +471,62 @@ def test_mixto_sin_fragmentos_lo_dice_y_no_adjunta(tmp_path: Path) -> None:
     assert resultado["citas"] == []
     assert RECHAZO in resultado["respuesta"]
     assert "Evidencia documental en corpus Fanalca" not in resultado["respuesta"]
+
+
+# ------------------------------------------------------------------ router visible (R08, casos 3, 4A y 4B)
+class BaseQueNoSeDebeConsultar(BaseSimulada):
+    """Falla si el agente busca en el corpus: comprueba que una ruta no invoca el recuperador."""
+
+    def buscar(self, consulta: str, k: int = 5, recuperador: str | None = None) -> list[Resultado]:
+        raise AssertionError(f"búsqueda inesperada: {consulta!r}")
+
+
+def test_herramienta_del_turno_en_los_metadatos_sse(tmp_path: Path) -> None:
+    """Caso 3: con el @tool, los metadatos traen nombre, argumentos, archivo, verificado y un resumen
+    acotado de la salida Pydantic (no el YAML); el texto no cambia ni lleva esos datos."""
+    eventos = _consultar(
+        _cliente(_agente(tmp_path, BaseSimulada([]))), "¿Cuál es el cilindraje de la CB 160F?"
+    )
+    meta = _metadatos(eventos)
+    assert meta["ruta_router"] == "herramienta_estructurada"
+    herramienta = meta["herramienta"]
+    assert herramienta["nombre"] == "consultar_datos_estructurados_fanalca"
+    assert herramienta["argumentos"] == {"tipo_consulta": "ficha_moto", "filtro": "cb160f"}
+    assert herramienta["fuente_archivo"] == "data/catalogo/motos_honda.yaml"
+    assert herramienta["verificado"] is True
+    resumen = herramienta["resumen"]
+    assert set(resumen) == {"claves", "total_claves", "elementos"}
+    assert len(json.dumps(resumen, ensure_ascii=False).encode("utf-8")) <= 1024
+    assert "140/70-17" not in json.dumps(herramienta, ensure_ascii=False)  # ningún valor de la ficha
+    assert "consultar_datos" not in _texto_visible(eventos)
+
+
+def test_saludo_va_a_directo_sin_busqueda_ni_herramienta(tmp_path: Path) -> None:
+    """Caso 4B: el saludo se responde sin consultar el corpus ni el @tool."""
+    meta = _metadatos(
+        _consultar(_cliente(_agente(tmp_path, BaseQueNoSeDebeConsultar([]))), "Hola, buenas tardes.")
+    )
+    assert meta["ruta_router"] == "directo"
+    assert meta["citas"] == [] and meta["fuentes_datos"] == []
+    assert "herramienta" not in meta
+
+
+def test_mixta_con_estadisticas_trae_la_herramienta(tmp_path: Path) -> None:
+    """Caso 4A: la ruta mixta cruza el @tool (estadísticas) con la evidencia documental."""
+    agente = _agente(tmp_path, BaseSimulada(["Fanalca presenta su informe de sostenibilidad cada año."]))
+    meta = _metadatos(
+        _consultar(_cliente(agente), "Compara la sostenibilidad del documento con las estadísticas")
+    )
+    assert meta["ruta_router"] == "mixto"
+    assert meta["herramienta"]["argumentos"]["tipo_consulta"] == "estadisticas_corpus"
+    assert meta["herramienta"]["fuente_archivo"] == "data/gold/estadisticas.json"
+    assert meta["citas"]
+
+
+def test_ficha_corporativa_no_declara_herramienta(tmp_path: Path) -> None:
+    """La ficha corporativa no pasa por el @tool: los metadatos no inventan una llamada."""
+    meta = _metadatos(
+        _consultar(_cliente(_agente(tmp_path, BaseSimulada([]))), "¿Qué negocios tiene Fanalca?")
+    )
+    assert meta["ruta_router"] == "herramienta_estructurada"
+    assert "herramienta" not in meta

@@ -58,6 +58,8 @@ interface Mensaje {
   fuentesDatos?: FuenteDatosIgnis[];
   categoriaModeracion?: string;
   normativa?: string;
+  /** Herramienta @tool del turno: solo se nombra en el `title` de la insignia de la ruta. */
+  herramienta?: string;
   error?: boolean;
   pendiente?: boolean;
 }
@@ -140,7 +142,7 @@ class LimiteEscena extends Component<{ children: ReactNode }, { fallo: boolean }
 }
 
 export default function IgnisAtencionView() {
-  const { hilo, nuevoHilo, reportarSse, aperturas, sesionVencida } = useIgnis();
+  const { hilo, nuevoHilo, reportarSse, aperturas, sesionVencida, registrarDecision } = useIgnis();
   const [estado, despachar] = useReducer(transicionarEstadoIgnis, "auto" as EstadoAvatarIgnis);
   const [mensajes, setMensajes] = useState<Mensaje[]>([SALUDO]);
   const [entrada, setEntrada] = useState("");
@@ -365,7 +367,19 @@ export default function IgnisAtencionView() {
             fuentesDatos: e.datos.fuentes_datos ?? m.fuentesDatos,
             categoriaModeracion: e.datos.categoria_moderacion ?? m.categoriaModeracion,
             normativa: e.datos.normativa ?? m.normativa,
+            herramienta: e.datos.herramienta?.nombre ?? m.herramienta,
           }));
+          // Pestaña Router: la decisión del turno, sin el texto de la pregunta. Una crisis personal no se lista.
+          if (e.datos.ruta_router && !SIN_INSIGNIA_DE_MODERACION.has(e.datos.categoria_moderacion ?? "")) {
+            registrarDecision({
+              ruta: e.datos.ruta_router,
+              score: e.datos.score_router,
+              justificacion: e.datos.justificacion_router ?? "",
+              herramienta: e.datos.herramienta,
+              bloqueada: e.datos.bloqueada === true,
+              categoriaModeracion: e.datos.categoria_moderacion,
+            });
+          }
         } else if (e.tipo === "adjunto") {
           entregaPendiente.current = true;
           actualizar(idRespuesta, (m) => (m.adjuntos?.some((a) => a.id === e.adjunto.id) ? m : { ...m, adjuntos: [...(m.adjuntos ?? []), e.adjunto] }));
@@ -402,7 +416,7 @@ export default function IgnisAtencionView() {
         if (!voz.current?.hablando) cerrarTurno();
       }
     },
-    [actualizar, cerrarTurno, hilo, nuevoHilo, reiniciarConversacion, reportarSse, sesionVencida],
+    [actualizar, cerrarTurno, hilo, nuevoHilo, registrarDecision, reiniciarConversacion, reportarSse, sesionVencida],
   );
 
   const alTeclear = (valor: string) => {
@@ -656,7 +670,7 @@ export default function IgnisAtencionView() {
                       {m.ruta || m.blindaje || m.bloqueada || m.normativa ? (
                         <div className="ignis-metadatos" aria-label="Metadatos de la respuesta">
                           {m.ruta && !SIN_INSIGNIA_DE_MODERACION.has(m.categoriaModeracion ?? "") ? (
-                            <span className="ignis-insignia ruta" title={`Ruta del router: ${m.ruta}`}>
+                            <span className="ignis-insignia ruta" title={`Ruta del router: ${m.ruta}${m.herramienta ? ` · herramienta: ${m.herramienta}` : ""}`}>
                               <Icono nombre="ruta" tamano={13} /> {etiquetaRuta(m.ruta)}
                             </span>
                           ) : null}

@@ -52,7 +52,7 @@ function vigilarConsola(page: Page): string[] {
 }
 
 /** Pestañas con implementación propia (sin estado vacío). */
-const IMPLEMENTADAS = new Set(["atencion", "sesion"]);
+const IMPLEMENTADAS = new Set(["atencion", "sesion", "router"]);
 
 test.beforeEach(async ({ page }) => {
   // Sesión real (ADR-033): page.request comparte las cookies con el contexto del navegador.

@@ -131,28 +131,32 @@ class ResultadoEstructuradoFanalca(BaseModel):
     verificado: bool = True
 
 
+def _leer_archivo(ruta_relativa: str) -> ResultadoEstructuradoFanalca:
+    """Lee un YAML o JSON del repositorio. Si falta o está vacío (``yaml.safe_load`` devuelve ``None``), los
+    datos quedan en ``{}`` y el resultado no se marca como verificado."""
+    ruta = RAIZ_REPO / ruta_relativa
+    datos: Any = None
+    if ruta.exists():
+        texto = ruta.read_text(encoding="utf-8")
+        datos = yaml.safe_load(texto) if ruta.suffix == ".yaml" else json.loads(texto)
+    datos = datos or {}
+    return ResultadoEstructuradoFanalca(
+        fuente_archivo=ruta_relativa, datos_exactos=datos, verificado=bool(datos)
+    )
+
+
 def _leer_datos_estructurados(tipo_consulta: TipoConsulta) -> ResultadoEstructuradoFanalca:
     """Lectura determinista sobre archivos YAML/JSON de Fanalca sin inventar cifras."""
     if tipo_consulta == "ficha_moto":
-        ruta = RAIZ_REPO / "data" / "catalogo" / "motos_honda.yaml"
-        datos = yaml.safe_load(ruta.read_text(encoding="utf-8")) if ruta.exists() else {}
-        return ResultadoEstructuradoFanalca(
-            fuente_archivo="data/catalogo/motos_honda.yaml", datos_exactos=datos
-        )
-
+        return _leer_archivo("data/catalogo/motos_honda.yaml")
     if tipo_consulta == "ficha_empresa":
+        # La ficha corporativa ya viene validada por su modelo Pydantic (cargar_ficha).
         return ResultadoEstructuradoFanalca(
             fuente_archivo=ARCHIVO_FICHA, datos_exactos=cargar_ficha().model_dump()
         )
-
     if tipo_consulta == "estadisticas_corpus":
-        ruta = RAIZ_REPO / "data" / "gold" / "estadisticas.json"
-        datos = json.loads(ruta.read_text(encoding="utf-8")) if ruta.exists() else {}
-        return ResultadoEstructuradoFanalca(fuente_archivo="data/gold/estadisticas.json", datos_exactos=datos)
-
-    ruta_etapas = RAIZ_REPO / "data" / "gold" / "metricas_etapas.json"
-    datos = json.loads(ruta_etapas.read_text(encoding="utf-8")) if ruta_etapas.exists() else {}
-    return ResultadoEstructuradoFanalca(fuente_archivo="data/gold/metricas_etapas.json", datos_exactos=datos)
+        return _leer_archivo("data/gold/estadisticas.json")
+    return _leer_archivo("data/gold/metricas_etapas.json")
 
 
 @tool(
@@ -169,18 +173,54 @@ def consultar_datos_estructurados_fanalca(
     return resultado.model_dump_json(), resultado
 
 
-def _consultar_datos(tipo_consulta: TipoConsulta) -> ResultadoEstructuradoFanalca:
+MAX_CLAVES_RESUMEN = 10
+MAX_TEXTO_RESUMEN = 80
+MAX_BYTES_RESUMEN = 1024
+
+
+def resumir_salida(resultado: ResultadoEstructuradoFanalca) -> dict[str, Any]:
+    """Resumen acotado de la salida Pydantic para los metadatos (nunca el YAML o JSON completo): claves de
+    primer nivel, su total y el número de elementos de las listas y diccionarios, en 1 KB o menos."""
+    datos = resultado.datos_exactos
+    claves = [str(clave)[:MAX_TEXTO_RESUMEN] for clave in list(datos)[:MAX_CLAVES_RESUMEN]]
+    elementos = {
+        str(clave)[:MAX_TEXTO_RESUMEN]: len(valor)
+        for clave, valor in list(datos.items())[:MAX_CLAVES_RESUMEN]
+        if isinstance(valor, list | dict)
+    }
+    resumen: dict[str, Any] = {"claves": claves, "total_claves": len(datos), "elementos": elementos}
+    while len(json.dumps(resumen, ensure_ascii=False).encode("utf-8")) > MAX_BYTES_RESUMEN and claves:
+        elementos.pop(claves.pop(), None)
+    return resumen
+
+
+def _consultar_datos(
+    tipo_consulta: TipoConsulta, registro: list[dict[str, Any]] | None = None
+) -> ResultadoEstructuradoFanalca:
     """Invoca la herramienta como lo hace un agente (llamada de herramienta) y devuelve su artefacto: el
-    modelo Pydantic con los datos exactos, sin pasar por JSON."""
+    modelo Pydantic con los datos exactos, sin pasar por JSON. Con ``registro``, agrega la traza de la llamada
+    (nombre, argumentos, archivo, verificado y resumen acotado) para los metadatos del turno."""
+    argumentos = ConsultaDatosFanalcaInput(tipo_consulta=tipo_consulta).model_dump()
     mensaje = consultar_datos_estructurados_fanalca.invoke(
         {
             "type": "tool_call",
             "id": f"ignis-{tipo_consulta}",
             "name": consultar_datos_estructurados_fanalca.name,
-            "args": {"tipo_consulta": tipo_consulta},
+            "args": argumentos,
         }
     )
-    return ResultadoEstructuradoFanalca.model_validate(mensaje.artifact)
+    resultado = ResultadoEstructuradoFanalca.model_validate(mensaje.artifact)
+    if registro is not None:
+        registro.append(
+            {
+                "nombre": consultar_datos_estructurados_fanalca.name,
+                "argumentos": argumentos,
+                "fuente_archivo": resultado.fuente_archivo,
+                "verificado": resultado.verificado,
+                "resumen": resumir_salida(resultado),
+            }
+        )
+    return resultado
 
 
 # --- 2. Blindaje contra inyección indirecta en los fragmentos recuperados ---
@@ -259,9 +299,9 @@ _CLAVES_RAG = [
     "documento",
     "sede",
     "historia",
-    "fanalca",
 ]
-_CLAVES_MOTO = ("moto", "cb", "cilindraje", "freno", "llanta")
+# Palabras completas: «cb» suelto o dentro de otra palabra («CBS») no hace de una pregunta una de motos.
+_PATRON_MOTO = re.compile(r"\b(motos?|motocicletas?|cb\s?\d+\w*|cilindraje|frenos?|llantas?)\b")
 
 
 def decidir_ruta_router(mensaje: str) -> DecisionRouter:
@@ -396,8 +436,7 @@ def _como_texto(prefs: Mapping[Any, str]) -> dict[str, str]:
 
 
 def _es_pregunta_de_moto(mensaje: str) -> bool:
-    bajo = mensaje.lower()
-    return any(w in bajo for w in _CLAVES_MOTO)
+    return bool(_PATRON_MOTO.search(mensaje.lower()))
 
 
 class AgenteIgnisM2:
@@ -498,6 +537,8 @@ class AgenteIgnisM2:
         citas: list[dict[str, str]] = []
         archivos: list[dict[str, str]] = []
         fuentes_datos: list[dict[str, Any]] = []
+        # Traza de las llamadas al @tool del turno (caso 3): va en los metadatos, nunca en el texto.
+        herramientas: list[dict[str, Any]] = []
         # Textos fijos que van después del cuerpo (ya limpios): no pasan por el recorte de pulir_respuesta.
         sufijos: list[str] = []
         blindaje_indirecto = False
@@ -528,18 +569,18 @@ class AgenteIgnisM2:
                 if seccion in {"presentacion", "negocios", "plantas"}:
                     sufijos.append(SEGUIMIENTO_FICHA)
             elif _es_pregunta_de_moto(mensaje):
-                res_tool = _consultar_datos("ficha_moto")
+                res_tool = _consultar_datos("ficha_moto", herramientas)
                 respuesta = redactar_ficha_moto(mensaje, res_tool.datos_exactos)
                 fuentes_datos.append(fuentes_datos_moto(res_tool.datos_exactos, res_tool.fuente_archivo))
             else:
-                res_tool = _consultar_datos("estadisticas_corpus")
+                res_tool = _consultar_datos("estadisticas_corpus", herramientas)
                 respuesta = redactar_estadisticas(mensaje, res_tool.datos_exactos)
                 fuentes_datos.append(
                     fuentes_datos_estadisticas(res_tool.datos_exactos, res_tool.fuente_archivo)
                 )
 
         elif decision.ruta == "mixto":
-            cifra, citas_cifra = self._cifra_mixta(mensaje, fuentes_datos)
+            cifra, citas_cifra = self._cifra_mixta(mensaje, fuentes_datos, herramientas)
             documental, citas_doc, blindaje_indirecto = self._documental(
                 mensaje, k=3, max_oraciones=2, entradas=("En sus documentos, Fanalca cuenta lo siguiente.",)
             )
@@ -602,10 +643,12 @@ class AgenteIgnisM2:
         }
         if normativa:
             resultado["normativa"] = normativa
+        if herramientas:
+            resultado["herramienta"] = herramientas[-1]
         return resultado
 
     def _cifra_mixta(
-        self, mensaje: str, fuentes_datos: list[dict[str, Any]]
+        self, mensaje: str, fuentes_datos: list[dict[str, Any]], herramientas: list[dict[str, Any]]
     ) -> tuple[str, list[dict[str, str]]]:
         """Oración con el dato estructurado de la ruta mixta: ficha corporativa, ficha de la moto o
         estadísticas (según la pregunta). Agrega la procedencia a ``fuentes_datos`` y devuelve las citas de la
@@ -618,7 +661,7 @@ class AgenteIgnisM2:
         tipo: Literal["ficha_moto", "estadisticas_corpus"] = (
             "ficha_moto" if _es_pregunta_de_moto(mensaje) else "estadisticas_corpus"
         )
-        res_tool = _consultar_datos(tipo)
+        res_tool = _consultar_datos(tipo, herramientas)
         if tipo == "ficha_moto":
             fuentes_datos.append(fuentes_datos_moto(res_tool.datos_exactos, res_tool.fuente_archivo))
             return redactar_ficha_moto(mensaje, res_tool.datos_exactos), []

@@ -16,12 +16,14 @@ import "./ignis.css";
 const IgnisAtencionView = lazy(() => import("./IgnisAtencionView"));
 const PestanaPendiente = lazy(() => import("./PestanaPendiente"));
 const PestanaSesion = lazy(() => import("./PestanaSesion"));
+const PestanaRouter = lazy(() => import("./PestanaRouter"));
 const PantallaEntrada = lazy(() => import("./PantallaEntrada"));
 
 /** Pestañas que ya tienen implementación propia; el resto muestra su estado vacío con el PR que la trae. */
 const IMPLEMENTADAS: Partial<Record<IdPestana, () => ReactNode>> = {
   atencion: () => <IgnisAtencionView />,
   sesion: () => <PestanaSesion />,
+  router: () => <PestanaRouter />,
 };
 
 /** Pestañas sin estado vacío: las que ya tienen implementación propia. */
