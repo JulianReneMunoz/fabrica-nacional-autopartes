@@ -13,6 +13,7 @@ Comandos:
   evaluate   Ejecuta el banco de 24 preguntas y guarda métricas.
   stats      Muestra estadísticas de la base de conocimiento.
   indexar-vectores       Construye el índice Chroma con nomic (extra semantica-cpu/gpu).
+  indexar-qdrant         Construye data/qdrant/ (Qdrant + nomic) para IGNIS (R07).
   comparar-recuperadores Prefijos de nomic y BM25 frente a semántico (hit@k, MRR, tiempos).
   agente     Agente con memoria por conversación (--thread); --verificar informa el proveedor.
   simulador  Genera o valida el ensamblaje 3D de demostración (v2.0).
@@ -176,6 +177,13 @@ def construir_parser() -> argparse.ArgumentParser:
         "--verificar",
         action="store_true",
         help="Mostrar el proveedor configurado (FNA_PROVEEDOR_AGENTE) y comprobar si responde",
+    )
+
+    iq = sub.add_parser("indexar-qdrant", help="Construir data/qdrant/ (Qdrant + nomic, IGNIS, R07)")
+    iq.add_argument(
+        "--descargar",
+        action="store_true",
+        help="Permitir la descarga del modelo desde Hugging Face (requiere red; por defecto solo la caché)",
     )
 
     iv = sub.add_parser("indexar-vectores", help="Construir data/vectores/ (Chroma + nomic, ADR-023)")
@@ -364,6 +372,17 @@ def _main(argv: list[str] | None = None) -> int:
 
     if args.comando == "agente":
         return _comando_agente(servicio, args)
+
+    if args.comando == "indexar-qdrant":
+        from fabrica_autopartes.core.excepciones import ErrorRecuperadorNoDisponible
+
+        try:
+            info = servicio.indexar_qdrant(descargar=args.descargar)
+        except ErrorRecuperadorNoDisponible as exc:  # solo el motivo: sin traza ni instrucciones de Chroma
+            print(f"No se pudo indexar en Qdrant: {exc.motivo}", file=sys.stderr)
+            return 1
+        print(json.dumps(info, ensure_ascii=False, indent=2))
+        return 0
 
     if args.comando == "indexar-vectores":
         info = servicio.indexar_vectores(descargar=args.descargar)

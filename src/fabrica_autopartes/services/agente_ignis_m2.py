@@ -21,9 +21,9 @@ from langchain_core.tools import tool
 from langgraph.store.base import BaseStore
 from pydantic import BaseModel, Field
 
-from fabrica_autopartes.core.config import RAIZ_PROYECTO
+from fabrica_autopartes.core.config import RAIZ_PROYECTO, RecuperadorIgnis
 from fabrica_autopartes.domain.modelos import Fragmento
-from fabrica_autopartes.knowledge.base import BaseConocimiento
+from fabrica_autopartes.knowledge.base import RECUPERADOR_QDRANT, BaseConocimiento
 from fabrica_autopartes.llm.extractivo import RECHAZO
 from fabrica_autopartes.pipelines.sinonimos import expandir_consulta
 from fabrica_autopartes.pipelines.texto import (
@@ -458,6 +458,7 @@ class AgenteIgnisM2:
         memoria: RepositorioMemoriaIgnis,
         store: BaseStore | None = None,
         base_demostracion: BaseConocimiento | None = None,
+        recuperador: RecuperadorIgnis = "bm25",
     ) -> None:
         self.kb = base
         self.memoria = memoria
@@ -466,15 +467,33 @@ class AgenteIgnisM2:
         # Documento de prueba del blindaje (caso 5): solo con FNA_IGNIS_DEMO_BLINDAJE; nunca se mezcla con el
         # Gold.
         self.base_demostracion = base_demostracion
+        # Recuperador configurado (FNA_IGNIS_RECUPERADOR, R07): bm25 por defecto. El recuperador usado de
+        # verdad en cada turno viaja con el resultado de ese turno, nunca en el agente (que se comparte
+        # entre peticiones simultáneas).
+        self.recuperador: RecuperadorIgnis = recuperador
 
-    def _buscar_fragmentos(self, consulta: str, k: int) -> list[Fragmento]:
+    def _buscar_fragmentos(self, consulta: str, k: int) -> tuple[list[Fragmento], str]:
         """Búsqueda de IGNIS sobre el buscador común: se piden más candidatos para poder filtrar. Con la base
-        de demostración activa, una pregunta por el «documento de prueba» busca solo en ella."""
-        base = self.kb
+        de demostración activa, una pregunta por el «documento de prueba» busca solo en ella.
+
+        Con ``hibrido_qdrant`` (opcional, R07) busca con BM25 + Qdrant y las exclusiones van como filtro de
+        payload; si Qdrant no está disponible, la base vuelve a bm25 y registra el motivo. Devuelve los
+        candidatos y el recuperador usado de verdad en esta búsqueda."""
         if self.base_demostracion is not None and pide_documento_de_prueba(consulta):
-            base = self.base_demostracion
-        candidatos = [r.fragmento for r in base.buscar(expandir_consulta(consulta), k=k * 4 + 6)]
-        return filtrar_para_ignis(consulta, candidatos, k)
+            resultados = self.base_demostracion.buscar(expandir_consulta(consulta), k=k * 4 + 6)
+            usado = "bm25"
+        elif self.recuperador == "bm25":
+            resultados = self.kb.buscar(expandir_consulta(consulta), k=k * 4 + 6)
+            usado = "bm25"
+        else:
+            from fabrica_autopartes.knowledge.vectorial_qdrant import FiltroPayload
+
+            filtro = FiltroPayload(excluir_documentos=tuple(sorted(documentos_excluidos())))
+            resultados, usado = self.kb.buscar_con_respaldo(
+                expandir_consulta(consulta), k * 4 + 6, RECUPERADOR_QDRANT, filtro
+            )
+        candidatos = [r.fragmento for r in resultados]
+        return filtrar_para_ignis(consulta, candidatos, k), usado
 
     def _preferencias(self, user_id: str) -> dict[str, str]:
         if self.store is None:
@@ -502,17 +521,17 @@ class AgenteIgnisM2:
 
     def _documental(
         self, mensaje: str, k: int, max_oraciones: int, entradas: tuple[str, ...] | None = None
-    ) -> tuple[str, list[dict[str, str]], bool]:
-        """Texto documental (vacío si no hay evidencia), citas de los fragmentos usados y alerta del
-        blindaje."""
-        fragmentos = self._buscar_fragmentos(mensaje, k=k)
+    ) -> tuple[str, list[dict[str, str]], bool, str]:
+        """Texto documental (vacío si no hay evidencia), citas de los fragmentos usados, alerta del blindaje
+        y recuperador usado en la búsqueda."""
+        fragmentos, recuperador_usado = self._buscar_fragmentos(mensaje, k=k)
         visibles, alerta = [], False
         for frag in fragmentos:
             texto_visible, alerta_frag = neutralizar_fragmento_rag(frag.texto)
             visibles.append(texto_visible)
             alerta = alerta or alerta_frag
         texto, usados = redactar_documental(mensaje, fragmentos, visibles, max_oraciones, entradas)
-        return texto, [_cita(f) for f in usados], alerta
+        return texto, [_cita(f) for f in usados], alerta, recuperador_usado
 
     def ejecutar_turno(self, mensaje: str, thread_id: str, user_id: str) -> dict[str, Any]:
         """Turno de IGNIS. ``user_id`` es el usuario seudónimo de la sesión (ADR-033): no tiene valor por
@@ -558,6 +577,8 @@ class AgenteIgnisM2:
         fuentes_datos: list[dict[str, Any]] = []
         # Traza de las llamadas al @tool del turno (caso 3): va en los metadatos, nunca en el texto.
         herramientas: list[dict[str, Any]] = []
+        # Recuperador usado en la búsqueda documental de este turno (si la hubo): estado del turno.
+        recuperador_turno: str | None = None
         # Textos fijos que van después del cuerpo (ya limpios): no pasan por el recorte de pulir_respuesta.
         sufijos: list[str] = []
         blindaje_indirecto = False
@@ -600,7 +621,7 @@ class AgenteIgnisM2:
 
         elif decision.ruta == "mixto":
             cifra, citas_cifra = self._cifra_mixta(mensaje, fuentes_datos, herramientas)
-            documental, citas_doc, blindaje_indirecto = self._documental(
+            documental, citas_doc, blindaje_indirecto, recuperador_turno = self._documental(
                 mensaje, k=3, max_oraciones=2, entradas=("En sus documentos, Fanalca cuenta lo siguiente.",)
             )
             if documental:
@@ -617,7 +638,9 @@ class AgenteIgnisM2:
                 respuesta = f"{cifra} {RECHAZO}"
 
         else:  # rag_documental
-            documental, citas, blindaje_indirecto = self._documental(mensaje, k=3, max_oraciones=3)
+            documental, citas, blindaje_indirecto, recuperador_turno = self._documental(
+                mensaje, k=3, max_oraciones=3
+            )
             if not documental:
                 respuesta = RECHAZO
             elif any(k in mensaje.lower() for k in _PIDE_PLANO):
@@ -664,6 +687,10 @@ class AgenteIgnisM2:
             resultado["normativa"] = normativa
         if herramientas:
             resultado["herramienta"] = herramientas[-1]
+        # Solo con hibrido_qdrant configurado y si el turno buscó en el corpus: "hibrido_qdrant" o "bm25"
+        # cuando hubo respaldo. Con bm25 por defecto el resultado no cambia.
+        if self.recuperador != "bm25" and recuperador_turno is not None:
+            resultado["recuperador"] = recuperador_turno
         return resultado
 
     def _cifra_mixta(

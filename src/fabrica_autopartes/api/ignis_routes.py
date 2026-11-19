@@ -91,7 +91,8 @@ async def stream_ignis_chat(
             meta["score_router"] = resultado["score_router"]
         # Campos que solo aparecen cuando aplican: categoría de la moderación, norma de datos personales y
         # la herramienta @tool del turno (nombre, argumentos, archivo, verificado y resumen de su salida).
-        for campo in ("categoria_moderacion", "normativa", "herramienta"):
+        # «recuperador» solo llega con FNA_IGNIS_RECUPERADOR=hibrido_qdrant (R07).
+        for campo in ("categoria_moderacion", "normativa", "herramienta", "recuperador"):
             if resultado.get(campo):
                 meta[campo] = resultado[campo]
         yield _evento(meta)

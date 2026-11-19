@@ -15,7 +15,10 @@ from typing import TYPE_CHECKING, Any
 from langchain_core.language_models.chat_models import BaseChatModel
 
 from fabrica_autopartes.core.config import Configuracion, obtener_configuracion
-from fabrica_autopartes.core.excepciones import ErrorProveedorLLM
+from fabrica_autopartes.core.excepciones import ErrorProveedorLLM, ErrorRecuperadorNoDisponible
+
+# Reexportado: las interfaces solo importan de services.asistente (estado de la base vectorial, R07).
+from fabrica_autopartes.domain.modelos import InfoVectorial as InfoVectorial
 from fabrica_autopartes.domain.modelos import (
     RespuestaAgente,
     RespuestaQA,
@@ -88,6 +91,9 @@ class ServicioAsistente:
             self.config.dir_vectores,
             self.config.recuperador,
             self.config.embeddings_dispositivo,
+            # Qdrant de IGNIS (R07): solo lo usa hibrido_qdrant; el M1 no cambia.
+            dir_qdrant=self.config.dir_qdrant,
+            qdrant_url=self.config.qdrant_url,
         )
         self.repo = repositorio or RepositorioAuditoria(self.config.url_base_datos)
         self._modelo_inyectado = modelo_llm  # usado por pruebas
@@ -273,6 +279,7 @@ class ServicioAsistente:
                         memoria,
                         crear_store(self.config.ruta_store),
                         base_demostracion=self._base_demo_blindaje(),
+                        recuperador=self.config.ignis_recuperador,
                     )
         resultado = self._ignis.ejecutar_turno(mensaje, thread_id, user_id)
         # Un mensaje bloqueado por la moderación titula el hilo con su marca («[mensaje moderado: …]»), nunca
@@ -334,6 +341,9 @@ class ServicioAsistente:
             self._agente.cerrar()
         if self._ignis is not None and self._ignis.store is not None:
             cerrar_store(self._ignis.store)
+        from fabrica_autopartes.knowledge.vectorial_qdrant import cerrar_conexiones
+
+        cerrar_conexiones()  # libera la carpeta local de Qdrant al apagar
 
     # ------------------------------------------------------- base semántica
     def disponibilidad_semantica(self) -> tuple[bool, str]:
@@ -354,6 +364,47 @@ class ServicioAsistente:
         total = indice.indexar(fragmentos)
         self.base.usar_recuperador_semantico(indice)
         return {"fragmentos": total, "directorio": str(self.config.dir_vectores), **funcion.descripcion()}
+
+    def indexar_qdrant(self, descargar: bool = False) -> dict[str, object]:
+        """Reconstruye la colección Qdrant de IGNIS (R07) con los fragmentos Gold y nomic.
+
+        Sin ``descargar=True`` no accede a la red: el modelo debe estar en la caché de Hugging Face. Crea
+        ``data/qdrant/`` si hace falta. Si otro proceso tiene la carpeta (por ejemplo, el backend en marcha),
+        lanza ``ErrorRecuperadorNoDisponible`` («en uso por otro proceso»). El resumen no lleva textos.
+        """
+        from fabrica_autopartes.knowledge import semantica
+        from fabrica_autopartes.knowledge.vectorial_qdrant import IndiceQdrant
+
+        self.base.exigir_contenido()
+        if not semantica.extra_instalado():
+            raise ErrorRecuperadorNoDisponible("falta el extra semantica-cpu o semantica-gpu")
+        if not descargar and not semantica.modelo_en_cache():
+            raise ErrorRecuperadorNoDisponible(
+                f"el modelo {semantica.MODELO_NOMIC} no está en la caché de Hugging Face: usar --descargar "
+                "(requiere red)"
+            )
+        funcion = semantica.EmbeddingsNomic(self.config.embeddings_dispositivo, solo_local=not descargar)
+        conexion = self.base.conexion_qdrant(crear=True)
+        fragmentos = self.base.fragmentos
+        indice = IndiceQdrant(conexion, funcion, fragmentos)
+        puntos = indice.indexar(fragmentos)
+        self.base.usar_indice_qdrant(indice)
+        info = indice.info()
+        return {
+            "coleccion": info.coleccion,
+            "puntos": puntos,
+            "modo": info.modo,
+            "destino": conexion.destino,
+            "tipo_busqueda": info.tipo_busqueda,
+            **funcion.descripcion(),
+        }
+
+    def info_vectorial(self) -> InfoVectorial:
+        """Estado de la colección Qdrant para la API, con el recuperador configurado para IGNIS. No crea ni
+        bloquea la carpeta local ni carga el modelo."""
+        info = self.base.info_vectorial()
+        info.recuperador_ignis = self.config.ignis_recuperador
+        return info
 
     def evaluar_recuperacion(
         self, dispositivos: list[str], repeticiones: int = 3, calentamiento: int = 1

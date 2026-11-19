@@ -166,3 +166,35 @@ class EstadisticasBase(BaseModel):
 class SolicitudScraping(BaseModel):
     urls: list[HttpUrl]
     max_paginas: int = 50
+
+
+# --- Base vectorial Qdrant de IGNIS (R07): estado de la colección para la API y la interfaz ---------------
+# Vive en el dominio para que las interfaces lo usen sin depender de knowledge ni de qdrant_client.
+COLECCION_QDRANT = "fragmentos_nomic_v15"
+CAMPOS_PAYLOAD = ("seccion", "documento_id", "idioma", "origen")
+HNSW_M = 16
+HNSW_EF_CONSTRUCT = 100
+ModoQdrant = Literal["local", "memoria", "servidor"]
+
+
+class InfoVectorial(BaseModel):
+    """Estado de la colección para la pestaña «Base de conocimiento — Qdrant» y la API."""
+
+    disponible: bool
+    motivo: str = ""
+    modo: ModoQdrant
+    coleccion: str = COLECCION_QDRANT
+    puntos: int = 0
+    dimension: int | None = None
+    distancia: str | None = None
+    hnsw_m: int = HNSW_M
+    hnsw_ef_construct: int = HNSW_EF_CONSTRUCT
+    umbral_busqueda_exacta_kb: int | None = None
+    vectores_indexados: int = 0
+    tipo_busqueda: Literal["exacta", "hnsw"] = "exacta"
+    explicacion: str = ""
+    campos_payload: list[str] = Field(default_factory=lambda: list(CAMPOS_PAYLOAD))
+    modelo: str = ""
+    revision: str = ""
+    generado_en: str | None = None
+    recuperador_ignis: str | None = None

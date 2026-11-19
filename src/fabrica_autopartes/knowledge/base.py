@@ -7,6 +7,7 @@ import logging
 import threading
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from fabrica_autopartes.core.excepciones import (
     ErrorBaseConocimientoVacia,
@@ -18,7 +19,17 @@ from fabrica_autopartes.domain.modelos import EstadisticasBase, Fragmento
 from fabrica_autopartes.knowledge.recuperacion import IndiceBM25, Recuperador, RecuperadorHibrido, Resultado
 from fabrica_autopartes.pipelines.texto import tokens_aprox
 
+if TYPE_CHECKING:
+    from fabrica_autopartes.knowledge.vectorial_qdrant import (
+        ConexionQdrant,
+        FiltroPayload,
+        IndiceQdrant,
+        InfoVectorial,
+    )
+
 _log = logging.getLogger(__name__)
+# Recuperador opcional de IGNIS (R07, ADR-034): BM25 + Qdrant con RRF. No forma parte de los valores del M1.
+RECUPERADOR_QDRANT = "hibrido_qdrant"
 
 
 @dataclass
@@ -40,6 +51,8 @@ class BaseConocimiento:
         dir_vectores: Path | None = None,
         recuperador: str = "bm25",
         dispositivo_embeddings: str = "auto",
+        dir_qdrant: Path | None = None,
+        qdrant_url: str | None = None,
     ) -> None:
         self.dir_gold = dir_gold
         self.dir_vectores = dir_vectores or dir_gold.parent / "vectores"
@@ -50,6 +63,13 @@ class BaseConocimiento:
         self._semantico: Recuperador | None = None
         self._lock_semantico = threading.Lock()
         self._motivo_sin_semantico: str | None = None  # motivo de la última vuelta a bm25 (ADR-031)
+        # Qdrant (solo IGNIS con FNA_IGNIS_RECUPERADOR=hibrido_qdrant): destino, índice y su propio motivo,
+        # independiente del de Chroma para no alterar el respaldo del M1.
+        self.dir_qdrant = dir_qdrant
+        self.qdrant_url = qdrant_url
+        self._qdrant: IndiceQdrant | None = None
+        self._lock_qdrant = threading.Lock()
+        self._motivo_sin_qdrant: str | None = None
 
     # ------------------------------------------------------------ carga
     @property
@@ -72,14 +92,19 @@ class BaseConocimiento:
             self._indice = IndiceBM25(self.fragmentos)
         return self._indice
 
-    def recuperador(self, nombre: str | None = None) -> Recuperador:
+    def recuperador(self, nombre: str | None = None, filtro: FiltroPayload | None = None) -> Recuperador:
         """Recuperador ``bm25`` (por defecto), ``semantico`` (Chroma + nomic, ADR-023) o ``hibrido`` (RRF,
-        ADR-031). Los dos últimos lanzan ``ErrorRecuperadorNoDisponible`` si el semántico no está listo."""
+        ADR-031). Los dos últimos lanzan ``ErrorRecuperadorNoDisponible`` si el semántico no está listo.
+
+        ``hibrido_qdrant`` (solo IGNIS, R07) fusiona BM25 y Qdrant con RRF y aplica ``filtro`` a los dos. Los
+        demás recuperadores ignoran ``filtro``."""
         nombre = nombre or self.recuperador_por_defecto
         if nombre == "bm25":
             return self.indice
         if nombre == "hibrido":
             return RecuperadorHibrido(self.indice, self._cargar_semantico())
+        if nombre == RECUPERADOR_QDRANT:
+            return self._hibrido_qdrant(filtro)
         if nombre != "semantico":
             raise ErrorConfiguracion(f"Recuperador desconocido: '{nombre}' (bm25, semantico o hibrido)")
         return self._cargar_semantico()
@@ -99,12 +124,17 @@ class BaseConocimiento:
                 )
             return self._semantico
 
-    def buscar_con_respaldo(self, consulta: str, k: int, recuperador: str) -> tuple[list[Resultado], str]:
+    def buscar_con_respaldo(
+        self, consulta: str, k: int, recuperador: str, filtro: FiltroPayload | None = None
+    ) -> tuple[list[Resultado], str]:
         """Busca con ``recuperador`` y, si el semántico no está disponible, vuelve a ``bm25`` (ADR-031).
 
         Devuelve los resultados y el recuperador realmente usado. La vuelta se registra con un aviso la
         primera vez y el motivo se recuerda, para no volver a comprobar la disponibilidad en cada consulta.
+        ``hibrido_qdrant`` tiene su propio respaldo (``_buscar_qdrant_con_respaldo``).
         """
+        if recuperador == RECUPERADOR_QDRANT:
+            return self._buscar_qdrant_con_respaldo(consulta, k, filtro)
         if recuperador != "bm25" and self._motivo_sin_semantico is None:
             try:
                 return self.recuperador(recuperador).buscar(consulta, k), recuperador
@@ -148,6 +178,133 @@ class BaseConocimiento:
         self._indice = None
         self._semantico = None
         self._motivo_sin_semantico = None
+        # La conexión compartida de Qdrant se conserva (un cliente por proceso); se olvidan el índice y el
+        # motivo.
+        self._qdrant = None
+        self._motivo_sin_qdrant = None
+
+    # --------------------------------------------------------- Qdrant (R07, solo IGNIS)
+    def _hibrido_qdrant(self, filtro: FiltroPayload | None) -> Recuperador:
+        from fabrica_autopartes.knowledge.vectorial_qdrant import FiltroPayload, RecuperadorFiltrado
+
+        f = filtro or FiltroPayload()
+        return RecuperadorHibrido(RecuperadorFiltrado(self.indice, f), self._cargar_qdrant().con_filtro(f))
+
+    def conexion_qdrant(self, crear: bool = False) -> ConexionQdrant:
+        """Conexión compartida a Qdrant. La carpeta local solo se crea con ``crear=True`` (indexación);
+        si no existe, lanza ``ErrorRecuperadorNoDisponible`` sin crearla."""
+        from fabrica_autopartes.knowledge.vectorial_qdrant import conexion_compartida, ruta_visible
+
+        if self.dir_qdrant is None and not self.qdrant_url:
+            raise ErrorRecuperadorNoDisponible("Qdrant sin destino: falta dir_qdrant o FNA_QDRANT_URL")
+        if not self.qdrant_url and not crear and self.dir_qdrant and not self.dir_qdrant.is_dir():
+            raise ErrorRecuperadorNoDisponible(
+                f"no existe la carpeta {ruta_visible(self.dir_qdrant)}: ejecutar «fabrica indexar-qdrant»"
+            )
+        return conexion_compartida(self.dir_qdrant, self.qdrant_url)
+
+    def _cargar_qdrant(self) -> IndiceQdrant:
+        """Índice Qdrant de esta base, una sola vez y con lock. Comprueba la colección antes de cargar el
+        modelo (unos 20 s): sin colección, sin extra o sin modelo lanza ``ErrorRecuperadorNoDisponible``. No
+        indexa ni descarga nada (eso es ``fabrica indexar-qdrant``)."""
+        with self._lock_qdrant:
+            if self._qdrant is None:
+                from fabrica_autopartes.knowledge import semantica
+                from fabrica_autopartes.knowledge.vectorial_qdrant import (
+                    COLECCION_QDRANT,
+                    ERRORES_CONEXION,
+                    IndiceQdrant,
+                )
+
+                conexion = self.conexion_qdrant()
+                try:
+                    existe = conexion.cliente.collection_exists(COLECCION_QDRANT)
+                except ERRORES_CONEXION as exc:
+                    raise ErrorRecuperadorNoDisponible(
+                        f"el servidor Qdrant no responde ({type(exc).__name__})"
+                    ) from exc
+                if not existe:
+                    raise ErrorRecuperadorNoDisponible(
+                        f"no existe la colección Qdrant {COLECCION_QDRANT}: ejecutar «fabrica indexar-qdrant»"
+                    )
+                if not semantica.extra_instalado():
+                    raise ErrorRecuperadorNoDisponible("falta el extra semantica-cpu o semantica-gpu")
+                if not semantica.modelo_en_cache():
+                    raise ErrorRecuperadorNoDisponible(
+                        f"el modelo {semantica.MODELO_NOMIC} no está en la caché de Hugging Face"
+                    )
+                try:
+                    funcion = semantica.EmbeddingsNomic(self.dispositivo_embeddings)
+                except Exception as exc:  # un fallo del modelo no debe romper la respuesta: vuelve a bm25
+                    raise ErrorRecuperadorNoDisponible(
+                        f"error al cargar el modelo: {type(exc).__name__}"
+                    ) from exc
+                self._qdrant = IndiceQdrant(conexion, funcion, self.fragmentos)
+            return self._qdrant
+
+    def _buscar_qdrant_con_respaldo(
+        self, consulta: str, k: int, filtro: FiltroPayload | None
+    ) -> tuple[list[Resultado], str]:
+        """``hibrido_qdrant`` con vuelta a ``bm25`` (con el mismo filtro) si Qdrant no está disponible. El
+        aviso registra el recuperador y el motivo, nunca la consulta ni el contenido de los fragmentos."""
+        from fabrica_autopartes.knowledge.vectorial_qdrant import FiltroPayload, RecuperadorFiltrado
+
+        if self._motivo_sin_qdrant is None:
+            try:
+                return self.recuperador(RECUPERADOR_QDRANT, filtro).buscar(consulta, k), RECUPERADOR_QDRANT
+            except ErrorRecuperadorNoDisponible as exc:
+                self._motivo_sin_qdrant = exc.motivo
+                _log.warning(
+                    "Recuperador '%s' no disponible (%s): se usa bm25.", RECUPERADOR_QDRANT, exc.motivo
+                )
+        return RecuperadorFiltrado(self.indice, filtro or FiltroPayload()).buscar(consulta, k), "bm25"
+
+    def disponibilidad_qdrant(self) -> tuple[bool, str]:
+        """``(True, "")`` si ``hibrido_qdrant`` puede usarse; si no, ``(False, motivo)``. Sin cargar el
+        modelo."""
+        if self._qdrant is not None:
+            return True, ""
+        from fabrica_autopartes.knowledge import semantica
+
+        info = self.info_vectorial()
+        if not info.disponible:
+            return False, info.motivo
+        if not semantica.extra_instalado():
+            return False, "falta el extra semantica-cpu o semantica-gpu"
+        if not semantica.modelo_en_cache():
+            return False, f"el modelo {semantica.MODELO_NOMIC} no está en la caché de Hugging Face"
+        return True, ""
+
+    def info_vectorial(self) -> InfoVectorial:
+        """Estado de la colección Qdrant para el servicio y la API, sin cargar el modelo.
+
+        En modo local nunca crea ni bloquea la carpeta: usa el cliente ya abierto en este proceso, si lo
+        hay, o lee el resumen que dejó la indexación. Con un servidor, consulta el servidor."""
+        from fabrica_autopartes.knowledge.vectorial_qdrant import (
+            InfoVectorial,
+            conexion_abierta,
+            info_coleccion,
+            info_local_sin_bloqueo,
+        )
+
+        if self.qdrant_url:
+            try:
+                return info_coleccion(self.conexion_qdrant())
+            except ErrorRecuperadorNoDisponible as exc:
+                return InfoVectorial(disponible=False, modo="servidor", motivo=exc.motivo)
+        if self.dir_qdrant is None:
+            return InfoVectorial(
+                disponible=False, modo="local", motivo="Qdrant sin destino: falta dir_qdrant o FNA_QDRANT_URL"
+            )
+        abierta = conexion_abierta(self.dir_qdrant)
+        if abierta is not None:
+            return info_coleccion(abierta)
+        return info_local_sin_bloqueo(self.dir_qdrant)
+
+    def usar_indice_qdrant(self, indice: IndiceQdrant) -> None:
+        """Inyecta un índice Qdrant (pruebas o índice ya construido)."""
+        self._qdrant = indice
+        self._motivo_sin_qdrant = None
 
     def exigir_contenido(self) -> None:
         if not self.fragmentos:

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from fabrica_autopartes.api.dependencias import obtener_servicio
 from fabrica_autopartes.api.esquemas import FragmentoBuscado, Pagina
 from fabrica_autopartes.domain.modelos import EstadisticasBase, Fragmento
-from fabrica_autopartes.services.asistente import ServicioAsistente
+from fabrica_autopartes.services.asistente import InfoVectorial, ServicioAsistente
 
 router = APIRouter(prefix="/api/v1/base", tags=["Base de conocimiento"])
 
@@ -15,6 +15,20 @@ router = APIRouter(prefix="/api/v1/base", tags=["Base de conocimiento"])
 @router.get("/estadisticas", response_model=EstadisticasBase, summary="Estadísticas del corpus Gold")
 def estadisticas(servicio: ServicioAsistente = Depends(obtener_servicio)) -> EstadisticasBase:
     return servicio.base.estadisticas()
+
+
+@router.get(
+    "/vectorial",
+    response_model=InfoVectorial,
+    summary="Estado de la base vectorial Qdrant de IGNIS",
+    description=(
+        "Colección, número de vectores, distancia, parámetros HNSW y tipo de búsqueda (exacta en modo "
+        "local; HNSW solo si un servidor indexó los vectores). No crea ni bloquea la carpeta local ni carga "
+        "el modelo. Si Qdrant no está disponible responde 200 con disponible=false y el motivo."
+    ),
+)
+def vectorial(servicio: ServicioAsistente = Depends(obtener_servicio)) -> InfoVectorial:
+    return servicio.info_vectorial()
 
 
 @router.get("/fragmentos", response_model=Pagina[FragmentoBuscado], summary="Listar o buscar fragmentos")
