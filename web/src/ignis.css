@@ -247,6 +247,7 @@ code { font-family: var(--ig-mono); }
 .ig-tabla .numero { font-family: var(--ig-mono); text-align: right; }
 /* Pestaña Router (R08): decisiones de la sesión con la herramienta @tool del turno. */
 .ig-router-tabla td { vertical-align: top; }
+.ig-router-tabla .ignis-insignia + .ignis-insignia { margin-left: 6px; }
 .ig-router-moderacion { display: block; margin-top: 6px; font-size: 12px; color: var(--ig-texto-2); }
 .ig-router-herramienta { display: grid; gap: 4px; font-size: 13px; }
 .ig-router-herramienta code { font-family: var(--ig-mono); color: var(--ig-texto); overflow-wrap: anywhere; }

@@ -405,6 +405,10 @@ y Archify (evaluada y descartada); motivos en [el detalle](docs/metodologias.md#
   respuesta no lleva URL ni identificadores.
 - Moderación de IGNIS: un mensaje bloqueado se guarda en el historial, en la auditoría y en el título del hilo con
   su categoría («[mensaje moderado: …]»), nunca con su texto.
+- Blindaje de IGNIS contra inyección indirecta (caso 5): los fragmentos recuperados se tratan como datos; las
+  instrucciones incrustadas se neutralizan y se informa `metadatos.blindaje_activado`. Para la demostración en vivo,
+  `FNA_IGNIS_DEMO_BLINDAJE=true` activa un documento de prueba ficticio (`data/demostracion/blindaje/`, origen
+  `demostrativo`), que solo se consulta si la pregunta menciona «documento de prueba» y nunca se mezcla con el Gold.
 - Cifras demostrativas y supuestos didácticos siempre marcados; sin procedimientos de reparación ni de seguridad.
 - Sesiones de IGNIS por usuario seudónimo ([ADR-033](docs/arquitectura/adr/ADR-033-sesiones-y-memoria-persistente.md)):
   el `user_id` es un HMAC del alias y el alias solo viaja en la cookie cifrada del propio usuario; no se guarda en la

@@ -54,7 +54,8 @@ class Fragmento(BaseModel):
     texto: str
     tokens_aprox: int
     orden: int
-    origen: Literal["scraping", "semilla", "lectura_web"] = "scraping"
+    # «demostrativo»: solo el documento de prueba del blindaje (data/demostracion/blindaje), nunca el Gold.
+    origen: Literal["scraping", "semilla", "lectura_web", "demostrativo"] = "scraping"
 
 
 class Fuente(BaseModel):

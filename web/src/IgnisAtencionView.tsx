@@ -377,6 +377,7 @@ export default function IgnisAtencionView() {
               justificacion: e.datos.justificacion_router ?? "",
               herramienta: e.datos.herramienta,
               bloqueada: e.datos.bloqueada === true,
+              blindaje: e.datos.blindaje_activado === true,
               categoriaModeracion: e.datos.categoria_moderacion,
             });
           }

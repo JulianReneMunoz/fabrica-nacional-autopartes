@@ -165,6 +165,12 @@ class Configuracion(BaseSettings):
     # Duración deslizante de la sesión: cada petición autenticada renueva la cookie.
     minutos_sesion: int = Field(default=480, ge=5, le=24 * 60)
 
+    # --- Demostración del blindaje (caso 5, R09) ----------------------------------------------------
+    # Con FNA_IGNIS_DEMO_BLINDAJE=1, IGNIS consulta el documento de prueba de data/demostracion/blindaje (con
+    # una instrucción incrustada) solo cuando la pregunta menciona «documento de prueba». Apagado por defecto:
+    # el documento nunca se mezcla con el Gold.
+    ignis_demo_blindaje: bool = False
+
     # --- Voz de IGNIS: Piper en el servidor, sin red (LICENCIAS_TERCEROS.md) ----------------------------
     # Voz por defecto: es_MX-claude-high (femenina, Apache-2.0). Alternativa: es_MX-ald-medium (masculina,
     # Unlicense). Los archivos se descargan con scripts/descargar_voz.py y no se versionan.
@@ -234,6 +240,11 @@ class Configuracion(BaseSettings):
     def ruta_store(self) -> Path:
         """Store de largo plazo con namespace ``("preferencias", user_id)`` (ADR-033, R05)."""
         return self.dir_datos / "ignis_store.sqlite"
+
+    @property
+    def dir_demo_blindaje(self) -> Path:
+        """Base de demostración del blindaje (caso 5): un documento de prueba, fuera de ``dir_gold``."""
+        return self.dir_datos / "demostracion" / "blindaje"
 
     @property
     def dir_vectores(self) -> Path:

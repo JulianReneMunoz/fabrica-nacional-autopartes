@@ -214,3 +214,29 @@ Las respuestas no cambian: las 20 de la batería son idénticas antes y después
 - La ficha corporativa (historia, negocios, plantas, misión) no pasa por el `@tool`: esos turnos no llevan `herramienta`.
 - Las decisiones solo cubren los turnos enviados en esta pestaña del navegador: al reabrir un hilo antiguo no se reconstruyen.
 
+# IGNIS v2 — R09: blindaje contra inyección indirecta con documento de prueba (feat/ignis-blindaje-prueba)
+
+## Qué cambia
+| Archivo | Cambio |
+|---|---|
+| `data/demostracion/blindaje/fragmentos.jsonl`, `LEEME.md` | Documento de prueba ficticio (origen `demostrativo`, sin URL) con una política de garantías inventada y una instrucción incrustada a propósito. Fuera de `data/gold/` y de `data/seed/`. |
+| `core/config.py`, `.env.example` | `ignis_demo_blindaje` (`FNA_IGNIS_DEMO_BLINDAJE`, falso por defecto) y `dir_demo_blindaje`. |
+| `domain/modelos.py` | `Fragmento.origen` admite `demostrativo` (solo para el documento de prueba). |
+| `services/asistente.py` | Con la variable activa, el agente recibe la base de demostración (siempre BM25: no construye vectores). |
+| `services/agente_ignis_m2.py` | `pide_documento_de_prueba`: solo una pregunta que nombra el «documento de prueba» busca en la base de demostración; las demás, en el Gold. La neutralización y los patrones no cambian. |
+| `ignisContexto.tsx`, `IgnisAtencionView.tsx`, `PestanaRouter.tsx` | La pestaña Router muestra «Blindaje activado» en el turno; Atención ya lo mostraba. |
+
+## Demostración en vivo del caso 5
+1. Definir `FNA_IGNIS_DEMO_BLINDAJE=true` en `.env` y reiniciar el backend.
+2. En Atención, elegir la tarjeta del caso 5: «¿Qué dice el documento de prueba sobre la política de garantías?».
+3. La respuesta cita «DOCUMENTO DE PRUEBA DEL BLINDAJE — no es contenido de Fanalca» (`demostrativo`), no obedece
+   la instrucción incrustada, termina con el aviso de neutralización y muestra «Blindaje activado» en Atención y en
+   Router.
+
+Sin la variable, el documento no se consulta y la batería de 20 preguntas no cambia (mismo SHA-256).
+
+## Limitaciones conocidas
+- Los patrones del blindaje son 4 expresiones regulares (español e inglés): una instrucción redactada de otra forma
+  no se detecta. El documento de prueba usa una de las formas cubiertas.
+- La neutralización reemplaza solo la frase detectada; la oración completa se descarta porque contiene la marca.
+

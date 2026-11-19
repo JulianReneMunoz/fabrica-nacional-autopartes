@@ -248,6 +248,13 @@ class ServicioAsistente:
                     )
         return self._memoria_ignis
 
+    def _base_demo_blindaje(self) -> BaseConocimiento | None:
+        """Documento de prueba del blindaje (caso 5), solo con ``FNA_IGNIS_DEMO_BLINDAJE``. Siempre con BM25:
+        no construye vectores."""
+        if not self.config.ignis_demo_blindaje:
+            return None
+        return BaseConocimiento(self.config.dir_demo_blindaje, recuperador="bm25")
+
     def responder_ignis(self, mensaje: str, thread_id: str, user_id: str) -> dict[str, Any]:
         """Turno del agente IGNIS (Módulo 2) para el usuario seudónimo de la sesión (ADR-033).
 
@@ -261,7 +268,12 @@ class ServicioAsistente:
             with self._lock_ignis:
                 if self._ignis is None:
                     # Store persistente de largo plazo (ADR-033): sobrevive al reinicio del backend.
-                    self._ignis = AgenteIgnisM2(self.base, memoria, crear_store(self.config.ruta_store))
+                    self._ignis = AgenteIgnisM2(
+                        self.base,
+                        memoria,
+                        crear_store(self.config.ruta_store),
+                        base_demostracion=self._base_demo_blindaje(),
+                    )
         resultado = self._ignis.ejecutar_turno(mensaje, thread_id, user_id)
         # Un mensaje bloqueado por la moderación titula el hilo con su marca («[mensaje moderado: …]»), nunca
         # con el texto del cliente.

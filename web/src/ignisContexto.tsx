@@ -38,6 +38,8 @@ export interface DecisionRouterTurno {
   justificacion: string;
   herramienta?: HerramientaIgnis;
   bloqueada: boolean;
+  /** El blindaje neutralizó instrucciones ocultas en algún fragmento recuperado (caso 5). */
+  blindaje: boolean;
   categoriaModeracion?: string;
 }
 
