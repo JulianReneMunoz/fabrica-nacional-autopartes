@@ -3,7 +3,7 @@
     "fna-conocimiento": {
       "type": "stdio",
       "command": "uv",
-      "args": ["run", "fabrica-mcp"],
+      "args": ["run", "--no-sync", "fabrica-mcp"],
       "env": { "FNA_MCP_PERMITIR_LLM": "false" }
     }
   }

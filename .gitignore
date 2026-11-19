@@ -71,5 +71,7 @@ graphify-out/
 
 # Índice vectorial Chroma (se regenera con `fabrica indexar-vectores`; ADR-023)
 data/vectores/
+# Qdrant local de IGNIS (R07): se reconstruye con «fabrica indexar-qdrant».
+data/qdrant/
 # Voces de Piper (scripts/descargar_voz.py): modelos de ~63 MB, se descargan con verificación de integridad
 data/voces/

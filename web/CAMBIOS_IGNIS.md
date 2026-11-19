@@ -240,3 +240,14 @@ Sin la variable, el documento no se consulta y la batería de 20 preguntas no ca
   no se detecta. El documento de prueba usa una de las formas cubiertas.
 - La neutralización reemplaza solo la frase detectada; la oración completa se descarta porque contiene la marca.
 
+# IGNIS v2 — R07: RAG en Qdrant para IGNIS (feat/ignis-qdrant) — en curso
+
+## Exclusiones por datos personales (Ley 1581)
+- `config/ignis_exclusiones.yaml` excluye de IGNIS tres documentos del blog que nombran a personas naturales: una
+  noticia, el listado `noticias` y una entrada centrada en una persona. Los archivos del corpus no se borran y el M1
+  no cambia.
+
+## Limitaciones conocidas
+- `informe-sostenibilidad` e `informe-sostenibilidad-capitulo-3` mencionan cargos con el nombre de la persona. No se
+  excluyen porque son contenido central. Ocultar los nombres dentro del fragmento queda como mejora posterior.
+

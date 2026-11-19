@@ -21,6 +21,9 @@ Proveedor = Literal["ollama", "openai", "anthropic", "claude_code", "extractivo"
 ModoContexto = Literal["auto", "completo", "seleccion"]
 Recuperador = Literal["bm25", "semantico"]
 RecuperadorAgente = Literal["hibrido", "bm25", "semantico"]
+# Recuperador de IGNIS (R07): bm25 por defecto; hibrido_qdrant = BM25 + Qdrant (nomic) con RRF y filtros por
+# payload, con vuelta a bm25 si falta el índice, el modelo o el extra.
+RecuperadorIgnis = Literal["bm25", "hibrido_qdrant"]
 DispositivoEmbeddings = Literal["auto", "cpu", "cuda"]
 ProveedorAgente = Literal["ollama", "anthropic"]
 
@@ -171,6 +174,14 @@ class Configuracion(BaseSettings):
     # el documento nunca se mezcla con el Gold.
     ignis_demo_blindaje: bool = False
 
+    # --- Base vectorial de IGNIS en Qdrant (R07, ADR-034) -------------------------------------------
+    # FNA_IGNIS_RECUPERADOR: bm25 por defecto, para que las respuestas de IGNIS no cambien; hibrido_qdrant es
+    # opcional. El M1 sigue con `recuperador` y `agente_recuperador`, sin cambios.
+    ignis_recuperador: RecuperadorIgnis = "bm25"
+    # FNA_QDRANT_URL: servidor de Qdrant (por ejemplo Docker), el único que construye HNSW. Sin valor, IGNIS
+    # usa la carpeta local dir_qdrant, que hace búsqueda exacta.
+    qdrant_url: str | None = None
+
     # --- Voz de IGNIS: Piper en el servidor, sin red (LICENCIAS_TERCEROS.md) ----------------------------
     # Voz por defecto: es_MX-claude-high (femenina, Apache-2.0). Alternativa: es_MX-ald-medium (masculina,
     # Unlicense). Los archivos se descargan con scripts/descargar_voz.py y no se versionan.
@@ -181,6 +192,16 @@ class Configuracion(BaseSettings):
     voz_dir: Path | None = None
     # Duración de los fonemas: 1.0 es la velocidad del modelo; 1.1 da una voz algo más pausada.
     voz_length_scale: float = Field(default=1.1, ge=0.5, le=2.0)
+
+    @field_validator("qdrant_url", mode="before")
+    @classmethod
+    def _qdrant_url_valida(cls, valor: object) -> object:
+        """Vacía (como en .env.example) equivale a sin servidor; si hay valor, debe ser http(s)."""
+        if valor is None or (isinstance(valor, str) and not valor.strip()):
+            return None
+        if isinstance(valor, str) and not valor.strip().startswith(("http://", "https://")):
+            raise ValueError("FNA_QDRANT_URL debe empezar por http:// o https://")
+        return valor.strip() if isinstance(valor, str) else valor
 
     @field_validator("voz_dir", mode="before")
     @classmethod
@@ -240,6 +261,11 @@ class Configuracion(BaseSettings):
     def ruta_store(self) -> Path:
         """Store de largo plazo con namespace ``("preferencias", user_id)`` (ADR-033, R05)."""
         return self.dir_datos / "ignis_store.sqlite"
+
+    @property
+    def dir_qdrant(self) -> Path:
+        """Carpeta del Qdrant local de IGNIS (ignorada en git). La usa un solo proceso a la vez."""
+        return self.dir_datos / "qdrant"
 
     @property
     def dir_demo_blindaje(self) -> Path:
