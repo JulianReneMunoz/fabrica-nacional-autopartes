@@ -6,6 +6,7 @@ import {
   etiquetaModeracion,
   etiquetaRuta,
   interpretarEvento,
+  normalizarHerramienta,
   normalizarOrigen,
   urlAdjuntoPermitida,
   type EventoConversacion,
@@ -267,5 +268,56 @@ describe("codificación", () => {
       .filter(([, texto]) => /Ã[\u0080-¿]|Â[\u0080-¿]|ðŸ|â€/.test(texto) || texto.startsWith("﻿"))
       .map(([ruta]) => ruta);
     expect(rotos).toEqual([]);
+  });
+});
+
+describe("herramienta del turno en los metadatos (R08, caso 3)", () => {
+  const HERRAMIENTA = {
+    nombre: "consultar_datos_estructurados_fanalca",
+    argumentos: { tipo_consulta: "ficha_moto", filtro: "cb160f" },
+    fuente_archivo: "data/catalogo/motos_honda.yaml",
+    verificado: true,
+    resumen: { claves: ["version_esquema", "fuentes", "modelos"], total_claves: 3, elementos: { fuentes: 2, modelos: 1 } },
+  };
+
+  it("lee la herramienta y la justificación del router desde el evento de metadatos", () => {
+    const e = interpretarEvento(null, { tipo: "metadatos", ruta_router: "herramienta_estructurada", justificacion_router: "Ficha técnica.", herramienta: HERRAMIENTA });
+    expect(e?.tipo).toBe("metadatos");
+    if (e?.tipo !== "metadatos") return;
+    expect(e.datos.justificacion_router).toBe("Ficha técnica.");
+    expect(e.datos.herramienta).toEqual({
+      nombre: "consultar_datos_estructurados_fanalca",
+      argumentos: { tipo_consulta: "ficha_moto", filtro: "cb160f" },
+      fuenteArchivo: "data/catalogo/motos_honda.yaml",
+      verificado: true,
+      resumen: { claves: ["version_esquema", "fuentes", "modelos"], totalClaves: 3, elementos: { fuentes: 2, modelos: 1 } },
+    });
+  });
+
+  it("sin herramienta o con un valor que no es un objeto, el campo queda vacío", () => {
+    for (const herramienta of [undefined, null, "consultar", 3, [HERRAMIENTA], { argumentos: {} }]) {
+      const e = interpretarEvento(null, { tipo: "metadatos", ruta_router: "directo", herramienta });
+      expect(e?.tipo === "metadatos" && e.datos.herramienta).toBeFalsy();
+    }
+  });
+
+  it("acota el resumen: claves y textos recortados, sin objetos anidados ni números no finitos", () => {
+    const h = normalizarHerramienta({
+      nombre: "x".repeat(200),
+      argumentos: { tipo_consulta: "ficha_moto", anidado: { a: 1 }, lista: [1, 2] },
+      verificado: "sí",
+      resumen: {
+        claves: [...Array.from({ length: 30 }, (_, i) => `clave_${i}`), { no: "texto" }],
+        total_claves: 31,
+        elementos: { fuentes: 2, raro: Number.NaN, texto: "3" },
+      },
+    })!;
+    expect(h.nombre).toHaveLength(80);
+    expect(h.argumentos).toEqual({ tipo_consulta: "ficha_moto" });
+    expect(h.verificado).toBe(false);
+    expect(h.resumen.claves).toHaveLength(10);
+    expect(h.resumen.totalClaves).toBe(31);
+    expect(h.resumen.elementos).toEqual({ fuentes: 2 });
+    expect(h.fuenteArchivo).toBe("");
   });
 });

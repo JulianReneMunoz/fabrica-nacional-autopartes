@@ -245,6 +245,16 @@ code { font-family: var(--ig-mono); }
 .ig-tabla tr:last-child td { border-bottom: 0; }
 .ig-tabla tr[aria-current="true"] td { background: rgba(229, 56, 59, 0.08); }
 .ig-tabla .numero { font-family: var(--ig-mono); text-align: right; }
+/* Pestaña Router (R08): decisiones de la sesión con la herramienta @tool del turno. */
+.ig-router-tabla td { vertical-align: top; }
+.ig-router-moderacion { display: block; margin-top: 6px; font-size: 12px; color: var(--ig-texto-2); }
+.ig-router-herramienta { display: grid; gap: 4px; font-size: 13px; }
+.ig-router-herramienta code { font-family: var(--ig-mono); color: var(--ig-texto); overflow-wrap: anywhere; }
+.ig-router-herramienta span { color: var(--ig-texto-2); overflow-wrap: anywhere; }
+.ig-router-herramienta summary { cursor: pointer; color: var(--ig-texto-2); }
+.ig-router-herramienta summary:focus-visible { outline: 2px solid var(--ig-acento-brillo); outline-offset: 2px; }
+.ig-router-herramienta details p,
+.ig-router-herramienta details ul { margin: 6px 0 0; padding-left: 16px; color: var(--ig-texto-2); }
 .ig-hilo-titulo { display: block; }
 .ig-hilo-id { display: block; font-size: 11px; color: var(--ig-texto-2); }
 

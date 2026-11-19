@@ -57,6 +57,65 @@ export interface MetadatosIgnis {
   categoria_moderacion?: string;
   /** Norma de datos personales que aplicó el turno («Ley 1581 de 2012»); la voz no la lee. */
   normativa?: string;
+  /** Justificación de la decisión del router (pestaña Router). */
+  justificacion_router?: string;
+  /** Herramienta @tool usada en el turno (caso 3); solo llega cuando la ruta la invoca. */
+  herramienta?: HerramientaIgnis;
+}
+
+/** Resumen acotado de la salida Pydantic de la herramienta: nunca el YAML o JSON completo. */
+export interface ResumenHerramienta {
+  claves: string[];
+  totalClaves: number;
+  elementos: Record<string, number>;
+}
+
+export interface HerramientaIgnis {
+  nombre: string;
+  argumentos: Record<string, string>;
+  fuenteArchivo: string;
+  verificado: boolean;
+  resumen: ResumenHerramienta;
+}
+
+const MAX_CLAVES_RESUMEN = 10;
+const MAX_TEXTO = 80;
+
+function textoAcotado(valor: unknown): string {
+  return String(valor).slice(0, MAX_TEXTO);
+}
+
+/** Valida la herramienta de los metadatos: tipos simples, textos recortados y resumen acotado; null si no sirve. */
+export function normalizarHerramienta(valor: unknown): HerramientaIgnis | null {
+  if (typeof valor !== "object" || valor === null || Array.isArray(valor)) return null;
+  const h = valor as Record<string, unknown>;
+  const nombre = typeof h.nombre === "string" ? h.nombre.trim() : "";
+  if (!nombre) return null;
+  const argumentos: Record<string, string> = {};
+  if (typeof h.argumentos === "object" && h.argumentos !== null && !Array.isArray(h.argumentos)) {
+    for (const [clave, v] of Object.entries(h.argumentos as Record<string, unknown>)) {
+      if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") argumentos[textoAcotado(clave)] = textoAcotado(v);
+    }
+  }
+  const r = typeof h.resumen === "object" && h.resumen !== null && !Array.isArray(h.resumen) ? (h.resumen as Record<string, unknown>) : {};
+  const claves = Array.isArray(r.claves) ? r.claves.filter((c) => typeof c === "string").slice(0, MAX_CLAVES_RESUMEN).map(textoAcotado) : [];
+  const elementos: Record<string, number> = {};
+  if (typeof r.elementos === "object" && r.elementos !== null && !Array.isArray(r.elementos)) {
+    for (const [clave, n] of Object.entries(r.elementos as Record<string, unknown>).slice(0, MAX_CLAVES_RESUMEN)) {
+      if (typeof n === "number" && Number.isFinite(n)) elementos[textoAcotado(clave)] = n;
+    }
+  }
+  return {
+    nombre: textoAcotado(nombre),
+    argumentos,
+    fuenteArchivo: typeof h.fuente_archivo === "string" ? textoAcotado(h.fuente_archivo) : "",
+    verificado: h.verificado === true,
+    resumen: {
+      claves,
+      totalClaves: typeof r.total_claves === "number" && Number.isFinite(r.total_claves) ? r.total_claves : claves.length,
+      elementos,
+    },
+  };
 }
 
 /** URL http(s) bien formada; cualquier otra (javascript:, relativa, mal escrita) se descarta. */
@@ -197,6 +256,8 @@ export function interpretarEvento(nombre: string | null, datos: unknown): Evento
             : undefined,
           categoria_moderacion: typeof d.categoria_moderacion === "string" ? d.categoria_moderacion : undefined,
           normativa: typeof d.normativa === "string" ? d.normativa : undefined,
+          justificacion_router: typeof d.justificacion_router === "string" ? d.justificacion_router : undefined,
+          herramienta: normalizarHerramienta(d.herramienta) ?? undefined,
         },
       };
     }

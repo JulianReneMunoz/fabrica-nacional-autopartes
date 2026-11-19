@@ -6,9 +6,12 @@
  * - El hilo activo vive en memoria. Al entrar (o al recargar) se toma el hilo más reciente del usuario o se crea
  *   uno nuevo en el servidor, que lo liga al `user_id` seudónimo.
  * - API: se consulta `GET /salud` al montar y cada 30 s. SSE: lo informa la última conversación de Atención.
+ * - Decisiones del router de la sesión actual (pestaña Router): las registra Atención con los metadatos que llegan
+ *   por SSE; viven solo en memoria, sin el texto de la pregunta (Ley 1581), y se vacían al cerrar la sesión.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "./api";
+import type { HerramientaIgnis } from "./ignisCliente";
 import {
   cerrarSesion as cerrarSesionApi,
   crearHilo,
@@ -25,6 +28,21 @@ export type EstadoSesion =
   | { estado: "comprobando" }
   | { estado: "sin_sesion"; aviso?: string }
   | { estado: "activa"; alias: string; userIdCorto: string };
+
+/** Decisión del router en un turno de la sesión actual: sin el texto de la pregunta. */
+export interface DecisionRouterTurno {
+  /** Número del turno dentro de la sesión (1, 2, 3…). */
+  turno: number;
+  ruta: string;
+  score?: number;
+  justificacion: string;
+  herramienta?: HerramientaIgnis;
+  bloqueada: boolean;
+  categoriaModeracion?: string;
+}
+
+/** Tope de decisiones guardadas en memoria: se conservan las más recientes. */
+export const MAX_DECISIONES = 50;
 
 export interface ContextoIgnisApp {
   sesion: EstadoSesion;
@@ -44,6 +62,10 @@ export interface ContextoIgnisApp {
   sse: EstadoServicio;
   /** Atención informa el origen de la última respuesta. */
   reportarSse: (estado: EstadoServicio) => void;
+  /** Decisiones del router de los turnos de la sesión actual, de la más antigua a la más reciente. */
+  decisiones: DecisionRouterTurno[];
+  /** Atención registra la decisión de cada turno respondido; el número de turno lo asigna el contexto. */
+  registrarDecision: (decision: Omit<DecisionRouterTurno, "turno">) => void;
 }
 
 const INTERVALO_SALUD_MS = 30_000;
@@ -61,6 +83,8 @@ export function ProveedorIgnis({ children }: { children: ReactNode }) {
   const [aperturas, setAperturas] = useState(0);
   const [estadoApi, setEstadoApi] = useState<EstadoServicio>("comprobando");
   const [sse, setSse] = useState<EstadoServicio>("sin_datos");
+  const [decisiones, setDecisiones] = useState<DecisionRouterTurno[]>([]);
+  const turnos = useRef(0);
   const ultimoApi = useRef<EstadoServicio>("comprobando");
 
   /** Hilo más reciente del usuario o uno nuevo. */
@@ -119,6 +143,17 @@ export function ProveedorIgnis({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const vaciarDecisiones = useCallback(() => {
+    turnos.current = 0;
+    setDecisiones([]);
+  }, []);
+
+  const registrarDecision = useCallback((decision: Omit<DecisionRouterTurno, "turno">) => {
+    turnos.current += 1;
+    const turno = turnos.current;
+    setDecisiones((lista) => [...lista, { ...decision, turno }].slice(-MAX_DECISIONES));
+  }, []);
+
   const entrar = useCallback(async (alias: string) => iniciar(await entrarApi(alias)), [iniciar]);
 
   const cerrarSesion = useCallback(async () => {
@@ -126,14 +161,16 @@ export function ProveedorIgnis({ children }: { children: ReactNode }) {
       await cerrarSesionApi();
     } finally {
       setHilo(null);
+      vaciarDecisiones();
       setSesion({ estado: "sin_sesion" });
     }
-  }, []);
+  }, [vaciarDecisiones]);
 
   const sesionVencida = useCallback(() => {
     setHilo(null);
+    vaciarDecisiones();
     setSesion({ estado: "sin_sesion", aviso: AVISO_VENCIDA });
-  }, []);
+  }, [vaciarDecisiones]);
 
   const nuevoHilo = useCallback(async () => {
     const { thread_id } = await crearHilo();
@@ -159,8 +196,10 @@ export function ProveedorIgnis({ children }: { children: ReactNode }) {
       api: estadoApi,
       sse,
       reportarSse: setSse,
+      decisiones,
+      registrarDecision,
     }),
-    [sesion, hilo, aperturas, entrar, cerrarSesion, sesionVencida, nuevoHilo, abrirHilo, estadoApi, sse],
+    [sesion, hilo, aperturas, entrar, cerrarSesion, sesionVencida, nuevoHilo, abrirHilo, estadoApi, sse, decisiones, registrarDecision],
   );
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

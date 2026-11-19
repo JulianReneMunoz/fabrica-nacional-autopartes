@@ -191,3 +191,26 @@ Las respuestas no cambian: las 20 de la batería son idénticas antes y después
 
 ## Pendiente para el bloque del router y el panel
 - Mostrar en los metadatos el nombre de la herramienta y su salida Pydantic (caso 3 de validación).
+
+# IGNIS v2 — R08: router visible (feat/ignis-router-visible)
+
+## Qué cambia en el backend
+| Archivo | Cambio |
+|---|---|
+| `services/agente_ignis_m2.py` | Campo `herramienta` en el resultado cuando el turno usa el `@tool` (ficha de la moto o estadísticas, en la ruta estructurada o en la mixta): nombre, argumentos, `fuente_archivo`, `verificado` y un resumen acotado de la salida Pydantic (claves de primer nivel, su total y el número de elementos; 1 KB o menos, sin los datos). `verificado` es falso si el archivo falta o está vacío, y un YAML vacío da `{}`. El router detecta las preguntas de moto por palabras completas («cb» suelto o «CBS» ya no cuentan), y la palabra «fanalca» sola ya no vuelve mixta una pregunta. |
+| `api/ignis_routes.py` | `herramienta` en el evento `metadatos` solo cuando existe; los campos actuales no cambian. |
+
+Única ruta que cambia con el router: «¿Cuántas unidades de negocio tiene Fanalca?» pasa de `mixto` a `herramienta_estructurada` (ficha corporativa, sección negocios). Las 20 respuestas de la batería son idénticas antes y después.
+
+## Qué cambia en el visor
+| Archivo | Cambio |
+|---|---|
+| `ignisCliente.ts` | `normalizarHerramienta` (tipos simples, textos de 80 caracteres o menos, resumen acotado) y lectura de `justificacion_router`. |
+| `ignisContexto.tsx` | Decisiones del router de la sesión actual (hasta 50), en memoria, sin el texto de la pregunta; se vacían al cerrar la sesión. |
+| `IgnisAtencionView.tsx` | Registra la decisión de cada turno (salvo crisis personal); la insignia de la ruta nombra la herramienta en su `title`. |
+| `PestanaRouter.tsx` | Pestaña «Router»: turno, ruta, puntaje, justificación y herramienta (tipo de consulta, archivo, verificado y resumen desplegable). Sin turnos, estado vacío. |
+
+## Limitaciones conocidas
+- La ficha corporativa (historia, negocios, plantas, misión) no pasa por el `@tool`: esos turnos no llevan `herramienta`.
+- Las decisiones solo cubren los turnos enviados en esta pestaña del navegador: al reabrir un hilo antiguo no se reconstruyen.
+
