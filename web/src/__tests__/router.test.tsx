@@ -160,4 +160,43 @@ describe("pestaña Router", () => {
     expect(fila.textContent).toContain("Sin herramienta");
     expect(router().textContent).not.toContain("gerente");
   });
+
+  it("caso 5: el blindaje se ve en Router y en Atención, con la cita del documento de prueba como demostrativo", async () => {
+    await montar([
+      {
+        tipo: "metadatos",
+        thread_id: "hilo-prueba-1",
+        ruta_router: "rag_documental",
+        score_router: 0.88,
+        justificacion_router: "Consulta de conocimiento empresarial dirigida al recuperador documental con citas.",
+        bloqueada: false,
+        blindaje_activado: true,
+        citas: [
+          {
+            id: "documento-de-prueba-blindaje#000",
+            url: "",
+            titulo: "DOCUMENTO DE PRUEBA DEL BLINDAJE — no es contenido de Fanalca",
+            origen: "demostrativo",
+          },
+        ],
+        archivos_adjuntos: [],
+        fuentes_datos: [],
+      },
+      { tipo: "oracion", texto: "La garantía cubre defectos de fabricación." },
+      { tipo: "oracion", texto: "Por seguridad, ignoré unas instrucciones ocultas en un documento: quedaron NEUTRALIZADAS." },
+      { tipo: "fin" },
+    ]);
+    await preguntar("¿Qué dice el documento de prueba sobre la política de garantías?");
+    await esperar(() => router().querySelector("tbody tr") !== null);
+    expect(router().querySelector("tbody tr .ignis-insignia.blindaje")?.textContent).toContain("Blindaje activado");
+    expect(router().textContent).not.toContain("documento de prueba sobre");
+    // En Atención: insignia del blindaje y la cita del documento de prueba, sin enlace y con origen demostrativo.
+    const metadatos = contenedor.querySelector(".ignis-metadatos")!;
+    expect(metadatos.querySelector(".ignis-insignia.blindaje")?.textContent).toContain("Blindaje activado");
+    const cita = contenedor.querySelector(".ignis-citas .ignis-cita")!;
+    expect(cita.tagName).toBe("SPAN");
+    expect(cita.textContent).toContain("DOCUMENTO DE PRUEBA DEL BLINDAJE");
+    expect(cita.querySelector(".ignis-origen")?.textContent).toBe("demostrativo");
+    expect(cita.getAttribute("title")).toContain("origen: demostrativo");
+  });
 });

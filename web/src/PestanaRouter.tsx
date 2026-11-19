@@ -51,7 +51,7 @@ export default function PestanaRouter() {
         <h1 id="titulo-router">Router</h1>
       </header>
       <p className="ig-vacio-motivo">
-        Decisiones del router en los turnos de esta sesión: ruta, puntaje, justificación y herramienta usada. No se
+        Decisiones del router en los turnos de esta sesión: ruta, puntaje, justificación, herramienta usada y blindaje. No se
         guarda el texto de las preguntas; se borran al cerrar la sesión.
       </p>
 
@@ -84,6 +84,11 @@ export default function PestanaRouter() {
                     <span className="ignis-insignia ruta" title={`Ruta del router: ${d.ruta}`}>
                       {etiquetaRuta(d.ruta)}
                     </span>
+                    {d.blindaje ? (
+                      <span className="ignis-insignia blindaje">
+                        <Icono nombre="escudo" tamano={13} /> Blindaje activado
+                      </span>
+                    ) : null}
                     {d.categoriaModeracion ? (
                       <span className="ig-router-moderacion">Moderación: {etiquetaModeracion(d.categoriaModeracion)}</span>
                     ) : null}

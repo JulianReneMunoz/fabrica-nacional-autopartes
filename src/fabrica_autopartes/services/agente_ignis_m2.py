@@ -264,6 +264,14 @@ def sanitizar_fragmento_rag(texto: str, doc_id: str, max_caracteres: int | None 
     return bloque_pasivo, alerta
 
 
+# Caso 5 (R09): solo una pregunta que nombra el «documento de prueba» consulta la base de demostración.
+_PIDE_DOCUMENTO_DE_PRUEBA = re.compile(r"\bdocumento\s+de\s+prueba\b")
+
+
+def pide_documento_de_prueba(mensaje: str) -> bool:
+    return bool(_PIDE_DOCUMENTO_DE_PRUEBA.search(sin_tildes(mensaje.lower())))
+
+
 # --- 3. Router por reglas de palabras clave (ruta, puntaje fijo y justificación) ---
 class DecisionRouter(BaseModel):
     ruta: Literal["directo", "memoria_store", "herramienta_estructurada", "rag_documental", "mixto"]
@@ -445,16 +453,27 @@ class AgenteIgnisM2:
     mensajes bloqueados por la moderación se registran solo con su categoría."""
 
     def __init__(
-        self, base: BaseConocimiento, memoria: RepositorioMemoriaIgnis, store: BaseStore | None = None
+        self,
+        base: BaseConocimiento,
+        memoria: RepositorioMemoriaIgnis,
+        store: BaseStore | None = None,
+        base_demostracion: BaseConocimiento | None = None,
     ) -> None:
         self.kb = base
         self.memoria = memoria
         # Store de largo plazo (ADR-033): preferencias por usuario en el namespace ("preferencias", user_id).
         self.store = store
+        # Documento de prueba del blindaje (caso 5): solo con FNA_IGNIS_DEMO_BLINDAJE; nunca se mezcla con el
+        # Gold.
+        self.base_demostracion = base_demostracion
 
     def _buscar_fragmentos(self, consulta: str, k: int) -> list[Fragmento]:
-        """Búsqueda de IGNIS sobre el buscador común: se piden más candidatos para poder filtrar."""
-        candidatos = [r.fragmento for r in self.kb.buscar(expandir_consulta(consulta), k=k * 4 + 6)]
+        """Búsqueda de IGNIS sobre el buscador común: se piden más candidatos para poder filtrar. Con la base
+        de demostración activa, una pregunta por el «documento de prueba» busca solo en ella."""
+        base = self.kb
+        if self.base_demostracion is not None and pide_documento_de_prueba(consulta):
+            base = self.base_demostracion
+        candidatos = [r.fragmento for r in base.buscar(expandir_consulta(consulta), k=k * 4 + 6)]
         return filtrar_para_ignis(consulta, candidatos, k)
 
     def _preferencias(self, user_id: str) -> dict[str, str]:
