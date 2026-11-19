@@ -178,3 +178,16 @@ Detalle en [ADR-033](../docs/arquitectura/adr/ADR-033-sesiones-y-memoria-persist
 ## Limitaciones conocidas
 - Sin LLM, la respuesta documental es extractiva: puede elegir una oración que comparte el tema con la pregunta pero no la responde, o un rótulo largo del sitio (por ejemplo, «Explora las principales estrategias de sostenibilidad.» en la comparación mixta).
 - La guía de estilo para el LLM (`llm/estilo_ignis.py`, constante `ESTILO_RESPUESTA_IGNIS`) queda para el PR de herramientas LangChain y LLM, que la inyectará con `dynamic_prompt`; este PR solo cubre el motor de reglas.
+
+# IGNIS v2 — R06: consulta a datos estructurados como `@tool` (feat/ignis-tool-datos)
+
+## Qué cambia
+| Archivo | Cambio |
+|---|---|
+| `services/agente_ignis_m2.py` | `consultar_datos_estructurados_fanalca` pasa a ser un `@tool` de LangChain con `args_schema=ConsultaDatosFanalcaInput` y `response_format="content_and_artifact"`: el contenido es el JSON del resultado y el artefacto es `ResultadoEstructuradoFanalca`. El agente la invoca como llamada de herramienta y usa el artefacto. La lectura de los archivos no cambia. |
+| `tests/unit/test_herramienta_datos_ignis.py` | Nombre, esquema, los 4 tipos de consulta, datos iguales a los archivos, contenido JSON equivalente al artefacto y tipo inválido rechazado. |
+
+Las respuestas no cambian: las 20 de la batería son idénticas antes y después en texto, ruta, citas, fuentes de datos, bloqueo, moderación y adjuntos.
+
+## Pendiente para el bloque del router y el panel
+- Mostrar en los metadatos el nombre de la herramienta y su salida Pydantic (caso 3 de validación).
