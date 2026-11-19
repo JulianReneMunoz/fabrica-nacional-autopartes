@@ -1,6 +1,6 @@
 """Agente IGNIS del Módulo 2 (Fanalca - Grupo 11): moderación antes del router, router por reglas, memoria
-por hilo, consulta determinista a datos estructurados (ficha de motos, ficha corporativa y estadísticas) y
-blindaje de los fragmentos recuperados. Se usa a través de ``ServicioAsistente``.
+por hilo, herramienta ``@tool`` determinista a datos estructurados (ficha de motos, ficha corporativa y
+estadísticas) y blindaje de los fragmentos recuperados. Se usa a través de ``ServicioAsistente``.
 
 El texto de la respuesta es para el cliente: oraciones completas, sin identificadores, URL, JSON ni jerga. La
 evidencia técnica (citas, fuentes de datos, ruta, puntaje, blindaje y moderación) viaja aparte, en el
@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
+from langchain_core.tools import tool
 from langgraph.store.base import BaseStore
 from pydantic import BaseModel, Field
 
@@ -113,9 +114,12 @@ def _adjunto(clave: str) -> dict[str, str]:
     return dict(ADJUNTOS[clave])
 
 
-# --- 1. Esquemas Pydantic de la consulta determinista a datos estructurados (función, no @tool) ---
+# --- 1. Herramienta determinista a datos estructurados: @tool de LangChain con esquema Pydantic ---
+TipoConsulta = Literal["ficha_moto", "estadisticas_corpus", "unidades_negocio", "ficha_empresa"]
+
+
 class ConsultaDatosFanalcaInput(BaseModel):
-    tipo_consulta: Literal["ficha_moto", "estadisticas_corpus", "unidades_negocio", "ficha_empresa"] = Field(
+    tipo_consulta: TipoConsulta = Field(
         description="Tipo de dato estructurado exacto a consultar en los catálogos YAML/JSON de Fanalca."
     )
     filtro: str = Field(default="cb160f", description="Identificador o filtro opcional de consulta.")
@@ -127,21 +131,21 @@ class ResultadoEstructuradoFanalca(BaseModel):
     verificado: bool = True
 
 
-def consultar_datos_estructurados_fanalca(entrada: ConsultaDatosFanalcaInput) -> ResultadoEstructuradoFanalca:
-    """Consulta determinista sobre archivos YAML/JSON de Fanalca sin inventar cifras."""
-    if entrada.tipo_consulta == "ficha_moto":
+def _leer_datos_estructurados(tipo_consulta: TipoConsulta) -> ResultadoEstructuradoFanalca:
+    """Lectura determinista sobre archivos YAML/JSON de Fanalca sin inventar cifras."""
+    if tipo_consulta == "ficha_moto":
         ruta = RAIZ_REPO / "data" / "catalogo" / "motos_honda.yaml"
         datos = yaml.safe_load(ruta.read_text(encoding="utf-8")) if ruta.exists() else {}
         return ResultadoEstructuradoFanalca(
             fuente_archivo="data/catalogo/motos_honda.yaml", datos_exactos=datos
         )
 
-    if entrada.tipo_consulta == "ficha_empresa":
+    if tipo_consulta == "ficha_empresa":
         return ResultadoEstructuradoFanalca(
             fuente_archivo=ARCHIVO_FICHA, datos_exactos=cargar_ficha().model_dump()
         )
 
-    if entrada.tipo_consulta == "estadisticas_corpus":
+    if tipo_consulta == "estadisticas_corpus":
         ruta = RAIZ_REPO / "data" / "gold" / "estadisticas.json"
         datos = json.loads(ruta.read_text(encoding="utf-8")) if ruta.exists() else {}
         return ResultadoEstructuradoFanalca(fuente_archivo="data/gold/estadisticas.json", datos_exactos=datos)
@@ -149,6 +153,34 @@ def consultar_datos_estructurados_fanalca(entrada: ConsultaDatosFanalcaInput) ->
     ruta_etapas = RAIZ_REPO / "data" / "gold" / "metricas_etapas.json"
     datos = json.loads(ruta_etapas.read_text(encoding="utf-8")) if ruta_etapas.exists() else {}
     return ResultadoEstructuradoFanalca(fuente_archivo="data/gold/metricas_etapas.json", datos_exactos=datos)
+
+
+@tool(
+    "consultar_datos_estructurados_fanalca",
+    args_schema=ConsultaDatosFanalcaInput,
+    response_format="content_and_artifact",
+)
+def consultar_datos_estructurados_fanalca(
+    tipo_consulta: TipoConsulta, filtro: str = "cb160f"
+) -> tuple[str, ResultadoEstructuradoFanalca]:
+    """Consulta los datos estructurados de Fanalca (ficha de motos, ficha corporativa y estadísticas del
+    corpus) y devuelve los datos exactos con su archivo de origen, sin calcular ni redactar."""
+    resultado = _leer_datos_estructurados(tipo_consulta)
+    return resultado.model_dump_json(), resultado
+
+
+def _consultar_datos(tipo_consulta: TipoConsulta) -> ResultadoEstructuradoFanalca:
+    """Invoca la herramienta como lo hace un agente (llamada de herramienta) y devuelve su artefacto: el
+    modelo Pydantic con los datos exactos, sin pasar por JSON."""
+    mensaje = consultar_datos_estructurados_fanalca.invoke(
+        {
+            "type": "tool_call",
+            "id": f"ignis-{tipo_consulta}",
+            "name": consultar_datos_estructurados_fanalca.name,
+            "args": {"tipo_consulta": tipo_consulta},
+        }
+    )
+    return ResultadoEstructuradoFanalca.model_validate(mensaje.artifact)
 
 
 # --- 2. Blindaje contra inyección indirecta en los fragmentos recuperados ---
@@ -496,15 +528,11 @@ class AgenteIgnisM2:
                 if seccion in {"presentacion", "negocios", "plantas"}:
                     sufijos.append(SEGUIMIENTO_FICHA)
             elif _es_pregunta_de_moto(mensaje):
-                res_tool = consultar_datos_estructurados_fanalca(
-                    ConsultaDatosFanalcaInput(tipo_consulta="ficha_moto")
-                )
+                res_tool = _consultar_datos("ficha_moto")
                 respuesta = redactar_ficha_moto(mensaje, res_tool.datos_exactos)
                 fuentes_datos.append(fuentes_datos_moto(res_tool.datos_exactos, res_tool.fuente_archivo))
             else:
-                res_tool = consultar_datos_estructurados_fanalca(
-                    ConsultaDatosFanalcaInput(tipo_consulta="estadisticas_corpus")
-                )
+                res_tool = _consultar_datos("estadisticas_corpus")
                 respuesta = redactar_estadisticas(mensaje, res_tool.datos_exactos)
                 fuentes_datos.append(
                     fuentes_datos_estadisticas(res_tool.datos_exactos, res_tool.fuente_archivo)
@@ -590,7 +618,7 @@ class AgenteIgnisM2:
         tipo: Literal["ficha_moto", "estadisticas_corpus"] = (
             "ficha_moto" if _es_pregunta_de_moto(mensaje) else "estadisticas_corpus"
         )
-        res_tool = consultar_datos_estructurados_fanalca(ConsultaDatosFanalcaInput(tipo_consulta=tipo))
+        res_tool = _consultar_datos(tipo)
         if tipo == "ficha_moto":
             fuentes_datos.append(fuentes_datos_moto(res_tool.datos_exactos, res_tool.fuente_archivo))
             return redactar_ficha_moto(mensaje, res_tool.datos_exactos), []
