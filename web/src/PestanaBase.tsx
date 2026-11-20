@@ -3,7 +3,7 @@
  * la colección vectorial de IGNIS (`GET /api/v1/base/vectorial`). Cada bloque tiene sus estados de carga, vacío y
  * error; si el backend no responde no se muestra ninguna cifra.
  */
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { api, ErrorApi, type EstadisticasBase, type InfoVectorial } from "./api";
 import { Icono } from "./IgnisIconos";
 
@@ -15,26 +15,41 @@ const MODOS: Record<InfoVectorial["modo"], string> = {
   servidor: "Servidor Qdrant",
 };
 
-/** Mensaje para el usuario sin trazas ni detalles internos del servidor. */
-function mensajeError(e: unknown): string {
+/** Mensaje para el usuario sin trazas ni detalles internos del servidor; lo comparten las pestañas de solo lectura. */
+export function mensajeError(e: unknown): string {
   if (e instanceof ErrorApi) return `El backend respondió con un error (HTTP ${e.estado}). Vuelve a intentarlo más tarde.`;
   return "No se pudo conectar con el backend. Comprueba que la API esté en marcha y vuelve a intentarlo.";
 }
 
-/** Carga de un endpoint de solo lectura con «Reintentar»; la reutiliza la pestaña Preguntas frecuentes. */
+/** Solo se enlazan URL http(s); el resto se muestra como texto. */
+export function urlSegura(url: string): boolean {
+  return /^https?:\/\//i.test(url);
+}
+
+/**
+ * Carga de un endpoint de solo lectura con «Reintentar». Cada carga lleva un número: solo la última puede escribir el
+ * estado, así una respuesta tardía de una carga anterior no pisa la del reintento ni actúa tras desmontar.
+ */
 export function useCarga<T>(pedir: () => Promise<T>) {
   const [estado, setEstado] = useState<Carga<T>>({ tipo: "cargando" });
+  const ultima = useRef(0);
   const cargar = useCallback(() => {
-    let vivo = true;
+    const id = ++ultima.current;
     setEstado({ tipo: "cargando" });
     pedir()
-      .then((datos) => vivo && setEstado({ tipo: "listo", datos }))
-      .catch((e: unknown) => vivo && setEstado({ tipo: "error", mensaje: mensajeError(e) }));
-    return () => {
-      vivo = false;
-    };
+      .then((datos) => {
+        if (id === ultima.current) setEstado({ tipo: "listo", datos });
+      })
+      .catch((e: unknown) => {
+        if (id === ultima.current) setEstado({ tipo: "error", mensaje: mensajeError(e) });
+      });
   }, [pedir]);
-  useEffect(() => cargar(), [cargar]);
+  useEffect(() => {
+    cargar();
+    return () => {
+      ultima.current++;
+    };
+  }, [cargar]);
   return { estado, cargar };
 }
 

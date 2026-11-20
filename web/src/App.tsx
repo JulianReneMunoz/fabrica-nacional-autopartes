@@ -19,6 +19,9 @@ const PestanaSesion = lazy(() => import("./PestanaSesion"));
 const PestanaRouter = lazy(() => import("./PestanaRouter"));
 const PestanaRayosX = lazy(() => import("./PestanaRayosX"));
 const PestanaBase = lazy(() => import("./PestanaBase"));
+const PestanaFaq = lazy(() => import("./PestanaFaq"));
+const PestanaQa = lazy(() => import("./PestanaQa"));
+const PestanaCorpus = lazy(() => import("./PestanaCorpus"));
 const PantallaEntrada = lazy(() => import("./PantallaEntrada"));
 
 /** Pestañas que ya tienen implementación propia; el resto muestra su estado vacío con el PR que la trae. */
@@ -28,6 +31,9 @@ const IMPLEMENTADAS: Partial<Record<IdPestana, () => ReactNode>> = {
   router: () => <PestanaRouter />,
   "rayos-x": () => <PestanaRayosX />,
   base: () => <PestanaBase />,
+  faq: () => <PestanaFaq />,
+  qa: () => <PestanaQa />,
+  corpus: () => <PestanaCorpus />,
 };
 
 /** Pestañas sin estado vacío: las que ya tienen implementación propia. */
