@@ -11,7 +11,8 @@ import { useIgnis } from "./ignisContexto";
 import { Icono } from "./IgnisIconos";
 import { hashDe } from "./ignisRutas";
 
-function Herramienta({ h }: { h: HerramientaIgnis }) {
+/** Herramienta @tool del turno con su archivo y verificación; la reutiliza la pestaña Rayos-X. */
+export function Herramienta({ h }: { h: HerramientaIgnis }) {
   const tipo = h.argumentos.tipo_consulta;
   return (
     <div className="ig-router-herramienta">

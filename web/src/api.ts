@@ -43,6 +43,28 @@ export interface EstadisticasBase {
   generado_en: string | null;
 }
 
+/** Estado de la colección Qdrant de IGNIS (`InfoVectorial` en `domain/modelos.py`). */
+export interface InfoVectorial {
+  disponible: boolean;
+  motivo: string;
+  modo: "local" | "memoria" | "servidor";
+  coleccion: string;
+  puntos: number;
+  dimension: number | null;
+  distancia: string | null;
+  hnsw_m: number;
+  hnsw_ef_construct: number;
+  umbral_busqueda_exacta_kb: number | null;
+  vectores_indexados: number;
+  tipo_busqueda: "exacta" | "hnsw";
+  explicacion: string;
+  campos_payload: string[];
+  modelo: string;
+  revision: string;
+  generado_en: string | null;
+  recuperador_ignis: string | null;
+}
+
 export interface Fuente {
   fragmento_id: string;
   titulo: string;
@@ -220,6 +242,7 @@ export const api = {
   salud: () => pedir<Salud>("/salud"),
   /* Corpus Gold */
   estadisticasBase: () => pedir<EstadisticasBase>("/base/estadisticas"),
+  infoVectorial: () => pedir<InfoVectorial>("/base/vectorial"),
   fragmentos: (f: { q?: string; seccion?: string; pagina?: number; tamano?: number } = {}) =>
     pedir<Pagina<FragmentoBuscado>>(`/base/fragmentos${consulta(f)}`),
   fragmento: (id: string) => pedir<Fragmento>(`/base/fragmentos/${encodeURIComponent(id)}`),
